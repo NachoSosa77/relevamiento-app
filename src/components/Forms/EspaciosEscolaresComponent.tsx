@@ -3,7 +3,6 @@
 import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import ObservacionesComponent from "@/components/Forms/ObservacionesComponent";
-import Navbar from "@/components/NavBar/NavBar";
 import { useState } from "react";
 
 interface Tab {
@@ -11,7 +10,7 @@ interface Tab {
   content: React.ReactNode;
 }
 
-export default function AreasExterioresPage() {
+export default function EspaciosEscolaresComponent() {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const tabs: Tab[] = [
@@ -29,9 +28,8 @@ export default function AreasExterioresPage() {
     },
   ];
   return (
-    <div className="h-full">
-      <Navbar />
-      <div className="mt-20 flex px-8">
+    <div className="h-full bg-white text-black">
+      <div className="mt-4 flex px-8">
         {tabs.map((tab, index) => (
           <button
             key={index}
@@ -46,7 +44,7 @@ export default function AreasExterioresPage() {
           </button>
         ))}
       </div>
-      <div className="flex-1 overflow-auto no-scrollbar mb-20 flex justify-center items-center">
+      <div className="flex-1 overflow-auto no-scrollbar mb-20 flex justify-center items-center bg-white">
         {tabs[selectedTab].content}
       </div>
     </div>

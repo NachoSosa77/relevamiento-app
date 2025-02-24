@@ -1,10 +1,9 @@
-import React from "react";
-
+import React, { ChangeEvent } from "react";
 interface InputProps {
   label: string;
   subLabel: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void; // Tipo correcto para onChange
 }
 
 const AlphanumericInput: React.FC<InputProps> = ({
@@ -13,9 +12,10 @@ const AlphanumericInput: React.FC<InputProps> = ({
   value,
   onChange,
 }) => {
+  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/[^a-zA-Z0-9]/g, ""); // Permite solo alfanuméricos
-    onChange(newValue.substring(0, 8)); // Limita a 8 caracteres
+    onChange({ ...event, target: { ...event.target, value: newValue } }); 
   };
 
   return (
@@ -30,7 +30,7 @@ const AlphanumericInput: React.FC<InputProps> = ({
           onChange={handleChange}
           maxLength={8}
         ></input>
-        <p className="text-sm text-gray-500 mr-2">{subLabel}</p>
+        <p className="text-sm text-gray-500 mr-2 whitespace-nowrap">{subLabel}</p>
         {/* Opcional: mostrar un mensaje si el valor excede los 8 caracteres */}
         {value.length > 8 && (
           <p className="text-red-500">Máximo 8 caracteres</p>

@@ -1,18 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 
 interface CheckProps {
   label: string;
-  checked?: boolean;
+  checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean; // Nueva prop para deshabilitar el checkbox
 }
 
-const Check: React.FC<CheckProps> = ({ label, checked = false, onChange }) => {
-  const [isChecked, setIsChecked] = useState(checked);
+const Check: React.FC<CheckProps> = ({  label, checked, onChange, disabled }) => {
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsChecked(event.target.checked);
-    onChange(event.target.checked);
-  };
 
   return (
     <div className="flex justify-center items-center gap-2">
@@ -20,12 +16,11 @@ const Check: React.FC<CheckProps> = ({ label, checked = false, onChange }) => {
       <div className="flex flex-col justify-end border rounded-lg">
         <input
           type="checkbox"
-          id={label}
-          checked={isChecked}
-          onChange={handleCheckboxChange}
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          disabled={disabled} // Se aplica la prop disabled al input
           className="p-2 border rounded"
-        >          
-        </input>
+        />          
       </div>
     </div>
   );

@@ -95,7 +95,7 @@ return (
               type="email"
               autoComplete="email"
               required
-              className={`mt-1 block w-full px-3 py-2 border ${errors.email ? "border-destructive" : "border-input dark:border-dark.input"} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
+              className={`mt-1 block w-full px-3 py-2 border text-black ${errors.email ? "border-destructive" : "border-input dark:border-dark.input"} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
               placeholder="tucorreo@ejemplo.com"
               value={formData.email}
               onChange={handleChange}
@@ -117,7 +117,7 @@ return (
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className={`block w-full px-3 py-2 border ${errors.password ? "border-destructive" : "border-input dark:border-dark.input"} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
+                className={`block w-full px-3 py-2 border text-black ${errors.password ? "border-destructive" : "border-input dark:border-dark.input"} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
                 value={formData.password}
                 onChange={handleChange}
                 aria-invalid={errors.password ? "true" : "false"}

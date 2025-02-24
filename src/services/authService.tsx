@@ -2,16 +2,21 @@ import { FormDataUser } from "@/interfaces/FormDataUser";
 import axiosInstance from "@/utils/axiosInstance";
 import axios, { AxiosError } from "axios";
 import Cookies from 'js-cookie';
+import { jwtDecode } from "jwt-decode";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 interface User {
+  message: string;
   email: string,
-  password: string
+  password: string,
+  nombres: string,
+  apellido: string,
 }
 
 interface AuthResponse {
   token: string;
+  message: string;
 }
 
 export const register = async (formData: FormDataUser): Promise<User> => {
@@ -24,7 +29,7 @@ export const register = async (formData: FormDataUser): Promise<User> => {
   );
     console.log('response:', response.data);
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     if (axios.isAxiosError(error)){
       const axiosError = error as AxiosError<User>;
       if (axiosError.response){
@@ -47,49 +52,57 @@ export const register = async (formData: FormDataUser): Promise<User> => {
   }
 };
 
-
 export const login = async (formData: FormDataUser) => {
   try {
     const response = await axiosInstance.post(`${API_URL}/login`, formData,);
-    console.log('response:', response.data);
+    //console.log('response:', response.data);
     // Aquí podrías guardar el token en localStorage
     if (response.data.token) {
       Cookies.set('token', response.data.token, {expires: 7});
     }
+    console.log(response.data)
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<AuthResponse>;
-      console.error("Error del servidor:", axiosError.response.status, axiosError.response.data);
-      // Lanza un error con un mensaje más descriptivo
-      throw new Error(axiosError.response.data.message || "Error en el inicio de sesión");
-    } else if (axiosError.request) {
-      console.error("Error de red:");
-      throw new Error("No se pudo conectar con el servidor");
+      if (axiosError.response) {
+      console.error("Error del servidor:", axiosError.response?.status, axiosError.response?.data);
+      throw new Error(axiosError.response?.data?.message || "Error en el inicio de sesión");
     } else {
-      console.error("Error de configuración:")
+      console.error("Error de red o no hay respuesta del servidor:", axiosError.message);
+      throw new Error("Error en el inicio de sesión");
+    }} else {
+      console.error("Error desconocido:", error);
       throw new Error("Error en la solicitud de inicio de sesión");
     }
   } 
 }
 
-
 const logout = () => {
-  localStorage.removeItem('token');
+  localStorage.removeItem("token");
+  Cookies.remove("token");
 };
 
 const getCurrentUser = () => {
-  const token = localStorage.getItem('token');
+  const token = Cookies.get('token');
   if (token) {
-    // Aquí podrías verificar y decodificar el token para obtener la información del usuario
-    return { /* Información del usuario */ };
+    try {
+    const decoded = jwtDecode(token); // Decodifica el token JWT
+    console.log("Decoded token:", decoded);
+    return decoded; // Devuelve la información decodificada del usuario
+} catch (error) {
+    console.error("Error al decodificar el token:", error);
+    return null; // Si hay un error, el token es inválido
+}
   }
   return null;
 };
 
-export default {
+const authService = { // <-- Asigna el objeto a la variable authService
   register,
   login,
   logout,
   getCurrentUser,
 };
+
+export default authService

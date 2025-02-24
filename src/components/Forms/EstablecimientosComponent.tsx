@@ -1,23 +1,45 @@
 "use client";
 
-import { Colegios } from "@/app/lib/Colegios";
-import { Establecimientos } from "@/interfaces/Establecimientos";
+import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
 import { useState } from "react";
-import Select from "../ui/SelectComponent";
+import Modal from "react-modal";
+import ESTABLECIMIENTOS_COLUMNS from "../Table/TableColumns/establecimientosColumns";
+import ReusableTable from "../Table/TableReutilizable";
+import ReusableForm from "./ReusableForm";
 
-export default function EstablecimientosComponent() {
-  const [selectedEstablecimiento, setSelectedEstablecimiento] = useState<
-    number | null
-  >(null);
-  const establecimientos: Establecimientos[] = Colegios;
-  console.log(establecimientos, "establecimientos");
+interface EstablecimientosComponentProps {
+  selectedInstitution: InstitucionesData | null;
+}
 
-  const handleSelecteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedEstablecimiento(Number(event.target.value));
+const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
+  selectedInstitution,
+}) => {
+  const [modalIsOpen, setModalIsOpen] = useState(false); // Estado para controlar la apertura del modal
+  const [institutions, setInstitutions] = useState(
+    selectedInstitution ? [selectedInstitution] : []
+  ); // Estado para almacenar las instituciones
+
+  const handleAddInstitution = (newInstitution: InstitucionesData) => {
+    setInstitutions([...institutions, newInstitution]); // Agrega la nueva institución al array
+    closeModal();
   };
-  const selectedColegio = establecimientos.find(
-    (establecimientos) => establecimientos.id === selectedEstablecimiento
-  );
+
+  const openModal = () => {
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
+
+  if (!selectedInstitution) {
+    // Manejar el caso en que selectedInstitution es null
+    return (
+      <div className="mx-10 mt-4">
+        <p>No se ha seleccionado ninguna institución.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-10 mt-4">
@@ -38,55 +60,33 @@ export default function EstablecimientosComponent() {
           Referencia para especificar el domicilio.
         </p>
       </div>
-      <div className="flex mt-2 gap-2 items-center">
-        <div className="flex flex-row gap-4">
-          <Select
-            label={"Establecimiento"}
-            value={selectedEstablecimiento?.toString() || ""}
-            options={establecimientos.map((establecimiento) => ({
-              value: establecimiento.id,
-              label: establecimiento.nombre,
-            }))}
-            onChange={handleSelecteChange}
-          />
-          {selectedColegio && (
-            <div className="flex flex-row gap-8 text-sm mx-6 whitespace-nowrap items-center justify-between">
-              <div className="flex flex-col">
-                <p className="font-bold">Calle</p>
-                <p className="border-2 rounded p-2">{selectedColegio.calle}</p>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold">Número</p>
-                <p className="border-2 rounded p-2">{selectedColegio.numero}</p>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold">Referencia</p>
-                <p className="border-2 rounded p-2">
-                  {selectedColegio.referencia}
-                </p>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold">Provincia</p>
-                <p className="border-2 rounded p-2">
-                  {selectedColegio.provincia}
-                </p>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold">Departamento</p>
-                <p className="border-2 rounded p-2">
-                  {selectedColegio.departamento || "N/A"}
-                </p>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold">Localidad/Paraje</p>
-                <p className="border-2 rounded p-2">
-                  {selectedColegio.localidad}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+      <ReusableTable
+        data={[selectedInstitution]}
+        columns={ESTABLECIMIENTOS_COLUMNS}
+      />
+      <div className="flex justify-end">
+        {/* Contenedor flex para alinear a la derecha */}
+        <button
+          className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={openModal}
+        >
+          Agregar establecimiento
+        </button>
       </div>
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        className="modal-content bg-white p-4 rounded-lg shadow-md w-fit max-w-md relative" // Clase para estilos
+        overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" // Centrado vertical y horizontal
+      >        
+        <ReusableForm
+          columns={ESTABLECIMIENTOS_COLUMNS}
+          onSubmit={handleAddInstitution}
+          onCancel={closeModal}
+        />
+      </Modal>
     </div>
   );
-}
+};
+
+export default EstablecimientosComponent;
