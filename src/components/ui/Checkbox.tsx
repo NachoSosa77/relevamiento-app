@@ -11,7 +11,7 @@ const Check: React.FC<CheckProps> = ({  label, checked, onChange, disabled }) =>
 
 
   return (
-    <div className="flex justify-center items-center gap-2">
+    <div className="flex flex-col justify-center items-center">
       <p className="text-sm text-black font-bold">{label}</p>
       <div className="flex flex-col justify-end border rounded-lg">
         <input

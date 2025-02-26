@@ -5,6 +5,7 @@ interface ReusableFormProps<T> {
   columns: {
     Header: string;
     accessor: keyof T;
+    inputType: "number" | "date" | "time" | "text";
   }[];
   onSubmit: (data: T) => void;
   onCancel: () => void; // Nueva prop para la función cancelar
@@ -38,35 +39,75 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
           >
             {column.Header}
           </label>
-          <input
-            type="text"
-            id={column.accessor}
-            name={column.accessor}
-            value={formData[column.accessor] || ""} // Valor vacío si no existe en formData
-            onChange={handleInputChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3  leading-tight focus:outline-none focus:shadow-outline"
-          />
+          {(() => {
+            switch (column.inputType) {
+              case "date":
+                return (
+                  <input
+                    type="date"
+                    id={column.accessor}
+                    name={column.accessor}
+                    value={formData[column.accessor] || ""}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                );
+              case "time":
+                return (
+                  <input
+                    type="time"
+                    id={column.accessor}
+                    name={column.accessor}
+                    value={formData[column.accessor] || ""}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                );
+              case "number":
+                return (
+                  <input
+                    type="number"
+                    id={column.accessor}
+                    name={column.accessor}
+                    value={formData[column.accessor] || ""}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                );
+              case "text":
+              default:
+                return (
+                  <textarea
+                    id={column.accessor}
+                    name={column.accessor}
+                    value={formData[column.accessor] || ""}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                );
+            }
+          })()}
         </div>
       ))}
       <div className="w-full p-2 flex">
         {/* Contenedor para los botones */}
         <div className="w-1/2 pr-2">
-        <button
-          type="button" // Importante: type="button" para evitar el submit del formulario
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-          onClick={onCancel} // Llama a la función onCancel al hacer clic
-        >
-          Cancelar
-        </button>
+          <button
+            type="button" // Importante: type="button" para evitar el submit del formulario
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            onClick={onCancel} // Llama a la función onCancel al hacer clic
+          >
+            Cancelar
+          </button>
         </div>
         <div className="w-1/2 pl-2">
-        <button
-          type="submit"
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Guardar
-        </button>  
-        </div>      
+          <button
+            type="submit"
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Guardar
+          </button>
+        </div>
       </div>
     </form>
   );

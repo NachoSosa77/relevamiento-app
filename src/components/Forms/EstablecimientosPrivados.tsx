@@ -13,8 +13,16 @@ export default function EstablecimientosPrivados() {
           <p>B</p>
         </div>
         <div className="flex p-2 justify-center items-center text-sm">
-          <p>ESTABLECIMIENTOS EN EDIFICIO NO ESCOLAR O ESCOLAR CEDIDO AL SECTOR PRIVADO</p>
-        </div>               
+          <p>
+            ESTABLECIMIENTOS EN EDIFICIO NO ESCOLAR O ESCOLAR CEDIDO AL SECTOR
+            PRIVADO
+          </p>
+        </div>        
+      </div>
+      <div className="flex mt-2 border items-center justify-between bg-black">
+        <div className="flex p-2 justify-center items-center text-white text-sm">
+          <p>Si se trata de un establecimiento que funciona en un edificio no escolar o en un edificio escolar cedido por el sector privado, deberán relevarse exclusivamente los ítems C, D Y 6 (en caso que el establecimiento utilice áreas exteriores)</p>
+        </div>
       </div>
       <div className="flex p-2 justify-center text-sm gap-2">
         <FormReutilizable question={""} />

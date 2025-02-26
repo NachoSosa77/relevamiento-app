@@ -7,6 +7,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  /* useEffect(() => {
+    const appElement = document.getElementById('__next');
+    if (appElement) {
+      Modal.setAppElement(appElement);
+    } else {
+      console.error('Element with ID "__next" not found.');
+    }
+  }, []); */
   
   return (
     <html lang="en">

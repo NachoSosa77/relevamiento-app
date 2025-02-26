@@ -1,57 +1,90 @@
-import { AreasExteriores } from "@/app/lib/AreasExteriores";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
-import { ChangeEvent, useState } from "react";
+import { areasExterioresService } from "@/services/areasExterioresService";
+import { ChangeEvent, useEffect, useState } from "react";
 import ReusableTable from "../Table/TableReutilizable";
 import AlphanumericInput from "../ui/AlphanumericInput";
 import Select from "../ui/SelectComponent";
 
 interface FormData {
-  identificacion: string;
-  tipo: number | null;
+  identificacionPlano: string;
+  tipo: string;
   superficie: string;
 }
 
 export default function AreasExterioresComponent() {
-    const [selectArea, setSelectArea] = useState<number | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-      identificacion: "",
-      tipo: null,
-      superficie: "",
-    });
-    const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
-    const areasExteriores: TipoAreasExteriores[] = AreasExteriores;
-    const [otroTipo, setOtroTipo] = useState(""); // Nuevo estado para el campo "Otro Tipo"
+  const [selectArea, setSelectArea] = useState<number | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    identificacionPlano: "",
+    tipo: "null",
+    superficie: "",
+  });
+  const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
+  const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]); // Ajusta el tipo según la estructura de tus datos
+  //console.log(areasExteriores, "locales");
 
-    console.log(areasExteriores, "locales");
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await areasExterioresService.getOpcionesAreasExteriores();
+        setOpcionesAreas(data);
+      } catch (error) {
+        console.error('Error al obtener opciones de áreas exteriores:', error);
+      }
+    }
+    fetchData();
+  }, []);
 
-    const handleSelecteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const selectedType = Number(event.target.value);
-      setSelectArea(selectedType);
-      setFormData({ ...formData, tipo: selectedType }); // Actualiza el formData
-    };
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = event.target.value;
+    setSelectArea(Number(selectedType));
+    setFormData({ ...formData, tipo: selectedType }); // Actualiza el formData
+  };
 
-    const handleInputChange = (name: keyof FormData, event: ChangeEvent<HTMLInputElement>) => {
-      setFormData({ ...formData, [name]: event.target.value });
-    };
+  const handleInputChange = (
+    name: keyof FormData,
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData({ ...formData, [name]: event.target.value });
+  };
+  
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      // Crea un objeto con los datos que necesitas enviar
+      const areasExterioresData = {
+        identificacionPlano: formData.identificacionPlano,
+        tipo: formData.tipo,
+        superficie: formData.superficie,
+      };
+  
+      // Envía los datos al backend
+      const response = await areasExterioresService.postAreasExteriores(areasExterioresData);
+      console.log('Respuesta del backend:', response);
+  
+      // Agrega los datos a la tabla si la respuesta es exitosa
+      setTableData([...tableData, formData]);
+  
+      // Limpia el formulario con los campos correctos
+      setFormData({ identificacionPlano: '', tipo: "", superficie: '' });
+      setSelectArea(null);
+    } catch (error) {
+      console.error('Error al enviar los datos:', error);
+      // Maneja el error (muestra un mensaje al usuario, etc.)
+    }    
+  };
 
-    const handleOtroTipoChange = (event: ChangeEvent<HTMLInputElement>) => {
-      setOtroTipo(event.target.value);
-    };
-
-    const handleSubmit = (event: React.FormEvent) => {
-      event.preventDefault();
-      setTableData([...tableData, formData]); // Agrega los datos a la tabla
-      setFormData({ identificacion: "", tipo: null, superficie: "" }); // Limpia el formulario
-      setSelectArea(null); // Resetea el select
-      setOtroTipo(""); // Limpia el campo "Otro Tipo"
-      console.log("Datos a enviar:", formData); // Aquí puedes enviar los datos al backend
-    };
-
-    const columns = [ // Definición de las columnas para la tabla
-      { Header: "Identificación", accessor: "identificacion" },
-      { Header: "Tipo", accessor: "tipo", Cell: ({ value }) => areasExteriores.find(area => area.id === value)?.name || "-" }, // Muestra el nombre del tipo
-      { Header: "Superficie", accessor: "superficie" },
-    ];
+  const columns = [
+    // Definición de las columnas para la tabla
+    { Header: "Identificación", accessor: "identificacionPlano" },
+    {
+      Header: "Tipo",
+      accessor: "tipo",
+      Cell: ({ value }) => {
+        const opcion = opcionesAreas.find((op) => op.id === Number(value));
+        return opcion ? opcion.name : "No definido";}
+    }, // Muestra el nombre del tipo
+    { Header: "Superficie", accessor: "superficie" },
+  ];
 
   return (
     <div className="mx-10 bg-white text-black">
@@ -90,8 +123,8 @@ export default function AreasExterioresComponent() {
               <AlphanumericInput
                 subLabel="E"
                 label={""}
-                value={formData.identificacion}
-                onChange={(event) => handleInputChange("identificacion", event)}
+                value={formData.identificacionPlano}
+                onChange={(event) => handleInputChange("identificacionPlano", event)}
               />
             </div>
           </div>
@@ -100,24 +133,15 @@ export default function AreasExterioresComponent() {
               Tipo
             </p>
             <div className="mt-2 w-full">
-            <Select
+              <Select
                 label={""}
                 value={selectArea?.toString() || ""}
-                options={areasExteriores.map((local)=>({
-                  value: local.id,
-                  label: local.name,
-                }))}                
-                onChange={handleSelecteChange}
-            />
-            {/* Campo "Otro Tipo" condicional */}
-            {/* {selectArea === 13 && ( // 13 es el ID de "M - Otra"
-                  <AlphanumericInput
-                    subLabel="Detalle"
-                    label="Otro Tipo"
-                    value={otroTipo}
-                    onChange={handleOtroTipoChange}
-                  />
-                )} */}
+                options={opcionesAreas.map((opcion) => ({
+                  value: opcion.id,
+                  label: opcion.name,
+                }))}
+                onChange={handleSelectChange}
+              />             
             </div>
           </div>
           <div className="flex flex-col border  p-4 w-1/3">

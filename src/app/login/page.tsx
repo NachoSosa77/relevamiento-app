@@ -8,6 +8,9 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 
 export interface FormDataLogin {
+  id: number,
+  nombre: string,
+  apellido: string,
   email: string,
   password: string,
 }
@@ -22,6 +25,9 @@ export default function LoginPage() {
   
 const router = useRouter();  
 const [formData, setFormData] = useState<FormDataLogin>({
+    id: 0,
+    nombre: "",
+    apellido: "",
     email: "",
     password: "",
  });
@@ -41,10 +47,9 @@ const validatePassword = (password: string) => {
 };
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  const { name, value, type, checked } = e.target;
+  const { name, value, } = e.target;
   setFormData(prev => ({
     ...prev,
-    [name]: type === "checkbox" ? checked : value
   }));
 
   // Real-time validation

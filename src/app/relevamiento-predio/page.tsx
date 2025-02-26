@@ -6,53 +6,69 @@ import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCui
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { UserData } from "@/interfaces/UserData";
+import authService from "@/services/authService";
 import { useEffect, useState } from "react";
 
 export default function RelevamientoPredioPage() {
   const [selectedInstitution, setSelectedInstitution] = useState<InstitucionesData | null>(null);
-  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
+  const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
+  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
+  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
 
-  useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    console.log("storedInstitution", storedInstitution);
-    if (storedInstitution) {
-      try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          setSelectedInstitution(parsedInstitution);
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-          setError("Error al cargar la institución."); // Establece el error
-        }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-        setError("Error al cargar la institución."); // Establece el error
-      }
-    } else {
-      setLoading(false); // Si no hay nada en localStorage, no hay carga
-    }
-  }, []);
+  // Obtiene el usuario actual
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser as UserData | null);
+    };
+    fetchUser();
+  }, []); // El array vacío asegura que esto se ejecuta solo una vez al montar el componente
 
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
+  useEffect(() => {
+    const storedInstitution = localStorage.getItem("selectedInstitution");
+    console.log("storedInstitution", storedInstitution);
+    if (storedInstitution) {
+      try {
+        const parsedInstitution = JSON.parse(storedInstitution);
+        if (
+          typeof parsedInstitution === "object" &&
+          parsedInstitution !== null
+        ) {
+          console.log("parsedInstitution", parsedInstitution);
+          setSelectedInstitution(parsedInstitution);
+          setLoading(false); // Actualiza loading a false aquí
+        } else {
+          console.warn(
+            "Datos incorrectos en localStorage para selectedInstitution"
+          );
+          setError("Error al cargar la institución."); // Establece el error
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error(
+          "Error al parsear selectedInstitution desde localStorage:",
+          error
+        );
+        setError("Error al cargar la institución."); // Establece el error
+        setLoading(false);
+      }
+    } else {
+      setLoading(false); // Si no hay nada en localStorage, no hay carga
+    }
+  }, []);
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) {
+    return <div>Cargando institución...</div>;
+  }
 
-  if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
-  }
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!selectedInstitution) {
+    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
+  }
   return (
     <div className="h-full bg-white text-black">
       <Navbar />
@@ -65,23 +81,26 @@ export default function RelevamientoPredioPage() {
           <p>1</p>
         </div>
       </div>
-      <CuiComponent selectedInstitution={selectedInstitution} initialCui={selectedInstitution?.cui} onCuiInputChange={()=>{}} isReadOnly={true} label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"/>
+       <CuiComponent
+        selectedInstitution={selectedInstitution}
+        initialCui={selectedInstitution?.cui}
+        onCuiInputChange={() => {}}
+        isReadOnly={true}
+        label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"
+        onInstitutionSelected={() => {}}
+      />
       <div className="flex mt-2 mx-10 p-2 border items-center justify-center gap-4">
-        <div className="border bg-slate-200 p-2 font-bold text-sm">
-          <p>CENSISTA</p>
-        </div>
-        <div className="flex gap-2 border bg-slate-200 p-2 font-bold text-sm">
+        <div className=" flex gap-4 items-center justify-center w-1/2 h-1/2 border bg-slate-200 p-2 font-bold text-sm">
+          <p>Censista</p>
           <p>Nombre y apellido:</p>
-          <p>Ignacio Sosa</p>
-        </div>
-        <div className="flex gap-2 border bg-slate-200 p-2 font-bold text-sm">
-          <p>DNI:</p>
+          <p>{user?.nombre} {user?.apellido}</p>
+          <p>Dni:</p>
           <p>34.835.912</p>
         </div>
       </div>
-      <VisitasComponent/>
-      <RespondientesDelCuiComponent/>
-      <EstablecimientosPrivados/>
+      <VisitasComponent />
+      <RespondientesDelCuiComponent />
+      <EstablecimientosPrivados />
     </div>
   );
 }

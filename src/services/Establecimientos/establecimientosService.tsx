@@ -13,7 +13,7 @@ const getAllEstablecimientos = async (): Promise<InstitucionesData[]> => {
     }
   };
   
-  const getEstablecimientoByCue = async (cue: number): Promise<InstitucionesData> => {
+const getEstablecimientoByCue = async (cue: number): Promise<InstitucionesData> => {
     try {
       const response = await axios.get(`${API_URL}/instituciones/${cue}`);
       return response.data;
@@ -23,7 +23,7 @@ const getAllEstablecimientos = async (): Promise<InstitucionesData[]> => {
     }
   };
   
-  export const establecimientosService = {
+export const establecimientosService = {
     getAllEstablecimientos,
     getEstablecimientoByCue,
-  }; 
+}; 

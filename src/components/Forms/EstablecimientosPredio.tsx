@@ -1,26 +1,29 @@
 "use client";
 
+import { establecimientosHeader } from "@/app/relevamiento-predio/config/establecimientosHeader";
 import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Modal from "react-modal";
-import ESTABLECIMIENTOS_COLUMNS from "../Table/TableColumns/establecimientosColumns";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
 interface EstablecimientosComponentProps {
   selectedInstitution: InstitucionesData | null;
 }
-
-const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
+const EstablecimientosPredio: React.FC<EstablecimientosComponentProps> = ({
   selectedInstitution,
 }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false); // Estado para controlar la apertura del modal
-  const [institutions, setInstitutions] = useState(
-    selectedInstitution ? [selectedInstitution] : []
-  ); // Estado para almacenar las instituciones
+  const [newInstitutions, setNewInstitutions] = useState<InstitucionesData[]>([]);
+  
+  const institutionsToDisplay = useMemo(() => {
+    if (!selectedInstitution) return [];
+    return [selectedInstitution, ...newInstitutions];
+  }, [selectedInstitution, newInstitutions]);
+  
 
   const handleAddInstitution = (newInstitution: InstitucionesData) => {
-    setInstitutions([...institutions, newInstitution]); // Agrega la nueva institución al array
+    setNewInstitutions([...newInstitutions, newInstitution]);
     closeModal();
   };
 
@@ -42,27 +45,29 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
   }
 
   return (
-    <div className="mx-10 mt-4">
-      <div className="flex mt-2 p-2 border items-center">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
-          <p>B</p>
+    <div className="mx-10 mt-4 text-sm">
+      <div className="flex mt-2 border items-center">
+        <div className="w-10 h-10 flex justify-center items-center text-white bg-black font-bold">
+          <p>C</p>
         </div>
         <div>
           <p className="text-sm font-bold justify-center ml-4">
-            ESTABLECIMIENTOS EDUCATIVOS
+            ESTABLECIMIENTOS QUE FUNCIONAN EN EL PREDIO
           </p>
         </div>
       </div>
       <div className="flex p-1 bg-gray-100 border">
         <p className="text-sm text-gray-400">
-          Transcriba de la hoja de ruta el domicilio postal del CUE-Anexos del o
-          los directivos respondientes. Si es necesario utilice la columna
-          Referencia para especificar el domicilio.
+          Transcriba de la hoja de ruta la denominación de los establecimientos
+          educativos que funcionan en el predio y el Número de CUE-Anexo de cada
+          uno de ellos. En caso de que el directivo mencione un CUE-Anexo
+          usuario que no está consignado en la Hoja de ruta, se deberá agregar,
+          completando los datos correspondientes.
         </p>
       </div>
-      <ReusableTable
-        data={[selectedInstitution]}
-        columns={ESTABLECIMIENTOS_COLUMNS}
+       <ReusableTable
+        data={institutionsToDisplay}
+        columns={establecimientosHeader}
       />
       <div className="flex justify-end">
         {/* Contenedor flex para alinear a la derecha */}
@@ -79,9 +84,9 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
         className="modal-content bg-white p-4 rounded-lg shadow-md w-fit max-w-md relative" // Clase para estilos
         overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" // Centrado vertical y horizontal
         ariaHideApp={false}
-      >        
+      >
         <ReusableForm
-          columns={ESTABLECIMIENTOS_COLUMNS}
+          columns={establecimientosHeader}
           onSubmit={handleAddInstitution}
           onCancel={closeModal}
         />
@@ -90,4 +95,4 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
   );
 };
 
-export default EstablecimientosComponent;
+export default EstablecimientosPredio;

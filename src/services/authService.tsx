@@ -88,7 +88,7 @@ const getCurrentUser = () => {
   if (token) {
     try {
     const decoded = jwtDecode(token); // Decodifica el token JWT
-    console.log("Decoded token:", decoded);
+    //console.log("Decoded token:", decoded);
     return decoded; // Devuelve la información decodificada del usuario
 } catch (error) {
     console.error("Error al decodificar el token:", error);
