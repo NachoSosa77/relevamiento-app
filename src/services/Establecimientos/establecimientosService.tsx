@@ -5,7 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL; // Url de la API
 
 const getAllEstablecimientos = async (): Promise<InstitucionesData[]> => {
     try {
-      const response = await axios.get(`${API_URL}/instituciones`);
+      const response = await axios.get(`${API_URL}/api/instituciones`);
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimientos:', error);
@@ -15,7 +15,7 @@ const getAllEstablecimientos = async (): Promise<InstitucionesData[]> => {
   
 const getEstablecimientoByCue = async (cue: number): Promise<InstitucionesData> => {
     try {
-      const response = await axios.get(`${API_URL}/instituciones/${cue}`);
+      const response = await axios.get(`${API_URL}/api/instituciones/${cue}`);
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimiento por CUE:', error);

@@ -5,7 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL; // Url de la API
 
 const getAllAreasExteriores = async (): Promise<AreasExteriores[]> => {
     try {
-      const response = await axios.get(`${API_URL}/areas-exteriores`);
+      const response = await axios.get(`${API_URL}/api/areas-exteriores`);
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimientos:', error);
@@ -15,7 +15,7 @@ const getAllAreasExteriores = async (): Promise<AreasExteriores[]> => {
   
 const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
     try {
-      const response = await axios.get(`${API_URL}/areas-exteriores/${id}`);
+      const response = await axios.get(`${API_URL}/api/areas-exteriores/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimiento por CUE:', error);
@@ -25,7 +25,7 @@ const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
 
 const postAreasExteriores = async (formData: AreasExteriores) => {
     try {
-        const response = await axios.post(`${API_URL}/areas-exteriores`, formData);
+        const response = await axios.post(`${API_URL}/api/areas-exteriores`, formData);
         return response.data;
     } catch (error) {
         console.error('Error al cargar los datos:', error);
@@ -34,7 +34,7 @@ const postAreasExteriores = async (formData: AreasExteriores) => {
 
 const getOpcionesAreasExteriores = async () => {
   try {
-    const response = await axios.get(`${API_URL}/opciones-areas-exteriores`);
+    const response = await axios.get(`${API_URL}/api/opciones-areas-exteriores`);
     return response.data;
   } catch (error) {
     console.error('Error al obtener establecimientos:', error);

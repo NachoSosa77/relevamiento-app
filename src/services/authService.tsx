@@ -21,7 +21,7 @@ interface AuthResponse {
 
 export const register = async (formData: FormDataUser): Promise<User> => {
   try {
-    const response = await axiosInstance.post(`${API_URL}/register`, formData, {
+    const response = await axiosInstance.post(`${API_URL}/api/auth/register`, formData, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -54,7 +54,7 @@ export const register = async (formData: FormDataUser): Promise<User> => {
 
 export const login = async (formData: FormDataUser) => {
   try {
-    const response = await axiosInstance.post(`${API_URL}/login`, formData,);
+    const response = await axiosInstance.post(`${API_URL}/api/auth/login`, formData,);
     //console.log('response:', response.data);
     // Aquí podrías guardar el token en localStorage
     if (response.data.token) {

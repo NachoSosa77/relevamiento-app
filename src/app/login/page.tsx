@@ -50,6 +50,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElemen
   const { name, value, } = e.target;
   setFormData(prev => ({
     ...prev,
+    [name]: value, // Actualiza el valor del campo específico
   }));
 
   // Real-time validation
