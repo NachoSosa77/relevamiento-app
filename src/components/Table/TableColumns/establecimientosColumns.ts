@@ -1,26 +1,24 @@
-import { InstitucionesData } from "@/interfaces/Instituciones";
-
-const ESTABLECIMIENTOS_COLUMNS = [
+const establecimientos_columns = [
   {
     Header: "Establecimiento",
-    accessor: "institucion" as keyof InstitucionesData,
+    accessor: "institucion",
   },
   {
     Header: "Modalidad/Nivel",
-    accessor: "modalidad_nivel" as keyof InstitucionesData,
+    accessor: "modalidad_nivel",
   },
-  { Header: "Calle", accessor: "calle" as keyof InstitucionesData },
-  { Header: "Número", accessor: "numero" as keyof InstitucionesData },
-  { Header: "Referencia", accessor: "referencia" as keyof InstitucionesData },
-  { Header: "Provincia", accessor: "provincia" as keyof InstitucionesData },
+  { Header: "Calle", accessor: "calle" },
+  { Header: "Número", accessor: "numero" },
+  { Header: "Referencia", accessor: "referencia" },
+  { Header: "Provincia", accessor: "provincia" },
   {
     Header: "Departamento",
-    accessor: "departamento" as keyof InstitucionesData,
+    accessor: "departamento",
   },
   {
     Header: "Localidad/Paraje",
-    accessor: "localidad" as keyof InstitucionesData,
+    accessor: "localidad",
   },
 ];
 
-export default ESTABLECIMIENTOS_COLUMNS;
+export default establecimientos_columns;

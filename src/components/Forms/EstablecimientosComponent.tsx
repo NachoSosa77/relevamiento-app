@@ -3,7 +3,7 @@
 import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
 import { useState } from "react";
 import Modal from "react-modal";
-import ESTABLECIMIENTOS_COLUMNS from "../Table/TableColumns/establecimientosColumns";
+import { default as ESTABLECIMIENTOS_COLUMNS, default as establecimientos_columns } from "../Table/TableColumns/establecimientosColumns";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
@@ -81,7 +81,7 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
         ariaHideApp={false}
       >        
         <ReusableForm
-          columns={ESTABLECIMIENTOS_COLUMNS}
+          columns={establecimientos_columns}
           onSubmit={handleAddInstitution}
           onCancel={closeModal}
         />

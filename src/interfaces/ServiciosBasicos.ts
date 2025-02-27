@@ -1,8 +1,8 @@
 export interface ServiciosBasicos {
   id: string;
   servicio: string;
-  enPredio: string | null;
-  disponibilidad: string | null;
+  enPredio: string;
+  disponibilidad: string;
   distancia: string;
   prestadores: string;
 }

@@ -4,11 +4,19 @@ import React, { useState } from "react";
 interface ReusableFormProps<T> {
   columns: {
     Header: string;
-    accessor: keyof T;
-    inputType: "number" | "date" | "time" | "text";
+    accessor: string | number;
+    inputType?: "number" | "date" | "time" | "text";
   }[];
   onSubmit: (data: T) => void;
   onCancel: () => void; // Nueva prop para la función cancelar
+}
+
+interface FormData {
+  [key: string]: string | number | undefined; // O los tipos específicos que necesites
+  // O definir propiedades específicas
+  // nombre?: string;
+  // fechaNacimiento?: Date;
+  // ...
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,9 +25,11 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   onSubmit,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<FormData>({});
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -33,44 +43,22 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap -m-2">
       {columns.map((column) => (
-        <div key={column.accessor} className="w-1/2 p-2">
+        <div key={column.accessor as string | number} className="w-1/2 p-2">
           <label
-            htmlFor={column.accessor}
+            htmlFor={column.accessor as string}
             className="block text-gray-700 font-bold mb-2"
           >
             {column.Header}
           </label>
           {(() => {
             switch (column.inputType) {
-              case "date":
-                return (
-                  <input
-                    type="date"
-                    id={column.accessor}
-                    name={column.accessor}
-                    value={formData[column.accessor] || ""}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                  />
-                );
-              case "time":
-                return (
-                  <input
-                    type="time"
-                    id={column.accessor}
-                    name={column.accessor}
-                    value={formData[column.accessor] || ""}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                  />
-                );
               case "number":
                 return (
                   <input
                     type="number"
-                    id={column.accessor}
-                    name={column.accessor}
-                    value={formData[column.accessor] || ""}
+                    id={column.accessor.toString()}
+                    name={column.accessor.toString()}
+                    value={formData[column.accessor]}
                     onChange={handleInputChange}
                     className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
                   />
@@ -79,8 +67,8 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
               default:
                 return (
                   <textarea
-                    id={column.accessor}
-                    name={column.accessor}
+                    id={column.accessor.toString()}
+                    name={column.accessor.toString()}
                     value={formData[column.accessor] || ""}
                     onChange={handleInputChange}
                     className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"

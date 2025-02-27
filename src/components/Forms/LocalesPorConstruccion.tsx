@@ -108,10 +108,10 @@ export default function LocalesPorConstruccion() {
     {
       Header: "Tipo de local",
       accessor: "tipo",
-      Cell: ({ value }) =>
+      Cell: ({ value }: { value: number }) =>
         locales.find((area) => area.id === value)?.name || "-",
     }, // Muestra el nombre del tipo
-    { Header: "Local sin uso", accessor: "localSinUso", Cell: ({ value }) => value ? "Sí" : "No" },// Transformación para mostrar "Sí" o "No" 
+    { Header: "Local sin uso", accessor: "localSinUso", Cell: ({ value }: { value: string }) => value ? "Sí" : "No" },// Transformación para mostrar "Sí" o "No" 
     { Header: "Superficie", accessor: "superficie" },
   ];
 

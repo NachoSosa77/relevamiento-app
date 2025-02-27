@@ -1,9 +1,7 @@
-import { InstitucionesData } from "@/interfaces/Instituciones";
-
 interface EstablemicientosPredioHeaderColumn {
   Header: string;
-  accessor: keyof InstitucionesData;
-  inputType: "number" | "date" | "time" | "text";
+  accessor: string | number;
+  inputType: "number" | "text";
 }
 
 export const establecimientosHeader: EstablemicientosPredioHeaderColumn[] = [

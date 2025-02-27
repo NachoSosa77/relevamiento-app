@@ -52,7 +52,7 @@ export default function AreasExterioresComponent() {
     try {
       // Crea un objeto con los datos que necesitas enviar
       const areasExterioresData = {
-        identificacionPlano: formData.identificacionPlano,
+        identificacion_plano: formData.identificacionPlano,
         tipo: formData.tipo,
         superficie: formData.superficie,
       };
@@ -79,7 +79,7 @@ export default function AreasExterioresComponent() {
     {
       Header: "Tipo",
       accessor: "tipo",
-      Cell: ({ value }) => {
+      Cell: ({ value }: { value: number }) => {
         const opcion = opcionesAreas.find((op) => op.id === Number(value));
         return opcion ? opcion.name : "No definido";}
     }, // Muestra el nombre del tipo

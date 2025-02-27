@@ -9,7 +9,7 @@ export default function ObservacionesComponent() {
   const [observaciones, setObservaciones] = useState("");
   const router = useRouter();
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setObservaciones(event.target.value);
   };
 
@@ -30,7 +30,7 @@ export default function ObservacionesComponent() {
           <p className="text-lg font-bold ml-4">OBSERVACIONES</p>
         </div>
         <form onSubmit={handleSubmit}>
-          <TextInput label={""} subLabel={""} value={observaciones} onChange={handleInputChange} />
+          <TextInput value={observaciones} onChange={handleInputChange} />
           <div className="flex mt-2 justify-end">
             <button
               type="submit"

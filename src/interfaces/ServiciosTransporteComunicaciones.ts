@@ -1,8 +1,8 @@
 export interface ServiciosTransporteComunicaciones {
   id: string;
   servicio: string;
-  enPredio: string | null;
-  disponibilidad: string | null;
+  enPredio: string;
+  disponibilidad: string;
   distancia: string;
 }
 export interface Column {

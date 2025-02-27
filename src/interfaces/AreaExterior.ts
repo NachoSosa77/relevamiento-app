@@ -1,5 +1,5 @@
 export interface AreasExteriores {
-  id: number;
+  id?: number; // El 'id' ahora es opcional
   identificacion_plano: string;
   tipo: string;
   superficie: string;
