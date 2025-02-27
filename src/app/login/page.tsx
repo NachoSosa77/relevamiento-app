@@ -75,6 +75,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElemen
       setSuccess('¡Bienvenido!');
       router.replace("/home");
       setIsLoading(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setErrors(error.message);
     }

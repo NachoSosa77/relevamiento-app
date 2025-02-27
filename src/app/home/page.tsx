@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
@@ -11,6 +12,7 @@ export default function HomePage() {
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null); // Una sola institución
   const [cuiInputValue, setCuiInputValue] = useState<number | null>(null); // Valor del input CUI
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]); // Todas las instituciones
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

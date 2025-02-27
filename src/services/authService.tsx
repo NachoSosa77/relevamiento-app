@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FormDataUser } from "@/interfaces/FormDataUser";
 import axiosInstance from "@/utils/axiosInstance";
 import axios, { AxiosError } from "axios";

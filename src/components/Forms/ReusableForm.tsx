@@ -11,6 +11,7 @@ interface ReusableFormProps<T> {
   onCancel: () => void; // Nueva prop para la función cancelar
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   columns,
   onSubmit,

@@ -51,7 +51,7 @@ const AreasExterioresTable: React.FC<AreasExterioresFormProps> = ({
           </tr>
         </thead>
         <tbody>
-          {servicios.map((servicio, index) => (
+          {servicios.map((servicio) => (
             <tr key={servicio.id}>
               {columnsConfig.map((column) => (
                 <td key={`${servicio.id}-${column.key}`} className="border p-2">

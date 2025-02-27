@@ -30,7 +30,6 @@ export default function SingInPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,6 +74,7 @@ export default function SingInPage() {
       await authService.register(formData);
       setSuccess("¡Registro exitoso! Por favor, inicia sesión.");
       router.push("/login");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setErrors(error.message);
     }
@@ -248,7 +248,7 @@ export default function SingInPage() {
               type="submit"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-body text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark.primary.DEFAULT dark:text-dark.primary.foreground"
             >
-              {isLoading ? "Cargando..." : "Registrarse"}
+              Registrarse
             </button>
             {success && <p style={{ color: "green" }}>{success}</p>}
           </div>
