@@ -12,10 +12,9 @@ const AlphanumericInput: React.FC<InputProps> = ({
   value,
   onChange,
 }) => {
-  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/[^a-zA-Z0-9]/g, ""); // Permite solo alfanuméricos
-    onChange({ ...event, target: { ...event.target, value: newValue } }); 
+    onChange({ ...event, target: { ...event.target, value: newValue } });
   };
 
   return (
@@ -30,11 +29,9 @@ const AlphanumericInput: React.FC<InputProps> = ({
           onChange={handleChange}
           maxLength={8}
         ></input>
-        <p className="text-sm text-gray-500 mr-2 whitespace-nowrap">{subLabel}</p>
-        {/* Opcional: mostrar un mensaje si el valor excede los 8 caracteres */}
-        {value.length > 8 && (
-          <p className="text-red-500">Máximo 8 caracteres</p>
-        )}
+        <p className="text-sm text-gray-500 mr-2 whitespace-nowrap">
+          {subLabel}
+        </p>
       </div>
     </div>
   );

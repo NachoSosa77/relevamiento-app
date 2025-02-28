@@ -6,7 +6,7 @@ import AlphanumericInput from "../ui/AlphanumericInput";
 import Select from "../ui/SelectComponent";
 
 interface FormData {
-  identificacionPlano: string;
+  identificacion_plano: string;
   tipo: string;
   superficie: string;
 }
@@ -14,7 +14,7 @@ interface FormData {
 export default function AreasExterioresComponent() {
   const [selectArea, setSelectArea] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    identificacionPlano: "",
+    identificacion_plano: "",
     tipo: "null",
     superficie: "",
   });
@@ -52,7 +52,7 @@ export default function AreasExterioresComponent() {
     try {
       // Crea un objeto con los datos que necesitas enviar
       const areasExterioresData = {
-        identificacion_plano: formData.identificacionPlano,
+        identificacion_plano: formData.identificacion_plano,
         tipo: formData.tipo,
         superficie: formData.superficie,
       };
@@ -65,7 +65,7 @@ export default function AreasExterioresComponent() {
       setTableData([...tableData, formData]);
   
       // Limpia el formulario con los campos correctos
-      setFormData({ identificacionPlano: '', tipo: "", superficie: '' });
+      setFormData({ identificacion_plano: '', tipo: "", superficie: '' });
       setSelectArea(null);
     } catch (error) {
       console.error('Error al enviar los datos:', error);
@@ -75,7 +75,7 @@ export default function AreasExterioresComponent() {
 
   const columns = [
     // Definición de las columnas para la tabla
-    { Header: "Identificación", accessor: "identificacionPlano" },
+    { Header: "Identificación", accessor: "identificacion_plano" },
     {
       Header: "Tipo",
       accessor: "tipo",
@@ -123,8 +123,8 @@ export default function AreasExterioresComponent() {
               <AlphanumericInput
                 subLabel="E"
                 label={""}
-                value={formData.identificacionPlano}
-                onChange={(event) => handleInputChange("identificacionPlano", event)}
+                value={formData.identificacion_plano}
+                onChange={(event) => handleInputChange("identificacion_plano", event)}
               />
             </div>
           </div>

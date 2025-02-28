@@ -215,8 +215,8 @@ export default function RelevamientoCPage() {
                 <p>SERVICIOS</p>
               </div> 
               <div className="bg-white text-xs p-1">
-                <p>Pregunte si los servicios listados están disponbibles en el predio. En caso de respuesta afirmativa, indique &quotsi&quot y pase al item siguiente. En caso de respuesta negativa, indique &quotno&quot y pregunte si el servicio se encuentra disponible en un radio de 1km.
-                En casi de resouesta afirmativa, pregunte ¿A que distancia del predio (en m.) está disponible el servicio? En caso de respueste negativa, indique &quotno&quot y pase al item siguiente.</p>
+                <p>Pregunte si los servicios listados están disponbibles en el predio. En caso de respuesta afirmativa, indique "si" y pase al item siguiente. En caso de respuesta negativa, indique "no" y pregunte si el servicio se encuentra disponible en un radio de 1km.
+                En casi de respuesta afirmativa, pregunte ¿A que distancia del predio (en m.) está disponible el servicio? En caso de respuesta negativa, indique "no" y pase al item siguiente.</p>
               </div>
             </div>
             <ServiciosBasicosForm serviciosData={serviciosData} columnsConfig={serviciosColumns}/>
