@@ -7,7 +7,7 @@ import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { UserData } from "@/interfaces/UserData";
-import authService from "@/services/authService";
+import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 
 export default function RelevamientoPredioPage() {
@@ -19,11 +19,23 @@ export default function RelevamientoPredioPage() {
   // Obtiene el usuario actual
   useEffect(() => {
     const fetchUser = async () => {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser as UserData | null);
+      try {
+        const res = await fetch("/api/get-token", { credentials: "include" });
+        const data = await res.json();
+        console.log("Token obtenido desde backend:", data.token);
+  
+        if (data.token) {
+          const decodedUser: UserData = jwtDecode(data.token);
+          setUser(decodedUser);
+        }
+      } catch (error) {
+        console.error("Error obteniendo token:", error);
+      }
+      setLoading(false)
     };
+  
     fetchUser();
-  }, []); // El array vacío asegura que esto se ejecuta solo una vez al montar el componente
+  }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente
 
   useEffect(() => {
     const storedInstitution = localStorage.getItem("selectedInstitution");

@@ -1,14 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { FormDataUser } from "@/interfaces/FormDataUser";
-import authService from "@/services/authService";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface Errors {
   email?: string;
   password?: string;
+  general?: string;
 }
 
 export default function LoginPage() {
@@ -24,6 +26,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsLoading(false); // Asegura que este estado solo se modifique en el cliente
+  }, []);
 
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,16 +70,35 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrors({});
+    setSuccess(null);
     try {
-      await authService.login(formData);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        credentials: "include", // Si usas cookies para sesiones
+      });
+
+      console.log(formData.email)
+      console.log(formData.email)
+      
+
+
+      if (!response.ok) {
+        throw new Error("Credenciales incorrectas o error en el servidor");
+      }
+      const data = await response.json();
       setSuccess("¡Bienvenido!");
+      console.log("Redirigiendo a /home...");
       router.push("/home");
-      setIsLoading(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      setErrors(error.message);
+      setErrors({ general: error.message || "Error desconocido" });
+    } finally {
+      console.log("formData", formData);
+      setIsLoading(false);
     }
-    console.log("formData", formData);
   };
 
   return (
@@ -159,6 +184,8 @@ export default function LoginPage() {
                 </p>
               )}
             </div>
+
+            {errors.general && <p className="mt-2 text-sm text-destructive">{errors.general}</p>}
 
             {/* <div className="flex items-center justify-between">
             <div className="flex items-center">

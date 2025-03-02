@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import authService from "@/services/authService";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -71,10 +71,17 @@ export default function SingInPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await authService.register(formData);
-      setSuccess("¡Registro exitoso! Por favor, inicia sesión.");
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password, nombre: formData.nombre, apellido: formData.apellido }),
+        credentials: "include", // Si usas cookies para sesiones
+      });
+      setSuccess("Registro Correcto!!")
       router.push("/login");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!response.ok) {
+        throw new Error("Credenciales incorrectas o error en el servidor");
+      }
     } catch (error: any) {
       setErrors(error.message);
     }

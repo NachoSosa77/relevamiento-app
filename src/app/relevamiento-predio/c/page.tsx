@@ -13,9 +13,15 @@ import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
 import ServiciosBasicosForm from "../components/ServiciosTable";
 import ServiciosTransporteForm from "../components/ServiciosTrasnporteTable";
 import { areasExterioresColumns } from "../config/areaExterior";
-import { factoresRiesgoColumns, factoresRiesgoData } from "../config/factoresRiesgo";
+import {
+  factoresRiesgoColumns,
+  factoresRiesgoData,
+} from "../config/factoresRiesgo";
 import { serviciosColumns, serviciosData } from "../config/serviciosBasicos";
-import { serviciosDataTransporte, serviciosTransporteComunicaciones } from "../config/serviciosTransporteComunicaciones";
+import {
+  serviciosDataTransporte,
+  serviciosTransporteComunicaciones,
+} from "../config/serviciosTransporteComunicaciones";
 
 interface FormData {
   descripcion: string | null;
@@ -107,12 +113,12 @@ export default function RelevamientoCPage() {
     console.log(formData);
   };
 
-  const handleSubmit = (event: FormEvent)=> {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: ""  }); // Limpia el formulario
+    setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" }); // Limpia el formulario
     setSelectSituacion(null);
     console.log(formData);
-  }  
+  };
 
   return (
     <div className="h-full bg-white text-black text-sm mb-10">
@@ -129,7 +135,7 @@ export default function RelevamientoCPage() {
         </div>
       </div>
       <EstablecimientosPredio selectedInstitution={selectedInstitution} />
-      
+
       <div className="flex items-center mx-10 mt-2 bg-slate-200 ">
         <div className="w-10 h-10 flex justify-center items-center border text-white font-bold bg-black text-sm">
           <p>1</p>
@@ -137,71 +143,71 @@ export default function RelevamientoCPage() {
         <p className="ml-2 text-sm font-bold">SITUACIÓN DEL DOMINIO</p>
       </div>
       <form onSubmit={handleSubmit}>
-      <div className="flex items-center mx-10 bg-slate-200">
-        <div className="w-10 h-10 flex justify-center items-center">
-          <p>1.1</p>
+        <div className="flex items-center mx-10 bg-slate-200">
+          <div className="w-10 h-10 flex justify-center items-center">
+            <p>1.1</p>
+          </div>
+          <p className="ml-2 text-sm">
+            ¿Cúal es la situación de dominio de este predio?
+          </p>
+          <div className="ml-4 flex justify-center items-center gap-2 text-sm">
+            <p>Descripción:</p>
+            <Select
+              label=""
+              options={SituacionDominio.map((local) => ({
+                value: local.id,
+                label: local.name,
+              }))}
+              value={selectSituacion?.toString() || ""}
+              onChange={handleSelectChange}
+            />
+            {selectSituacion === 5 && (
+              <div className="ml-4 flex justify-center items-center gap-2 text-sm">
+                <p>Otra situación. Indique:</p>
+                <TextInput
+                  label={""}
+                  value={formData.descripcionOtro}
+                  onChange={(event) =>
+                    handleInputChange("descripcionOtro", event)
+                  }
+                />
+              </div>
+            )}
+          </div>
         </div>
-        <p className="ml-2 text-sm">
-          ¿Cúal es la situación de dominio de este predio?
-        </p>
-        <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-          <p>Descripción:</p>
-          <Select
-            label=""
-            options={SituacionDominio.map((local) => ({
-              value: local.id,
-              label: local.name,
-            }))}
-            value={selectSituacion?.toString() || ""}
-            onChange={handleSelectChange}
-          />
-          {selectSituacion === 5 && (
-            <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-              <p>Otra situación. Indique:</p>
-              <TextInput
-                label={""}
-                value={formData.descripcionOtro}
-                onChange={(event) =>
-                  handleInputChange("descripcionOtro", event)
-                }
-              />
-            </div>
-          )}
+        <div className="flex items-center mx-10 bg-slate-200">
+          <div className="w-10 h-10 flex justify-center items-center">
+            <p>1.2</p>
+          </div>
+          <p className="ml-2 text-sm ">
+            ¿Existe algún juicio en curso con respecto a la tenencia de este
+            predio?
+          </p>
+          <div className="ml-4 flex justify-center items-center gap-2 text-sm">
+            <p>Si</p>
+            <Check
+              label=""
+              checked={selectedJuicio === "SI"}
+              onChange={() => handleJuicioChange("SI")}
+              disabled={false}
+            />
+            <p>No</p>
+            <Check
+              label=""
+              checked={selectedJuicio === "NO"}
+              onChange={() => handleJuicioChange("NO")}
+              disabled={false}
+            />
+            <p>No sabe</p>
+            <Check
+              label=""
+              checked={selectedJuicio === "NO_SABE"}
+              onChange={() => handleJuicioChange("NO_SABE")}
+              disabled={false}
+            />
+          </div>
         </div>
-      </div>
-      <div className="flex items-center mx-10 bg-slate-200">
-        <div className="w-10 h-10 flex justify-center items-center">
-          <p>1.2</p>
-        </div>
-        <p className="ml-2 text-sm ">
-          ¿Existe algún juicio en curso con respecto a la tenencia de este
-          predio?
-        </p>
-        <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-          <p>Si</p>
-          <Check
-            label=""
-            checked={selectedJuicio === "SI"}
-            onChange={() => handleJuicioChange("SI")}
-            disabled={false}
-          />
-          <p>No</p>
-          <Check
-            label=""
-            checked={selectedJuicio === "NO"}
-            onChange={() => handleJuicioChange("NO")}
-            disabled={false}
-          />
-          <p>No sabe</p>
-          <Check
-            label=""
-            checked={selectedJuicio === "NO_SABE"}
-            onChange={() => handleJuicioChange("NO_SABE")}
-            disabled={false}
-          />
-        </div>
-      </div>
-         <div className="flex justify-end mx-10 mt-2">
+        <div className="flex justify-end mx-10 mt-2">
           <button
             type="submit"
             className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
@@ -210,19 +216,44 @@ export default function RelevamientoCPage() {
           </button>
         </div>
       </form>
-            <div className="flex flex-col mt-3 mx-10 bg-black border"> 
-              <div className="p-2 justify-center items-center text-white font-bold">
-                <p>SERVICIOS</p>
-              </div> 
-              <div className="bg-white text-xs p-1">
-                <p>Pregunte si los servicios listados están disponbibles en el predio. En caso de respuesta afirmativa, indique "si" y pase al item siguiente. En caso de respuesta negativa, indique "no" y pregunte si el servicio se encuentra disponible en un radio de 1km.
-                En casi de respuesta afirmativa, pregunte ¿A que distancia del predio (en m.) está disponible el servicio? En caso de respuesta negativa, indique "no" y pase al item siguiente.</p>
-              </div>
-            </div>
-            <ServiciosBasicosForm serviciosData={serviciosData} columnsConfig={serviciosColumns}/>
-            <ServiciosTransporteForm serviciosData={serviciosDataTransporte} columnsConfig={serviciosTransporteComunicaciones}/>
-            <FactoresRiesgoTable serviciosData={factoresRiesgoData} columnsConfig={factoresRiesgoColumns}/>
-            <AreasExterioresTable columnsConfig={areasExterioresColumns} />
+      <div className="flex flex-col mt-3 mx-10 bg-black border">
+        <div className="p-2 justify-center items-center text-white font-bold">
+          <p>SERVICIOS</p>
+        </div>
+        <div className="bg-white text-xs p-1">
+          <p>
+            Pregunte si los servicios listados están disponibles en el predio.
+            En caso de respuesta afirmativa, indique &quot;si&quot; y pase al
+            ítem siguiente. En caso de respuesta negativa, indique
+            &quot;no&quot; y pregunte si el servicio se encuentra disponible en
+            un radio de 1km. En caso de respuesta afirmativa, pregunte ¿A qué
+            distancia del predio (en m.) está disponible el servicio? En caso de
+            respuesta negativa, indique &quot;no&quot; y pase al ítem siguiente.
+          </p>{" "}
+          <p>
+            Pregunte si los servicios listados están disponbibles en el predio.
+            En caso de respuesta afirmativa, indique &quot;si&quot; y pase al item
+            siguiente. En caso de respuesta negativa, indique &quot;no&quot; y pregunte si
+            el servicio se encuentra disponible en un radio de 1km. En casi de
+            respuesta afirmativa, pregunte ¿A que distancia del predio (en m.)
+            está disponible el servicio? En caso de respuesta negativa, indique
+            &quot;no&quot; y pase al item siguiente.
+          </p>
+        </div>
+      </div>
+      <ServiciosBasicosForm
+        serviciosData={serviciosData}
+        columnsConfig={serviciosColumns}
+      />
+      <ServiciosTransporteForm
+        serviciosData={serviciosDataTransporte}
+        columnsConfig={serviciosTransporteComunicaciones}
+      />
+      <FactoresRiesgoTable
+        serviciosData={factoresRiesgoData}
+        columnsConfig={factoresRiesgoColumns}
+      />
+      <AreasExterioresTable columnsConfig={areasExterioresColumns} />
     </div>
   );
 }

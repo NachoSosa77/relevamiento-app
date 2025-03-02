@@ -33,15 +33,19 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   useEffect(() => {
     const fetchInstituciones = async () => {
       try {
-        const data = await establecimientosService.getAllEstablecimientos(); // Llama a tu servicio para obtener las instituciones
-        setInstituciones(data);
+        const response = await establecimientosService.getAllEstablecimientos();
+        if (response && Array.isArray(response)) {
+          setInstituciones(response);
+        } else {
+          setInstituciones([]);
+        }
       } catch (error: any) {
         setError(error?.message);
-        console.error("Error fetching instituciones:", error);
       } finally {
         setLoading(false);
       }
     };
+
     if (!isReadOnly) {
       fetchInstituciones();
     }
