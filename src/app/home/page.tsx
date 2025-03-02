@@ -21,6 +21,7 @@ export default function HomePage() {
     const fetchInstituciones = async () => {
       try {
         const data = await establecimientosService.getAllEstablecimientos();
+        //console.log(data)
         setInstituciones(data);
       } catch (error: any) {
         setError(error.message);

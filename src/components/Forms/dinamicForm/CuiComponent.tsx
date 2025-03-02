@@ -34,8 +34,9 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
     const fetchInstituciones = async () => {
       try {
         const response = await establecimientosService.getAllEstablecimientos();
-        if (response && Array.isArray(response)) {
-          setInstituciones(response);
+        console.log('data response',response.instituciones)
+        if (response && Array.isArray(response.instituciones)) {
+          setInstituciones(response.instituciones);
         } else {
           setInstituciones([]);
         }
