@@ -16,7 +16,7 @@ const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
       const response = await axios.get(`/api/areas_exteriores/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener establecimiento por CUE:', error);
+      console.error('Error al obtener el area exterior:', error);
       throw error;
     }
   };

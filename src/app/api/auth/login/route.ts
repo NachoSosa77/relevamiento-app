@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
 
     connection.release();
     if (users.length === 0) {
+      console.log("Credenciales inválidas");
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
@@ -39,7 +40,10 @@ export async function POST(req: NextRequest) {
     }
 
     const user = users[0] as FormDataUser;
+    console.log("🔑 Usuario encontrado:", password);
+    console.log("🔑 Usuario encontrado:", user.password);
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log("🔑 Passwords coinciden:", passwordMatch);
 
     if (!passwordMatch) {
       return NextResponse.json(
@@ -74,6 +78,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
+    console.error("🔥 Error en el inicio de sesión:", error);
     return NextResponse.json(
       { message: "Error en el inicio de sesión", error },
       { status: 500 }

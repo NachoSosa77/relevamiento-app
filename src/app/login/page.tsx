@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { FormDataUser } from "@/interfaces/FormDataUser";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -15,13 +14,15 @@ interface Errors {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormDataUser>({
+  /* const [formData, setFormData] = useState<FormDataUser>({
     id: 0,
     nombre: "",
     apellido: "",
     email: "",
     password: "",
-  });
+  }); */
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +41,7 @@ export default function LoginPage() {
     return password.length >= 8;
   };
 
-  const handleChange = (
+  /* const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
@@ -66,6 +67,23 @@ export default function LoginPage() {
           : "",
       }));
     }
+  }; */
+  const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    setErrors((prev) => ({
+      ...prev,
+      email: !validateEmail(value) ? "Por favor ingrese un correo válido" : "",
+    }));
+  };
+
+  const handleChangePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setErrors((prev) => ({
+      ...prev,
+      password: !validatePassword(value) ? "La contraseña debe tener al menos 8 caracteres" : "",
+    }));
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -77,12 +95,12 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({ email, password}),
         credentials: "include", // Si usas cookies para sesiones
       });
-
-      console.log(formData.email)
-      console.log(formData.email)
+      console.log('response', response)
+      console.log(email)
+      console.log(password)
       
 
 
@@ -91,12 +109,11 @@ export default function LoginPage() {
       }
       const data = await response.json();
       setSuccess("¡Bienvenido!");
-      console.log("Redirigiendo a /home...");
+      console.log("Redirigiendo a /home...", data);
       router.push("/home");
     } catch (error: any) {
       setErrors({ general: error.message || "Error desconocido" });
     } finally {
-      console.log("formData", formData);
       setIsLoading(false);
     }
   };
@@ -134,8 +151,8 @@ export default function LoginPage() {
                     : "border-input dark:border-dark.input"
                 } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
                 placeholder="tucorreo@ejemplo.com"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={handleChangeEmail}
                 aria-invalid={errors.email ? "true" : "false"}
               />
               {errors.email && (
@@ -162,8 +179,8 @@ export default function LoginPage() {
                       ? "border-destructive"
                       : "border-input dark:border-dark.input"
                   } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-dark.secondary.DEFAULT dark:text-dark.foreground`}
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={handleChangePassword}
                   aria-invalid={errors.password ? "true" : "false"}
                 />
                 <button

@@ -10,9 +10,9 @@ import { InstitucionesData } from "@/interfaces/Instituciones";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import AreasExterioresTable from "../components/AreasExterioresTable";
 import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
+import ObrasDentroDelPredio from "../components/ObrasDentroDelPredio";
 import ServiciosBasicosForm from "../components/ServiciosTable";
 import ServiciosTransporteForm from "../components/ServiciosTrasnporteTable";
-import { areasExterioresColumns } from "../config/areaExterior";
 import {
   factoresRiesgoColumns,
   factoresRiesgoData,
@@ -232,12 +232,12 @@ export default function RelevamientoCPage() {
           </p>{" "}
           <p>
             Pregunte si los servicios listados están disponbibles en el predio.
-            En caso de respuesta afirmativa, indique &quot;si&quot; y pase al item
-            siguiente. En caso de respuesta negativa, indique &quot;no&quot; y pregunte si
-            el servicio se encuentra disponible en un radio de 1km. En casi de
-            respuesta afirmativa, pregunte ¿A que distancia del predio (en m.)
-            está disponible el servicio? En caso de respuesta negativa, indique
-            &quot;no&quot; y pase al item siguiente.
+            En caso de respuesta afirmativa, indique &quot;si&quot; y pase al
+            item siguiente. En caso de respuesta negativa, indique
+            &quot;no&quot; y pregunte si el servicio se encuentra disponible en
+            un radio de 1km. En casi de respuesta afirmativa, pregunte ¿A que
+            distancia del predio (en m.) está disponible el servicio? En caso de
+            respuesta negativa, indique &quot;no&quot; y pase al item siguiente.
           </p>
         </div>
       </div>
@@ -253,7 +253,8 @@ export default function RelevamientoCPage() {
         serviciosData={factoresRiesgoData}
         columnsConfig={factoresRiesgoColumns}
       />
-      <AreasExterioresTable columnsConfig={areasExterioresColumns} />
+      <AreasExterioresTable />
+      <ObrasDentroDelPredio />
     </div>
   );
 }

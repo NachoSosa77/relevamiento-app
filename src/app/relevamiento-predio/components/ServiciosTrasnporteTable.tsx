@@ -29,7 +29,9 @@ const ServiciosTransporteForm: React.FC<ServiciostTransporteFormProps> = ({ serv
         <thead>
           <tr className="bg-gray-200">
             {columnsConfig.map((column) => (
-              <th key={column.key} className="border p-2 text-left">
+              <th key={column.key} className={`border p-2 text-left ${
+                column.key === "id" ? "bg-black text-white" : ""
+              }`}>
                 {column.header}
               </th>
             ))}
