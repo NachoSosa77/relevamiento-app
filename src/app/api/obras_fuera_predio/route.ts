@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const connection = await getConnection();
     const [opciones] = await connection.query<OpcionObraEnpredio[]>(
-      "SELECT * FROM obras_en_predio"
+      "SELECT * FROM obras_fuera_predio"
     );
     connection.release();
 
@@ -34,23 +34,10 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json(); // Obtener datos del request
-    const {
-      tipo_obra,
-      estado,
-      financiamiento,
-      destino,
-      superficie_total,
-      cue,
-    } = body;
+    const { tipo_obra, domicilio, cue, destino } = body;
 
     // 🔍 Validar que los campos requeridos estén presentes
-    if (
-      !tipo_obra ||
-      !estado ||
-      !financiamiento ||
-      !destino ||
-      !superficie_total
-    ) {
+    if (!tipo_obra || !domicilio || !destino) {
       return NextResponse.json(
         { message: "Faltan campos obligatorios" },
         { status: 400 }
@@ -59,9 +46,9 @@ export async function POST(req: Request) {
 
     const connection = await getConnection();
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total, cue) 
-       VALUES (?, ?, ?, JSON_ARRAY(?), ?, ?)`,
-      [tipo_obra, estado, financiamiento, destino, superficie_total, cue]
+      `INSERT INTO obras_fuera_predio (tipo_obra, domicilio, cue, destino) 
+       VALUES (?, ?, ?, JSON_ARRAY(?))`,
+      [tipo_obra, domicilio, cue, destino]
     );
     connection.release();
 

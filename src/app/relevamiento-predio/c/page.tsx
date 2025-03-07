@@ -10,7 +10,10 @@ import { InstitucionesData } from "@/interfaces/Instituciones";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import AreasExterioresTable from "../components/AreasExterioresTable";
 import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
+import FormReu from "../components/FormReu";
+import FormReuFuera from "../components/FormReuFuera";
 import ObrasDentroDelPredio from "../components/ObrasDentroDelPredio";
+import ObrasFueraDelPredio from "../components/ObrasFueraDElPredio";
 import ServiciosBasicosForm from "../components/ServiciosTable";
 import ServiciosTransporteForm from "../components/ServiciosTrasnporteTable";
 import {
@@ -39,6 +42,9 @@ export default function RelevamientoCPage() {
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
   const [selectedJuicio, setSelectedJuicio] = useState<string | null>(null); // Estado para el checkbox seleccionado      const [loading, setLoading] = useState(true); // Nuevo estado para la carga
+  const [mostrarObras, setMostrarObras] = useState(false); // Estado elevado
+  const [showFormFuera, setShowFormFuera] = useState(false);
+  const [mostrarFuera, setMostrarFuera] = useState(false); // Nuevo estado para ObrasFueraDelPredio
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
   const [loading, setLoading] = useState(true); // Nuevo estado para la carga
 
@@ -88,6 +94,10 @@ export default function RelevamientoCPage() {
   if (!selectedInstitution) {
     return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
   }
+
+  const handleFormReuConfirm = () => {
+    setShowFormFuera(true);
+  };
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);
@@ -254,7 +264,17 @@ export default function RelevamientoCPage() {
         columnsConfig={factoresRiesgoColumns}
       />
       <AreasExterioresTable />
-      <ObrasDentroDelPredio />
+      <FormReu setMostrarObras={setMostrarObras} question="¿Existen obras en este predio?" onConfirm={handleFormReuConfirm}/>
+      {mostrarObras && (<ObrasDentroDelPredio mostrarObras={mostrarObras}/>)}
+      {showFormFuera && (
+        <FormReuFuera
+          question="¿Hay obras en un predio no escolar, destinadas a alguno de los CUE-Anexos que funcionan acá?"
+          setMostrarFuera={setMostrarFuera}
+          onConfirm={() => {}} // Puedes agregar lógica adicional aquí si es necesario
+        />
+      )}
+
+      {mostrarFuera && <ObrasFueraDelPredio mostrarObras={mostrarFuera} />}
     </div>
   );
 }

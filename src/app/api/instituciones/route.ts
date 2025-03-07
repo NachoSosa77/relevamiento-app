@@ -8,7 +8,8 @@ interface Institucion extends RowDataPacket {
   localidad: string;
   modalidad_nivel: string;
   institucion: string;
-  cui: string;
+  cue: number;
+  cui: number;
   matricula: number;
   calle: string;
   calle_numero: string;
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
       localidad,
       modalidad_nivel,
       institucion,
+      cue,
       cui,
       matricula,
       calle,
@@ -70,12 +72,13 @@ export async function POST(req: NextRequest) {
     } = data;
 
     await connection.query(
-      "INSERT INTO instituciones (departamento, localidad, modalidad_nivel, institucion, cui, matricula, calle, calle_numero, referencia, provincia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO instituciones (departamento, localidad, modalidad_nivel, institucion, cue, cui, matricula, calle, calle_numero, referencia, provincia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         departamento,
         localidad,
         modalidad_nivel,
         institucion,
+        cue,
         cui,
         matricula,
         calle,

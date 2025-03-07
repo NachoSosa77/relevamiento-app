@@ -1,18 +1,16 @@
-export interface ObrasEnPredio {
+export interface ObrasFueraPredio {
     id?: number; // El 'id' ahora es opcional
     tipo_obra: string;
-    estado: string;
-    financiamiento: string;
-    superficie_total: string;
+    domicilio: string;
     cue: number | null;
     destino: string[];
   }
   
   export interface Column {
     header: string;
-    key: keyof ObrasEnPredio;
+    key: keyof ObrasFueraPredio;
     type: "select" | "input" | "text";
     options?: string[] | string[] | { id: number; label: string }[]; // ✅ Ahora acepta objetos;
-    conditional?: (areas: ObrasEnPredio) => boolean;
+    conditional?: (areas: ObrasFueraPredio) => boolean;
   }
   

@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Column, ObrasEnPredio } from "@/interfaces/ObrasEnpredio";
+import { Column, ObrasFueraPredio } from "@/interfaces/ObrasFueraPredio";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { obrasEnpredioColumns } from "../config/obrasEnElPredio";
+import { obrasFueraPredioColumns } from "../config/obrasFueraDelPredio";
 
 interface Opcion {
   id: number;
   label: string;
 }
-interface ObrasDentroDelPredioProps {
+interface ObrasFueraDelPredioProps {
   mostrarObras: boolean;
 }
-const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
+const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
   mostrarObras,
 }) => {
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
@@ -23,14 +23,12 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   >([]);
   const [destinoOpciones, setDestinoOpciones] = useState<string[]>([]);
 
-  const [obras, setObras] = useState<ObrasEnPredio[]>([
+  const [obras, setObras] = useState<ObrasFueraPredio[]>([
     {
       id: undefined, // La obra aún no existe en la BD
       tipo_obra: "",
-      estado: "",
-      financiamiento: "",
+      domicilio: "",
       destino: [],
-      superficie_total: "",
       cue: null,
     },
   ]);
@@ -38,7 +36,7 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   // 🚀 Cargar columnas configuradas
   useEffect(() => {
     const fetchColumns = async () => {
-      const columns = await obrasEnpredioColumns();
+      const columns = await obrasFueraPredioColumns();
       setColumnsConfig(columns);
     };
     fetchColumns();
@@ -48,11 +46,9 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   useEffect(() => {
     const fetchOpciones = async () => {
       try {
-        const [tipoRes, estadoRes, financiamientoRes, destinoRes] =
+        const [tipoRes, destinoRes] =
           await Promise.all([
             axios.get("/api/obras_en_predio/opciones/tipo_obra"),
-            axios.get("/api/obras_en_predio/opciones/estado_obra"),
-            axios.get("/api/obras_en_predio/opciones/financiamiento_obra"),
             axios.get("/api/obras_en_predio/opciones/destino_obra"),
           ]);
 
@@ -61,10 +57,6 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
             id: op.id,
             label: `${op.prefijo} - ${op.name}`,
           }))
-        );
-        setEstadoOpciones(estadoRes.data.map((op: any) => op.name));
-        setFinanciamientoOpciones(
-          financiamientoRes.data.map((op: any) => op.name)
         );
         setDestinoOpciones(
           destinoRes.data.map((op: any) => `${op.prefijo} - ${op.name}`)
@@ -78,7 +70,7 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   }, []);
 
   // 🚀 Actualizar estado local cuando el usuario edita un campo
-  const handleUpdateField = (field: keyof ObrasEnPredio, value: any) => {
+  const handleUpdateField = (field: keyof ObrasFueraPredio, value: any) => {
     setObras((prev) => [{ ...prev[0], [field]: value }]);
   };
 
@@ -89,27 +81,23 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
 
       if (
         !obraSinId.tipo_obra ||
-        !obraSinId.estado ||
-        !obraSinId.financiamiento ||
+        !obraSinId.domicilio ||
         !obraSinId.destino ||
-        !obraSinId.superficie_total ||
         obraSinId.cue === null
       ) {
         alert("Por favor, complete todos los campos.");
         return;
       }
       console.log(obraSinId);
-      await axios.post("/api/obras_en_predio", obraSinId);
+      await axios.post("/api/obras_fuera_predio", obraSinId);
       alert("Datos guardados correctamente");
       // 🚀 Resetear el formulario después de guardar
       setObras([
         {
           id: undefined,
           tipo_obra: "",
-          estado: "",
-          financiamiento: "",
+          domicilio: "",
           destino: [],
-          superficie_total: "",
           cue: null,
         },
       ]);
@@ -141,17 +129,14 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   return (
     <div className="p-4 mx-10">
       <div className="mt-2 border px-4 py-2 flex justify-center items-center bg-slate-200">
-        <p className="text-xs font-bold">OBRAS DENTRO DEL PREDIO</p>
+        <p className="text-sm font-bold">OBRAS FUERA DEL PREDIO</p>
       </div>
       <div></div>
       {mostrarObras && (
         <div>
           <div className="flex p-1 bg-gray-100 border text-sm">
-            <p className="text-sm text-gray-400">
-              Indique para cada una de las obras: tipo de obra, estado de avance
-              y fuente de financiamiento (lea, en cada caso, todas las opciones
-              de respuesta). Sólo para obra nueva o ampliación, indague acerca
-              de la superficie, a qué CUE-Anexo corresponde y el destino
+            <p className="text-xs text-gray-400">
+              Indique para cada una de las obras: tipo de obra, domicilio, a qué CUE-Anexo corresponde y el destino
               previsto. Lea todas las opciones de respuesta y marque todas las
               que mencione el respondente.
             </p>
@@ -191,37 +176,17 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
                             </option>
                           ))}
                         </select>
-                      ) : column.key === "estado" ? (
-                        <select
-                          value={obras[0].estado}
+                      ) : column.key === "domicilio" ? (
+                        <input
+                          placeholder="Calle/N°/Referencia"  
+                          value={obras[0].domicilio}
                           onChange={(e) =>
-                            handleUpdateField("estado", e.target.value)
+                            handleUpdateField("domicilio", e.target.value)
                           }
                           className="border p-2 rounded-lg"
-                        >
-                          <option value="">Seleccione...</option>
-                          {estadoOpciones.map((op, index) => (
-                            <option key={index} value={op}>
-                              {op}
-                            </option>
-                          ))}
-                        </select>
-                      ) : column.key === "financiamiento" ? (
-                        <select
-                          value={obras[0].financiamiento}
-                          onChange={(e) =>
-                            handleUpdateField("financiamiento", e.target.value)
-                          }
-                          className="border p-2 rounded-lg"
-                        >
-                          <option value="">Seleccione...</option>
-                          {financiamientoOpciones.map((op, index) => (
-                            <option key={index} value={op}>
-                              {op}
-                            </option>
-                          ))}
-                        </select>
-                      ) : column.key === "destino" ? (
+                        />
+                         
+                      ) :  column.key === "destino" ? (
                         <div className="grid grid-cols-3 gap-4">
                           {destinoOpciones.map((op, index) => {
                             const prefijo = op.split(" - ")[0]; // Obtener el prefijo
@@ -243,19 +208,15 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
                             );
                           })}
                         </div>
-                      ) : column.key === "superficie_total" ||
+                      ) : 
                         column.key === "cue" ? (
                         <input
                           type="text"
-                          placeholder={
-                            column.key === "superficie_total"
-                              ? "Superficie Total (m2)"
-                              : "CUE-Anexo"
-                          }
+                          placeholder="CUE-Anexo"                          
                           value={obras[0][column.key] || ""}
                           onChange={(e) =>
                             handleUpdateField(
-                              column.key as keyof ObrasEnPredio,
+                              column.key as keyof ObrasFueraPredio,
                               e.target.value
                             )
                           }
@@ -290,4 +251,4 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
   );
 };
 
-export default ObrasDentroDelPredio;
+export default ObrasFueraDelPredio;
