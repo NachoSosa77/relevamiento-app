@@ -20,7 +20,7 @@ import {
   factoresRiesgoColumns,
   factoresRiesgoData,
 } from "../config/factoresRiesgo";
-import { serviciosColumns, serviciosData } from "../config/serviciosBasicos";
+import { serviciosColumns, serviciosData } from "../config/serviciosBasicosHeader";
 import {
   serviciosDataTransporte,
   serviciosTransporteComunicaciones,

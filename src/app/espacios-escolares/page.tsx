@@ -76,6 +76,7 @@ export default function EspaciosEscolaresPage() {
         onInstitutionSelected={() => {}} // Función vacía
         initialCui={selectedInstitution.cui} // O un valor inicial si lo tienes
         onCuiInputChange={() => {}} // Función vacía
+        sublabel=""
       />
       <EstablecimientosComponent selectedInstitution={selectedInstitution} />
       <PlanoComponent />

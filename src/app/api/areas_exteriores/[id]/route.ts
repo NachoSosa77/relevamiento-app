@@ -5,11 +5,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const connection = await getConnection();
-    const id = params.id;
+    const id = (await params).id;
 
     if (!id) {
       return NextResponse.json(
@@ -43,11 +43,11 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const connection = await getConnection();
-    const id = params.id;
+    const id = (await params).id;
     const body = await req.json(); // 👀 Leer el cuerpo de la petición
 
     if (!id) {

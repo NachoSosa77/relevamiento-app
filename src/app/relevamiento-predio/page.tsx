@@ -100,6 +100,7 @@ export default function RelevamientoPredioPage() {
         isReadOnly={true}
         label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"
         onInstitutionSelected={() => {}}
+        sublabel=""
       />
       <div className="flex mt-2 mx-10 p-2 border items-center justify-center gap-4">
         <div className=" flex gap-4 items-center justify-center w-1/2 h-1/2 border bg-slate-200 p-2 font-bold text-sm">

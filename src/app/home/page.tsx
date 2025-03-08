@@ -106,6 +106,7 @@ export default function HomePage() {
         onInstitutionSelected={handleInstitutionSelected} // Pasa el callback
         selectedInstitution={selectedInstitution}
         isReadOnly={false}
+        sublabel=""
       />
 
       <Link href="/espacios-escolares">
