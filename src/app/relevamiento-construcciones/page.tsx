@@ -5,7 +5,18 @@ import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
 import AntiguedadComponent from "./components/Antiguedad";
+import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
+import ServiciosBasicos from "./components/ServiciosBasicos";
+import ServiciosReu from "./components/ServiciosReu";
+import {
+  almacenamientoAgua,
+  calidadAgua,
+  provisionAgua,
+  servicioAgua,
+} from "./config/relevamientoAgua";
+import { servicioDesague } from "./config/relevamientoDesague";
+import { servicioGas } from "./config/relevamientoGas";
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitution, setSelectedInstitution] =
@@ -102,7 +113,50 @@ export default function RelevamientoConstruccionesPage() {
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
       />
       <CantidadPlantas />
-      <AntiguedadComponent/>
+      <AntiguedadComponent />
+      <ServiciosBasicos />
+      <ServiciosReu
+        id={3}
+        label={"AGUA"}
+        sub_id={3.1}
+        sublabel={"TIPO DE PROVISIÓN DE AGUA"}
+        servicios={servicioAgua}
+      />
+      <ServiciosReu
+        id={0}
+        label={""}
+        sub_id={3.2}
+        sublabel={"TIPO DE ALMACENAMIENTO"}
+        servicios={almacenamientoAgua}
+      />
+      <ServiciosReu
+        id={0}
+        label={""}
+        sub_id={3.3}
+        sublabel={"ALCANCE DE LA PROVISIÓN DE AGUA"}
+        servicios={provisionAgua}
+      />
+      <CalidadAgua
+        id={0}
+        label={""}
+        sub_id={3.4}
+        sublabel={"CALIDAD DEL AGUA PARA CONSUMO HUMANO"}
+        servicios={calidadAgua}
+      />
+      <ServiciosReu
+        id={4}
+        label={"DESAGUES CLOACALES"}
+        sub_id={4}
+        sublabel={"DESAGUES CLOACALES"}
+        servicios={servicioDesague}
+      />
+      <ServiciosReu
+        id={5}
+        label={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
+        sub_id={5}
+        sublabel={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
+        servicios={servicioGas}
+      />
     </div>
   );
 }
