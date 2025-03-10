@@ -79,9 +79,11 @@ export default function CantidadPlantas() {
           <p className="px-2 text-sm font-bold">CANTIDAD DE PLANTAS</p>
         </div>
         <div className="flex items-center p-1 border bg-slate-200 text-slate-400 text-xs">
-                <p>Ingrese la cantidad de pisos de la construcción. El nivel de acceso se considerará como PLANTA BAJA</p>
-            </div>
-
+          <p>
+            Ingrese la cantidad de pisos de la construcción. El nivel de acceso
+            se considerará como PLANTA BAJA
+          </p>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

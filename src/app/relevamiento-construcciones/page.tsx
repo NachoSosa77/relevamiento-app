@@ -4,10 +4,12 @@ import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruc
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
+import AntiguedadComponent from "./components/Antiguedad";
 import CantidadPlantas from "./components/CantidadPlantas";
 
 export default function RelevamientoConstruccionesPage() {
-  const [selectedInstitution, setSelectedInstitution] = useState<InstitucionesData | null>(null);
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<InstitucionesData | null>(null);
   const [loading, setLoading] = useState(true); // Nuevo estado para la carga
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
 
@@ -82,13 +84,15 @@ export default function RelevamientoConstruccionesPage() {
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
-          <h4 className="text-sm">FORMULARIO DE RELEVAMIENTO DE LAS CONSTRUCCIONES</h4>
+          <h4 className="text-sm">
+            FORMULARIO DE RELEVAMIENTO DE LAS CONSTRUCCIONES
+          </h4>
         </div>
         <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
           <p>2</p>
         </div>
       </div>
-       <CuiConstruccionComponent
+      <CuiConstruccionComponent
         selectedInstitution={selectedInstitution}
         initialCui={selectedInstitution?.cui}
         onCuiInputChange={() => {}}
@@ -97,7 +101,8 @@ export default function RelevamientoConstruccionesPage() {
         onInstitutionSelected={() => {}}
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
       />
-      <CantidadPlantas/>
+      <CantidadPlantas />
+      <AntiguedadComponent/>
     </div>
   );
 }

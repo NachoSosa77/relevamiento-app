@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Column, ObrasFueraPredio } from "@/interfaces/ObrasFueraPredio";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { obrasFueraPredioColumns } from "../config/obrasFueraDelPredio";
 
@@ -17,12 +18,7 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
 }) => {
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [tipoOpciones, setTipoOpciones] = useState<Opcion[]>([]);
-  const [estadoOpciones, setEstadoOpciones] = useState<string[]>([]);
-  const [financiamientoOpciones, setFinanciamientoOpciones] = useState<
-    string[]
-  >([]);
   const [destinoOpciones, setDestinoOpciones] = useState<string[]>([]);
-
   const [obras, setObras] = useState<ObrasFueraPredio[]>([
     {
       id: undefined, // La obra aún no existe en la BD
@@ -32,6 +28,7 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
       cue: null,
     },
   ]);
+  const router = useRouter();
 
   // 🚀 Cargar columnas configuradas
   useEffect(() => {
@@ -91,6 +88,7 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
       console.log(obraSinId);
       await axios.post("/api/obras_fuera_predio", obraSinId);
       alert("Datos guardados correctamente");
+      router.push("/relevamiento-construcciones");
       // 🚀 Resetear el formulario después de guardar
       setObras([
         {

@@ -149,6 +149,7 @@ const FormReutilizable: React.FC<FormValues> = () => {
                 <div className="flex items-center justify-center gap-2">
                   <p>Otro. Indique:</p>
                   <TextInput
+                    sublabel=""
                     label={""}
                     value={formData.descripcionOtro}
                     onChange={(event) =>
@@ -172,6 +173,7 @@ const FormReutilizable: React.FC<FormValues> = () => {
               </label>
               <div className="flex items-center ml-2">
                 <TextInput
+                  sublabel=""
                   label={""}
                   value={formData.nombreInstitucion}
                   onChange={(event) =>

@@ -175,6 +175,7 @@ export default function RelevamientoCPage() {
               <div className="ml-4 flex justify-center items-center gap-2 text-sm">
                 <p>Otra situación. Indique:</p>
                 <TextInput
+                  sublabel=""
                   label={""}
                   value={formData.descripcionOtro}
                   onChange={(event) =>
