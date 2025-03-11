@@ -8,6 +8,7 @@ import AntiguedadComponent from "./components/Antiguedad";
 import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
 import ElectricidadServicio from "./components/ElectricidadServicio";
+import SeguridadIncendio from "./components/SeguridadIncendio";
 import ServiciosBasicos from "./components/ServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import {
@@ -17,8 +18,12 @@ import {
   servicioAgua,
 } from "./config/relevamientoAgua";
 import { servicioDesague } from "./config/relevamientoDesague";
-import { servicioElectricidad, tablerosElectricidad } from "./config/relevamientoElectricidad";
+import {
+  servicioElectricidad,
+  tablerosElectricidad,
+} from "./config/relevamientoElectricidad";
 import { servicioGas } from "./config/relevamientoGas";
+import { seguridadIncendio } from "./config/relevamientoSeguridadIncendio";
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitution, setSelectedInstitution] =
@@ -172,6 +177,13 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={6.2}
         sublabel="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
         servicios={tablerosElectricidad}
+      />
+      <SeguridadIncendio
+        id={7}
+        label="INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIO"
+        sub_id={7}
+        sublabel=""
+        servicios={seguridadIncendio}
       />
     </div>
   );
