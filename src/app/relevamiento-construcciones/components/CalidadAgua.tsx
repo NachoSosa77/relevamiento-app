@@ -115,7 +115,7 @@ export default function CalidadAgua({
                     name={`disponibilidad-${id}`}
                     value="NC"
                     onChange={() =>
-                      handleResponseChange(id, "disponibilidad", "No")
+                      handleResponseChange(id, "disponibilidad", "Nc")
                     }
                   />
                 )}
@@ -126,7 +126,7 @@ export default function CalidadAgua({
                   name={`disponibilidad-${id}`}
                   value="NS"
                   onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "No")
+                    handleResponseChange(id, "disponibilidad", "Ns")
                   }
                 />
               </td>

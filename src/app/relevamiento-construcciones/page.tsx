@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import AntiguedadComponent from "./components/Antiguedad";
 import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
+import ElectricidadServicio from "./components/ElectricidadServicio";
 import ServiciosBasicos from "./components/ServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import {
@@ -16,6 +17,7 @@ import {
   servicioAgua,
 } from "./config/relevamientoAgua";
 import { servicioDesague } from "./config/relevamientoDesague";
+import { servicioElectricidad, tablerosElectricidad } from "./config/relevamientoElectricidad";
 import { servicioGas } from "./config/relevamientoGas";
 
 export default function RelevamientoConstruccionesPage() {
@@ -156,6 +158,20 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={5}
         sublabel={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
         servicios={servicioGas}
+      />
+      <ElectricidadServicio
+        id={6}
+        label="ELECTRICIDAD"
+        sub_id={6.1}
+        sublabel="TIPO DE PROVISIÓN"
+        servicios={servicioElectricidad}
+      />
+      <ElectricidadServicio
+        id={0}
+        label="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
+        sub_id={6.2}
+        sublabel="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
+        servicios={tablerosElectricidad}
       />
     </div>
   );
