@@ -190,9 +190,10 @@ export default function ElectricidadServicio({
                     <div className="flex gap-2 items-center justify-center">
                       <label>
                         <TextInput
-                          label=""
+                          className=""
+                          label={id === "6.1.2" || id === "6.1.4" ? "Potencia" : "Potencia (Vp panel x N paneles)"}
                           sublabel=""
-                          value="Regular"
+                          value=""
                           onChange={() =>
                             handleResponseChange(id, "estado", "Regular")
                           }

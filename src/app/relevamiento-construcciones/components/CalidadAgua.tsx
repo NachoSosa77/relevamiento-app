@@ -158,7 +158,7 @@ export default function CalidadAgua({
                   />
                 ) : (
                   <TextInput
-                    label=""
+                    label="Cantidad de veces al año"
                     sublabel=""
                     value={""}
                     onChange={(e) => {}}

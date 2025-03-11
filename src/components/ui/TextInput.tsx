@@ -3,10 +3,17 @@ interface InputProps {
   label: string;
   sublabel: string;
   value: string;
+  className?: string; // Prop para clases de CSS personalizadas
   onChange: (event: ChangeEvent<HTMLInputElement>) => void; // Tipo correcto para onChange
 }
 
-const TextInput: React.FC<InputProps> = ({ label, value, onChange, sublabel }) => {
+const TextInput: React.FC<InputProps> = ({
+  label,
+  value,
+  onChange,
+  sublabel,
+  className,
+}) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(
       /[^a-zA-Z0-9\sÁÉÍÓÚáéíóúñÑüÜ¿?¡!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/g,
@@ -16,11 +23,11 @@ const TextInput: React.FC<InputProps> = ({ label, value, onChange, sublabel }) =
   };
 
   return (
-    <div className="flex flex-col justify-center">
-      <p className="text-sm text-black font-bold">{label}</p>
+    <div className={`flex items-center justify-center gap-2 text-sm ${className || ""}`}>
+      <p className="text-xs text-black font-bold">{label}:</p>
       <div className="flex justify-end border rounded-lg">
         <input
-          className="p-2 border rounded"
+          className="p-1 border rounded"
           type="text"
           id={label}
           value={value}

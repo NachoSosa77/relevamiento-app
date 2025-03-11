@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import AntiguedadComponent from "./components/Antiguedad";
 import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
+import CondicionesAccesibilidad from "./components/CondicionesAccesibilidad";
 import ElectricidadServicio from "./components/ElectricidadServicio";
 import SeguridadIncendio from "./components/SeguridadIncendio";
 import ServiciosBasicos from "./components/ServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
+import { servicioAccesibilidad } from "./config/relevamientoAccesibilidad";
 import {
   almacenamientoAgua,
   calidadAgua,
@@ -184,6 +186,13 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={7}
         sublabel=""
         servicios={seguridadIncendio}
+      />
+      <CondicionesAccesibilidad
+        id={8}
+        label="CONDICIONES ACCESIBILIDAD"
+        sub_id={8}
+        sublabel=""
+        servicios={servicioAccesibilidad}
       />
     </div>
   );

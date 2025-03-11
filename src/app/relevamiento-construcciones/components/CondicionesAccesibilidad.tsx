@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import TextInput from "@/components/ui/TextInput";
 import { useState } from "react";
 
 interface Servicio {
@@ -17,7 +18,13 @@ interface ServiciosReuProps {
   servicios: Servicio[];
 }
 
-export default function ServiciosReu({
+interface EspecificacionesAccesibilidad {
+  id?: number;
+  estado: string;
+  cantidad_bocas: string;
+}
+
+export default function CondicionesAccesibilidad({
   id,
   label,
   sub_id,
@@ -25,12 +32,19 @@ export default function ServiciosReu({
   servicios,
 }: ServiciosReuProps) {
   const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
+    Record<
+      string,
+      {
+        disponibilidad: string;
+        estado: string;
+        cantidad: string;
+      }
+    >
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado",
+    field: "disponibilidad" | "estado" | "cantidad",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -66,17 +80,15 @@ export default function ServiciosReu({
         <thead>
           <tr className="bg-slate-200">
             <th className="border p-2"></th>
-            <th className="border p-2"></th>
+            <th className="border p-2">TIPO DE PROVISIÓN</th>
             <th className="border p-2">No</th>
             <th className="border p-2">Sí</th>
-            <th className="border p-2">
-              {sub_id === 3.3 ? "" : "Estado de conservación"}
-            </th>
+            <th className="border p-2">Estado y especificaciones</th>
           </tr>
         </thead>
         <tbody>
           {servicios.map(({ id, question, showCondition }) => (
-            <tr key={id} className="border">
+            <tr key={id} className="border text-sm">
               <td className="border p-2 text-center">{id}</td>
               <td className="border p-2">{question}</td>
               <td className="border p-2 text-center">
@@ -99,112 +111,103 @@ export default function ServiciosReu({
                   }
                 />
               </td>
-              <td className="border p-2 text-center">
-                {!showCondition || sub_id === 3.3 ? (
-                  <div className="flex gap-2 items-center justify-center">
-                    {id === "3.3.1" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Construcción sin baños"
-                          onChange={() =>
-                            handleResponseChange(
-                              id,
-                              "estado",
-                              "Construcción sin baños"
-                            )
-                          }
-                          className="mr-1"
-                        />
-                        Construcción sin baños
-                      </label>
-                    )}
-                    {id === "3.3.2" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Construcción sin cocina"
-                          onChange={() =>
-                            handleResponseChange(
-                              id,
-                              "estado",
-                              "Construcción sin cocina"
-                            )
-                          }
-                          className="mr-1"
-                        />
-                        Construcción sin cocina
-                      </label>
-                    )}
-                    {id === "3.3.3" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="NS"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "NS")
-                          }
-                          className="mr-1"
-                        />
-                        NS
-                      </label>
-                    )}
-                    {id === "3.3.4" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="NC"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "NC")
-                          }
-                          className="mr-1"
-                        />
-                        NC
-                      </label>
-                    )}
-                  </div>
+
+              {/* Especificaciones */}
+              <td
+                className={`border p-2 text-center ${
+                  !showCondition ? "bg-slate-200 text-slate-400" : ""
+                }`}
+              >
+                {!showCondition ? (
+                  "No corresponde"
                 ) : (
                   <div className="flex gap-2 items-center justify-center">
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Bueno"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Bueno")
-                        }
-                        className="mr-1"
-                      />
-                      B
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Regular"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Regular")
-                        }
-                        className="mr-1"
-                      />
-                      R
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Malo"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Malo")
-                        }
-                        className="mr-1"
-                      />
-                      M
-                    </label>
+                    {/* Radios B, R, M */}
+                    <div className="flex gap-2 items-center justify-center">
+                      <label>
+                        <input
+                          type="radio"
+                          name={`estado-${id}`}
+                          value="Bueno"
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Bueno")
+                          }
+                          className="mr-1"
+                        />
+                        B
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={`estado-${id}`}
+                          value="Regular"
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Regular")
+                          }
+                          className="mr-1"
+                        />
+                        R
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={`estado-${id}`}
+                          value="Malo"
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Malo")
+                          }
+                          className="mr-1"
+                        />
+                        M
+                      </label>
+                    </div>
+
+                    {/* TextInput para 8.1, 8.2, 8.3 */}
+                    {(id === "8.1" || id === "8.2" || id === "8.3") && (
+                      <div className="flex gap-2 items-center justify-center">
+                        <TextInput
+                          className="text-sm"
+                          label="Cantidad"
+                          sublabel=""
+                          value={responses[id]?.cantidad || ""}
+                          onChange={(e) =>
+                            setResponses((prev) => ({
+                              ...prev,
+                              [id]: { ...prev[id], cantidad: e.target.value },
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {/* TextInput para 8.1, 8.2, 8.3 */}
+                    {(id === "8.1" || id === "8.2") && (
+                      <div className="flex gap-2 items-center justify-center">
+                        <label>
+                        <input
+                          type="radio"
+                          name={`disponibilidad-${id}-8.3`}
+                          value="No"
+                          onChange={() =>
+                            handleResponseChange(id, "disponibilidad", "No")
+                          }
+                          className="mr-1"
+                        />
+                        No
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={`disponibilidad-${id}`}
+                          value="Malo"
+                          onChange={() =>
+                            handleResponseChange(id, "disponibilidad", "Si")
+                          }
+                          className="mr-1"
+                        />
+                        Si
+                      </label>
+                      </div>
+                    )}
                   </div>
                 )}
               </td>
