@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import AntiguedadComponent from "./components/Antiguedad";
 import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
+import Comedor from "./components/Comdedor";
 import CondicionesAccesibilidad from "./components/CondicionesAccesibilidad";
 import ElectricidadServicio from "./components/ElectricidadServicio";
 import SeguridadIncendio from "./components/SeguridadIncendio";
@@ -19,6 +20,7 @@ import {
   provisionAgua,
   servicioAgua,
 } from "./config/relevamientoAgua";
+import { usoComedor } from "./config/relevamientoComedor";
 import { servicioDesague } from "./config/relevamientoDesague";
 import {
   servicioElectricidad,
@@ -193,6 +195,13 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={8}
         sublabel=""
         servicios={servicioAccesibilidad}
+      />
+      <Comedor
+      id={9}
+      label="USO DEL COMEDOR"
+      sub_id={9}
+      sublabel=""
+      servicios={usoComedor}      
       />
     </div>
   );
