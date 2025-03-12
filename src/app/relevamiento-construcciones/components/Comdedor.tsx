@@ -81,7 +81,9 @@ export default function Comedor({
               <td className="border p-2 text-center">{id}</td>
               <td className="border p-2">{question}</td>
               {!showCondition ? (
-                <td className="border p-2 text-center gap-2">
+                <>
+                <td className="border p-2 text-center">
+                    <div className="grid grid-cols-3 gap-2">
                     {tipoComedorOpciones.map((opcion) => (
                     <label key={opcion.id} className="text-sm">
                         {opcion.prefijo}
@@ -93,7 +95,16 @@ export default function Comedor({
                          />                         
                     </label>
                       ))}
+                      </div>
                 </td>
+                <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
+                <p>A - En comedor B - SUM/patio cubierto/gimnasio C - En aulas D - áreas de circulación E - Otro</p>
+              </td>
+              <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
+                <p>El servicio se presta en aulas (C): pase al ítem 10. Resto: al ítem 9.3</p>
+              </td>
+              
+                </>
               ) : (
                 <>
                   <td className={`border p-2 text-center ${
