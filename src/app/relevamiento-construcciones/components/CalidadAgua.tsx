@@ -161,7 +161,7 @@ export default function CalidadAgua({
                     label="Cantidad de veces al año"
                     sublabel=""
                     value={""}
-                    onChange={(e) => {}}
+                    onChange={(e) => { }}
                   />
                 )}
               </td>

@@ -3,7 +3,7 @@ import React from "react";
 interface InputProps {
   label: string;
   subLabel: string;
-  value: number | string; // Permitir número o string para el valor inicial
+  value: number | string | undefined; // Permitir número o string para el valor inicial
   onChange: (value: string) => void;
   disabled: boolean;
 }

@@ -4,8 +4,12 @@ import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesCompon
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
+import Dimensiones from "./components/Dimensiones";
 import FormReutilizable from "./components/FormReutilizable";
+import TableCantidadReutilizable from "./components/TablaCantidadReutilizable";
+import TableReutilizable from "./components/TableReutilizable";
 import { tipoLocal } from "./config/tipoLocal";
+import { tipoAberturas, tipoMateriales } from "./config/tipoMateriales";
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitution, setSelectedInstitution] =
@@ -103,10 +107,20 @@ export default function RelevamientoConstruccionesPage() {
         onInstitutionSelected={() => {}}
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano los números de construcción y local."
       />
-      <FormReutilizable
-      id={1}
-      label="TIPO DE LOCAL"
-      locales={tipoLocal}
+      <FormReutilizable id={1} label="TIPO DE LOCAL" locales={tipoLocal} />
+
+      <Dimensiones />
+
+      <TableReutilizable
+        id={3}
+        label="MATERIALES PREDOMINANTES"
+        locales={tipoMateriales}
+      />
+
+      <TableCantidadReutilizable
+        id={4}
+        label="ABERTURAS"
+        locales={tipoAberturas}
       />
     </div>
   );

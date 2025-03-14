@@ -7,8 +7,9 @@ interface SeparadorReutilizableProps {
   data: SeparadorData;
 }
 
-export default function SeparadorReutilizable({data}: SeparadorReutilizableProps) {
-
+export default function SeparadorReutilizable({
+  data,
+}: SeparadorReutilizableProps) {
   return (
     <div className="mx-10">
       <div className="flex mt-2 border items-center justify-between bg-black">
@@ -17,9 +18,7 @@ export default function SeparadorReutilizable({data}: SeparadorReutilizableProps
         </div>
       </div>
       <div className="flex flex-col p-2 justify-center items-cente text-sm">
-        <p>
-          {data.value}
-        </p>
+        <p>{data.value}</p>
       </div>
     </div>
   );
