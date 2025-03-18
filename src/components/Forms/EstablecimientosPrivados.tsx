@@ -7,7 +7,7 @@ export default function EstablecimientosPrivados() {
   }; */
 
   return (
-    <div className="mx-10">
+    <div className="mx-10 text-sm">
       <div className="flex mt-2 p-2 border items-center">
         <div className="w-6 h-6 flex justify-center text-white bg-black">
           <p>B</p>

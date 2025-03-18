@@ -23,7 +23,7 @@ interface EstructuraReuProps {
   locales: Locales[];
 }
 
-export default function TableReutilizable({
+export default function SistemaContraRobo({
   id,
   label,
   locales,
@@ -66,9 +66,8 @@ export default function TableReutilizable({
         <thead>
           <tr className="bg-slate-200">
             <th className="border p-2"></th>
-            <th className="border p-2">Ítem</th>
-            <th className="border p-2">Material predominante</th>
-            <th className="border p-2">Estado de conservación</th>
+            <th className="border p-2"></th>
+            <th className="border p-2">Descripción</th>
           </tr>
         </thead>
         <tbody>
@@ -86,46 +85,6 @@ export default function TableReutilizable({
                     label: option.name,
                   }))}
                 />
-              </td>
-              <td className="border p-2 text-center">
-                <div className="flex gap-2 items-center justify-center">
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Bueno"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Bueno")
-                      }
-                      className="mr-1"
-                    />
-                    B
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Regular"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Regular")
-                      }
-                      className="mr-1"
-                    />
-                    R
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Malo"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Malo")
-                      }
-                      className="mr-1"
-                    />
-                    M
-                  </label>
-                </div>
               </td>
             </tr>
           ))}

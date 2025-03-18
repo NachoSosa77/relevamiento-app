@@ -2,6 +2,7 @@
 
 import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruccionComponent";
 import Navbar from "@/components/NavBar/NavBar";
+import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
 import AntiguedadComponent from "./components/Antiguedad";
@@ -12,7 +13,10 @@ import Comedor from "./components/Comdedor";
 import CondicionesAccesibilidad from "./components/CondicionesAccesibilidad";
 import ElectricidadServicio from "./components/ElectricidadServicio";
 import SeguridadIncendio from "./components/SeguridadIncendio";
-import { default as SeparadorReutilizable, default as ServiciosBasicos } from "./components/ServiciosBasicos";
+import {
+  default as SeparadorReutilizable,
+  default as ServiciosBasicos,
+} from "./components/ServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import { servicioAccesibilidad } from "./config/relevamientoAccesibilidad";
 import {
@@ -27,10 +31,18 @@ import {
   servicioElectricidad,
   tablerosElectricidad,
 } from "./config/relevamientoElectricidad";
-import { energiasAlternativas, estructuraResistente, estructuraTecho, paredesCerramientos } from "./config/relevamientoEstructura";
+import {
+  energiasAlternativas,
+  estructuraResistente,
+  estructuraTecho,
+  paredesCerramientos,
+} from "./config/relevamientoEstructura";
 import { servicioGas } from "./config/relevamientoGas";
 import { seguridadIncendio } from "./config/relevamientoSeguridadIncendio";
-import { caracteristicasConstruccion, serviciosBasicos } from "./config/separadoresServicios";
+import {
+  caracteristicasConstruccion,
+  serviciosBasicos,
+} from "./config/separadoresServicios";
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitution, setSelectedInstitution] =
@@ -128,7 +140,7 @@ export default function RelevamientoConstruccionesPage() {
       />
       <CantidadPlantas />
       <AntiguedadComponent />
-      <ServiciosBasicos data={serviciosBasicos}/>
+      <ServiciosBasicos data={serviciosBasicos} />
       <ServiciosReu
         id={3}
         label={"AGUA"}
@@ -200,33 +212,35 @@ export default function RelevamientoConstruccionesPage() {
         servicios={servicioAccesibilidad}
       />
       <Comedor
-      id={9}
-      label="USO DEL COMEDOR"
-      sub_id={9}
-      sublabel=""
-      servicios={usoComedor}      
+        id={9}
+        label="USO DEL COMEDOR"
+        sub_id={9}
+        sublabel=""
+        servicios={usoComedor}
       />
-      <SeparadorReutilizable data={caracteristicasConstruccion}/>
+      <SeparadorReutilizable data={caracteristicasConstruccion} />
       <CaracteristicasConservacion
-      id={10}
-      label="ESTRUCTURA RESISTENTE"
-      estructuras={estructuraResistente}
-      />
-      <CaracteristicasConservacion
-      id={11}
-      label="TECHO"
-      estructuras={estructuraTecho}
+        id={10}
+        label="ESTRUCTURA RESISTENTE"
+        estructuras={estructuraResistente}
       />
       <CaracteristicasConservacion
-      id={12}
-      label="PAREDES Y CERRAMIENTOS EXTERIORES"
-      estructuras={paredesCerramientos}
+        id={11}
+        label="TECHO"
+        estructuras={estructuraTecho}
       />
       <CaracteristicasConservacion
-      id={13}
-      label="ENERGÍAS ALTERNATIVAS"
-      estructuras={energiasAlternativas}
+        id={12}
+        label="PAREDES Y CERRAMIENTOS EXTERIORES"
+        estructuras={paredesCerramientos}
       />
+      <CaracteristicasConservacion
+        id={13}
+        label="ENERGÍAS ALTERNATIVAS"
+        estructuras={energiasAlternativas}
+      />
+
+      <ObservacionesComponent />
     </div>
   );
 }

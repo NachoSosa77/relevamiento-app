@@ -2,7 +2,6 @@ import { useState } from "react";
 import AlphanumericInput from "../ui/AlphanumericInput";
 import Check from "../ui/Checkbox";
 import FileUpload from "../ui/FileUpLoad";
-import EspaciosEscolaresComponent from "./EspaciosEscolaresComponent";
 
 export default function PlanoComponent() {
   const [showComponents, setShowComponents] = useState<boolean | null>(null); // Estado para controlar la visibilidad de los componentes
@@ -140,38 +139,34 @@ export default function PlanoComponent() {
               </div>
             </div>
           </div>
-          <div>          
-          <EspaciosEscolaresComponent/>
-          </div>
+          <div></div>
         </div>
       ) : showComponents === false ? ( // Nueva condición para mostrar solo el componente 3
         <div className="flex flex-col gap-8">
-        <div className="flex mt-4 p-2 border items-center w-1/2">
-          <div className="w-6 h-6 flex justify-center text-white bg-black">
-            <p>3</p>
-          </div>
-          <div className="flex justify-between w-full">
-            <div className="justify-center flex flex-col">
-              <p className="text-sm font-bold ml-4 justify-center">
-                CANTIDAD DE CONSTRUCCIONES EN EL PREDIO
-              </p>
+          <div className="flex mt-4 p-2 border items-center w-1/2">
+            <div className="w-6 h-6 flex justify-center text-white bg-black">
+              <p>3</p>
             </div>
-            <div className="flex flex-row gap-4">
-              <AlphanumericInput
-                label=""
-                value=""
-                subLabel=""
-                onChange={() =>
-                  console.log("Cantidad de construcciones en el predio")
-                }
-              />
+            <div className="flex justify-between w-full">
+              <div className="justify-center flex flex-col">
+                <p className="text-sm font-bold ml-4 justify-center">
+                  CANTIDAD DE CONSTRUCCIONES EN EL PREDIO
+                </p>
+              </div>
+              <div className="flex flex-row gap-4">
+                <AlphanumericInput
+                  label=""
+                  value=""
+                  subLabel=""
+                  onChange={() =>
+                    console.log("Cantidad de construcciones en el predio")
+                  }
+                />
+              </div>
             </div>
           </div>
+          <div className=""></div>
         </div>
-          <div className="">          
-          <EspaciosEscolaresComponent/>
-          </div>
-          </div>
       ) : null}{" "}
       {/* No muestra nada si showComponents es null */}
     </div>

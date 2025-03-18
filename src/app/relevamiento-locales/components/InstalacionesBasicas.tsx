@@ -19,12 +19,14 @@ interface Locales {
 
 interface EstructuraReuProps {
   id: number;
+  sub_id: number;
   label: string;
   locales: Locales[];
 }
 
-export default function TableReutilizable({
+export default function ServiciosBasicos({
   id,
+  sub_id,
   label,
   locales,
 }: EstructuraReuProps) {
@@ -65,10 +67,10 @@ export default function TableReutilizable({
       <table className="w-full border mt-2 text-xs">
         <thead>
           <tr className="bg-slate-200">
-            <th className="border p-2"></th>
+            <th className="border p-2">{sub_id}</th>
             <th className="border p-2">Ítem</th>
-            <th className="border p-2">Material predominante</th>
-            <th className="border p-2">Estado de conservación</th>
+            <th className="border p-2">Descripción</th>
+            {sub_id !== 8.2 && <th className="border p-2">Funciona</th>}
           </tr>
         </thead>
         <tbody>
@@ -77,56 +79,48 @@ export default function TableReutilizable({
               <td className="border p-2 text-center">{id}</td>
               <td className="border p-2">{question}</td>
               <td className="border p-2">
-                <Select
-                  label=""
-                  value={opcionSeleccionada || ""}
-                  onChange={(e) => handleOpcionChange(e.target.value)}
-                  options={opciones.map((option) => ({
-                    value: option.id,
-                    label: option.name,
-                  }))}
-                />
+                {showCondition && (
+                  <Select
+                    label=""
+                    value={opcionSeleccionada || ""}
+                    onChange={(e) => handleOpcionChange(e.target.value)}
+                    options={opciones.map((option) => ({
+                      value: option.id,
+                      label: option.name,
+                    }))}
+                  />
+                )}
               </td>
-              <td className="border p-2 text-center">
-                <div className="flex gap-2 items-center justify-center">
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Bueno"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Bueno")
-                      }
-                      className="mr-1"
-                    />
-                    B
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Regular"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Regular")
-                      }
-                      className="mr-1"
-                    />
-                    R
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name={`estado-${id}`}
-                      value="Malo"
-                      onChange={() =>
-                        handleResponseChange(id, "estado", "Malo")
-                      }
-                      className="mr-1"
-                    />
-                    M
-                  </label>
-                </div>
-              </td>
+              {sub_id !== 8.2 && (
+                <td className="border p-2 text-center">
+                  <div className="flex gap-2 items-center justify-center">
+                    <label>
+                      <input
+                        type="radio"
+                        name={`estado-${id}`}
+                        value="Regular"
+                        onChange={() =>
+                          handleResponseChange(id, "estado", "Regular")
+                        }
+                        className="mr-1"
+                      />
+                      Si
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`estado-${id}`}
+                        value="Malo"
+                        onChange={() =>
+                          handleResponseChange(id, "estado", "Malo")
+                        }
+                        className="mr-1"
+                      />
+                      No
+                    </label>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

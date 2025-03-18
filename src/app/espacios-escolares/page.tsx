@@ -1,9 +1,12 @@
 "use client";
 
+import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosComponent from "@/components/Forms/EstablecimientosComponent";
+import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import Navbar from "@/components/NavBar/NavBar";
+import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
 
@@ -13,7 +16,7 @@ export default function EspaciosEscolaresPage() {
   const [loading, setLoading] = useState(true); // Nuevo estado para la carga
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
 
-  console.log('SELECTED INSTITUCION', selectedInstitution );
+  console.log("SELECTED INSTITUCION", selectedInstitution);
 
   useEffect(() => {
     const storedInstitution = localStorage.getItem("selectedInstitution");
@@ -80,6 +83,9 @@ export default function EspaciosEscolaresPage() {
       />
       <EstablecimientosComponent selectedInstitution={selectedInstitution} />
       <PlanoComponent />
+      <AreasExterioresComponent />
+      <LocalesPorConstruccion />
+      <ObservacionesComponent/>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import ObservacionesComponent from "@/components/Forms/ObservacionesComponent";
 import { useState } from "react";
@@ -14,10 +13,6 @@ export default function EspaciosEscolaresComponent() {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const tabs: Tab[] = [
-    {
-      label: "Áreas Exteriores",
-      content: <AreasExterioresComponent />,
-    },
     {
       label: "Locales por Construcción",
       content: <LocalesPorConstruccion />,

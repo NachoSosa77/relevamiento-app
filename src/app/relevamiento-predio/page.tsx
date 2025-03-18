@@ -5,13 +5,15 @@ import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivado
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
+import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { UserData } from "@/interfaces/UserData";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 
 export default function RelevamientoPredioPage() {
-  const [selectedInstitution, setSelectedInstitution] = useState<InstitucionesData | null>(null);
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<InstitucionesData | null>(null);
   const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
   const [loading, setLoading] = useState(true); // Nuevo estado para la carga
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
@@ -23,7 +25,7 @@ export default function RelevamientoPredioPage() {
         const res = await fetch("/api/get-token", { credentials: "include" });
         const data = await res.json();
         console.log("Token obtenido desde backend:", data.token);
-  
+
         if (data.token) {
           const decodedUser: UserData = jwtDecode(data.token);
           setUser(decodedUser);
@@ -31,9 +33,9 @@ export default function RelevamientoPredioPage() {
       } catch (error) {
         console.error("Error obteniendo token:", error);
       }
-      setLoading(false)
+      setLoading(false);
     };
-  
+
     fetchUser();
   }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente
 
@@ -93,7 +95,7 @@ export default function RelevamientoPredioPage() {
           <p>1</p>
         </div>
       </div>
-       <CuiComponent
+      <CuiComponent
         selectedInstitution={selectedInstitution}
         initialCui={selectedInstitution?.cui}
         onCuiInputChange={() => {}}
@@ -106,7 +108,9 @@ export default function RelevamientoPredioPage() {
         <div className=" flex gap-4 items-center justify-center w-1/2 h-1/2 border bg-slate-200 p-2 font-bold text-sm">
           <p>Censista</p>
           <p>Nombre y apellido:</p>
-          <p>{user?.nombre} {user?.apellido}</p>
+          <p>
+            {user?.nombre} {user?.apellido}
+          </p>
           <p>Dni:</p>
           <p>34.835.912</p>
         </div>
@@ -114,6 +118,7 @@ export default function RelevamientoPredioPage() {
       <VisitasComponent />
       <RespondientesDelCuiComponent />
       <EstablecimientosPrivados />
+      <ObservacionesComponent />
     </div>
   );
 }

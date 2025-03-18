@@ -3,7 +3,10 @@
 import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
 import { useState } from "react";
 import Modal from "react-modal";
-import { default as ESTABLECIMIENTOS_COLUMNS, default as establecimientos_columns } from "../Table/TableColumns/establecimientosColumns";
+import {
+  default as ESTABLECIMIENTOS_COLUMNS,
+  default as establecimientos_columns,
+} from "../Table/TableColumns/establecimientosColumns";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
@@ -79,7 +82,7 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
         className="modal-content bg-white p-4 rounded-lg shadow-md w-fit max-w-md relative" // Clase para estilos
         overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" // Centrado vertical y horizontal
         ariaHideApp={false}
-      >        
+      >
         <ReusableForm
           columns={establecimientos_columns}
           onSubmit={handleAddInstitution}

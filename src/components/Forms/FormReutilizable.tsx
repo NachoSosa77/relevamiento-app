@@ -86,9 +86,9 @@ const FormReutilizable: React.FC<FormValues> = () => {
   };
 
   return (
-    <div className="grid items-center justify-center gap-4 p-4 border">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex items-center">
+    <div className="mx-10 grid p-4 border">
+      <form onSubmit={handleSubmit} className="flex flex-col">
+        <div className="flex">
           <div className="w-10 h-10 flex justify-center items-center border text-black font-bold bg-slate-200">
             <p>B1</p>
           </div>

@@ -7,7 +7,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   /* useEffect(() => {
     const appElement = document.getElementById('__next');
     if (appElement) {
@@ -16,14 +15,14 @@ export default function RootLayout({
       console.error('Element with ID "__next" not found.');
     }
   }, []); */
-  
+
   return (
     <html lang="en">
       {/*
         <head /> will contain the components returned by the nearest parent
         head.js. Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head
       */}
-      <body className={`bg-white `}>{children}</body>
+      <body className="bg-white mb-8">{children}</body>
     </html>
   );
 }

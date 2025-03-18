@@ -64,7 +64,7 @@ export default function TableCantidadReutilizable({
             <th className="border p-2">Ítem</th>
             <th className="border p-2">Tipo</th>
             <th className="border p-2">Cantidad</th>
-            <th className="border p-2">Estado</th>
+            {id !== 6 && <th className="border p-2">Estado</th>}
           </tr>
         </thead>
         <tbody>
@@ -111,7 +111,7 @@ export default function TableCantidadReutilizable({
                     />
                   )}
                 </td>
-                <td className="border p-2 text-center">
+               { id !== "6.1" && id !== "6.2" && <td className="border p-2 text-center">
                   {showCondition && opciones.length > 0 ? (
                     opciones.map((tipo) => (
                       <div
@@ -161,7 +161,7 @@ export default function TableCantidadReutilizable({
                       ))}
                     </div>
                   )}
-                </td>
+                </td>}
               </tr>
           ))}
         </tbody>

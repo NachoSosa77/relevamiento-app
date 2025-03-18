@@ -2,14 +2,27 @@
 
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
 import Navbar from "@/components/NavBar/NavBar";
+import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
 import Dimensiones from "./components/Dimensiones";
+import EquipamientoCantidad from "./components/EquipamientoCantidad";
 import FormReutilizable from "./components/FormReutilizable";
+import IluminacionVentilacion from "./components/IlumicacionVentilacion";
+import ServiciosBasicos from "./components/InstalacionesBasicas";
+import SistemaContraRobo from "./components/SistemaContraRobo";
 import TableCantidadReutilizable from "./components/TablaCantidadReutilizable";
 import TableReutilizable from "./components/TableReutilizable";
+import { equipamientoCocina, equipamientoSanitario } from "./config/equipamientoCocina";
+import { tipoAcondicionamiento } from "./config/tipoAcondicionamiento";
+import { tipo_ilumincacion } from "./config/tipoIlumincaion";
 import { tipoLocal } from "./config/tipoLocal";
 import { tipoAberturas, tipoMateriales } from "./config/tipoMateriales";
+import {
+  estadoServicios,
+  tipoServiciosBasicos,
+} from "./config/tipoServiciosBasicos";
+import { tipo_Sistema_Contra_Robo } from "./config/tipoSistemaContraRobo";
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitution, setSelectedInstitution] =
@@ -122,6 +135,54 @@ export default function RelevamientoConstruccionesPage() {
         label="ABERTURAS"
         locales={tipoAberturas}
       />
+
+      <IluminacionVentilacion
+        id={5}
+        label="CONDICIONES DE ILUMINACIÓN Y VENTILACIÓN"
+        locales={tipo_ilumincacion}
+      />
+
+      <TableCantidadReutilizable
+        id={6}
+        label="ACONDICIONAMIENTO TÉRMICO"
+        locales={tipoAcondicionamiento}
+      />
+
+      <SistemaContraRobo
+        id={7}
+        label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
+        locales={tipo_Sistema_Contra_Robo}
+      />
+
+      <ServiciosBasicos
+        id={8}
+        sub_id={8.1}
+        label="INSTALACIONES BÁSICAS"
+        locales={tipoServiciosBasicos}
+      />
+
+      <ServiciosBasicos
+        id={8}
+        sub_id={8.2}
+        label="MOTIVO PRINCIPAL POR QUE EL SERVICIO DE AGUA, GAS Y/O ELECTRICIDAD NO FUNCIONA"
+        locales={estadoServicios}
+      />
+
+      {/* Solo se despliega si tipo de local es cocina*/}
+      <EquipamientoCantidad
+        id={9}
+        label="EQUIPAMIENTO DE COCINA/OFFICES"
+        locales={equipamientoCocina}
+      />
+  
+      {/* Solo se despliega si tipo de local es baño*/}
+      <EquipamientoCantidad
+        id={10}
+        label="EQUIPAMIENTO SANITARIO"
+        locales={equipamientoSanitario}
+      />
+
+      <ObservacionesComponent/>
     </div>
   );
 }
