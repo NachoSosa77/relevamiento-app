@@ -1,5 +1,6 @@
 "use client";
 
+
 import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
 import { useState } from "react";
 import Modal from "react-modal";
@@ -45,7 +46,7 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
   }
 
   return (
-    <div className="mx-10 mt-4">
+    <div className="mx-10 mt-4 text-sm">
       <div className="flex mt-2 p-2 border items-center">
         <div className="w-6 h-6 flex justify-center text-white bg-black">
           <p>B</p>

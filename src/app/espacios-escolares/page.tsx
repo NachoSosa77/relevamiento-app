@@ -1,5 +1,6 @@
 "use client";
 
+
 import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosComponent from "@/components/Forms/EstablecimientosComponent";
@@ -85,7 +86,7 @@ export default function EspaciosEscolaresPage() {
       <PlanoComponent />
       <AreasExterioresComponent />
       <LocalesPorConstruccion />
-      <ObservacionesComponent/>
+      <ObservacionesComponent onSave={() => {}} contextId={""}/>
     </div>
   );
 }

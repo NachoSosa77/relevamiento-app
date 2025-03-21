@@ -7,8 +7,10 @@ const establecimientos_columns = [
     Header: "Modalidad/Nivel",
     accessor: "modalidad_nivel",
   },
+  { Header: "CUE", accessor: "cue" },
+  { Header: "CUI", accessor: "cui" },
+  { Header: "Matrícula", accessor: "matricula" },
   { Header: "Calle", accessor: "calle" },
-  { Header: "Número", accessor: "numero" },
   { Header: "Referencia", accessor: "referencia" },
   { Header: "Provincia", accessor: "provincia" },
   {
