@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import ObservacionesComponent from "@/components/Forms/ObservacionesComponent";
 import { useState } from "react";
