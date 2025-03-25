@@ -5,7 +5,7 @@ import axios from 'axios';
 const getAllEstablecimientos = async () => {
     try {
       const response = await axios.get(`/api/instituciones`);
-      console.log(response.data)
+      //console.log(response.data)
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimientos:', error);
@@ -13,17 +13,17 @@ const getAllEstablecimientos = async () => {
     }
   };
   
-const getEstablecimientoByCue = async (cue: number): Promise<InstitucionesData> => {
+const getEstablecimientoByCui = async (cui: number): Promise<InstitucionesData> => {
     try {
-      const response = await axios.get(`/api/instituciones/${cue}`);
+      const response = await axios.get(`/api/instituciones/${cui}`);
       return response.data;
     } catch (error) {
       console.error('Error al obtener establecimiento por CUE:', error);
       throw error;
-    }
+    } 
   };
   
 export const establecimientosService = {
     getAllEstablecimientos,
-    getEstablecimientoByCue,
+    getEstablecimientoByCui,
 }; 

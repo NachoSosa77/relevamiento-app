@@ -1,4 +1,6 @@
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
+import { useAppDispatch } from "@/redux/hooks";
+import { setAreaExteriorId } from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
 import { ChangeEvent, useEffect, useState } from "react";
 import ReusableTable from "../Table/TableReutilizable";
@@ -20,13 +22,20 @@ export default function AreasExterioresComponent() {
   });
   const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]); // Ajusta el tipo según la estructura de tus datos
-  //console.log(areasExteriores, "locales");
+  const dispatch = useAppDispatch(); 
+  
+  
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await areasExterioresService.getOpcionesAreasExteriores();
-        setOpcionesAreas(data);
+        // Obtener opciones de áreas exteriores
+        const opciones = await areasExterioresService.getOpcionesAreasExteriores();
+        setOpcionesAreas(opciones);
+
+        // Cargar datos guardados previamente en la tabla
+        const existingData = await areasExterioresService.getAreasExteriores();
+        setTableData(Array.isArray(existingData) ? existingData : []);
       } catch (error) {
         console.error('Error al obtener opciones de áreas exteriores:', error);
       }
@@ -60,9 +69,10 @@ export default function AreasExterioresComponent() {
       // Envía los datos al backend
       const response = await areasExterioresService.postAreasExteriores(areasExterioresData);
       console.log('Respuesta del backend:', response);
-  
-      // Agrega los datos a la tabla si la respuesta es exitosa
-      setTableData([...tableData, formData]);
+      dispatch(setAreaExteriorId(response.id)); // Asumiendo que la respuesta tiene un campo 'id'
+      
+      // Agregar al estado local
+      setTableData((prev) => [...prev, response]); 
   
       // Limpia el formulario con los campos correctos
       setFormData({ identificacion_plano: '', tipo: "", superficie: '' });
@@ -104,14 +114,6 @@ export default function AreasExterioresComponent() {
           <p>E-Anfiteatro F-Plaza seca G-Pileta H-Canchas Deportivas</p>
           <p>I-Huerta J-Corral K-Estacionamiento L-Áreas libres M-Otra</p>
         </div>
-        {/* <div className="ml-auto">
-                <AlphanumericInput
-                    subLabel=""
-                    label={""}
-                    value={""}
-                    onChange={() => set""()}
-                />
-                </div> */}
       </div>
       <form onSubmit={handleSubmit}>
         <div className="flex mt-2 p-2 border items-center justify-between gap-2">
@@ -167,7 +169,7 @@ export default function AreasExterioresComponent() {
           </div>
         </div>
       </form>
-      <ReusableTable data={tableData} columns={columns} />
+      <ReusableTable data={tableData ?? []} columns={columns} />
     </div>
   );
 }

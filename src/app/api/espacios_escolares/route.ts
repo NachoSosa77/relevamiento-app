@@ -46,12 +46,31 @@ export async function POST(req: NextRequest) {
     const connection = await getConnection();
     const data = await req.json();
 
-    const { institucion, plano, area_exterior_id, local_id, observaciones } =
-      data;
+    const {
+      institucion,
+      cantidad_construcciones,
+      superficie_total,
+      plano,
+      area_exterior_id,
+      local_id,
+      observaciones,
+      locales,
+      contextId,
+    } = data;
 
     await connection.query(
-      "INSERT INTO espacios_escolares (institucion, plano, area_exterior_id, local_id, observaciones) VALUES (?,?,?,?,?)",
-      [institucion, plano, area_exterior_id, local_id, observaciones]
+      "INSERT INTO espacios_escolares (institucion, cantidad_construcciones, superficie_total, plano, area_exterior_id, local_id, observaciones, locales, contextId) VALUES (?,?,?,?,?,?,?)",
+      [
+        institucion,
+        cantidad_construcciones,
+        superficie_total,
+        plano,
+        area_exterior_id,
+        local_id,
+        observaciones,
+        locales,
+        contextId,
+      ]
     );
     connection.release();
     return NextResponse.json(

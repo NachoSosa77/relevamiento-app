@@ -1,4 +1,5 @@
 export interface InstitucionesData {
+    id?: number;
     departamento: string;
     localidad: string;
     modalidad_nivel: string;

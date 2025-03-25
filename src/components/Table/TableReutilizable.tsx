@@ -2,6 +2,7 @@
 // ReusableTable.tsx
 import React from "react";
 
+
 interface ReusableTableProps<T> {
   data: T[];
   columns: {

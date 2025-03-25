@@ -3,8 +3,8 @@ import React from "react";
 interface InputProps {
   label: string;
   subLabel: string;
-  value: number | string | undefined; // Permitir número o string para el valor inicial
-  onChange: (value: string) => void;
+  value: number | undefined; 
+  onChange: (value: number | undefined) => void;
   disabled: boolean;
 }
 
@@ -17,7 +17,7 @@ const NumericInput: React.FC<InputProps> = ({
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/[^0-9]/g, ""); // Permite solo numeros
-    onChange(newValue.substring(0, 8)); // Limita a 8 caracteres
+    onChange(newValue ? parseInt(newValue, 10) : undefined); // Convierte a number o undefined
   };
 
   return (
@@ -28,9 +28,9 @@ const NumericInput: React.FC<InputProps> = ({
           className="text-black mr-2 w-full text-center p-0"
           type="text"
           id={label}
-          value={value}
+          value={value !== undefined ? value.toString() : ""} // Maneja undefine}
           onChange={handleChange}
-          maxLength={8}
+          maxLength={10}
           inputMode="numeric" // Mejora la experiencia en dispositivos móviles
           pattern="[0-9]*" // Ayuda a la validación en algunos navegadores
           disabled={disabled}

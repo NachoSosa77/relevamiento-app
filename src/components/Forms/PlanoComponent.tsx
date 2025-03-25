@@ -1,12 +1,25 @@
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  setCantidadConstrucciones,
+  setSuperficieTotalPredio,
+} from "@/redux/slices/espacioEscolarSlice";
 import { useState } from "react";
-import AlphanumericInput from "../ui/AlphanumericInput";
 import Check from "../ui/Checkbox";
 import FileUpload from "../ui/FileUpLoad";
+import NumericInput from "../ui/NumericInput";
 
 export default function PlanoComponent() {
   const [showComponents, setShowComponents] = useState<boolean | null>(null); // Estado para controlar la visibilidad de los componentes
   const [siChecked, setSiChecked] = useState(false); // Estado para el checkbox "SI"
   const [noChecked, setNoChecked] = useState(false); // Estado para el checkbox "NO"
+  const dispatch = useAppDispatch(); // Usa el hook personalizado
+  const superficieTotalPredio = useAppSelector(
+    (state) => state.espacio_escolar.superficieTotalPredio
+  );
+  const cantidadConstrucciones = useAppSelector(
+    (state) => state.espacio_escolar.cantidadConstrucciones
+  );
+  const institucionState = useAppSelector((state) => state.espacio_escolar); // Usa el hook personalizado
 
   const handleSiChange = (checked: boolean) => {
     if (checked) {
@@ -37,6 +50,19 @@ export default function PlanoComponent() {
   const handleFileUpload = (file: File | null) => {
     // Aquí puedes hacer algo con el archivo, como enviarlo a un servidor
     console.log("Archivo subido:", file);
+  };
+
+  const handleCantidadConstruccionesChange = (value: number | undefined) => {
+    dispatch(setCantidadConstrucciones(value));
+  };
+
+  const handleSuperficieTotalPredioChange = (value: number | undefined) => {
+    dispatch(setSuperficieTotalPredio(value));
+  };
+
+  const handleGuardarDatos = () => {
+    console.log("Datos en Redux:", institucionState);
+    // Aquí puedes enviar 'institucionState' a tu API para guardarlos en la base de datos
   };
 
   return (
@@ -96,7 +122,7 @@ export default function PlanoComponent() {
       </div>
       {/*  Compoenentes 2 y 3 */}
       {showComponents === true ? ( // Solo se renderizan si showComponents es true
-        <div className="flex flex-col gap-8">
+        <div className="flex gap-8">
           <div className="flex mt-4 p-2 border items-center w-1/2">
             <div className="w-6 h-6 flex justify-center text-white bg-black">
               <p>2</p>
@@ -108,41 +134,53 @@ export default function PlanoComponent() {
                 </p>
               </div>
               <div className="flex gap-4">
-                <AlphanumericInput
+                <NumericInput
                   label=""
-                  value=""
-                  subLabel="m² O-NS"
-                  onChange={() => console.log("Superficie total del predio")}
+                  value={superficieTotalPredio}
+                  subLabel=""
+                  onChange={handleSuperficieTotalPredioChange}
+                  disabled={false}
                 />
+                <button
+                  className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
+                  onClick={handleGuardarDatos}
+                >
+                  Cargar Información
+                </button>
               </div>
             </div>
           </div>
-          <div className="flex p-2 border items-center w-1/2">
+          <div className="flex mt-4 p-2 border items-center w-1/2">
             <div className="w-6 h-6 flex justify-center text-white bg-black">
               <p>3</p>
             </div>
             <div className="flex justify-between w-full">
               <div className="justify-center flex flex-col">
                 <p className="text-sm font-bold ml-4 justify-center">
-                  CANTIDAD DE CONSTRUCCIONES EN EL PREDIO
+                  CONSTRUCCIONES EN EL PREDIO
                 </p>
               </div>
-              <div className="flex flex-row gap-4">
-                <AlphanumericInput
+              <div className="flex gap-4">
+                <NumericInput
                   label=""
-                  value=""
+                  value={cantidadConstrucciones}
                   subLabel=""
-                  onChange={() =>
-                    console.log("Cantidad de construcciones en el predio")
-                  }
+                  onChange={handleCantidadConstruccionesChange}
+                  disabled={false}
                 />
+                <button
+                  className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
+                  onClick={handleGuardarDatos}
+                >
+                  Cargar Información
+                </button>
               </div>
             </div>
           </div>
           <div></div>
         </div>
       ) : showComponents === false ? ( // Nueva condición para mostrar solo el componente 3
-        <div className="flex flex-col gap-8">
+        <div className="flex gap-8">
           <div className="flex mt-4 p-2 border items-center w-1/2">
             <div className="w-6 h-6 flex justify-center text-white bg-black">
               <p>3</p>
@@ -154,18 +192,22 @@ export default function PlanoComponent() {
                 </p>
               </div>
               <div className="flex flex-row gap-4">
-                <AlphanumericInput
+                <NumericInput
                   label=""
-                  value=""
+                  value={cantidadConstrucciones}
                   subLabel=""
-                  onChange={() =>
-                    console.log("Cantidad de construcciones en el predio")
-                  }
+                  onChange={handleCantidadConstruccionesChange}
+                  disabled={false}
                 />
+                <button
+                  className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
+                  onClick={handleGuardarDatos}
+                >
+                  Cargar Información
+                </button>
               </div>
             </div>
           </div>
-          <div className=""></div>
         </div>
       ) : null}{" "}
       {/* No muestra nada si showComponents es null */}

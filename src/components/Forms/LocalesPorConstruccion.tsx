@@ -1,53 +1,71 @@
 "use client";
 
-import { Locales } from "@/app/lib/Locales";
 import { TipoLocales } from "@/interfaces/Locales";
-import { ChangeEvent, useState } from "react";
+import { useAppDispatch } from "@/redux/hooks";
+import { setLocalId } from "@/redux/slices/espacioEscolarSlice";
+import { localesService } from "@/services/localesServices";
+import { ChangeEvent, useEffect, useState } from "react";
 import ReusableTable from "../Table/TableReutilizable";
 import AlphanumericInput from "../ui/AlphanumericInput";
 import Check from "../ui/Checkbox";
 import Select from "../ui/SelectComponent";
 
 interface FormData {
-  numeroConstruccion: number | null;
-  superficieCubierta: number | null;
-  superficieSemicubierta: number | null;
-  superficieTotal: number | null;
-  identificacionPlano: string;
-  numeroPlanta: number | null;
-  tipo: number | null;
-  localSinUso: boolean;
-  superficie: number | null;
+  numero_construccion: number;
+  superficie_cubierta: number;
+  superficie_semicubierta: number;
+  superficie_total: number;
+  identificacion_plano: string;
+  numero_planta: number;
+  tipo_local_id: number;
+  local_sin_uso: string;
+  superficie: number;
 }
 
 export default function LocalesPorConstruccion() {
   const [selectLocales, setSelectLocales] = useState<number | null>(null);
   const [checked, setChecked] = useState(false); // Estado para el checkbox
   const [formData, setFormData] = useState<FormData>({
-    numeroConstruccion: null,
-    superficieCubierta: null,
-    superficieSemicubierta: null,
-    superficieTotal: null,
-    identificacionPlano: "",
-    numeroPlanta: null,
-    tipo: null,
-    localSinUso: false,
-    superficie: null,
+    numero_construccion: 0,
+    superficie_cubierta: 0,
+    superficie_semicubierta: 0,
+    superficie_total: 0,
+    identificacion_plano: "",
+    numero_planta: 0,
+    tipo_local_id: 0,
+    local_sin_uso: "",
+    superficie: 0,
   });
+  const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
   const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
-  const locales: TipoLocales[] = Locales;
-  //console.log(locales, "locales");
+  const dispatch = useAppDispatch(); 
+  
+
+  useEffect(() => {
+      async function fetchData() {
+        try {
+          const data = await localesService.getOpcionesLocales();
+          setOpcionesLocales(data);
+        } catch (error) {
+          console.error('Error al obtener opciones de áreas exteriores:', error);
+        }
+      }
+      fetchData();
+    }, []);
+
+
+
   const handleSelecteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);
     setSelectLocales(selectedType);
-    setFormData({ ...formData, tipo: selectedType }); // Actualiza el formData
+    setFormData({ ...formData, tipo_local_id: selectedType }); // Actualiza el formData
   };
   /* const selectedLocales = locales.find(
         (locales) => locales.id === setSelectLocales
       ); */
   const handleSiChange = (checked: boolean) => {
     setChecked(checked);
-    setFormData({ ...formData, localSinUso: checked }); // Actualiza formData.localSinUso
+    setFormData({ ...formData, local_sin_uso: checked ? "Si": "No" }); // Actualiza formData.localSinUso
   };    
 
   const calculoSuperficieTotal = (
@@ -55,14 +73,14 @@ export default function LocalesPorConstruccion() {
     setFormData: React.Dispatch<React.SetStateAction<FormData>>
   ): void => {
     const superficieTotal =
-      (updatedFormData.superficieCubierta !== null
-        ? Number(updatedFormData.superficieCubierta)
+      (updatedFormData.superficie_cubierta !== null
+        ? Number(updatedFormData.superficie_cubierta)
         : 0) +
-      (updatedFormData.superficieSemicubierta !== null
-        ? Number(updatedFormData.superficieSemicubierta)
+      (updatedFormData.superficie_semicubierta !== null
+        ? Number(updatedFormData.superficie_semicubierta)
         : 0);
 
-    setFormData((prevFormData) => ({ ...prevFormData, superficieTotal: superficieTotal }));
+    setFormData((prevFormData) => ({ ...prevFormData, superficie_total: superficieTotal }));
   };
 
   const handleInputChange = (
@@ -72,46 +90,54 @@ export default function LocalesPorConstruccion() {
     const newValue = event.target.value;
     setFormData((prevFormData) => {
       const updatedFormData = { ...prevFormData, [name]: newValue };
-      if (name === "superficieCubierta" || name === "superficieSemicubierta") {
+      if (name === "superficie_cubierta" || name === "superficie_semicubierta") {
         calculoSuperficieTotal(updatedFormData, setFormData);
       }
       return updatedFormData;
     });
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setTableData([...tableData, formData]); // Agrega los datos a la tabla
-    setFormData({
-      numeroConstruccion: null,
-      superficieCubierta: null,
-      superficieSemicubierta: null,
-      superficieTotal: null,
-      identificacionPlano: "",
-      numeroPlanta: null,
-      tipo: null,
-      localSinUso: false,
-      superficie: null,
-    }); // Limpia el formulario
-    setSelectLocales(null); // Resetea el select
-    console.log("Datos a enviar:", formData); // Aquí puedes enviar los datos al backend
+    try{
+      const response = await localesService.postLocales(formData);
+      console.log('Respuesta del backend:', response);
+      dispatch(setLocalId(response.id)); // Asumiendo que la respuesta tiene un campo 'id'
+      setTableData([...tableData, formData]);
+
+      setFormData({
+      numero_construccion: 0,
+      superficie_cubierta: 0,
+      superficie_semicubierta: 0,
+      superficie_total: 0,
+      identificacion_plano: "",
+      numero_planta: 0,
+      tipo_local_id: 0,
+      local_sin_uso: "",
+      superficie: 0,
+      }); // Limpia el formulario
+      setSelectLocales(null); // Resetea el select
+    }catch(error){
+      console.error('Error al enviar los datos:', error);
+    }
   };
 
   const columns = [
     // Definición de las columnas para la tabla
-    { Header: "N° de Construcción", accessor: "numeroConstruccion" },
-    { Header: "Superficie Cubierta", accessor: "superficieCubierta" },
-    { Header: "Superficie Semicubierta", accessor: "superficieSemicubierta" },
-    { Header: "Superficie Total", accessor: "superficieTotal" },
-    { Header: "Identificación en el plano", accessor: "identificacionPlano" },
-    { Header: "N° de planta", accessor: "numeroPlanta" },
+    { Header: "N° de Construcción", accessor: "numero_construccion" },
+    { Header: "Superficie Cubierta", accessor: "superficie_cubierta" },
+    { Header: "Superficie Semicubierta", accessor: "superficie_semicubierta" },
+    { Header: "Superficie Total", accessor: "superficie_total" },
+    { Header: "Identificación en el plano", accessor: "identificacion_plano" },
+    { Header: "N° de planta", accessor: "numero_planta" },
     {
       Header: "Tipo de local",
-      accessor: "tipo",
-      Cell: ({ value }: { value: number }) =>
-        locales.find((area) => area.id === value)?.name || "-",
+      accessor: "tipo_local_id",
+      Cell: ({ value }: { value: number }) =>{
+        const opcion = opcionesLocales.find((op) => op.id === Number(value));
+        return opcion ? opcion.name : "No definido";}
     }, // Muestra el nombre del tipo
-    { Header: "Local sin uso", accessor: "localSinUso", Cell: ({ value }: { value: string }) => value ? "Sí" : "No" },// Transformación para mostrar "Sí" o "No" 
+    { Header: "Local sin uso", accessor: "local_sin_uso", Cell: ({ value }: { value: string }) => value ? "Sí" : "No" },// Transformación para mostrar "Sí" o "No" 
     { Header: "Superficie", accessor: "superficie" },
   ];
 
@@ -171,9 +197,9 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel=""
                 label={""}
-                value={formData.numeroConstruccion?.toString() || ""}
+                value={formData.numero_construccion?.toString() || ""}
                 onChange={(event) =>
-                  handleInputChange("numeroConstruccion", event)
+                  handleInputChange("numero_construccion", event)
                 }
               />
             </div>
@@ -186,9 +212,9 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel=""
                 label={""}
-                value={formData.superficieCubierta?.toString() || ""}
+                value={formData.superficie_cubierta?.toString() || ""}
                 onChange={(event) =>
-                  handleInputChange("superficieCubierta", event)
+                  handleInputChange("superficie_cubierta", event)
                 }
               />
             </div>
@@ -201,9 +227,9 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel=""
                 label={""}
-                value={formData.superficieSemicubierta?.toString() || ""}
+                value={formData.superficie_semicubierta?.toString() || ""}
                 onChange={(event) =>
-                  handleInputChange("superficieSemicubierta", event)
+                  handleInputChange("superficie_semicubierta", event)
                 }
               />
             </div>
@@ -216,7 +242,7 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel="m²"
                 label={""}
-                value={formData.superficieTotal?.toString() || ""}
+                value={formData.superficie_total.toString() || ""}
                 onChange={() => console.log("Value")}
               />
             </div>
@@ -234,8 +260,8 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel="L"
                 label={""}
-                value={formData.identificacionPlano}
-                onChange={(event) => handleInputChange("identificacionPlano", event)}
+                value={formData.identificacion_plano}
+                onChange={(event) => handleInputChange("identificacion_plano", event)}
               />
             </div>
           </div>
@@ -247,8 +273,8 @@ export default function LocalesPorConstruccion() {
               <AlphanumericInput
                 subLabel=""
                 label={""}
-                value={formData.numeroPlanta?.toString() || ""}
-                onChange={(event) => handleInputChange("numeroPlanta", event)}
+                value={formData.numero_planta?.toString() || ""}
+                onChange={(event) => handleInputChange("numero_planta", event)}
               />
             </div>
           </div>
@@ -260,7 +286,7 @@ export default function LocalesPorConstruccion() {
               <Select
                 label={""}
                 value={selectLocales?.toString() || ""}
-                options={locales.map((local) => ({
+                options={opcionesLocales.map((local) => ({
                   value: local.id,
                   label: local.name,
                 }))}

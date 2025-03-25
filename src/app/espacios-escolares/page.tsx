@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 
 import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
@@ -9,48 +9,69 @@ import PlanoComponent from "@/components/Forms/PlanoComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setInstitucionSeleccionada } from "@/redux/slices/institucionSlice";
 import { useEffect, useState } from "react";
 
 export default function EspaciosEscolaresPage() {
+  const selectedInstitutionId = useAppSelector(
+    (state) => state.institucion.institucionSeleccionada
+  );
+  const selectedEspacioEscolar = useAppSelector(
+    (state) => state.espacio_escolar
+  ); // Obtén el estado de espacio_escolar
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
-  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
 
-  console.log("SELECTED INSTITUCION", selectedInstitution);
 
   useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    console.log("storedInstitution", storedInstitution);
-    if (storedInstitution) {
+    const fetchInstitution = async () => {
       try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          console.log("parsedInstitution", parsedInstitution);
-          setSelectedInstitution(parsedInstitution);
-          setLoading(false); // ¡IMPORTANTE!
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-          setError("Error al cargar la institución."); // Establece el error
-          setLoading(false); // ¡IMPORTANTE!
+        const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+        if (!response.ok) {
+          throw new Error("No se pudo obtener la institución.");
         }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-        setError("Error al cargar la institución."); // Establece el error
-        setLoading(false); // ¡IMPORTANTE!
+        const data = await response.json();
+        setSelectedInstitution(data); // Actualiza el estado con la respuesta de la API
+        dispatch(setInstitucionSeleccionada(selectedInstitutionId));
+      } catch (error: any) {
+        setError(error.message);
+        console.error("Error fetching institution:", error);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setLoading(false); // Si no hay nada en localStorage, no hay carga
+    };
+
+    if (selectedInstitutionId) {
+      fetchInstitution();
     }
-  }, []);
+  }, [dispatch, selectedInstitutionId]);
+
+  useEffect(() => {
+    console.log("Estado de Redux (espacio_escolar) actualizado:", selectedEspacioEscolar);
+  }, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
+
+  const handleSaveObservacion = async (observations: string, contextId: string | number) => {
+    try {
+      const response = await fetch("/api/observaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observacion: observations, espacio_escolar_id: contextId }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Error al guardar la observación");
+      }
+  
+      console.log("Observación guardada con éxito");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
 
   if (loading) {
     return <div>Cargando institución...</div>;
@@ -61,11 +82,11 @@ export default function EspaciosEscolaresPage() {
   }
 
   if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
+    return <div>No se ha seleccionado ninguna institución.</div>;
   }
 
   return (
-    <div className="h-screen bg-white text-black">
+    <div className="h-screen bg-white text-black text-sm">
       <Navbar />
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
@@ -73,20 +94,20 @@ export default function EspaciosEscolaresPage() {
           <h4 className="text-sm">DE ESPACIOS ESCOLARES</h4>
         </div>
       </div>
+
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
-        selectedInstitution={selectedInstitution}
         isReadOnly={true}
-        onInstitutionSelected={() => {}} // Función vacía
-        initialCui={selectedInstitution.cui} // O un valor inicial si lo tienes
-        onCuiInputChange={() => {}} // Función vacía
+        initialCui={selectedInstitution.cui}
+        onCuiInputChange={() => {}}
         sublabel=""
       />
-      <EstablecimientosComponent selectedInstitution={selectedInstitution} />
+
+      <EstablecimientosComponent />
       <PlanoComponent />
       <AreasExterioresComponent />
       <LocalesPorConstruccion />
-      <ObservacionesComponent onSave={() => {}} contextId={""}/>
+      <ObservacionesComponent onSave={handleSaveObservacion} contextId={1} />
     </div>
   );
 }

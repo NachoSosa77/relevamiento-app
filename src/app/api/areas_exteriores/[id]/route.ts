@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+/* export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -39,7 +39,7 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+} */
 
 export async function PUT(
   req: NextRequest,

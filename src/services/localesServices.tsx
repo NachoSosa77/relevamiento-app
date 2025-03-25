@@ -1,8 +1,8 @@
-import { AreasExteriores } from '@/interfaces/AreaExterior';
+import { LocalesConstruccion } from '@/interfaces/Locales';
 import axios from 'axios';
 
 // Obtener todas las áreas exteriores
- const getAreasExteriores = async (): Promise<AreasExteriores[]> => {
+/* const getAllAreasExteriores = async (): Promise<AreasExteriores[]> => {
   try {
     const response = await axios.get(`/api/areas_exteriores`);
     return response.data;
@@ -10,7 +10,7 @@ import axios from 'axios';
     console.error('Error al obtener áreas exteriores:', error);
     throw error;
   }
-}; 
+}; */
 
 // Obtener un área exterior por ID
 /* const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
@@ -23,24 +23,23 @@ import axios from 'axios';
   }
 }; */
 
-// Crear una nueva área exterior
-const postAreasExteriores = async (formData: AreasExteriores) => {
+
+const getOpcionesLocales = async () => {
   try {
-    const response = await axios.post(`/api/areas_exteriores`, formData);
-    return response.data; // Devuelve la respuesta completa, que incluye el id
+    const response = await axios.get(`/api/locales_por_construccion/opciones`);
+    return response.data;
   } catch (error) {
-    console.error('Error al cargar los datos:', error);
+    console.error('Error al obtener opciones de áreas exteriores:', error);
     throw error;
   }
 };
 
-// Obtener opciones de tipos de áreas exteriores
-const getOpcionesAreasExteriores = async () => {
+const postLocales = async (formData: LocalesConstruccion) => {
   try {
-    const response = await axios.get(`/api/areas_exteriores/opciones`);
-    return response.data;
+    const response = await axios.post(`/api/locales_por_construccion`, formData);
+    return response.data; // Devuelve la respuesta completa, que incluye el id
   } catch (error) {
-    console.error('Error al obtener opciones de áreas exteriores:', error);
+    console.error('Error al cargar los datos:', error);
     throw error;
   }
 };
@@ -57,8 +56,7 @@ const getOpcionesAreasExteriores = async () => {
 }; */
 
 // Exportar las funciones como un servicio
-export const areasExterioresService = {
-  postAreasExteriores,
-  getOpcionesAreasExteriores,
-  getAreasExteriores
+export const localesService = {
+  getOpcionesLocales,
+  postLocales
 };

@@ -4,14 +4,13 @@
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { useAppSelector } from "@/redux/hooks";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService"; // Importa el servicio
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<InstitucionesData | null>(null); // Una sola institución
-  const [cuiInputValue, setCuiInputValue] = useState<number | null>(null); // Valor del input CUI
+  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(undefined); // Valor del input CUI
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]); // Todas las instituciones
   const [loading, setLoading] = useState(true);
@@ -33,54 +32,17 @@ export default function HomePage() {
     fetchInstituciones();
   }, []);
 
-  const handleCuiInputChange = (cui: number | null) => {
+  const handleCuiInputChange = (cui: number | undefined) => {
     setCuiInputValue(cui);
-    setSelectedInstitution(null);
   };
 
-  const handleInstitutionSelected = (institution: InstitucionesData | null) => {
-    setSelectedInstitution(institution);
-    if (institution) {
-      setCuiInputValue(institution.cui); // Actualiza el input CUI al seleccionar una institución
-    }
-  };
-
-  useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    if (storedInstitution) {
-      try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          setSelectedInstitution(parsedInstitution);
-          setCuiInputValue(parsedInstitution.cui);
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedInstitution) {
-      localStorage.setItem(
-        "selectedInstitution",
-        JSON.stringify(selectedInstitution)
-      );
-    } else {
-      localStorage.removeItem("selectedInstitution");
-    }
-  }, [selectedInstitution]);
-
+  
+  const selectedInstitutionId = useAppSelector(
+    (state) => state.institucion.institucionSeleccionada
+  );
+  
+  console.log("ID HomePage:", selectedInstitutionId);
+  
   if (loading) {
     return <div>Cargando instituciones...</div>;
   }
@@ -103,8 +65,6 @@ export default function HomePage() {
         label={""}
         initialCui={cuiInputValue}
         onCuiInputChange={handleCuiInputChange} // Pasa la función para actualizar el CUI
-        onInstitutionSelected={handleInstitutionSelected} // Pasa el callback
-        selectedInstitution={selectedInstitution}
         isReadOnly={false}
         sublabel=""
       />
@@ -112,7 +72,7 @@ export default function HomePage() {
       <Link href="/espacios-escolares">
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-          disabled={!selectedInstitution}
+          disabled={!selectedInstitutionId}
         >
           Continuar
         </button>

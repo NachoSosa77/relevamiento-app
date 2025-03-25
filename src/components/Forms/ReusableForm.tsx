@@ -1,5 +1,5 @@
 // ReusableForm.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface ReusableFormProps<T> {
   columns: {
@@ -9,7 +9,8 @@ interface ReusableFormProps<T> {
   }[];
   onSubmit: (data: T) => void;
   onCancel: () => void; // Nueva prop para la función cancelar
-}
+  initialValues?: T; // Nueva prop para los valores iniciales
+  }
 
 interface FormData {
   [key: string]: string | number | undefined; // O los tipos específicos que necesites
@@ -24,8 +25,15 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   columns,
   onSubmit,
   onCancel,
+  initialValues,
 }) => {
   const [formData, setFormData] = useState<FormData>({});
+
+  useEffect(() => {
+    if (initialValues) {
+      setFormData(initialValues);
+    }
+  }, [initialValues]);
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -66,12 +74,13 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
               case "text":
               default:
                 return (
-                  <textarea
+                  <input
+                    type="text"
                     id={column.accessor.toString()}
                     name={column.accessor.toString()}
                     value={formData[column.accessor] || ""}
                     onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                    className="shadow text-sm text-slate-400 border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
                   />
                 );
             }

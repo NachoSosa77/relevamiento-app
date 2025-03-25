@@ -11,6 +11,7 @@
   "dependencies": {
     "@nextui-org/react": "^2.6.11",
     "@radix-ui/react-popover": "^1.1.5",
+    "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/postcss": "^4.0.6",
     "@types/express": "^5.0.0",
     "axios": "^1.7.9",
@@ -20,13 +21,15 @@
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mysql2": "^3.12.0",
-    "next": "15.1.7",
+    "next": "^15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "react-modal": "^3.16.3",
+    "react-redux": "^9.2.0",
     "react-select": "^5.10.1",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

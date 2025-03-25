@@ -1,30 +1,43 @@
 "use client";
 
-
-import { InstitucionesData } from "@/interfaces/Instituciones"; // Importa la interfaz
-import { useState } from "react";
+import { InstitucionesData } from "@/interfaces/Instituciones";
+import { useAppSelector } from "@/redux/hooks";
+import { useEffect, useState } from "react";
 import Modal from "react-modal";
-import {
-  default as ESTABLECIMIENTOS_COLUMNS,
+import ESTABLECIMIENTOS_COLUMNS, {
   default as establecimientos_columns,
 } from "../Table/TableColumns/establecimientosColumns";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
-interface EstablecimientosComponentProps {
-  selectedInstitution: InstitucionesData | null;
-}
+const EstablecimientosComponent: React.FC = () => {
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [institucion, setInstitucion] = useState<InstitucionesData | null>(null);
+  const selectedInstitutionId = useAppSelector(
+    (state) => state.institucion.institucionSeleccionada
+  );
 
-const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
-  selectedInstitution,
-}) => {
-  const [modalIsOpen, setModalIsOpen] = useState(false); // Estado para controlar la apertura del modal
-  const [institutions, setInstitutions] = useState(
-    selectedInstitution ? [selectedInstitution] : []
-  ); // Estado para almacenar las instituciones
+  useEffect(() => {
+    const fetchInstitution = async () => {
+      try {
+        const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+        if (!response.ok) {
+          throw new Error("No se pudo obtener la institución.");
+        }
+        const data: InstitucionesData = await response.json();
+        setInstitucion(data);
+      } catch (error) {
+        console.error("Error fetching institution:", error);
+      }
+    };
+
+    if (selectedInstitutionId) {
+      fetchInstitution();
+    }
+  }, [selectedInstitutionId]);
 
   const handleAddInstitution = (newInstitution: InstitucionesData) => {
-    setInstitutions([...institutions, newInstitution]); // Agrega la nueva institución al array
+    // Lógica para agregar la institución (si es necesario)
     closeModal();
   };
 
@@ -36,8 +49,7 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
     setModalIsOpen(false);
   };
 
-  if (!selectedInstitution) {
-    // Manejar el caso en que selectedInstitution es null
+  if (!institucion) {
     return (
       <div className="mx-10 mt-4">
         <p>No se ha seleccionado ninguna institución.</p>
@@ -64,12 +76,8 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
           Referencia para especificar el domicilio.
         </p>
       </div>
-      <ReusableTable
-        data={[selectedInstitution]}
-        columns={ESTABLECIMIENTOS_COLUMNS}
-      />
+      <ReusableTable data={[institucion]} columns={ESTABLECIMIENTOS_COLUMNS} />
       <div className="flex justify-end">
-        {/* Contenedor flex para alinear a la derecha */}
         <button
           className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={openModal}
@@ -80,14 +88,15 @@ const EstablecimientosComponent: React.FC<EstablecimientosComponentProps> = ({
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="modal-content bg-white p-4 rounded-lg shadow-md w-fit max-w-md relative" // Clase para estilos
-        overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" // Centrado vertical y horizontal
+        className="modal-content bg-white p-4 rounded-lg shadow-md w-fit max-w-md relative"
+        overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
         ariaHideApp={false}
       >
         <ReusableForm
           columns={establecimientos_columns}
           onSubmit={handleAddInstitution}
           onCancel={closeModal}
+          initialValues={institucion}
         />
       </Modal>
     </div>
