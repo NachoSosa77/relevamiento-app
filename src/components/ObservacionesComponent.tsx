@@ -1,34 +1,22 @@
 "use client";
 
+
+
 import { useState } from "react";
 
 interface ObservacionesComponentProps {
-  onSave: (observations: string, contextId: string | number) => void;
+  onSave: (observations: string) => void; // Cambiar onSave a una función de callback
   initialObservations?: string;
-  contextId: string | number;
 }
 
 export default function ObservacionesComponent({
   onSave,
   initialObservations = "",
-  contextId,
 }: ObservacionesComponentProps) {
   const [observations, setObservations] = useState(initialObservations);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleSave = async () => {
-    setLoading(true);
-    setMessage("");
-
-    try {
-      await onSave(observations, contextId);
-      setMessage("Observación guardada con éxito.");
-    } catch (error) {
-      setMessage(error instanceof Error ? `Error: ${error.message}` : "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
+    onSave(observations); // Llama a la función de callback del padre
   };
 
   return (
@@ -39,18 +27,19 @@ export default function ObservacionesComponent({
       <textarea
         className="w-full h-32 mt-2 p-2 border resize-none"
         value={observations}
-        onChange={(e) => setObservations(e.target.value)}
+        onChange={(e) => {
+          setObservations(e.target.value);
+        }}
+        aria-label="Área de observaciones"
       />
       <div className="flex justify-end mt-2">
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-400"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-400 disabled:opacity-50"
           onClick={handleSave}
-          disabled={loading}
         >
-          {loading ? "Guardando..." : "Guardar"}
+          Guardar
         </button>
       </div>
-      {message && <p className="mt-2 text-center text-gray-600">{message}</p>}
     </div>
   );
 }

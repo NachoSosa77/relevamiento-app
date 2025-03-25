@@ -188,147 +188,68 @@ export default function LocalesPorConstruccion() {
       </div>
       {/* Encabezado de tabla */}
       <form onSubmit={handleSubmit}>
-        <div className="flex mt-2 p-2 border items-center justify-between gap-2">
-          <div className="flex flex-col border p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              N° de Construcción:
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel=""
-                label={""}
-                value={formData.numero_construccion?.toString() || ""}
-                onChange={(event) =>
-                  handleInputChange("numero_construccion", event)
-                }
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Superficie cubierta
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel=""
-                label={""}
-                value={formData.superficie_cubierta?.toString() || ""}
-                onChange={(event) =>
-                  handleInputChange("superficie_cubierta", event)
-                }
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Superficie semicubierta
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel=""
-                label={""}
-                value={formData.superficie_semicubierta?.toString() || ""}
-                onChange={(event) =>
-                  handleInputChange("superficie_semicubierta", event)
-                }
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Superficie total
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel="m²"
-                label={""}
-                value={formData.superficie_total.toString() || ""}
-                onChange={() => console.log("Value")}
-              />
-            </div>
-          </div>
-          <div>
-          </div>
-        </div>
-      {/* Cuerpo tabla */}
-        <div className="flex mt-2 p-2 border items-center justify-between gap-2">
-          <div className="flex flex-col border p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2 no-warp whitespace-nowrap">
-              Identificación en el plano
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel="L"
-                label={""}
-                value={formData.identificacion_plano}
-                onChange={(event) => handleInputChange("identificacion_plano", event)}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              N° de planta
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel=""
-                label={""}
-                value={formData.numero_planta?.toString() || ""}
-                onChange={(event) => handleInputChange("numero_planta", event)}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Tipo
-            </p>
-            <div className="mt-2 w-full">
-              <Select
-                label={""}
-                value={selectLocales?.toString() || ""}
-                options={opcionesLocales.map((local) => ({
-                  value: local.id,
-                  label: local.name,
-                }))}
-                onChange={handleSelecteChange}
-              ></Select>
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Local sin uso
-            </p>
-            <div className="mt-2 w-full">
-              <Check
-                label={"Si"}
-                checked={checked}
-                onChange={handleSiChange}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Superficie
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel="m²"
-                label={""}
-                value={formData.superficie?.toString() || ""}
-                onChange={(event) => handleInputChange("superficie", event)}
-              />
-            </div>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
-            >
-              Cargar Información
-            </button>
-          </div>
-        </div>
-      </form>
+      <table className="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">N° de Construcción</th>
+            <th className="border p-2">Superficie Cubierta</th>
+            <th className="border p-2">Superficie Semicubierta</th>
+            <th className="border p-2">Superficie Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="border p-2">
+              <AlphanumericInput label="" subLabel="" value={formData.numero_construccion?.toString() || ""} onChange={(event) => handleInputChange("numero_construccion", event)} />
+            </td>
+            <td className="border p-2">
+              <AlphanumericInput label="" subLabel="" value={formData.superficie_cubierta?.toString() || ""} onChange={(event) => handleInputChange("superficie_cubierta", event)} />
+            </td>
+            <td className="border p-2">
+              <AlphanumericInput label="" subLabel="" value={formData.superficie_semicubierta?.toString() || ""} onChange={(event) => handleInputChange("superficie_semicubierta", event)} />
+            </td>
+            <td className="border p-2">
+              <AlphanumericInput subLabel="m²" label="" value={formData.superficie_total?.toString() || ""} onChange={() => console.log("Value")} />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="w-full border-collapse border border-gray-300 mt-4">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Identificación en el Plano</th>
+            <th className="border p-2">N° de Planta</th>
+            <th className="border p-2">Tipo</th>
+            <th className="border p-2">Local sin uso</th>
+            <th className="border p-2">Superficie</th>
+            <th className="border p-2">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="border p-2">
+              <AlphanumericInput label="" subLabel="" value={formData.identificacion_plano || ""} onChange={(event) => handleInputChange("identificacion_plano", event)} />
+            </td>
+            <td className="border p-2">
+              <AlphanumericInput label="" subLabel="" value={formData.numero_planta?.toString() || ""} onChange={(event) => handleInputChange("numero_planta", event)} />
+            </td>
+            <td className="border p-2">
+              <Select label=" " value={selectLocales?.toString() || ""} options={opcionesLocales.map((local) => ({ value: local.id, label: local.name }))} onChange={handleSelecteChange} />
+            </td>
+            <td className="border p-2 text-center">
+              <Check label="Si" checked={checked} onChange={handleSiChange} />
+            </td>
+            <td className="border p-2">
+              <AlphanumericInput label=" " subLabel="m²" value={formData.superficie?.toString() || ""} onChange={(event) => handleInputChange("superficie", event)} />
+            </td>
+            <td className="border p-2 text-center">
+              <button type="submit" className="text-sm font-bold bg-slate-200 p-2 rounded-md">Cargar Información</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
       <ReusableTable data={tableData} columns={columns} />
     </div>
   );

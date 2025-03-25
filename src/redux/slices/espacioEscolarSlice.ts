@@ -31,7 +31,7 @@ const espacioEscolarSlice = createSlice({
   name: "espacio_escolar",
   initialState,
   reducers: {
-    setInstitucion: (state, action: PayloadAction<number | undefined>) => {
+    setInstitucionId: (state, action: PayloadAction<number | undefined>) => {
       state.institucion = action.payload;
     },
     setCantidadConstrucciones: (
@@ -71,7 +71,7 @@ const espacioEscolarSlice = createSlice({
 });
 
 export const {
-  setInstitucion,
+  setInstitucionId,
   setCantidadConstrucciones,
   setSuperficieTotalPredio,
   setPlano,

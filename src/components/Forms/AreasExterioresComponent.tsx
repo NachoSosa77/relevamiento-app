@@ -22,22 +22,21 @@ export default function AreasExterioresComponent() {
   });
   const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]); // Ajusta el tipo según la estructura de tus datos
-  const dispatch = useAppDispatch(); 
-  
-  
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     async function fetchData() {
       try {
         // Obtener opciones de áreas exteriores
-        const opciones = await areasExterioresService.getOpcionesAreasExteriores();
+        const opciones =
+          await areasExterioresService.getOpcionesAreasExteriores();
         setOpcionesAreas(opciones);
 
         // Cargar datos guardados previamente en la tabla
         const existingData = await areasExterioresService.getAreasExteriores();
         setTableData(Array.isArray(existingData) ? existingData : []);
       } catch (error) {
-        console.error('Error al obtener opciones de áreas exteriores:', error);
+        console.error("Error al obtener opciones de áreas exteriores:", error);
       }
     }
     fetchData();
@@ -55,7 +54,7 @@ export default function AreasExterioresComponent() {
   ) => {
     setFormData({ ...formData, [name]: event.target.value });
   };
-  
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
@@ -65,22 +64,24 @@ export default function AreasExterioresComponent() {
         tipo: formData.tipo,
         superficie: formData.superficie,
       };
-  
+
       // Envía los datos al backend
-      const response = await areasExterioresService.postAreasExteriores(areasExterioresData);
-      console.log('Respuesta del backend:', response);
+      const response = await areasExterioresService.postAreasExteriores(
+        areasExterioresData
+      );
+      console.log("Respuesta del backend:", response);
       dispatch(setAreaExteriorId(response.id)); // Asumiendo que la respuesta tiene un campo 'id'
-      
+
       // Agregar al estado local
-      setTableData((prev) => [...prev, response]); 
-  
+      setTableData((prev) => [...prev, response]);
+
       // Limpia el formulario con los campos correctos
-      setFormData({ identificacion_plano: '', tipo: "", superficie: '' });
+      setFormData({ identificacion_plano: "", tipo: "", superficie: "" });
       setSelectArea(null);
     } catch (error) {
-      console.error('Error al enviar los datos:', error);
+      console.error("Error al enviar los datos:", error);
       // Maneja el error (muestra un mensaje al usuario, etc.)
-    }    
+    }
   };
 
   const columns = [
@@ -91,7 +92,8 @@ export default function AreasExterioresComponent() {
       accessor: "tipo",
       Cell: ({ value }: { value: number }) => {
         const opcion = opcionesAreas.find((op) => op.id === Number(value));
-        return opcion ? opcion.name : "No definido";}
+        return opcion ? opcion.name : "No definido";
+      },
     }, // Muestra el nombre del tipo
     { Header: "Superficie", accessor: "superficie" },
   ];
@@ -116,58 +118,57 @@ export default function AreasExterioresComponent() {
         </div>
       </div>
       <form onSubmit={handleSubmit}>
-        <div className="flex mt-2 p-2 border items-center justify-between gap-2">
-          <div className="flex flex-col border p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Identificación en el plano
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel="E"
-                label={""}
-                value={formData.identificacion_plano}
-                onChange={(event) => handleInputChange("identificacion_plano", event)}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Tipo
-            </p>
-            <div className="mt-2 w-full">
-              <Select
-                label={""}
-                value={selectArea?.toString() || ""}
-                options={opcionesAreas.map((opcion) => ({
-                  value: opcion.id,
-                  label: opcion.name,
-                }))}
-                onChange={handleSelectChange}
-              />             
-            </div>
-          </div>
-          <div className="flex flex-col border  p-4 w-1/3">
-            <p className="text-sm font-bold text-center bg-gray-100 p-2">
-              Superficie
-            </p>
-            <div className="mt-2 w-full">
-              <AlphanumericInput
-                subLabel="m²"
-                label={""}
-                value={formData.superficie}
-                onChange={(event) => handleInputChange("superficie", event)}
-              />
-            </div>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
-            >
-              Cargar Información
-            </button>
-          </div>
-        </div>
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">Identificación en el plano</th>
+              <th className="border p-2">Tipo</th>
+              <th className="border p-2">Superficie</th>
+              <th className="border p-2">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border p-2">
+                <AlphanumericInput
+                  subLabel="E"
+                  label={""}
+                  value={formData.identificacion_plano}
+                  onChange={(event) =>
+                    handleInputChange("identificacion_plano", event)
+                  }
+                />
+              </td>
+              <td className="border p-2">
+                <Select
+                  label={""}
+                  value={selectArea?.toString() || ""}
+                  options={opcionesAreas.map((opcion) => ({
+                    value: opcion.id,
+                    label: opcion.name,
+                  }))}
+                  onChange={handleSelectChange}
+                />
+              </td>
+              <td className="border p-2">
+                <AlphanumericInput
+                  subLabel="m²"
+                  label={""}
+                  value={formData.superficie}
+                  onChange={(event) => handleInputChange("superficie", event)}
+                />
+              </td>
+              <td className="border p-2 text-center">
+                <button
+                  type="submit"
+                  className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
+                >
+                  Cargar Información
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </form>
       <ReusableTable data={tableData ?? []} columns={columns} />
     </div>

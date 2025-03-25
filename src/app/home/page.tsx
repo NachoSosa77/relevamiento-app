@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setInstitucionId } from "@/redux/slices/espacioEscolarSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService"; // Importa el servicio
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -15,6 +17,8 @@ export default function HomePage() {
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]); // Todas las instituciones
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch(); // Usa el hook personalizado
+  
 
   useEffect(() => {
     const fetchInstituciones = async () => {
@@ -34,6 +38,7 @@ export default function HomePage() {
 
   const handleCuiInputChange = (cui: number | undefined) => {
     setCuiInputValue(cui);
+    dispatch(setInstitucionId());
   };
 
   

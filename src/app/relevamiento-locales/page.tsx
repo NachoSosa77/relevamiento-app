@@ -1,5 +1,6 @@
 "use client";
 
+
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";

@@ -55,11 +55,10 @@ export async function POST(req: NextRequest) {
       local_id,
       observaciones,
       locales,
-      contextId,
     } = data;
 
     await connection.query(
-      "INSERT INTO espacios_escolares (institucion, cantidad_construcciones, superficie_total, plano, area_exterior_id, local_id, observaciones, locales, contextId) VALUES (?,?,?,?,?,?,?)",
+      "INSERT INTO espacios_escolares (institucion, cantidad_construcciones, superficie_total, plano, area_exterior_id, local_id, observaciones, locales) VALUES (?,?,?,?,?,?)",
       [
         institucion,
         cantidad_construcciones,
@@ -69,7 +68,6 @@ export async function POST(req: NextRequest) {
         local_id,
         observaciones,
         locales,
-        contextId,
       ]
     );
     connection.release();

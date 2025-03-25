@@ -10,7 +10,10 @@ import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setInstitucionSeleccionada } from "@/redux/slices/institucionSlice";
+import {
+  setInstitucionId,
+  setObservaciones,
+} from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
 
 export default function EspaciosEscolaresPage() {
@@ -26,17 +29,23 @@ export default function EspaciosEscolaresPage() {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
+  useEffect(() => {
+    console.log("selectedInstitutionId desde Redux:", selectedInstitutionId);
+  }, [selectedInstitutionId]);
 
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
-        const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+        const response = await fetch(
+          `/api/instituciones/${selectedInstitutionId}`
+        );
         if (!response.ok) {
           throw new Error("No se pudo obtener la institución.");
         }
         const data = await response.json();
+        console.log("Institución obtenida:", data);
         setSelectedInstitution(data); // Actualiza el estado con la respuesta de la API
-        dispatch(setInstitucionSeleccionada(selectedInstitutionId));
+        dispatch(setInstitucionId(data.id));
       } catch (error: any) {
         setError(error.message);
         console.error("Error fetching institution:", error);
@@ -51,27 +60,37 @@ export default function EspaciosEscolaresPage() {
   }, [dispatch, selectedInstitutionId]);
 
   useEffect(() => {
-    console.log("Estado de Redux (espacio_escolar) actualizado:", selectedEspacioEscolar);
+    console.log(
+      "Estado de Redux (espacio_escolar) actualizado:",
+      selectedEspacioEscolar
+    );
   }, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
 
-  const handleSaveObservacion = async (observations: string, contextId: string | number) => {
+  const handleSaveObservacion = (observations: string) => {
+    dispatch(setObservaciones(observations));
+  };
+
+  const enviarDatosEspacioEscolar = async () => {
     try {
-      const response = await fetch("/api/observaciones", {
+      const response = await fetch("/api/espacios-escolares", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ observacion: observations, espacio_escolar_id: contextId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(selectedEspacioEscolar), // Envía todo el estado de espacio_escolar
       });
-  
+
       if (!response.ok) {
-        throw new Error("Error al guardar la observación");
+        throw new Error("Error al guardar los datos del espacio escolar.");
       }
-  
-      console.log("Observación guardada con éxito");
-    } catch (error) {
-      console.error(error);
+
+      console.log("Datos del espacio escolar guardados con éxito.");
+      // Puedes agregar lógica adicional aquí, como limpiar el estado o mostrar un mensaje de éxito.
+    } catch (error: any) {
+      console.error("Error al enviar datos del espacio escolar:", error);
+      setError(error.message); // Establece el error en el estado local
     }
   };
-  
 
   if (loading) {
     return <div>Cargando institución...</div>;
@@ -107,7 +126,22 @@ export default function EspaciosEscolaresPage() {
       <PlanoComponent />
       <AreasExterioresComponent />
       <LocalesPorConstruccion />
-      <ObservacionesComponent onSave={handleSaveObservacion} contextId={1} />
+      <ObservacionesComponent
+        onSave={handleSaveObservacion}
+        initialObservations={""}
+      />
+      {Object.keys(selectedEspacioEscolar).length > 0 && (
+        <div className="flex justify-center mt-4">
+          {" "}
+          {/* Contenedor flex con justify-center */}
+          <button
+            onClick={enviarDatosEspacioEscolar}
+            className="px-4 py-2 w-80 bg-blue-600 text-white rounded-md hover:bg-blue-400"
+          >
+            Guardar Espacio Escolar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

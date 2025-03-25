@@ -21,11 +21,10 @@ export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { params } = context; // Extrae params correctamente
-  const { id } = params;
+  const id = context.params?.id; // Extraemos id de forma segura
 
   // Valida que el id sea un número
-  if (!/^\d+$/.test(id)) {
+  if (!id || !/^\d+$/.test(id)) {
     return NextResponse.json(
       { message: "ID no válido. Debe ser un número." },
       { status: 400 }
