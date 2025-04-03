@@ -1,28 +1,30 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
+import { InstitucionesData } from "@/interfaces/Instituciones";
+import { LocalesConstruccion } from "@/interfaces/Locales";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface EspacioEscolarState {
-  institucion: number | undefined; // Reemplaza 'string' con el tipo correcto
+  cui: number | undefined;
+  institucion: number | undefined;
+  institucionesSeleccionadas: InstitucionesData[];
   cantidadConstrucciones: number | undefined;
   superficieTotalPredio: number | undefined;
-  plano: string | null; // Reemplaza 'string' con el tipo correcto
-  areaExteriorId: string | null; // Reemplaza 'string' con el tipo correcto
-  localId: string | null; // Reemplaza 'string' con el tipo correcto
-  observaciones: string | null; // Reemplaza 'string' con el tipo correcto
-  locales: string | null; // Reemplaza 'string' con el tipo correcto
+  plano: string | null;
+  observaciones: string | null;
+  locales: LocalesConstruccion[];
   contextId: number | null;
   areasExteriores: AreasExteriores[];
 }
 
 const initialState: EspacioEscolarState = {
+  cui: undefined,
   institucion: undefined,
+  institucionesSeleccionadas: [],
   cantidadConstrucciones: undefined,
   superficieTotalPredio: undefined,
   plano: null,
-  areaExteriorId: null,
-  localId: null,
   observaciones: null,
-  locales: null,
+  locales: [],
   contextId: null,
   areasExteriores: [],
 };
@@ -31,8 +33,17 @@ const espacioEscolarSlice = createSlice({
   name: "espacio_escolar",
   initialState,
   reducers: {
+    setCui: (state, action: PayloadAction<number | undefined>) => {
+      state.cui = action.payload;
+    },
     setInstitucionId: (state, action: PayloadAction<number | undefined>) => {
       state.institucion = action.payload;
+    },
+    setInstitucionesData: (
+      state,
+      action: PayloadAction<InstitucionesData[]>
+    ) => {
+      state.institucionesSeleccionadas = action.payload;
     },
     setCantidadConstrucciones: (
       state,
@@ -49,20 +60,18 @@ const espacioEscolarSlice = createSlice({
     setPlano: (state, action: PayloadAction<string | null>) => {
       state.plano = action.payload;
     },
-    setAreaExteriorId: (state, action: PayloadAction<string | null>) => {
-      state.areaExteriorId = action.payload;
-    },
-    setLocalId: (state, action: PayloadAction<string | null>) => {
-      state.localId = action.payload;
-    },
     setObservaciones: (state, action: PayloadAction<string | null>) => {
       state.observaciones = action.payload;
     },
-    setLocales: (state, action: PayloadAction<string | null>) => {
-      state.locales = action.payload;
+    setLocales: (state, action: PayloadAction<LocalesConstruccion>) => {
+      state.locales = state.locales || []; // Asegura que no sea null
+      state.locales.push(action.payload);
     },
-    addAreaExterior: (state, action: PayloadAction<AreasExteriores>) => {
+    addAreasExteriores: (state, action: PayloadAction<AreasExteriores>) => {
       state.areasExteriores.push(action.payload);
+    },
+    resetAreasExteriores: (state) => {
+      state.areasExteriores = [];
     },
     setContextId: (state, action: PayloadAction<number | null>) => {
       state.contextId = action.payload;
@@ -71,15 +80,17 @@ const espacioEscolarSlice = createSlice({
 });
 
 export const {
+  setCui,
   setInstitucionId,
+  setInstitucionesData,
   setCantidadConstrucciones,
   setSuperficieTotalPredio,
   setPlano,
-  setAreaExteriorId,
-  setLocalId,
   setObservaciones,
   setLocales,
-  addAreaExterior,
+  addAreasExteriores,
+  resetAreasExteriores,
+  setContextId,
 } = espacioEscolarSlice.actions;
 
 export default espacioEscolarSlice.reducer;

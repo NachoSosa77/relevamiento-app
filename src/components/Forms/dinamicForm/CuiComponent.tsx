@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
+
+
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch } from "@/redux/hooks";
+import { setCui } from "@/redux/slices/espacioEscolarSlice";
 import { setInstitucionSeleccionada } from "@/redux/slices/institucionSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { useEffect, useState } from "react";
@@ -72,6 +76,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const handleChange = (newValue: number | undefined) => {
     setInputValue(newValue);
     onCuiInputChange(newValue);
+    dispatch(setCui(newValue)); // Reinicia la institución seleccionada al cambiar el CUI
   };
 
   const handleInstitutionSelect = (

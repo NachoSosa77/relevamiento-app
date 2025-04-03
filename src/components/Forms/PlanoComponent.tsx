@@ -5,6 +5,7 @@ import {
 } from "@/redux/slices/espacioEscolarSlice";
 import { useState } from "react";
 import Check from "../ui/Checkbox";
+import DecimalNumericInput from "../ui/DecimalNumericInput";
 import FileUpload from "../ui/FileUpLoad";
 import NumericInput from "../ui/NumericInput";
 
@@ -19,7 +20,7 @@ export default function PlanoComponent() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
-  const institucionState = useAppSelector((state) => state.espacio_escolar); // Usa el hook personalizado
+  //const institucionState = useAppSelector((state) => state.espacio_escolar); // Usa el hook personalizado
 
   const handleSiChange = (checked: boolean) => {
     if (checked) {
@@ -60,10 +61,10 @@ export default function PlanoComponent() {
     dispatch(setSuperficieTotalPredio(value));
   };
 
-  const handleGuardarDatos = () => {
+  /* const handleGuardarDatos = () => {
     console.log("Datos en Redux:", institucionState);
     // Aquí puedes enviar 'institucionState' a tu API para guardarlos en la base de datos
-  };
+  }; */
 
   return (
     <div className="mx-10 my-4">
@@ -134,19 +135,19 @@ export default function PlanoComponent() {
                 </p>
               </div>
               <div className="flex gap-4">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   value={superficieTotalPredio}
-                  subLabel=""
+                  subLabel="m2 O-NS"
                   onChange={handleSuperficieTotalPredioChange}
                   disabled={false}
                 />
-                <button
+                {/* <button
                   className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
                   onClick={handleGuardarDatos}
                 >
                   Cargar Información
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -168,12 +169,12 @@ export default function PlanoComponent() {
                   onChange={handleCantidadConstruccionesChange}
                   disabled={false}
                 />
-                <button
+                {/* <button
                   className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
                   onClick={handleGuardarDatos}
                 >
                   Cargar Información
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -199,12 +200,12 @@ export default function PlanoComponent() {
                   onChange={handleCantidadConstruccionesChange}
                   disabled={false}
                 />
-                <button
+                {/* <button
                   className="text-sm font-bold bg-gray-100 p-2 rounded-md flex-nowrap"
                   onClick={handleGuardarDatos}
                 >
                   Cargar Información
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

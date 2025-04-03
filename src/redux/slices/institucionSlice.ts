@@ -21,12 +21,15 @@ const institucionSlice = createSlice({
     ) {
       state.institucionSeleccionada = action.payload;
     },
-    setInstituciones(state, action: PayloadAction<InstitucionesData[]>) {
+    setInstitucionesSeleccionadas(
+      state,
+      action: PayloadAction<InstitucionesData[]>
+    ) {
       state.instituciones = action.payload;
     },
   },
 });
 
-export const { setInstitucionSeleccionada, setInstituciones } =
+export const { setInstitucionSeleccionada, setInstitucionesSeleccionadas } =
   institucionSlice.actions;
 export default institucionSlice.reducer;

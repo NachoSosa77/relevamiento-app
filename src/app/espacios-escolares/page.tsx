@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+
+
 import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosComponent from "@/components/Forms/EstablecimientosComponent";
@@ -43,7 +45,7 @@ export default function EspaciosEscolaresPage() {
           throw new Error("No se pudo obtener la institución.");
         }
         const data = await response.json();
-        console.log("Institución obtenida:", data);
+        //console.log("Institución obtenida:", data);
         setSelectedInstitution(data); // Actualiza el estado con la respuesta de la API
         dispatch(setInstitucionId(data.id));
       } catch (error: any) {
