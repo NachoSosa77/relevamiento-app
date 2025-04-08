@@ -2,7 +2,7 @@ import { Column, ServiciosBasicos } from "@/interfaces/ServiciosBasicos";
 
 export const serviciosColumns: Column[] = [
   { header: "2", key: "id", type: "text" },
-  { header: "SERVICIOS BÁSICOS", key: "servicio", type: "text" },
+  { header: "Servicios básicos", key: "servicio", type: "text" },
   {
     header: "En el predio",
     key: "enPredio",

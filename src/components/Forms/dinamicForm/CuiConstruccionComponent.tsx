@@ -1,104 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
-import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
-import { useEffect, useState } from "react";
 import EstablecimientosEducativos from "../EstablecimientosEducativos";
 
 interface CuiComponentProps {
   label: string;
   sublabel: string;
-  selectedInstitution: InstitucionesData | null; // Nueva prop para la institución seleccionada
-  onInstitutionSelected: (institution: InstitucionesData | null) => void;
+  selectedInstitutions: InstitucionesData[] | null; // Nueva prop para la institución seleccionada
   isReadOnly: boolean;
-  initialCui: number | null; // Añade la propiedad initialCui
+  initialCui: number | undefined; // Añade la propiedad initialCui
   onCuiInputChange: (cui: number | null) => void; // Añade la función onCuiInputChange
 }
 
 const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   label,
   sublabel,
-  selectedInstitution,
-  onInstitutionSelected,
+  selectedInstitutions,
   isReadOnly,
   initialCui,
-  onCuiInputChange,
 }) => {
-  const [inputValue, setInputValue] = useState("");
-  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<
-    InstitucionesData[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchInstituciones = async () => {
-      try {
-        const response = await establecimientosService.getAllEstablecimientos();
-        console.log('data response',response.instituciones)
-        if (response && Array.isArray(response.instituciones)) {
-          setInstituciones(response.instituciones);
-        } else {
-          setInstituciones([]);
-        }
-      } catch (error: any) {
-        setError(error?.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!isReadOnly) {
-      fetchInstituciones();
-    }
-  }, [isReadOnly]);
-
-  useEffect(() => {
-    if (!isReadOnly) {
-      if (inputValue === "") {
-        setFilteredInstitutions([]);
-      } else {
-        const filtered = instituciones.filter(
-          (inst) => String(inst.cui) === inputValue
-        );
-        setFilteredInstitutions(filtered);
-      }
-    }
-  }, [inputValue, instituciones, isReadOnly]);
-
-  const handleChange = (newValue: string) => {
-    setInputValue(newValue);
-    onCuiInputChange(Number(newValue));
-  };
-
-  const handleInstitutionSelect = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedCueString = event.target.value;
-    const selectedCueNumber = Number(selectedCueString); // Convierte a número
-    const selected = filteredInstitutions.find(
-      (inst) => inst.cue === selectedCueNumber
-    );
-    onInstitutionSelected(selected || null);
-  };
-
-  useEffect(() => {
-    if (initialCui !== null) {
-      setInputValue(initialCui.toString());
-    } else {
-      setInputValue("");
-    }
-  }, [initialCui]);
-
-  if (loading && !isReadOnly) {
-    return <div>Cargando instituciones...</div>;
-  }
-
-  if (error && !isReadOnly) {
-    return <div>Error: {error}</div>;
-  }
 
   return (
     <div className="mx-10">
@@ -116,8 +37,8 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
             <NumericInput
                 subLabel=""
                 label={""}
-                value={inputValue}
-                onChange={handleChange}
+                value={initialCui}
+                onChange={()=>{}}
                 disabled={isReadOnly} // Deshabilita el input si es de solo lectura
             />
             </div>
@@ -130,8 +51,8 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
             <NumericInput
                 subLabel=""
                 label={""}
-                value="1"
-                onChange={handleChange}
+                value={0}
+                onChange={()=>{}}
                 disabled={isReadOnly} // Deshabilita el input si es de solo lectura
             />
             </div>
@@ -141,24 +62,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
           {sublabel}
         </p>
       </div>
-      {/* Muestra las instituciones encontradas */}
-      {!isReadOnly &&
-        filteredInstitutions.length > 0 && ( // Select solo si no es de solo lectura y hay resultados
-          <select
-            className="mt-2 p-2 border"
-            value={selectedInstitution?.cue || ""}
-            onChange={handleInstitutionSelect}
-          >
-            <option value="">Selecciona una institución</option>
-            {filteredInstitutions.map((inst) => (
-              <option key={inst.cue} value={inst.cue}>
-                {inst.institucion} ({inst.modalidad_nivel})
-              </option>
-            ))}
-          </select>
-        )}
-
-      {selectedInstitution && isReadOnly && (
+      {selectedInstitutions && isReadOnly && (
         <div>
             <div className="flex items-center gap-2 mt-2 p-2 border">
                 <div className="w-6 h-6 flex justify-center text-white bg-black">
@@ -174,7 +78,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
                 <p>Transcriba del Fórmulario 1 la denominación de los establecimientos educativos que funcionan en la construcción y el Número de CUE-Anexo de cada uno de ellos.</p>
             </div>
             <div>
-                <EstablecimientosEducativos cui={selectedInstitution?.cui || null}/>
+                <EstablecimientosEducativos selectedInstitutions={selectedInstitutions}/>
             </div>
         </div>
       )}

@@ -4,7 +4,10 @@ import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruc
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { useAppSelector } from "@/redux/hooks";
+import { RootState } from "@/redux/store";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import AntiguedadComponent from "./components/Antiguedad";
 import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
@@ -45,76 +48,25 @@ import {
 } from "./config/separadoresServicios";
 
 export default function RelevamientoConstruccionesPage() {
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<InstitucionesData | null>(null);
-  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
+  const [selectedInstitutions, setSelectedInstitutions] =
+    useState<InstitucionesData[] | null>(null);
 
-  // Obtiene el usuario actual
-  /* useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/get-token", { credentials: "include" });
-        const data = await res.json();
-        console.log("Token obtenido desde backend:", data.token);
+  const selectedCui = useAppSelector(
+          (state) => state.espacio_escolar.cui
+        );
+
+  const institucionesRedux = useSelector(
+    (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
+  );
+
   
-        if (data.token) {
-          const decodedUser: UserData = jwtDecode(data.token);
-          setUser(decodedUser);
-        }
-      } catch (error) {
-        console.error("Error obteniendo token:", error);
-      }
-      setLoading(false)
-    };
-  
-    fetchUser();
-  }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente */
 
   useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    console.log("storedInstitution", storedInstitution);
-    if (storedInstitution) {
-      try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          console.log("parsedInstitution", parsedInstitution);
-          setSelectedInstitution(parsedInstitution);
-          setLoading(false); // Actualiza loading a false aquí
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-          setError("Error al cargar la institución."); // Establece el error
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-        setError("Error al cargar la institución."); // Establece el error
-        setLoading(false);
-      }
-    } else {
-      setLoading(false); // Si no hay nada en localStorage, no hay carga
+    if (institucionesRedux.length > 0) {
+      setSelectedInstitutions(institucionesRedux);
     }
-  }, []);
+  }, [institucionesRedux]);
 
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
-  }
   return (
     <div className="h-full bg-white text-black">
       <Navbar />
@@ -130,12 +82,11 @@ export default function RelevamientoConstruccionesPage() {
         </div>
       </div>
       <CuiConstruccionComponent
-        selectedInstitution={selectedInstitution}
-        initialCui={selectedInstitution?.cui}
+        selectedInstitutions={selectedInstitutions}
+        initialCui={selectedCui}
         onCuiInputChange={() => {}}
         isReadOnly={true}
         label="COMPLETE UN FORMULARIO POR CADA CONSTRUCCIÓN DEL PREDIO"
-        onInstitutionSelected={() => {}}
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
       />
       <CantidadPlantas />
@@ -240,7 +191,7 @@ export default function RelevamientoConstruccionesPage() {
         estructuras={energiasAlternativas}
       />
 
-      <ObservacionesComponent />
+      <ObservacionesComponent onSave={()=>{}}/>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { Column, ServiciosTransporteComunicaciones } from '@/interfaces/ServiciosTransporteComunicaciones';
 import React, { ChangeEvent, useState } from 'react';
 
+
 interface ServiciostTransporteFormProps {
   serviciosData: ServiciosTransporteComunicaciones[];
   columnsConfig: Column[];

@@ -1,5 +1,6 @@
 "use client";
 
+
 import axios from "axios";
 import { useState } from "react";
 
@@ -87,13 +88,13 @@ export default function CantidadPlantas() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[900px] text-sm">
+        <table className="w-full border-collapse min-w-[900px] text-sm text-center">
           <thead>
             <tr className="bg-gray-200">
               {columnas.map((column) => (
                 <th
                   key={column.key}
-                  className={`border p-2 text-left ${
+                  className={`border p-2 text-center ${
                     column.key === "id" ? "bg-black text-white" : ""
                   }`}
                 >

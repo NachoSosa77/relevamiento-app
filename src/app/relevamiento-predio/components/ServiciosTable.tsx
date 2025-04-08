@@ -1,6 +1,7 @@
 import { Column, ServiciosBasicos } from '@/interfaces/ServiciosBasicos';
 import React, { ChangeEvent, useState } from 'react';
 
+
 interface ServiciosBasicosFormProps {
   serviciosData: ServiciosBasicos[];
   columnsConfig: Column[];
@@ -26,11 +27,11 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
     <form onSubmit={handleSubmit} className="p-4 mx-10">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-200">
+          <tr className="bg-gray-200 text-center">
             {columnsConfig.map((column) => (
               <th
                 key={column.key}
-                className={`border p-2 text-left ${column.key === 'id' ? 'bg-black text-white' : ''}`}
+                className={`border p-2 text-center ${column.key === 'id' ? 'bg-black text-white' : ''}`}
               >
                 {column.header}
               </th>
@@ -41,7 +42,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
           {servicios.map((servicio, index) => (
             <tr key={servicio.id}>
               {columnsConfig.map((column) => (
-                <td key={`${servicio.id}-${column.key}`} className="border p-2">
+                <td key={`${servicio.id}-${column.key}`} className="border p-2 text-center">
                   {column.type === 'select' && (
                     <select
                       value={servicio[column.key] as string}

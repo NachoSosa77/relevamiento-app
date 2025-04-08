@@ -1,22 +1,25 @@
 "use client";
 
+
+
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivados";
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
-import { InstitucionesData } from "@/interfaces/Instituciones";
 import { UserData } from "@/interfaces/UserData";
+import { useAppSelector } from "@/redux/hooks";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 
 export default function RelevamientoPredioPage() {
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<InstitucionesData | null>(null);
   const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
-  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
+
+
+  const selectedCui = useAppSelector(
+      (state) => state.espacio_escolar.cui
+    );
 
   // Obtiene el usuario actual
   useEffect(() => {
@@ -24,7 +27,7 @@ export default function RelevamientoPredioPage() {
       try {
         const res = await fetch("/api/get-token", { credentials: "include" });
         const data = await res.json();
-        console.log("Token obtenido desde backend:", data.token);
+        //console.log("Token obtenido desde backend:", data.token);
 
         if (data.token) {
           const decodedUser: UserData = jwtDecode(data.token);
@@ -33,56 +36,12 @@ export default function RelevamientoPredioPage() {
       } catch (error) {
         console.error("Error obteniendo token:", error);
       }
-      setLoading(false);
     };
 
     fetchUser();
   }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente
 
-  useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    console.log("storedInstitution", storedInstitution);
-    if (storedInstitution) {
-      try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          console.log("parsedInstitution", parsedInstitution);
-          setSelectedInstitution(parsedInstitution);
-          setLoading(false); // Actualiza loading a false aquí
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-          setError("Error al cargar la institución."); // Establece el error
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-        setError("Error al cargar la institución."); // Establece el error
-        setLoading(false);
-      }
-    } else {
-      setLoading(false); // Si no hay nada en localStorage, no hay carga
-    }
-  }, []);
-
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
-  }
+  
   return (
     <div className="h-full bg-white text-black">
       <Navbar />
@@ -96,12 +55,10 @@ export default function RelevamientoPredioPage() {
         </div>
       </div>
       <CuiComponent
-        selectedInstitution={selectedInstitution}
-        initialCui={selectedInstitution?.cui}
+        initialCui={selectedCui}
         onCuiInputChange={() => {}}
         isReadOnly={true}
         label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"
-        onInstitutionSelected={() => {}}
         sublabel=""
       />
       <div className="flex mt-2 mx-10 p-2 border items-center justify-center gap-4">
@@ -118,7 +75,7 @@ export default function RelevamientoPredioPage() {
       <VisitasComponent />
       <RespondientesDelCuiComponent />
       <EstablecimientosPrivados />
-      <ObservacionesComponent />
+      <ObservacionesComponent onSave={()=>{}} />
     </div>
   );
 }

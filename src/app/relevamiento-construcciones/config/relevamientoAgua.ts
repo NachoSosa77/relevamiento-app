@@ -51,23 +51,23 @@ export const almacenamientoAgua = [
 export const provisionAgua = [
   {
     id: "3.3.1",
-    question: "¿La provisión de agua abastece baños?",
+    question: "La provisión de agua abastece baños.",
     showCondition: false,
   },
   {
     id: "3.3.2",
-    question: "¿La provisión de agua abastece cocina?",
+    question: "La provisión de agua abastece cocina.",
     showCondition: false,
   },
   {
     id: "3.3.3",
     question:
-      "¿La provisión de agua es suficiente para ser utilizada en caso de incendio?",
+      "La provisión de agua es suficiente para ser utilizada en caso de incendio.",
     showCondition: false,
   },
   {
     id: "3.3.4",
-    question: "¿La provisión de agua abastece servicio de riego?",
+    question: "La provisión de agua abastece servicio de riego.",
     showCondition: false,
   },
 ];

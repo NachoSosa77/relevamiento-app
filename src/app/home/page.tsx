@@ -48,7 +48,7 @@ export default function HomePage() {
     (state) => state.institucion.institucionSeleccionada
   );
   
-  console.log("ID HomePage:", selectedInstitutionId);
+  //console.log("ID HomePage:", selectedInstitutionId);
   
   if (loading) {
     return <div>Cargando instituciones...</div>;

@@ -7,7 +7,9 @@ import Check from "@/components/ui/Checkbox";
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { RootState } from "@/redux/store";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import AreasExterioresTable from "../components/AreasExterioresTable";
 import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
 import FormReu from "../components/FormReu";
@@ -20,7 +22,10 @@ import {
   factoresRiesgoColumns,
   factoresRiesgoData,
 } from "../config/factoresRiesgo";
-import { serviciosColumns, serviciosData } from "../config/serviciosBasicosHeader";
+import {
+  serviciosColumns,
+  serviciosData,
+} from "../config/serviciosBasicosHeader";
 import {
   serviciosDataTransporte,
   serviciosTransporteComunicaciones,
@@ -39,61 +44,25 @@ export default function RelevamientoCPage() {
     descripcionOtro: "",
     juicioCurso: "",
   });
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<InstitucionesData | null>(null);
+  const [selectedInstitutions, setSelectedInstitutions] = useState<
+    InstitucionesData[]
+  >([]);
   const [selectedJuicio, setSelectedJuicio] = useState<string | null>(null); // Estado para el checkbox seleccionado      const [loading, setLoading] = useState(true); // Nuevo estado para la carga
   const [mostrarObras, setMostrarObras] = useState(false); // Estado elevado
   const [showFormFuera, setShowFormFuera] = useState(false);
   const [mostrarFuera, setMostrarFuera] = useState(false); // Nuevo estado para ObrasFueraDelPredio
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
-  const [loading, setLoading] = useState(true); // Nuevo estado para la carga
 
-  //console.log('SELECTED INSTITUCION', selectedInstitution );
+  const institucionesRedux = useSelector(
+    (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
+  );
+
+  console.log('SELECTED INSTITUCIONS', selectedInstitutions );
 
   useEffect(() => {
-    const storedInstitution = localStorage.getItem("selectedInstitution");
-    //console.log("storedInstitution", storedInstitution);
-    if (storedInstitution) {
-      try {
-        const parsedInstitution = JSON.parse(storedInstitution);
-        if (
-          typeof parsedInstitution === "object" &&
-          parsedInstitution !== null
-        ) {
-          //console.log("parsedInstitution", parsedInstitution);
-          setSelectedInstitution(parsedInstitution);
-          setLoading(false); // ¡IMPORTANTE!
-        } else {
-          console.warn(
-            "Datos incorrectos en localStorage para selectedInstitution"
-          );
-          setError("Error al cargar la institución."); // Establece el error
-          setLoading(false); // ¡IMPORTANTE!
-        }
-      } catch (error) {
-        console.error(
-          "Error al parsear selectedInstitution desde localStorage:",
-          error
-        );
-        setError("Error al cargar la institución."); // Establece el error
-        setLoading(false); // ¡IMPORTANTE!
-      }
-    } else {
-      setLoading(false); // Si no hay nada en localStorage, no hay carga
+    if (institucionesRedux.length > 0) {
+      setSelectedInstitutions(institucionesRedux);
     }
-  }, []);
-
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>; // Mensaje si no hay selección
-  }
+  }, [institucionesRedux]);
 
   const handleFormReuConfirm = () => {
     setShowFormFuera(true);
@@ -144,7 +113,7 @@ export default function RelevamientoCPage() {
           </div>
         </div>
       </div>
-      <EstablecimientosPredio selectedInstitution={selectedInstitution} />
+      <EstablecimientosPredio selectedInstitutions={selectedInstitutions} />
 
       <div className="flex items-center mx-10 mt-2 bg-slate-200 ">
         <div className="w-10 h-10 flex justify-center items-center border text-white font-bold bg-black text-sm">
@@ -265,8 +234,12 @@ export default function RelevamientoCPage() {
         columnsConfig={factoresRiesgoColumns}
       />
       <AreasExterioresTable />
-      <FormReu setMostrarObras={setMostrarObras} question="¿Existen obras en este predio?" onConfirm={handleFormReuConfirm}/>
-      {mostrarObras && (<ObrasDentroDelPredio mostrarObras={mostrarObras}/>)}
+      <FormReu
+        setMostrarObras={setMostrarObras}
+        question="¿Existen obras en este predio?"
+        onConfirm={handleFormReuConfirm}
+      />
+      {mostrarObras && <ObrasDentroDelPredio mostrarObras={mostrarObras} />}
       {showFormFuera && (
         <FormReuFuera
           question="¿Hay obras en un predio no escolar, destinadas a alguno de los CUE-Anexos que funcionan acá?"

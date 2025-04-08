@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
@@ -24,19 +23,29 @@ export default function ServiciosReu({
   sublabel,
   servicios,
 }: ServiciosReuProps) {
-  const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
-  >({});
+  const [selectedServicios, setSelectedServicios] = useState<
+    { servicio: string; estado?: string }[]
+  >([]);
 
-  const handleResponseChange = (
-    servicioId: string,
-    field: "disponibilidad" | "estado",
-    value: string
-  ) => {
-    setResponses((prev) => ({
-      ...prev,
-      [servicioId]: { ...prev[servicioId], [field]: value },
-    }));
+  const handleServicioSelect = (servicioId: string) => {
+    const servicio = servicios.find((s) => s.id === servicioId);
+    if (!servicio) return;
+    const alreadySelected = selectedServicios.some((s) => s.servicio === servicio.question);
+    if (!alreadySelected) {
+      setSelectedServicios((prev) => [...prev, { servicio: servicio.question }]);
+    }
+  };
+
+  const handleEstadoChange = (servicioQuestion: string, estado: string) => {
+    setSelectedServicios((prev) =>
+      prev.map((s) =>
+        s.servicio === servicioQuestion ? { ...s, estado } : s
+      )
+    );
+  };
+
+  const handleGuardar = () => {
+    console.log("Servicios seleccionados:", selectedServicios);
   };
 
   return (
@@ -52,7 +61,7 @@ export default function ServiciosReu({
         </div>
       )}
       {sub_id !== id && (
-        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200 ">
+        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
           <div className="w-6 h-6 flex justify-center text-black font-bold">
             <p>{sub_id}</p>
           </div>
@@ -65,153 +74,61 @@ export default function ServiciosReu({
       <table className="w-full border mt-2 text-xs">
         <thead>
           <tr className="bg-slate-200">
-            <th className="border p-2"></th>
-            <th className="border p-2"></th>
-            <th className="border p-2">No</th>
-            <th className="border p-2">Sí</th>
-            <th className="border p-2">
-              {sub_id === 3.3 ? "" : "Estado de conservación"}
-            </th>
+            <th className="border p-2">Servicio</th>
+            <th className="border p-2">Estado (si corresponde)</th>
           </tr>
         </thead>
         <tbody>
-          {servicios.map(({ id, question, showCondition }) => (
-            <tr key={id} className="border">
-              <td className="border p-2 text-center">{id}</td>
-              <td className="border p-2">{question}</td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="No"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "No")
-                  }
-                />
-              </td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="Si"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "Si")
-                  }
-                />
-              </td>
-              <td className="border p-2 text-center">
-                {!showCondition || sub_id === 3.3 ? (
-                  <div className="flex gap-2 items-center justify-center">
-                    {id === "3.3.1" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Construcción sin baños"
-                          onChange={() =>
-                            handleResponseChange(
-                              id,
-                              "estado",
-                              "Construcción sin baños"
-                            )
-                          }
-                          className="mr-1"
-                        />
-                        Construcción sin baños
-                      </label>
-                    )}
-                    {id === "3.3.2" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Construcción sin cocina"
-                          onChange={() =>
-                            handleResponseChange(
-                              id,
-                              "estado",
-                              "Construcción sin cocina"
-                            )
-                          }
-                          className="mr-1"
-                        />
-                        Construcción sin cocina
-                      </label>
-                    )}
-                    {id === "3.3.3" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="NS"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "NS")
-                          }
-                          className="mr-1"
-                        />
-                        NS
-                      </label>
-                    )}
-                    {id === "3.3.4" && (
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="NC"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "NC")
-                          }
-                          className="mr-1"
-                        />
-                        NC
-                      </label>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex gap-2 items-center justify-center">
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Bueno"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Bueno")
-                        }
-                        className="mr-1"
-                      />
-                      B
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Regular"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Regular")
-                        }
-                        className="mr-1"
-                      />
-                      R
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`estado-${id}`}
-                        value="Malo"
-                        onChange={() =>
-                          handleResponseChange(id, "estado", "Malo")
-                        }
-                        className="mr-1"
-                      />
-                      M
-                    </label>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
+          <tr>
+            <td className="border p-2" colSpan={2}>
+              <select
+                onChange={(e) => handleServicioSelect(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Seleccionar servicio</option>
+                {servicios.map((servicio) => (
+                  <option key={servicio.id} value={servicio.id}>
+                    {servicio.question}
+                  </option>
+                ))}
+              </select>
+            </td>
+          </tr>
+          {selectedServicios.map(({ servicio, estado }) => {
+            const currentServicio = servicios.find((s) => s.question === servicio);
+            return (
+              <tr key={servicio}>
+                <td className="border p-2">{servicio}</td>
+                <td className="border p-2">
+                  {currentServicio?.showCondition ? (
+                    <select
+                      value={estado || ""}
+                      onChange={(e) => handleEstadoChange(servicio, e.target.value)}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="">Seleccionar estado</option>
+                      <option value="Bueno">Bueno</option>
+                      <option value="Regular">Regular</option>
+                      <option value="Malo">Malo</option>
+                    </select>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar servicios
+        </button>
+      </div>
     </div>
   );
 }
