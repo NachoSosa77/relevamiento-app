@@ -76,6 +76,7 @@ const espacioEscolarSlice = createSlice({
     setContextId: (state, action: PayloadAction<number | null>) => {
       state.contextId = action.payload;
     },
+    resetEspacioEscolar: () => initialState,
   },
 });
 
@@ -91,6 +92,7 @@ export const {
   addAreasExteriores,
   resetAreasExteriores,
   setContextId,
+  resetEspacioEscolar,
 } = espacioEscolarSlice.actions;
 
 export default espacioEscolarSlice.reducer;

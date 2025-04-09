@@ -11,14 +11,15 @@ import { default as establecimientos_columns } from "../Table/TableColumns/estab
 import ReusableTable from "../Table/TableReutilizable";
 import CuiComponent from "./dinamicForm/CuiComponent";
 
+
 const EstablecimientosComponent: React.FC = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(
-    undefined
-  ); // Valor del input CUI
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
+  );
+  const selectedCui = useAppSelector(
+    (state) => state.espacio_escolar.cui
   );
   const dispatch = useAppDispatch();
 
@@ -51,12 +52,9 @@ const EstablecimientosComponent: React.FC = () => {
     }
   }, [selectedInstitutionId]);
 
-  const handleCuiInputChange = (newCui: number | undefined) => {
-    setCuiInputValue(newCui);
-  };
 
   const handleSave = () => {
-    if (cuiInputValue) {
+    if (selectedCui) {
       toast.success("¡Institución agregada exitosamente!");
       closeModal();
     } else {
@@ -129,8 +127,8 @@ const EstablecimientosComponent: React.FC = () => {
         /> */}
         <CuiComponent
           label={""}
-          initialCui={cuiInputValue} // Pasa el valor inicial del CUI
-          onCuiInputChange={handleCuiInputChange} // Pasa la función para actualizar el CUI
+          initialCui={selectedCui} // Pasa el valor inicial del CUI
+          onCuiInputChange={()=>{}} // Pasa la función para actualizar el CUI
           isReadOnly={false}
           sublabel=""
         />

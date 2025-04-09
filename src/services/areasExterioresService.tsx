@@ -24,14 +24,19 @@ import axios from 'axios';
 }; */
 
 // Crear una nueva área exterior
-const postAreasExteriores = async (formData: AreasExteriores) => {
-  try {
-    const response = await axios.post(`/api/areas_exteriores`, formData);
-    return response.data; // Devuelve la respuesta completa, que incluye el id
-  } catch (error) {
-    console.error('Error al cargar los datos:', error);
-    throw error;
+const postAreasExteriores = async (data: (AreasExteriores & { cui_number: number })[]) => {
+    const res = await fetch("/api/areas_exteriores", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    console.error("Respuesta del servidor:", errorData);
+    throw new Error("Error al guardar las áreas exteriores");
   }
+  return res.json();
 };
 
 // Obtener opciones de tipos de áreas exteriores

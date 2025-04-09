@@ -1,7 +1,7 @@
 "use client";
 
 import { LocalesConstruccion, TipoLocales } from "@/interfaces/Locales";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setLocales } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
 import { useEffect, useState } from "react";
@@ -18,9 +18,10 @@ interface FormData extends LocalesConstruccion {
   superficie_total?: number;
   identificacion_plano: number;
   numero_planta: number;
-  tipo_local_id: number;
+  tipo: string;
   local_sin_uso: string;
   superficie: number;
+  cui_number?: number;
 }
 
 export default function LocalesPorConstruccion() {
@@ -33,12 +34,14 @@ export default function LocalesPorConstruccion() {
     superficie_total: 0,
     identificacion_plano: 0,
     numero_planta: 0,
-    tipo_local_id: 0,
+    tipo: "",
     local_sin_uso: "",
     superficie: 0,
+    cui_number: 0,
   });
   const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
   const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
+  const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -54,10 +57,14 @@ export default function LocalesPorConstruccion() {
   }, []);
 
   const handleSelecteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = Number(event.target.value);
-    setSelectLocales(selectedType);
-    setFormData({ ...formData, tipo_local_id: selectedType }); // Actualiza el formData
+    const selectedId = Number(event.target.value);
+    setSelectLocales(selectedId);
+    const selectedOption = opcionesLocales.find((op) => op.id === selectedId);
+    if (selectedOption) {
+      const tipoString = `${selectedOption.name}`;
+      setFormData({ ...formData, tipo: tipoString });
   };
+}
   /* const selectedLocales = locales.find(
         (locales) => locales.id === setSelectLocales
       ); */
@@ -114,7 +121,7 @@ export default function LocalesPorConstruccion() {
       const newData: LocalesConstruccion = {
         identificacion_plano: formData.identificacion_plano,
         numero_planta: formData.numero_planta,
-        tipo_local_id: Number(selectLocales),
+        tipo: formData.tipo,
         local_sin_uso: formData.local_sin_uso || "No",
         superficie: formData.superficie,
       };
@@ -125,13 +132,33 @@ export default function LocalesPorConstruccion() {
       setFormData({
         identificacion_plano: 0,
         numero_planta: 0,
-        tipo_local_id: 0,
+        tipo: "",
         local_sin_uso: "",
         superficie: 0,
       }); // Limpia el formulario
       setSelectLocales(null); // Resetea el select
     } catch (error) {
       console.error("Error al enviar los datos:", error);
+    }
+  };
+
+  const handleGuardarLocales = async () => {
+    if (!cui_number) {
+      console.error("No hay CUI disponible");
+      return;
+    }
+  
+    const payload = tableData.map((local) => ({
+      ...local,
+      cui_number,
+    }));
+  
+    try {
+      await localesService.postLocales(payload);
+      console.log("Locales guardados correctamente:", payload);
+      // Limpieza o feedback opcional
+    } catch (error) {
+      console.error("Error al guardar los locales:", error);
     }
   };
 
@@ -143,14 +170,7 @@ export default function LocalesPorConstruccion() {
     { Header: "Superficie Total", accessor: "superficie_total" }, */
     { Header: "Identificación en el plano", accessor: "identificacion_plano" },
     { Header: "N° de planta", accessor: "numero_planta" },
-    {
-      Header: "Tipo de local",
-      accessor: "tipo_local_id",
-      Cell: ({ value }: { value: number }) => {
-        const opcion = opcionesLocales.find((op) => op.id === Number(value));
-        return opcion ? opcion.name : "No definido";
-      },
-    }, // Muestra el nombre del tipo
+    { Header: "Tipo de local", accessor: "tipo", }, // Muestra el nombre del tipo
     {
       Header: "Local sin uso",
       accessor: "local_sin_uso",
@@ -333,6 +353,17 @@ export default function LocalesPorConstruccion() {
         </table>
       </form>
       <ReusableTable data={tableData} columns={columns} />
+      {tableData.length > 0 && (
+        <div className="flex justify-center mt-4">
+          <button
+            type="button"
+            className="text-sm font-bold bg-blue-500 text-white p-2 rounded-md"
+            onClick={handleGuardarLocales}
+          >
+            Guardar Datos
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -98,9 +98,9 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password}),
         credentials: "include", // Si usas cookies para sesiones
       });
-      console.log('response', response)
-      console.log(email)
-      console.log(password)
+      //console.log('response', response)
+      //console.log(email)
+      //console.log(password)
       
 
 

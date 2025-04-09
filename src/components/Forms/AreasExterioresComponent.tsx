@@ -1,6 +1,6 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { addAreasExteriores } from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -23,6 +23,7 @@ export default function AreasExterioresComponent() {
   });
   const [tableData, setTableData] = useState<FormData[]>([]);
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
+  const cui_number = useAppSelector((state) => state.espacio_escolar.cui); // 👈 trae el cui
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -42,9 +43,13 @@ export default function AreasExterioresComponent() {
   }, []);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = event.target.value;
-    setSelectArea(Number(selectedType));
-    setFormData({ ...formData, tipo: selectedType });
+    const selectedId = Number(event.target.value);
+    setSelectArea(selectedId);
+    const selectedOption = opcionesAreas.find((op) => op.id === selectedId);
+    if (selectedOption) {
+      const tipoString = `${selectedOption.name}`;
+      setFormData({ ...formData, tipo: tipoString });
+    }
   };
 
   const handleInputChange = (
@@ -72,20 +77,35 @@ export default function AreasExterioresComponent() {
       console.error("Error al agregar el área exterior:", error);
     }
   };
+
+  const handleGuardarDatos = async () => {
+    if (!cui_number) {
+      console.error("No hay CUI definido.");
+      return;
+    }
   
+    try {
+      const payload = tableData.map((area) => ({
+        ...area,
+        cui_number,
+      }));
+
+      console.log("Payload a enviar:", payload); // 👀
   
+      await areasExterioresService.postAreasExteriores(payload);
+  
+      console.log("Datos guardados correctamente:", payload);
+      // Podés limpiar tabla o mostrar confirmación si querés
+  
+    } catch (error) {
+      console.error("Error al guardar los datos en la base:", error);
+    }
+  };
 
   const columns = [
     { Header: "Identificación", accessor: "identificacion_plano" },
-    {
-      Header: "Tipo",
-      accessor: "tipo",
-      Cell: ({ value }: { value: number }) => {
-        const opcion = opcionesAreas.find((op) => op.id === Number(value));
-        return opcion ? opcion.name : "No definido";
-      },
-    },
-    { Header: "Superficie", accessor: "superficie" },
+    { Header: "Tipo", accessor: "tipo"},
+    { Header: "Superficie", accessor: "superficie"},
   ];
 
   return (
@@ -150,16 +170,17 @@ export default function AreasExterioresComponent() {
         </table>
       </form>
       <ReusableTable data={tableData ?? []} columns={columns} />
-      {/* {tableData.length > 0 && (
+       {tableData.length > 0 && (
         <div className="flex justify-center mt-4">
           <button
-            type="submit"
+            type="button"
             className="text-sm font-bold bg-blue-500 text-white p-2 rounded-md"
+            onClick={handleGuardarDatos}
           >
             Guardar Datos
           </button>
         </div>
-      )} */}
+      )}
     </div>
   );
 }

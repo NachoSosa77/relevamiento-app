@@ -2,7 +2,6 @@
 "use client";
 
 
-
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";

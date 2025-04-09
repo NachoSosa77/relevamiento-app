@@ -1,4 +1,5 @@
 import { UserData } from "@/interfaces/UserData";
+import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,7 @@ import {
   AiOutlineMenu,
   AiOutlineUser,
 } from "react-icons/ai";
+import { useDispatch } from "react-redux";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +19,7 @@ const Navbar = () => {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true); // Nuevo estado para evitar renders en blanco
+  const dispatch = useDispatch();
  
 
   // Obtiene el usuario actual
@@ -46,6 +49,7 @@ const handleLogout = async () => {
 
   try {
     await fetch("/api/auth/logout", { method: "POST" }); // ⬅️ Llama al endpoint para borrar la cookie en el servidor
+    dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
     setUser(null);
     setShowLogoutModal(false);
     router.push("/");

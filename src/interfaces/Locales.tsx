@@ -11,7 +11,8 @@ export interface LocalesConstruccion {
   superficie_total?: number;
   identificacion_plano: number;
   numero_planta: number;
-  tipo_local_id: number;
+  tipo: string;
   local_sin_uso: string;
   superficie: number;
+  cui_number?: number;
 }

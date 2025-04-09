@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 interface AreaExterior extends RowDataPacket {
   id?: number; // El 'id' ahora es opcional
+  cui_number?: number;
   identificacion_plano: string;
   tipo: string;
   superficie: string;
@@ -18,21 +19,31 @@ export async function POST(req: NextRequest) {
     const connection = await getConnection();
     const body = await req.json();
 
-    const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO areas_exteriores (identificacion_plano, tipo, superficie) VALUES (?, ?, ?)`,
-      [body.identificacion_plano, body.tipo, body.superficie]
-    );
+    if (!Array.isArray(body)) {
+      return NextResponse.json(
+        { message: "Se esperaba un array de áreas exteriores" },
+        { status: 400 }
+      );
+    }
 
-    const areaExteriorId = result.insertId;
+    const insertResults = [];
+
+    for (const area of body) {
+      const [result] = await connection.query<ResultSetHeader>(
+        `INSERT INTO areas_exteriores (cui_number, identificacion_plano, tipo, superficie) VALUES (?, ?, ?, ?)`,
+        [area.cui_number, area.identificacion_plano, area.tipo, area.superficie]
+      );
+      insertResults.push({ id: result.insertId, ...area });
+    }
 
     connection.release();
 
     return NextResponse.json({
-      message: "Área exterior creada correctamente",
-      id: areaExteriorId,
+      message: "Áreas exteriores guardadas correctamente",
+      inserted: insertResults,
     });
   } catch (err: any) {
-    console.error("Error al crear el área exterior:", err);
+    console.error("Error al crear áreas exteriores:", err);
     return NextResponse.json(
       { message: "Error interno", error: err.message },
       { status: 500 }

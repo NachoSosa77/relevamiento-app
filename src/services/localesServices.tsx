@@ -34,15 +34,26 @@ const getOpcionesLocales = async () => {
   }
 };
 
-const postLocales = async (formData: LocalesConstruccion) => {
-  try {
-    const response = await axios.post(`/api/locales_por_construccion`, formData);
-    return response.data; // Devuelve la respuesta completa, que incluye el id
-  } catch (error) {
-    console.error('Error al cargar los datos:', error);
-    throw error;
+const postLocales = async (data: (LocalesConstruccion & { cui_number: number })[]) => {
+  const res = await fetch("/api/locales_por_construccion", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const contentType = res.headers.get("Content-Type");
+
+  if (!res.ok) {
+    const errorData = contentType?.includes("application/json")
+      ? await res.json()
+      : await res.text();
+
+    console.error("Error del servidor:", errorData);
+    throw new Error("Error al guardar los locales");
   }
-};
+
+  return res.json();
+}
 
 // Actualizar un área exterior por ID
 /* const updateAreasExteriores = async (id: number, formData: AreasExteriores) => {
