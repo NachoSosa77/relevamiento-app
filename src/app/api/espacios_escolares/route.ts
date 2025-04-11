@@ -1,45 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
-import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const connection = await getConnection();
-    const id = (await params).id;
-
-    if (!id) {
-      return NextResponse.json(
-        { message: "ID no proporcionado" },
-        { status: 400 }
-      );
-    }
-
-    const [result] = await connection.query<RowDataPacket[]>(
-      "SELECT * FROM espacios_escolares WHERE id = ?",
-      [id]
-    );
-    connection.release();
-
-    if (result.length === 0) {
-      return NextResponse.json(
-        { message: "Espacio escolar no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(result[0]); // ✅ Devolver solo un objeto en lugar de un array
-  } catch (err: any) {
-    console.error("Error al obtener el espacio escolar:", err);
-    return NextResponse.json(
-      { message: "Error interno", error: err.message },
-      { status: 500 }
-    );
-  }
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,29 +8,74 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
 
     const {
-      institucion,
-      cantidad_construcciones,
-      superficie_total,
+      cui,
+      cantidadConstrucciones,
+      superficieTotalPredio,
       plano,
-      area_exterior_id,
-      local_id,
       observaciones,
+      areasExteriores,
       locales,
+      institucionesSeleccionadas,
     } = data;
 
-    await connection.query(
-      "INSERT INTO espacios_escolares (institucion, cantidad_construcciones, superficie_total, plano, area_exterior_id, local_id, observaciones, locales) VALUES (?,?,?,?,?,?)",
-      [
-        institucion,
-        cantidad_construcciones,
-        superficie_total,
-        plano,
-        area_exterior_id,
-        local_id,
-        observaciones,
-        locales,
-      ]
+    // Insertar en espacio_escolar
+    const [espacioResult]: any = await connection.query(
+      `INSERT INTO espacios_escolares (cui, cantidad_construcciones, superficie_total_predio, plano, observaciones)
+       VALUES (?, ?, ?, ?, ?)`,
+      [cui, cantidadConstrucciones, superficieTotalPredio, plano, observaciones]
     );
+
+    const espacioEscolarId = espacioResult.insertId;
+
+    // Insertar relaciones con áreas exteriores
+    for (const area of areasExteriores) {
+      await connection.query(
+        `INSERT INTO areas_exteriores (identificacion_plano, tipo, superficie)
+         VALUES (?, ?, ?)`,
+        [area.identificacion_plano, area.tipo, area.superficie]
+      );
+      const [areaResult]: any = await connection.query(
+        "SELECT LAST_INSERT_ID() as id"
+      );
+      await connection.query(
+        `INSERT INTO espacio_escolar_areas_exteriores (espacio_escolar_id, area_exterior_id)
+         VALUES (?, ?)`,
+        [espacioEscolarId, areaResult[0].id]
+      );
+    }
+
+    // Insertar relaciones con locales
+    for (const local of locales) {
+      await connection.query(
+        `INSERT INTO locales_por_construccion (identificacion_plano, numero_planta, tipo, local_sin_uso, superficie)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          local.identificacion_plano,
+          local.numero_planta,
+          local.tipo,
+          local.local_sin_uso,
+          local.superficie,
+        ]
+      );
+      const [localResult]: any = await connection.query(
+        "SELECT LAST_INSERT_ID() as id"
+      );
+      await connection.query(
+        `INSERT INTO espacio_escolar_locales (espacio_escolar_id, local_id)
+         VALUES (?, ?)`,
+        [espacioEscolarId, localResult[0].id]
+      );
+    }
+
+    // Insertar relaciones con instituciones
+    for (const institucion of institucionesSeleccionadas) {
+      await connection.query(
+        `INSERT INTO espacio_escolar_instituciones (espacio_escolar_id, institucion_id)
+         VALUES (?, ?)`,
+        [espacioEscolarId, institucion.id]
+      );
+    }
+
     connection.release();
     return NextResponse.json(
       { message: "Espacio escolar insertado correctamente" },

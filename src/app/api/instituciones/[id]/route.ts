@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/instituciones/[id]/route.ts
+
 import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,12 +21,11 @@ interface Institucion extends RowDataPacket {
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = context.params?.id; // Extraemos id de forma segura
+  const id = (await params).id;
 
-  // Valida que el id sea un número
-  if (!id || !/^\d+$/.test(id)) {
+  if (!/^\d+$/.test(id)) {
     return NextResponse.json(
       { message: "ID no válido. Debe ser un número." },
       { status: 400 }
@@ -35,7 +36,7 @@ export async function GET(
     const connection = await getConnection();
     const [instituciones] = await connection.query<Institucion[]>(
       "SELECT * FROM instituciones WHERE id = ?",
-      [id]
+      [Number(id)]
     );
     connection.release();
 
@@ -46,11 +47,11 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(instituciones[0]); // Devuelve solo la institución encontrada
+    return NextResponse.json(instituciones[0]);
   } catch (err: any) {
-    console.error("Error al obtener la institución:", err);
+    console.error("Error:", err);
     return NextResponse.json(
-      { message: "Error al obtener la institución", error: err.message },
+      { message: "Error en el servidor", error: err.message },
       { status: 500 }
     );
   }

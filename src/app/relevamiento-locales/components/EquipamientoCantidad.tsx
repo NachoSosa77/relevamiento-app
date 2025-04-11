@@ -35,7 +35,7 @@ export default function EquipamientoCantidad({
   const handleResponseChange = (
     id: string,
     field: "cantidad" | "estado",
-    value: number | string
+    value: number | string | undefined
   ) => {
     setResponses((prev) => {
       const updatedResponse = {
@@ -109,7 +109,9 @@ export default function EquipamientoCantidad({
                           type="radio"
                           name={`estado-${id}`}
                           value={estado}
-                          checked={responses[id]?.["default"]?.estado === estado}
+                          checked={
+                            responses[id]?.["default"]?.estado === estado
+                          }
                           onChange={() =>
                             handleResponseChange(id, "estado", estado)
                           }

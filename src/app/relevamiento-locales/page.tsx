@@ -183,7 +183,7 @@ export default function RelevamientoConstruccionesPage() {
         locales={equipamientoSanitario}
       />
 
-      <ObservacionesComponent/>
+      <ObservacionesComponent onSave={()=>{}}/>
     </div>
   );
 }

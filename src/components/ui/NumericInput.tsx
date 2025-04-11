@@ -1,11 +1,9 @@
 import React from "react";
 
-
-
 interface InputProps {
   label: string;
   subLabel: string;
-  value: number | undefined; 
+  value: number | undefined;
   onChange: (value: number | undefined) => void;
   disabled: boolean;
 }

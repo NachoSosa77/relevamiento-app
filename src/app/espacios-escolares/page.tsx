@@ -16,7 +16,9 @@ import {
   setInstitucionId,
   setObservaciones,
 } from "@/redux/slices/espacioEscolarSlice";
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function EspaciosEscolaresPage() {
   const selectedInstitutionId = useAppSelector(
@@ -30,6 +32,7 @@ export default function EspaciosEscolaresPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   useEffect(() => {
     console.log("selectedInstitutionId desde Redux:", selectedInstitutionId);
@@ -74,23 +77,45 @@ export default function EspaciosEscolaresPage() {
 
   const enviarDatosEspacioEscolar = async () => {
     try {
-      const response = await fetch("/api/espacios-escolares", {
+      const payload = {
+        cui: selectedEspacioEscolar.cui,
+        cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
+        superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
+        plano: selectedEspacioEscolar.plano,
+        observaciones: selectedEspacioEscolar.observaciones,
+        areasExteriores: selectedEspacioEscolar.areasExteriores || [],
+        locales: selectedEspacioEscolar.locales || [],
+        institucionesSeleccionadas:
+          selectedEspacioEscolar.institucionesSeleccionadas || [],
+      };
+  
+      const response = await fetch("/api/espacios_escolares", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(selectedEspacioEscolar), // Envía todo el estado de espacio_escolar
+        body: JSON.stringify(payload),
       });
-
+  
       if (!response.ok) {
         throw new Error("Error al guardar los datos del espacio escolar.");
       }
-
+      toast.success("Espacio escolar guardado correctamente 🎉", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setTimeout(() => {
+        router.push('/relevamiento-predio');
+      }, 1000); // 1 segundo de espera
       console.log("Datos del espacio escolar guardados con éxito.");
-      // Puedes agregar lógica adicional aquí, como limpiar el estado o mostrar un mensaje de éxito.
+      // Podés resetear el estado o mostrar confirmación visual acá
     } catch (error: any) {
       console.error("Error al enviar datos del espacio escolar:", error);
-      setError(error.message); // Establece el error en el estado local
+      toast.error("Hubo un error al guardar los datos.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setError(error.message);
     }
   };
 

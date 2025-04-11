@@ -1,5 +1,6 @@
 "use client";
 
+import AlphanumericInput from "@/components/ui/AlphanumericInput";
 import NumericInput from "@/components/ui/NumericInput";
 import { useState } from "react";
 
@@ -36,7 +37,7 @@ export default function IluminacionVentilacion({
     id: string,
     tipo: string,
     field: "cantidad" | "estado",
-    value: number | string
+    value: number | string | undefined
   ) => {
     setResponses((prev) => ({
       ...prev,
@@ -85,11 +86,10 @@ export default function IluminacionVentilacion({
                     Si
                   </label>
                 ) : (
-                  <NumericInput
-                    disabled={false}
+                  <AlphanumericInput
                     label={"Superficie de iluminación"}
                     subLabel="m2"
-                    value={responses[id]?.["default"]?.cantidad || ""}
+                    value={responses[id]?.["default"]?.cantidad ?? undefined}
                     onChange={(value) =>
                       handleResponseChange(id, "default", "cantidad", value)
                     }
@@ -98,23 +98,23 @@ export default function IluminacionVentilacion({
               </td>
               <td className="border p-2 text-center">
                 {showCondition ? (
-                   <label>
-                   <input
-                     type="radio"
-                     name={`estado-${id}`}
-                     value={""}
-                     checked={false}
-                     onChange={() => {}}
-                     className="mr-1"
-                   />
-                   No
-                 </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name={`estado-${id}`}
+                      value={""}
+                      checked={false}
+                      onChange={() => {}}
+                      className="mr-1"
+                    />
+                    No
+                  </label>
                 ) : (
                   <NumericInput
                     disabled={false}
                     label="Superficie de ventilación"
                     subLabel="m2"
-                    value={responses[id]?.["default"]?.cantidad || ""}
+                    value={responses[id]?.["default"]?.cantidad ?? undefined}
                     onChange={(value) =>
                       handleResponseChange(id, "default", "cantidad", value)
                     }

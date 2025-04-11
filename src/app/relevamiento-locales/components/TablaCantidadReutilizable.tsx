@@ -1,5 +1,6 @@
 "use client";
 
+import AlphanumericInput from "@/components/ui/AlphanumericInput";
 import NumericInput from "@/components/ui/NumericInput";
 import { useState } from "react";
 
@@ -36,7 +37,7 @@ export default function TableCantidadReutilizable({
     id: string,
     tipo: string,
     field: "cantidad" | "estado",
-    value: number | string
+    value: number | string | undefined
   ) => {
     setResponses((prev) => ({
       ...prev,
@@ -88,8 +89,7 @@ export default function TableCantidadReutilizable({
                 <td className="border p-2 text-center">
                   {showCondition && opciones.length > 0 ? (
                     opciones.map((tipo) => (
-                      <NumericInput
-                        disabled={false}
+                      <AlphanumericInput
                         key={tipo}
                         label=""
                         subLabel=""
@@ -104,7 +104,7 @@ export default function TableCantidadReutilizable({
                       disabled={false}
                       label=""
                       subLabel=""
-                      value={responses[id]?.["default"]?.cantidad || ""}
+                      value={responses[id]?.["default"]?.cantidad ?? undefined}
                       onChange={(value) =>
                         handleResponseChange(id, "default", "cantidad", value)
                       }

@@ -11,16 +11,13 @@ import { default as establecimientos_columns } from "../Table/TableColumns/estab
 import ReusableTable from "../Table/TableReutilizable";
 import CuiComponent from "./dinamicForm/CuiComponent";
 
-
 const EstablecimientosComponent: React.FC = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
-  const selectedCui = useAppSelector(
-    (state) => state.espacio_escolar.cui
-  );
+  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
   const dispatch = useAppDispatch();
 
   //console.log("INSTITUCIONES", selectedInstitutionId);
@@ -51,7 +48,6 @@ const EstablecimientosComponent: React.FC = () => {
       fetchInstitution();
     }
   }, [selectedInstitutionId]);
-
 
   const handleSave = () => {
     if (selectedCui) {
@@ -128,7 +124,7 @@ const EstablecimientosComponent: React.FC = () => {
         <CuiComponent
           label={""}
           initialCui={selectedCui} // Pasa el valor inicial del CUI
-          onCuiInputChange={()=>{}} // Pasa la función para actualizar el CUI
+          onCuiInputChange={() => {}} // Pasa la función para actualizar el CUI
           isReadOnly={false}
           sublabel=""
         />

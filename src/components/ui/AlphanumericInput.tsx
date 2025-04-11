@@ -1,9 +1,9 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 interface InputProps {
   label: string;
   subLabel: string;
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void; // Tipo correcto para onChange
+  value: string | number | undefined; // Cambiado a string | number | undefined
+  onChange: (value: string) => void; // Tipo correcto para onChange
 }
 
 const AlphanumericInput: React.FC<InputProps> = ({
@@ -14,7 +14,7 @@ const AlphanumericInput: React.FC<InputProps> = ({
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/[^a-zA-Z0-9]/g, ""); // Permite solo alfanuméricos
-    onChange({ ...event, target: { ...event.target, value: newValue } });
+    onChange(newValue);
   };
 
   return (
