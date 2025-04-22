@@ -20,7 +20,25 @@ const EstablecimientosComponent: React.FC = () => {
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
   const dispatch = useAppDispatch();
 
-  //console.log("INSTITUCIONES", selectedInstitutionId);
+  // Cargar instituciones desde localStorage al iniciar
+  useEffect(() => {
+    const storedInstituciones = localStorage.getItem("institucionesSeleccionadas");
+    if (storedInstituciones) {
+      // Si hay instituciones almacenadas, las cargamos en Redux y en el estado local
+      const institucionesDesdeLocalStorage: InstitucionesData[] = JSON.parse(storedInstituciones);
+      setInstituciones(institucionesDesdeLocalStorage);
+      dispatch(setInstitucionesData(institucionesDesdeLocalStorage));
+    }
+  }, [dispatch]);
+
+  // Persistir cambios en las instituciones seleccionadas
+  useEffect(() => {
+    if (instituciones.length > 0) {
+      // Guardamos en localStorage siempre que las instituciones cambien
+      localStorage.setItem("institucionesSeleccionadas", JSON.stringify(instituciones));
+      dispatch(setInstitucionesData(instituciones)); // Sincronizamos Redux con el estado local
+    }
+  }, [instituciones, dispatch]);
 
   useEffect(() => {
     const fetchInstitution = async () => {
@@ -66,13 +84,15 @@ const EstablecimientosComponent: React.FC = () => {
     setModalIsOpen(false);
   };
 
-  useEffect(() => {
-    if (instituciones.length > 0) {
-      dispatch(setInstitucionesData(instituciones));
-    }
-  }, [instituciones, dispatch]);
+  // Función para eliminar una institución del estado
+  const handleRemoveInstitution = (id: number) => {
+    setInstituciones((prevInstituciones) =>
+      prevInstituciones.filter((institution) => institution.id !== id)
+    );
+    toast.success("¡Institución eliminada!");
+  };
 
-  if (!instituciones) {
+  if (!instituciones || instituciones.length === 0) {
     return (
       <div className="mx-10 mt-4">
         <p>No se ha seleccionado ninguna institución.</p>
@@ -99,7 +119,11 @@ const EstablecimientosComponent: React.FC = () => {
           Referencia para especificar el domicilio.
         </p>
       </div>
-      <ReusableTable data={instituciones} columns={establecimientos_columns} />
+      <ReusableTable
+        data={instituciones} 
+        columns={establecimientos_columns}
+        onRemove={handleRemoveInstitution} // Pasar la función de eliminación
+      />
       <div className="flex justify-end">
         <button
           className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -115,12 +139,6 @@ const EstablecimientosComponent: React.FC = () => {
         overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
         ariaHideApp={false}
       >
-        {/* <ReusableForm
-          columns={establecimientos_columns}
-          onSubmit={handleAddInstitution}
-          onCancel={closeModal}
-          initialValues={institucion}
-        /> */}
         <CuiComponent
           label={""}
           initialCui={selectedCui} // Pasa el valor inicial del CUI
@@ -129,8 +147,6 @@ const EstablecimientosComponent: React.FC = () => {
           sublabel=""
         />
         <div className="flex justify-center space-x-4 mt-4">
-          {" "}
-          {/* Flex container para centrar los botones */}
           <button
             className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded`}
             onClick={handleSave} // Llama a handleSave aquí

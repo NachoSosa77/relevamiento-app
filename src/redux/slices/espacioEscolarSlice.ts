@@ -14,6 +14,7 @@ interface EspacioEscolarState {
   locales: LocalesConstruccion[];
   contextId: number | null;
   areasExteriores: AreasExteriores[];
+  relevamientoId: number | null;
 }
 
 const initialState: EspacioEscolarState = {
@@ -27,6 +28,7 @@ const initialState: EspacioEscolarState = {
   locales: [],
   contextId: null,
   areasExteriores: [],
+  relevamientoId: null,
 };
 
 const espacioEscolarSlice = createSlice({
@@ -39,11 +41,20 @@ const espacioEscolarSlice = createSlice({
     setInstitucionId: (state, action: PayloadAction<number | undefined>) => {
       state.institucion = action.payload;
     },
+    setRelevamientoId: (state, action: PayloadAction<number | null>) => {
+      state.relevamientoId = action.payload;
+    },
     setInstitucionesData: (
       state,
       action: PayloadAction<InstitucionesData[]>
     ) => {
       state.institucionesSeleccionadas = action.payload;
+    },
+    deleteInstitucionData(state, action: PayloadAction<number>) {
+      state.institucionesSeleccionadas =
+        state.institucionesSeleccionadas.filter(
+          (institucion) => institucion.id !== action.payload
+        );
     },
     setCantidadConstrucciones: (
       state,
@@ -63,12 +74,17 @@ const espacioEscolarSlice = createSlice({
     setObservaciones: (state, action: PayloadAction<string | null>) => {
       state.observaciones = action.payload;
     },
-    setLocales: (state, action: PayloadAction<LocalesConstruccion>) => {
-      state.locales = state.locales || []; // Asegura que no sea null
-      state.locales.push(action.payload);
+    setLocales: (state, action: PayloadAction<LocalesConstruccion[]>) => {
+      state.locales = action.payload;
     },
     addAreasExteriores: (state, action: PayloadAction<AreasExteriores>) => {
       state.areasExteriores.push(action.payload);
+    },
+    deleteAreasExteriores: (state, action: PayloadAction<number>) => {
+      // Eliminar el área exterior con identificacion_plano
+      state.areasExteriores = state.areasExteriores.filter(
+        (area) => area.identificacion_plano !== action.payload
+      );
     },
     resetAreasExteriores: (state) => {
       state.areasExteriores = [];
@@ -80,13 +96,16 @@ const espacioEscolarSlice = createSlice({
 export const {
   setCui,
   setInstitucionId,
+  setRelevamientoId,
   setInstitucionesData,
+  deleteInstitucionData,
   setCantidadConstrucciones,
   setSuperficieTotalPredio,
   setPlano,
   setObservaciones,
   setLocales,
   addAreasExteriores,
+  deleteAreasExteriores,
   resetAreasExteriores,
   resetEspacioEscolar,
 } = espacioEscolarSlice.actions;

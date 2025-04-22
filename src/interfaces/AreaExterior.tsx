@@ -1,9 +1,9 @@
 export interface AreasExteriores {
   id?: number; // El 'id' ahora es opcional
   cui_number?: number;
-  identificacion_plano: string;
+  identificacion_plano: number;
   tipo: string;
-  superficie: string;
+  superficie: number;
   estado_conservacion?: string | null;
   terminacion_piso?: string | null;
 }

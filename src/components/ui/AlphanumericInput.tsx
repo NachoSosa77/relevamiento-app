@@ -1,4 +1,5 @@
 import React from "react";
+
 interface InputProps {
   label: string;
   subLabel: string;
@@ -22,7 +23,7 @@ const AlphanumericInput: React.FC<InputProps> = ({
       <p className="text-sm text-black">{label}</p>
       <div className="flex flex-row p-1 justify-end border rounded-lg">
         <input
-          className="text-black mr-2 w-full"
+          className="text-black mr-2 w-full text-center"
           type="text"
           id={label}
           value={value}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { LocalesConstruccion, TipoLocales } from "@/interfaces/Locales";
@@ -5,29 +6,18 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setLocales } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
 import { useEffect, useState } from "react";
-import ReusableTable from "../Table/TableReutilizable";
-import AlphanumericInput from "../ui/AlphanumericInput";
+import ReusableTable from "../Table/TableReutilizable"; // Tabla reutilizable importada
 import Check from "../ui/Checkbox";
+import DecimalNumericInput from "../ui/DecimalNumericInput";
 import NumericInput from "../ui/NumericInput";
 import Select from "../ui/SelectComponent";
 
-interface FormData extends LocalesConstruccion {
-  numero_construccion?: number;
-  superficie_cubierta?: number;
-  superficie_semicubierta?: number;
-  superficie_total?: number;
-  identificacion_plano: number;
-  numero_planta: number;
-  tipo: string;
-  local_sin_uso: string;
-  superficie: number;
-  cui_number?: number;
-}
-
 export default function LocalesPorConstruccion() {
   const [selectLocales, setSelectLocales] = useState<number | null>(null);
-  const [checked, setChecked] = useState(false); // Estado para el checkbox
-  const [formData, setFormData] = useState<FormData>({
+  const [checked, setChecked] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
+  const [formData, setFormData] = useState<LocalesConstruccion>({
     numero_construccion: 0,
     superficie_cubierta: 0,
     superficie_semicubierta: 0,
@@ -35,13 +25,14 @@ export default function LocalesPorConstruccion() {
     identificacion_plano: 0,
     numero_planta: 0,
     tipo: "",
-    local_sin_uso: "",
+    local_sin_uso: "No",
     superficie: 0,
     cui_number: 0,
   });
-  const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
-  const [tableData, setTableData] = useState<FormData[]>([]); // Datos para la tabla
+  const [tableData, setTableData] = useState<LocalesConstruccion[]>([]);
+
   const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
+  const localesRedux = useAppSelector((state) => state.espacio_escolar.locales);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -50,182 +41,199 @@ export default function LocalesPorConstruccion() {
         const data = await localesService.getOpcionesLocales();
         setOpcionesLocales(data);
       } catch (error) {
-        console.error("Error al obtener opciones de áreas exteriores:", error);
+        console.error("Error al obtener opciones de locales:", error);
       }
     }
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (localesRedux.length > 0) {
+      setTableData(localesRedux);
+    }
+  }, [localesRedux]);
 
   const handleSelecteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = Number(event.target.value);
     setSelectLocales(selectedId);
     const selectedOption = opcionesLocales.find((op) => op.id === selectedId);
     if (selectedOption) {
-      const tipoString = `${selectedOption.name}`;
-      setFormData({ ...formData, tipo: tipoString });
+      setFormData((prev) => ({ ...prev, tipo: selectedOption.name }));
+    }
   };
-}
-  /* const selectedLocales = locales.find(
-        (locales) => locales.id === setSelectLocales
-      ); */
+
   const handleSiChange = (checked: boolean) => {
     setChecked(checked);
-    setFormData((prev) => ({ ...prev, local_sin_uso: checked ? "Si" : "No" })); // Actualiza formData.localSinUso
+    setFormData((prev) => ({ ...prev, local_sin_uso: checked ? "Si" : "No" }));
   };
 
-  const calculoSuperficieTotal = (
-    updatedFormData: FormData,
-    setFormData: React.Dispatch<React.SetStateAction<FormData>>
-  ): void => {
+  const calculoSuperficieTotal = (updatedFormData: LocalesConstruccion) => {
     const superficieTotal =
-      (updatedFormData.superficie_cubierta !== null
-        ? Number(updatedFormData.superficie_cubierta)
-        : 0) +
-      (updatedFormData.superficie_semicubierta !== null
-        ? Number(updatedFormData.superficie_semicubierta)
-        : 0);
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      superficie_total: superficieTotal,
-    }));
+      (updatedFormData.superficie_cubierta ?? 0) +
+      (updatedFormData.superficie_semicubierta ?? 0);
+    setFormData((prev) => ({ ...prev, superficie_total: superficieTotal }));
   };
 
   const handleInputChange = (
-    name: keyof FormData,
+    name: keyof LocalesConstruccion,
     value: number | undefined
   ) => {
-    setFormData((prevFormData) => {
-      const updatedFormData = {
-        ...prevFormData,
-        [name]: value ?? 0, // 👈 Si es undefined, lo convierte a 0
-      };
+    const updatedFormData = { ...formData, [name]: value ?? 0 };
+    setFormData(updatedFormData);
 
-      if (
-        name === "superficie_cubierta" ||
-        name === "superficie_semicubierta"
-      ) {
-        calculoSuperficieTotal(updatedFormData, setFormData);
-      }
-
-      return updatedFormData;
-    });
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    try {
-      /* const response = await localesService.postLocales(formData);
-      console.log("Respuesta del backend:", response);
-      dispatch(setLocalId(response.id)); // Asumiendo que la respuesta tiene un campo 'id' */
-      const newData: LocalesConstruccion = {
-        identificacion_plano: formData.identificacion_plano,
-        numero_planta: formData.numero_planta,
-        tipo: formData.tipo,
-        local_sin_uso: formData.local_sin_uso || "No",
-        superficie: formData.superficie,
-      };
-      console.log("Datos enviados a Redux:", newData);
-      setTableData((prev) => [...prev, newData]);
-      dispatch(setLocales(newData));
-
-      setFormData({
-        identificacion_plano: 0,
-        numero_planta: 0,
-        tipo: "",
-        local_sin_uso: "",
-        superficie: 0,
-      }); // Limpia el formulario
-      setSelectLocales(null); // Resetea el select
-    } catch (error) {
-      console.error("Error al enviar los datos:", error);
+    if (name === "superficie_cubierta" || name === "superficie_semicubierta") {
+      calculoSuperficieTotal(updatedFormData);
     }
   };
 
-  const handleGuardarLocales = async () => {
-    if (!cui_number) {
-      console.error("No hay CUI disponible");
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const newData: LocalesConstruccion = {
+      ...formData,
+      cui_number, // Aquí se incluye el CUI
+      local_sin_uso: formData.local_sin_uso || "No",
+    };
+
+    let updatedData: LocalesConstruccion[];
+    if (editIndex !== null) {
+      updatedData = [...tableData];
+      updatedData[editIndex] = newData;
+      setEditIndex(null);
+    } else {
+      updatedData = [...tableData, newData];
+    }
+
+    setTableData(updatedData);
+    dispatch(setLocales(updatedData));
+
+    setFormData({
+      numero_construccion: 0,
+      superficie_cubierta: 0,
+      superficie_semicubierta: 0,
+      superficie_total: 0,
+      identificacion_plano: 0,
+      numero_planta: 0,
+      tipo: "",
+      local_sin_uso: "No",
+      superficie: 0,
+      cui_number: 0,
+    });
+    setSelectLocales(null);
+    setChecked(false);
+  };
+
+  const handleEditar = (identificacionPlano: number) => {
+    // Buscar el item usando identificacion_plano
+    const item = tableData.find(
+      (row) => row.identificacion_plano === identificacionPlano
+    );
+
+    if (!item) {
+      console.error(
+        "No se encontró el item con identificacion_plano:",
+        identificacionPlano
+      );
       return;
     }
-  
-    const payload = tableData.map((local) => ({
-      ...local,
-      cui_number,
-    }));
-  
-    try {
-      await localesService.postLocales(payload);
-      console.log("Locales guardados correctamente:", payload);
-      // Limpieza o feedback opcional
-    } catch (error) {
-      console.error("Error al guardar los locales:", error);
-    }
+
+    setFormData(item);
+    setEditIndex(
+      tableData.findIndex(
+        (row) => row.identificacion_plano === identificacionPlano
+      )
+    ); // Guardamos el índice para el caso de actualizar
+    setChecked(item.local_sin_uso === "Si");
+
+    // Usamos 'identificacion_plano' para buscar el tipo de local
+    const selectedOption = opcionesLocales.find((op) => op.name === item.tipo);
+    setSelectLocales(selectedOption ? selectedOption.id : null);
   };
 
+  const handleEliminar = (identificacion_plano: number) => {
+    const nuevosLocales = tableData.filter(
+      (local) => local.identificacion_plano !== identificacion_plano
+    );
+    setTableData(nuevosLocales);
+    dispatch(setLocales(nuevosLocales));
+  };
+
+  const handleGuardarDatos = async () => {
+      if (!cui_number) {
+        console.error("No hay CUI definido.");
+        return;
+      }
+      try {
+        const payload = localesRedux.map((local) => ({
+          ...local,
+          cui_number,
+        }));
+  
+        console.log("Payload a enviar:", payload);
+  
+        await localesService.postLocales(payload);
+        
+  
+        console.log("Datos guardados correctamente:", payload);
+      } catch (error) {
+        console.error("Error al guardar los datos en la base:", error);
+      }
+    };
+
+  //console.log("Datos de la tabla:", tableData);
+
   const columns = [
-    // Definición de las columnas para la tabla
-    /* { Header: "N° de Construcción", accessor: "numero_construccion" },
-    { Header: "Superficie Cubierta", accessor: "superficie_cubierta" },
-    { Header: "Superficie Semicubierta", accessor: "superficie_semicubierta" },
-    { Header: "Superficie Total", accessor: "superficie_total" }, */
     { Header: "Identificación en el plano", accessor: "identificacion_plano" },
     { Header: "N° de planta", accessor: "numero_planta" },
-    { Header: "Tipo de local", accessor: "tipo", }, // Muestra el nombre del tipo
+    { Header: "Tipo de local", accessor: "tipo" },
     {
       Header: "Local sin uso",
       accessor: "local_sin_uso",
-      Cell: ({ value }: { value: string }) => (value ? "Sí" : "No"),
-    }, // Transformación para mostrar "Sí" o "No"
-    { Header: "Superficie", accessor: "superficie" },
+      Cell: ({ value }: { value: string }) => (value === "Si" ? "Sí" : "No"),
+    },
+    { Header: "Superficie (m²)", accessor: "superficie" },
+    {
+      Header: "Acciones",
+      accessor: "acciones",
+      Cell: ({ row }: any) => {
+        const id = row.original.id || row.original.identificacion_plano;
+        return (
+          <div className="flex justify-center items-center gap-2">
+            <button
+              onClick={() => handleEditar(row.original.identificacion_plano)}
+              className="bg-blue-500 text-white p-1 rounded"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => {
+                const idToDelete = id;
+                if (idToDelete) {
+                  handleEliminar(idToDelete);
+                } else {
+                  console.error("ID no válido");
+                }
+              }}
+              className="bg-red-500 text-white p-1 rounded"
+            >
+              Eliminar
+            </button>
+          </div>
+        );
+      },
+    },
   ];
-
+  
   return (
-    <div className="mx-10">
+    <div className="mx-10  bg-white text-black">
       <div className="flex mt-2 p-4 border items-center justify-between">
         <div className="w-10 h-10 flex justify-center items-center text-white bg-black text-xl">
           <p>5</p>
         </div>
-        <div className="justify-center">
-          <p className="text-lg font-bold ml-4">LOCALES POR CONSTRUCCIÓN</p>
-        </div>
-        <div className="flex flex-col p-2 text-xs text-gray-400 bg-gray-100 border justify-end">
-          <p className="font-semibold text-center">Tipo de locales</p>
-          <p>
-            1-Aula común 2-Sala de nivel inicial 3-Aula especial 4-Laboratorio
-            5-Taller 6-Gimnasio 7-Piscina cubierta
-          </p>
-          <p>
-            8-Biblioteca/Centro de recursos 9-Sala de estudio 10-Salón de
-            actos/Aula magna 11-Auitorio/Teatro
-          </p>
-          <p>
-            12-Salón de usos múltiples/patio cubierto 13-Otro local pedagógico
-            14-Oficina 15-Sala de reuniones
-          </p>
-          <p>
-            16-Local para funciones de apoyo 17-Comedor 18-Cocina 19-Office
-            20-Cantina 21-Sanitarios Alumnos
-          </p>
-          <p>
-            22-Sanitarios docentes/personal 23-Vestuario 24-Alojamiento
-            25-Deposito/Despensa 26-Sala de maquinas
-          </p>
-          <p>
-            27-Hall/Acceso 28-Circulación 29-Porch/atrio 30-Otro (Indique)
-            31-Sin destino especifico
-          </p>
-        </div>
-        {/* <div className="ml-auto">
-                <AlphanumericInput
-                    subLabel=""
-                    label={""}
-                    value={""}
-                    onChange={() => set""()}
-                />
-                </div> */}
+        <p className="text-lg font-bold ml-4">LOCALES POR CONSTRUCCIÓN</p>
       </div>
-      {/* Encabezado de tabla */}
       <form onSubmit={handleSubmit}>
+        {/* Tabla de carga */}
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
@@ -239,49 +247,49 @@ export default function LocalesPorConstruccion() {
             <tr>
               <td className="border p-2">
                 <NumericInput
-                  label=""
-                  subLabel=""
+                  disabled={false}
                   value={formData.numero_construccion}
-                  onChange={(event) =>
-                    handleInputChange("numero_construccion", event)
+                  onChange={(val) =>
+                    handleInputChange("numero_construccion", val)
                   }
-                  disabled={false}
+                  label=""
+                  subLabel=""
                 />
               </td>
               <td className="border p-2">
-                <NumericInput
-                  label=""
-                  subLabel=""
+                <DecimalNumericInput
                   value={formData.superficie_cubierta}
-                  onChange={(event) =>
-                    handleInputChange("superficie_cubierta", event)
+                  onChange={(val) =>
+                    handleInputChange("superficie_cubierta", val)
                   }
-                  disabled={false}
-                />
-              </td>
-              <td className="border p-2">
-                <NumericInput
                   label=""
                   subLabel=""
-                  value={formData.superficie_semicubierta}
-                  onChange={(event) =>
-                    handleInputChange("superficie_semicubierta", event)
-                  }
-                  disabled={false}
                 />
               </td>
               <td className="border p-2">
-                <AlphanumericInput
-                  subLabel="m²"
+                <DecimalNumericInput
+                  value={formData.superficie_semicubierta}
+                  onChange={(val) =>
+                    handleInputChange("superficie_semicubierta", val)
+                  }
                   label=""
-                  value={formData.superficie_total?.toString() || ""}
-                  onChange={() => console.log("Value")}
+                  subLabel=""
+                />
+              </td>
+              <td className="border p-2">
+                <DecimalNumericInput
+                  value={formData.superficie_total}
+                  onChange={() => {}}
+                  label=""
+                  subLabel="m²"
+                  disabled={true}
                 />
               </td>
             </tr>
           </tbody>
         </table>
 
+        {/* Segunda tabla para agregar datos */}
         <table className="w-full border-collapse border border-gray-300 mt-4">
           <thead>
             <tr className="bg-gray-100">
@@ -297,68 +305,72 @@ export default function LocalesPorConstruccion() {
             <tr>
               <td className="border p-2">
                 <NumericInput
-                  label=""
-                  subLabel="L"
                   value={formData.identificacion_plano}
-                  onChange={(event) =>
-                    handleInputChange("identificacion_plano", event)
+                  onChange={(val) =>
+                    handleInputChange("identificacion_plano", val)
                   }
+                  label=""
+                  subLabel=""
                   disabled={false}
                 />
               </td>
               <td className="border p-2">
                 <NumericInput
+                  value={formData.numero_planta}
+                  onChange={(val) => handleInputChange("numero_planta", val)}
                   label=""
                   subLabel=""
-                  value={formData.numero_planta}
-                  onChange={(event) =>
-                    handleInputChange("numero_planta", event)
-                  }
                   disabled={false}
                 />
               </td>
               <td className="border p-2">
                 <Select
-                  label=" "
+                  label=""
                   value={selectLocales?.toString() || ""}
+                  onChange={handleSelecteChange}
                   options={opcionesLocales.map((local) => ({
                     value: local.id,
-                    label: `${local.id} - ${local.name} `,
+                    label: `${local.id} - ${local.name}`,
                   }))}
-                  onChange={handleSelecteChange}
                 />
               </td>
-              <td className="border p-2 text-center">
-                <Check label="Si" checked={checked} onChange={handleSiChange} />
+              <td className="border p-2">
+                <Check
+                  checked={checked}
+                  onChange={handleSiChange}
+                  label="Local sin uso"
+                />
               </td>
               <td className="border p-2">
-                <NumericInput
-                  label=" "
-                  subLabel="m²"
+                <DecimalNumericInput
                   value={formData.superficie}
-                  onChange={(event) => handleInputChange("superficie", event)}
+                  onChange={(val) => handleInputChange("superficie", val)}
+                  label=""
+                  subLabel="m²"
                   disabled={false}
                 />
               </td>
-              <td className="border p-2 text-center">
+              <td className="border p-2">
                 <button
                   type="submit"
-                  className="text-sm font-bold bg-slate-200 p-2 rounded-md"
+                  className="text-white bg-blue-500 px-4 py-2 rounded-md"
                 >
-                  Cargar Información
+                  Guardar
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
       </form>
+
+      {/* Mostrar tabla con los datos guardados */}
       <ReusableTable data={tableData} columns={columns} />
       {tableData.length > 0 && (
         <div className="flex justify-center mt-4">
           <button
             type="button"
             className="text-sm font-bold bg-blue-500 text-white p-2 rounded-md"
-            onClick={handleGuardarLocales}
+            onClick={handleGuardarDatos}
           >
             Guardar Datos
           </button>

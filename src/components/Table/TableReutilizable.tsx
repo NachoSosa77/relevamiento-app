@@ -2,16 +2,14 @@
 // ReusableTable.tsx
 import React from "react";
 
-
-
-
 interface ReusableTableProps<T> {
   data: T[];
   columns: {
     Header: string;
     accessor: keyof T;
-    Cell?: React.FC<{ value: T[keyof T] }>;
+    Cell?: React.FC<{ value: T[keyof T]; row: { original: T } }>;
   }[];
+  onRemove?: (id: number) => void;
 }
 
 const ReusableTable: React.FC<ReusableTableProps<any>> = ({
@@ -33,7 +31,7 @@ const ReusableTable: React.FC<ReusableTableProps<any>> = ({
         {data.length === 0 ? (
           <tr key="empty-row">
             {columns.map((column, columnIndex) => (
-              <td key={`${columnIndex}-empty-cell`} className="border py-4  ">
+              <td key={`${columnIndex}-empty-cell`} className="border py-4">
                 {/* Celda vacía */}
               </td>
             ))}
@@ -44,7 +42,11 @@ const ReusableTable: React.FC<ReusableTableProps<any>> = ({
               {columns.map((column, columnIndex) => (
                 <td key={`${rowIndex}-${columnIndex}`} className="border py-2">
                   {column.Cell ? (
-                    <column.Cell value={row[column.accessor]} />
+                    // Ahora pasamos 'row' junto con 'value'
+                    <column.Cell
+                      value={row[column.accessor]}
+                      row={{ original: row }}
+                    />
                   ) : (
                     row[column.accessor]
                   )}

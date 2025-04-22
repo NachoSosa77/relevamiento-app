@@ -1,40 +1,37 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { addAreasExteriores } from "@/redux/slices/espacioEscolarSlice";
+import { addAreasExteriores, deleteAreasExteriores } from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ReusableTable from "../Table/TableReutilizable";
 import AlphanumericInput from "../ui/AlphanumericInput";
+import DecimalNumericInput from "../ui/DecimalNumericInput";
 import Select from "../ui/SelectComponent";
 
 interface FormData {
-  identificacion_plano: string;
+  identificacion_plano: number;
   tipo: string;
-  superficie: string;
+  superficie: number;
 }
 
 export default function AreasExterioresComponent() {
   const [selectArea, setSelectArea] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    identificacion_plano: "",
-    tipo: "null",
-    superficie: "",
+    identificacion_plano: 0,
+    tipo: " ",
+    superficie: 0,
   });
-  const [tableData, setTableData] = useState<FormData[]>([]);
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
-  const cui_number = useAppSelector((state) => state.espacio_escolar.cui); // 👈 trae el cui
+  const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
+  const areasExteriores = useAppSelector((state) => state.espacio_escolar.areasExteriores); // Datos desde Redux
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const opciones =
-          await areasExterioresService.getOpcionesAreasExteriores();
+        const opciones = await areasExterioresService.getOpcionesAreasExteriores();
         setOpcionesAreas(opciones);
-
-        const existingData = await areasExterioresService.getAreasExteriores();
-        setTableData(Array.isArray(existingData) ? existingData : []);
       } catch (error) {
         console.error("Error al obtener opciones de áreas exteriores:", error);
       }
@@ -54,9 +51,9 @@ export default function AreasExterioresComponent() {
 
   const handleInputChange = (
     name: keyof FormData,
-    event: ChangeEvent<HTMLInputElement>
+    value: number
   ) => {
-    setFormData({ ...formData, [name]: event.target.value });
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -69,9 +66,7 @@ export default function AreasExterioresComponent() {
       };
 
       dispatch(addAreasExteriores(newArea));
-      setTableData((prev) => [...prev, newArea]);
-
-      setFormData({ identificacion_plano: "", tipo: "", superficie: "" });
+      setFormData({ identificacion_plano: 0, tipo: "", superficie: 0 });
       setSelectArea(null);
     } catch (error) {
       console.error("Error al agregar el área exterior:", error);
@@ -83,29 +78,59 @@ export default function AreasExterioresComponent() {
       console.error("No hay CUI definido.");
       return;
     }
-  
     try {
-      const payload = tableData.map((area) => ({
+      const payload = areasExteriores.map((area) => ({
         ...area,
         cui_number,
       }));
 
-      console.log("Payload a enviar:", payload); // 👀
-  
+      console.log("Payload a enviar:", payload);
+
       await areasExterioresService.postAreasExteriores(payload);
-  
+
       console.log("Datos guardados correctamente:", payload);
-      // Podés limpiar tabla o mostrar confirmación si querés
-  
     } catch (error) {
       console.error("Error al guardar los datos en la base:", error);
     }
   };
 
+  /* const handleEditar = (item: AreasExteriores) => {
+    setFormData({
+      identificacion_plano: item.identificacion_plano,
+      tipo: item.tipo,
+      superficie: item.superficie,
+    });
+    setSelectArea(item.identificacion_plano);
+  }; */
+
+  const handleEliminar = (identificacion_plano: number) => {
+    dispatch(deleteAreasExteriores(identificacion_plano));
+  };
+
   const columns = [
     { Header: "Identificación", accessor: "identificacion_plano" },
-    { Header: "Tipo", accessor: "tipo"},
-    { Header: "Superficie", accessor: "superficie"},
+    { Header: "Tipo", accessor: "tipo" },
+    { Header: "Superficie", accessor: "superficie" },
+    {
+      Header: "Acciones",
+      accessor: "acciones",
+      Cell: ({ row }: { row: { original: AreasExteriores } }) => (
+        <div className="flex space-x-2 justify-center">
+          {/* <button
+            onClick={() => handleEditar(row.original)}
+            className="bg-blue-500 text-white p-1 rounded"
+          >
+            Editar
+          </button> */}
+          <button
+            onClick={() => handleEliminar(row.original.identificacion_plano)}
+            className="bg-red-500 text-white p-1 rounded"
+          >
+            Eliminar
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -133,8 +158,8 @@ export default function AreasExterioresComponent() {
                   subLabel="E"
                   label=""
                   value={formData.identificacion_plano}
-                  onChange={(event) =>
-                    handleInputChange("identificacion_plano", event)
+                  onChange={(value) =>
+                    handleInputChange("identificacion_plano", Number(value))
                   }
                 />
               </td>
@@ -150,11 +175,14 @@ export default function AreasExterioresComponent() {
                 />
               </td>
               <td className="border p-2">
-                <AlphanumericInput
+                <DecimalNumericInput
+                  disabled={false}
                   subLabel="m²"
                   label=""
                   value={formData.superficie}
-                  onChange={(event) => handleInputChange("superficie", event)}
+                  onChange={(value) =>
+                    handleInputChange("superficie", Number(value))
+                  }
                 />
               </td>
               <td className="border p-2 text-center">
@@ -169,8 +197,8 @@ export default function AreasExterioresComponent() {
           </tbody>
         </table>
       </form>
-      <ReusableTable data={tableData ?? []} columns={columns} />
-       {tableData.length > 0 && (
+      <ReusableTable data={areasExteriores} columns={columns} />
+      {areasExteriores.length > 0 && (
         <div className="flex justify-center mt-4">
           <button
             type="button"

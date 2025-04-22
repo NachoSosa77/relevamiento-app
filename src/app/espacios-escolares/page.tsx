@@ -27,6 +27,9 @@ export default function EspaciosEscolaresPage() {
   const selectedEspacioEscolar = useAppSelector(
     (state) => state.espacio_escolar
   ); // Obtén el estado de espacio_escolar
+  const relevamientoId = useAppSelector((state) => state.espacio_escolar.relevamientoId);
+  //console.log("relevamientoId desde Redux:", relevamientoId);
+
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,15 +81,12 @@ export default function EspaciosEscolaresPage() {
   const enviarDatosEspacioEscolar = async () => {
     try {
       const payload = {
+        relevamiento_id: relevamientoId, // <-- este es clave
         cui: selectedEspacioEscolar.cui,
         cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
         superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
         plano: selectedEspacioEscolar.plano,
         observaciones: selectedEspacioEscolar.observaciones,
-        areasExteriores: selectedEspacioEscolar.areasExteriores || [],
-        locales: selectedEspacioEscolar.locales || [],
-        institucionesSeleccionadas:
-          selectedEspacioEscolar.institucionesSeleccionadas || [],
       };
   
       const response = await fetch("/api/espacios_escolares", {

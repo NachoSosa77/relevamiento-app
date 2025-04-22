@@ -1,30 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setCui, setInstitucionId } from "@/redux/slices/espacioEscolarSlice";
-import { establecimientosService } from "@/services/Establecimientos/establecimientosService"; // Importa el servicio
-import Link from "next/link";
+import { setCui, setInstitucionId, setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
+import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function HomePage() {
-  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(undefined); // Valor del input CUI
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]); // Todas las instituciones
+  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(
+    undefined
+  );
+  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const dispatch = useAppDispatch(); // Usa el hook personalizado
-  
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchInstituciones = async () => {
       try {
         const data = await establecimientosService.getAllEstablecimientos();
-        //console.log(data)
         setInstituciones(data);
       } catch (error: any) {
         setError(error.message);
@@ -39,23 +41,37 @@ export default function HomePage() {
   const handleCuiInputChange = (cui: number | undefined) => {
     setCuiInputValue(cui);
     dispatch(setInstitucionId());
-    dispatch(setCui())
+    dispatch(setCui());
   };
 
-  
+  const handleContinue = async () => {
+    if (!cuiInputValue) return;
+
+    try {
+      const response = await axios.post("/api/relevamientos", {
+        cui: cuiInputValue,
+      });
+
+      if (response.status === 200) {
+        toast.success("Relevamiento creado correctamente");
+        const nuevoRelevamientoId = response.data.inserted.id;
+        dispatch(setRelevamientoId(nuevoRelevamientoId));
+        router.push("/espacios-escolares");
+      } else {
+        toast.error("No se pudo crear el relevamiento");
+      }
+    } catch (error) {
+      console.error("Error en la creación del relevamiento:", error);
+      toast.error("Error al crear el relevamiento");
+    }
+  };
+
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
-  
-  //console.log("ID HomePage:", selectedInstitutionId);
-  
-  if (loading) {
-    return <div>Cargando instituciones...</div>;
-  }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div>Cargando instituciones...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="h-full overflow-hidden bg-white text-black">
@@ -68,21 +84,20 @@ export default function HomePage() {
       </div>
 
       <CuiComponent
-        label={""}
+        label=""
         initialCui={cuiInputValue}
-        onCuiInputChange={handleCuiInputChange} // Pasa la función para actualizar el CUI
+        onCuiInputChange={handleCuiInputChange}
         isReadOnly={false}
         sublabel=""
       />
 
-      <Link href="/espacios-escolares">
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-          disabled={!selectedInstitutionId}
-        >
-          Continuar
-        </button>
-      </Link>
+      <button
+        className="bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+        disabled={!selectedInstitutionId}
+        onClick={handleContinue}
+      >
+        Continuar
+      </button>
     </div>
   );
 }
