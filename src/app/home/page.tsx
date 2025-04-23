@@ -8,16 +8,16 @@ import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setCui, setInstitucionId, setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
-import axios from "axios";
+import { relevamientoService } from "@/services/relevamientoService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+
 export default function HomePage() {
-  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(
-    undefined
-  );
+  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(undefined);
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
+  const [relevamientos, setRelevamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
@@ -44,17 +44,27 @@ export default function HomePage() {
     dispatch(setCui());
   };
 
-  const handleContinue = async () => {
+  // Función para buscar relevamientos existentes por CUI
+  const fetchRelevamientos = async () => {
+    if (!cuiInputValue) return;
+    try {
+      const data = await relevamientoService.getRelevamientoByCui(cuiInputValue);
+      setRelevamientos(data);  // Guardamos los relevamientos en el estado
+    } catch (error) {
+      console.error("Error al obtener el relevamiento:", error);
+      toast.error("Error al obtener el relevamiento");
+    }
+  };
+
+  const handleNuevoRelevamiento = async () => {
     if (!cuiInputValue) return;
 
     try {
-      const response = await axios.post("/api/relevamientos", {
-        cui: cuiInputValue,
-      });
+      const data = await relevamientoService.createRelevamiento(cuiInputValue);
 
-      if (response.status === 200) {
+      if (data.response.status === 200) {
         toast.success("Relevamiento creado correctamente");
-        const nuevoRelevamientoId = response.data.inserted.id;
+        const nuevoRelevamientoId = data.inserted.id;
         dispatch(setRelevamientoId(nuevoRelevamientoId));
         router.push("/espacios-escolares");
       } else {
@@ -69,6 +79,13 @@ export default function HomePage() {
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
+
+  //console.log('relevamientos', relevamientos);
+
+  const handleView = (relevamientoId: number) => {
+    // Redirigir a la página de detalle con el id del relevamiento
+    router.push(`/home/relevamiento/detalle?id=${relevamientoId}`);
+  };
 
   if (loading) return <div>Cargando instituciones...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -94,10 +111,58 @@ export default function HomePage() {
       <button
         className="bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
         disabled={!selectedInstitutionId}
-        onClick={handleContinue}
+        onClick={fetchRelevamientos} // Función para buscar los relevamientos
       >
-        Continuar
+        Buscar
       </button>
+
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+        disabled={!selectedInstitutionId}
+        onClick={handleNuevoRelevamiento} // Función para crear un nuevo relevamiento
+      >
+        Nuevo Relevamiento
+      </button>
+
+      {/* Mostrar los relevamientos encontrados en una tabla */}
+      {relevamientos.length > 0 && (
+        <div className="mt-6 mx-10">
+          <h3 className="font-bold">Relevamientos existentes</h3>
+          <table className="min-w-full bg-white border border-rounded-lg border-gray-300 mt-4 text-sm text-center">
+            <thead>
+              <tr className="bg-gray-200">
+              <th className="px-4 py-2 border-b">Fecha</th>
+                <th className="px-4 py-2 border-b">ID Relevamiento</th>
+                <th className="px-4 py-2 border-b">CUI</th>
+                <th className="px-4 py-2 border-b">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {relevamientos.map((relevamiento) => (
+                <tr key={relevamiento.id}>
+                  <th className="px-4 py-2 border-b">{new Date(relevamiento.created_at).toLocaleDateString("es-ES")}</th>
+                  <td className="px-4 py-2 border-b">{relevamiento.id}</td>
+                  <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
+                  <td className="px-4 py-2 border-b">
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-1 mr-2"
+                      onClick={()=> handleView(relevamiento.id)}
+                    >
+                      Ver
+                    </button>
+                    <button
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-md px-4 py-1"
+                      disabled
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

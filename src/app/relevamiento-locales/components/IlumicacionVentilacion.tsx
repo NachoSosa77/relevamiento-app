@@ -87,6 +87,7 @@ export default function IluminacionVentilacion({
                   </label>
                 ) : (
                   <AlphanumericInput
+                    disabled={false}
                     label={"Superficie de iluminación"}
                     subLabel="m2"
                     value={responses[id]?.["default"]?.cantidad ?? undefined}

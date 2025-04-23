@@ -5,6 +5,7 @@ interface InputProps {
   subLabel: string;
   value: string | number | undefined; // Cambiado a string | number | undefined
   onChange: (value: string) => void; // Tipo correcto para onChange
+  disabled: boolean;
 }
 
 const AlphanumericInput: React.FC<InputProps> = ({
@@ -12,6 +13,7 @@ const AlphanumericInput: React.FC<InputProps> = ({
   subLabel,
   value,
   onChange,
+  disabled,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/[^a-zA-Z0-9]/g, ""); // Permite solo alfanuméricos
@@ -29,6 +31,7 @@ const AlphanumericInput: React.FC<InputProps> = ({
           value={value}
           onChange={handleChange}
           maxLength={8}
+          disabled={disabled}
         ></input>
         <p className="text-sm text-gray-500 mr-2 whitespace-nowrap">
           {subLabel}

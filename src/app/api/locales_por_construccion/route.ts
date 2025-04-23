@@ -14,11 +14,24 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
     const insertResults = [];
 
     for (const local of body) {
       const [result] = await connection.query<ResultSetHeader>(
-        `INSERT INTO locales_por_construccion (numero_construccion, superficie_cubierta, superficie_semicubierta, superficie_total, identificacion_plano, numero_planta, tipo, local_sin_uso, superficie, cui_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO locales_por_construccion (
+          numero_construccion,
+          superficie_cubierta,
+          superficie_semicubierta,
+          superficie_total,
+          identificacion_plano,
+          numero_planta,
+          tipo,
+          local_sin_uso,
+          superficie,
+          cui_number,
+          relevamiento_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           local.numero_construccion,
           local.superficie_cubierta,
@@ -30,8 +43,10 @@ export async function POST(req: NextRequest) {
           local.local_sin_uso,
           local.superficie,
           local.cui_number,
+          local.relevamiento_id, // 👈 nuevo valor insertado
         ]
       );
+
       insertResults.push({ id: result.insertId, ...local });
 
       connection.release();

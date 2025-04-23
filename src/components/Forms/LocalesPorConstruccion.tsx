@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setLocales } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable"; // Tabla reutilizable importada
 import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
@@ -28,10 +29,16 @@ export default function LocalesPorConstruccion() {
     local_sin_uso: "No",
     superficie: 0,
     cui_number: 0,
+    relevamiento_id: 0,
   });
   const [tableData, setTableData] = useState<LocalesConstruccion[]>([]);
-
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
   const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
+  const cantidadConstrucciones = useAppSelector(
+    (state) => state.espacio_escolar.cantidadConstrucciones
+  );
   const localesRedux = useAppSelector((state) => state.espacio_escolar.locales);
   const dispatch = useAppDispatch();
 
@@ -92,6 +99,7 @@ export default function LocalesPorConstruccion() {
     const newData: LocalesConstruccion = {
       ...formData,
       cui_number, // Aquí se incluye el CUI
+      relevamiento_id: relevamientoId,
       local_sin_uso: formData.local_sin_uso || "No",
     };
 
@@ -159,26 +167,29 @@ export default function LocalesPorConstruccion() {
   };
 
   const handleGuardarDatos = async () => {
-      if (!cui_number) {
-        console.error("No hay CUI definido.");
-        return;
-      }
-      try {
-        const payload = localesRedux.map((local) => ({
-          ...local,
-          cui_number,
-        }));
-  
-        console.log("Payload a enviar:", payload);
-  
-        await localesService.postLocales(payload);
-        
-  
-        console.log("Datos guardados correctamente:", payload);
-      } catch (error) {
-        console.error("Error al guardar los datos en la base:", error);
-      }
-    };
+    if (!cui_number) {
+      console.error("No hay CUI definido.");
+      toast.error("No se puede guardar: CUI no definido");
+      return;
+    }
+    try {
+      const payload = localesRedux.map((local) => ({
+        ...local,
+        cui_number,
+        relevamiento_id: relevamientoId,
+      }));
+
+      console.log("Payload a enviar:", payload);
+
+      await localesService.postLocales(payload);
+
+      toast.success("Datos guardados correctamente");
+      console.log("Datos guardados correctamente:", payload);
+    } catch (error) {
+      console.error("Error al guardar los datos en la base:", error);
+      toast.error("Error al guardar los datos. Intentá nuevamente.");
+    }
+  };
 
   //console.log("Datos de la tabla:", tableData);
 
@@ -223,7 +234,7 @@ export default function LocalesPorConstruccion() {
       },
     },
   ];
-  
+
   return (
     <div className="mx-10  bg-white text-black">
       <div className="flex mt-2 p-4 border items-center justify-between">
@@ -248,10 +259,8 @@ export default function LocalesPorConstruccion() {
               <td className="border p-2">
                 <NumericInput
                   disabled={false}
-                  value={formData.numero_construccion}
-                  onChange={(val) =>
-                    handleInputChange("numero_construccion", val)
-                  }
+                  value={cantidadConstrucciones}
+                  onChange={() => {}}
                   label=""
                   subLabel=""
                 />

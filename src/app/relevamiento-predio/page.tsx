@@ -1,7 +1,5 @@
 "use client";
 
-
-
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivados";
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
@@ -16,10 +14,7 @@ import { useEffect, useState } from "react";
 export default function RelevamientoPredioPage() {
   const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
 
-
-  const selectedCui = useAppSelector(
-      (state) => state.espacio_escolar.cui
-    );
+  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
   // Obtiene el usuario actual
   useEffect(() => {
@@ -41,7 +36,6 @@ export default function RelevamientoPredioPage() {
     fetchUser();
   }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente
 
-  
   return (
     <div className="h-full bg-white text-black">
       <Navbar />
@@ -75,7 +69,7 @@ export default function RelevamientoPredioPage() {
       <VisitasComponent />
       <RespondientesDelCuiComponent />
       <EstablecimientosPrivados />
-      <ObservacionesComponent onSave={()=>{}} />
+      <ObservacionesComponent onSave={() => {}} />
     </div>
   );
 }

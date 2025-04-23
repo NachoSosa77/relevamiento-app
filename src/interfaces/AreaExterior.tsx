@@ -6,6 +6,7 @@ export interface AreasExteriores {
   superficie: number;
   estado_conservacion?: string | null;
   terminacion_piso?: string | null;
+  relevamiento_id?: number;
 }
 
 export interface Column {

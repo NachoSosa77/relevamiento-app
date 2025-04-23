@@ -14,7 +14,7 @@ interface EspacioEscolarState {
   locales: LocalesConstruccion[];
   contextId: number | null;
   areasExteriores: AreasExteriores[];
-  relevamientoId: number | null;
+  relevamientoId: number | undefined;
 }
 
 const initialState: EspacioEscolarState = {
@@ -28,7 +28,7 @@ const initialState: EspacioEscolarState = {
   locales: [],
   contextId: null,
   areasExteriores: [],
-  relevamientoId: null,
+  relevamientoId: undefined,
 };
 
 const espacioEscolarSlice = createSlice({
@@ -41,7 +41,7 @@ const espacioEscolarSlice = createSlice({
     setInstitucionId: (state, action: PayloadAction<number | undefined>) => {
       state.institucion = action.payload;
     },
-    setRelevamientoId: (state, action: PayloadAction<number | null>) => {
+    setRelevamientoId: (state, action: PayloadAction<number | undefined>) => {
       state.relevamientoId = action.payload;
     },
     setInstitucionesData: (

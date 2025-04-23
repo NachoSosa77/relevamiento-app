@@ -15,4 +15,5 @@ export interface LocalesConstruccion {
   local_sin_uso: string;
   superficie: number;
   cui_number?: number;
+  relevamiento_id?: number;
 }

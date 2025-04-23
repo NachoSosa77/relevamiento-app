@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 interface AreaExterior extends RowDataPacket {
   id?: number; // El 'id' ahora es opcional
   cui_number?: number;
+  relevamiento_id?: number;
   identificacion_plano: string;
   tipo: string;
   superficie: string;
@@ -30,8 +31,14 @@ export async function POST(req: NextRequest) {
 
     for (const area of body) {
       const [result] = await connection.query<ResultSetHeader>(
-        `INSERT INTO areas_exteriores (cui_number, identificacion_plano, tipo, superficie) VALUES (?, ?, ?, ?)`,
-        [area.cui_number, area.identificacion_plano, area.tipo, area.superficie]
+        `INSERT INTO areas_exteriores (cui_number, relevamiento_id, identificacion_plano, tipo, superficie) VALUES (?, ?, ?, ?, ?)`,
+        [
+          area.cui_number,
+          area.relevamiento_id,
+          area.identificacion_plano,
+          area.tipo,
+          area.superficie,
+        ]
       );
       insertResults.push({ id: result.insertId, ...area });
     }

@@ -50,6 +50,16 @@ const getOpcionesAreasExteriores = async () => {
   }
 };
 
+const getAreasExterioresById = async (id: number) => {
+  try {
+    const response = await axios.get(`/api/areas_exteriores/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener opciones de áreas exteriores:', error);
+    throw error;
+  }
+};
+
 // Actualizar un área exterior por ID
 /* const updateAreasExteriores = async (id: number, formData: AreasExteriores) => {
   try {
@@ -65,5 +75,6 @@ const getOpcionesAreasExteriores = async () => {
 export const areasExterioresService = {
   postAreasExteriores,
   getOpcionesAreasExteriores,
-  getAreasExteriores
+  getAreasExteriores,
+  getAreasExterioresById
 };

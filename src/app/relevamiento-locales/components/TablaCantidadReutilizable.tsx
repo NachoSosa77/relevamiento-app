@@ -90,7 +90,8 @@ export default function TableCantidadReutilizable({
                   {showCondition && opciones.length > 0 ? (
                     opciones.map((tipo) => (
                       <AlphanumericInput
-                        key={tipo}
+                        disabled={false}
+                        key={tipo}  
                         label=""
                         subLabel=""
                         value={responses[id]?.[tipo]?.cantidad || ""}

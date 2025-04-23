@@ -1,9 +1,13 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { addAreasExteriores, deleteAreasExteriores } from "@/redux/slices/espacioEscolarSlice";
+import {
+  addAreasExteriores,
+  deleteAreasExteriores,
+} from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable";
 import AlphanumericInput from "../ui/AlphanumericInput";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
@@ -23,14 +27,20 @@ export default function AreasExterioresComponent() {
     superficie: 0,
   });
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
   const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
-  const areasExteriores = useAppSelector((state) => state.espacio_escolar.areasExteriores); // Datos desde Redux
+  const areasExteriores = useAppSelector(
+    (state) => state.espacio_escolar.areasExteriores
+  ); // Datos desde Redux
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const opciones = await areasExterioresService.getOpcionesAreasExteriores();
+        const opciones =
+          await areasExterioresService.getOpcionesAreasExteriores();
         setOpcionesAreas(opciones);
       } catch (error) {
         console.error("Error al obtener opciones de áreas exteriores:", error);
@@ -49,10 +59,7 @@ export default function AreasExterioresComponent() {
     }
   };
 
-  const handleInputChange = (
-    name: keyof FormData,
-    value: number
-  ) => {
+  const handleInputChange = (name: keyof FormData, value: number) => {
     setFormData({ ...formData, [name]: value });
   };
 
@@ -63,6 +70,7 @@ export default function AreasExterioresComponent() {
         identificacion_plano: formData.identificacion_plano,
         tipo: formData.tipo,
         superficie: formData.superficie,
+        relevamiento_id: relevamientoId,
       };
 
       dispatch(addAreasExteriores(newArea));
@@ -76,21 +84,25 @@ export default function AreasExterioresComponent() {
   const handleGuardarDatos = async () => {
     if (!cui_number) {
       console.error("No hay CUI definido.");
+      toast.error("No se puede guardar: CUI no definido");
       return;
     }
     try {
       const payload = areasExteriores.map((area) => ({
         ...area,
         cui_number,
+        relevamiento_id: relevamientoId,
       }));
 
       console.log("Payload a enviar:", payload);
 
       await areasExterioresService.postAreasExteriores(payload);
 
+      toast.success("Datos guardados correctamente");
       console.log("Datos guardados correctamente:", payload);
     } catch (error) {
       console.error("Error al guardar los datos en la base:", error);
+      toast.error("Error al guardar los datos. Intentá nuevamente.");
     }
   };
 
@@ -155,6 +167,7 @@ export default function AreasExterioresComponent() {
             <tr>
               <td className="border p-2">
                 <AlphanumericInput
+                  disabled={false}
                   subLabel="E"
                   label=""
                   value={formData.identificacion_plano}

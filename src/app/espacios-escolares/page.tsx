@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-
-
 import AreasExterioresComponent from "@/components/Forms/AreasExterioresComponent";
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosComponent from "@/components/Forms/EstablecimientosComponent";
@@ -16,7 +14,7 @@ import {
   setInstitucionId,
   setObservaciones,
 } from "@/redux/slices/espacioEscolarSlice";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -27,7 +25,9 @@ export default function EspaciosEscolaresPage() {
   const selectedEspacioEscolar = useAppSelector(
     (state) => state.espacio_escolar
   ); // Obtén el estado de espacio_escolar
-  const relevamientoId = useAppSelector((state) => state.espacio_escolar.relevamientoId);
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
   //console.log("relevamientoId desde Redux:", relevamientoId);
 
   const [selectedInstitution, setSelectedInstitution] =
@@ -88,7 +88,7 @@ export default function EspaciosEscolaresPage() {
         plano: selectedEspacioEscolar.plano,
         observaciones: selectedEspacioEscolar.observaciones,
       };
-  
+
       const response = await fetch("/api/espacios_escolares", {
         method: "POST",
         headers: {
@@ -96,16 +96,37 @@ export default function EspaciosEscolaresPage() {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         throw new Error("Error al guardar los datos del espacio escolar.");
       }
+
+      // 👉 Enviar instituciones relacionadas
+      const responseInstituciones = await fetch(
+        "/api/instituciones_por_relevamiento",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            relevamiento_id: relevamientoId,
+            instituciones:
+              selectedEspacioEscolar.institucionesSeleccionadas.map(
+                (i) => i.id
+              ),
+          }),
+        }
+      );
+
+      if (!responseInstituciones.ok) {
+        throw new Error("Error al guardar instituciones por relevamiento.");
+      }
+
       toast.success("Espacio escolar guardado correctamente 🎉", {
         position: "top-right",
         autoClose: 3000,
       });
       setTimeout(() => {
-        router.push('/relevamiento-predio');
+        router.push("/relevamiento-predio");
       }, 1000); // 1 segundo de espera
       console.log("Datos del espacio escolar guardados con éxito.");
       // Podés resetear el estado o mostrar confirmación visual acá
@@ -132,7 +153,7 @@ export default function EspaciosEscolaresPage() {
   }
 
   return (
-    <div className="h-screen bg-white text-black text-sm">
+    <div className="h-screen bg-white text-black text-sm mb-8">
       <Navbar />
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">

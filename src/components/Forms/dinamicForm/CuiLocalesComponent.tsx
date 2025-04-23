@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import NumericInput from "@/components/ui/NumericInput";
+import AlphanumericInput from "@/components/ui/AlphanumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { useEffect, useState } from "react";
+
 
 interface CuiComponentProps {
   label: string;
@@ -110,19 +111,20 @@ const CuiLocalesComponent: React.FC<CuiComponentProps> = ({
           <p className="px-2 text-sm font-bold">CUI</p>
         </div>
         <div className="ml-auto">
-          <NumericInput
+          <AlphanumericInput
             subLabel=""
             label={""}
             value={inputValue}
             onChange={handleChange}
             disabled={isReadOnly} // Deshabilita el input si es de solo lectura
+
           />
         </div>
         <div className="h-6 flex items-center justify-center ">
           <p className="px-2 text-sm font-bold">N° DE CONSTRUCCIÓN</p>
         </div>
         <div className="ml-auto">
-          <NumericInput
+          <AlphanumericInput
             subLabel=""
             label={""}
             value="1"
@@ -134,7 +136,7 @@ const CuiLocalesComponent: React.FC<CuiComponentProps> = ({
           <p className="px-2 text-sm font-bold">N° PLANTA</p>
         </div>
         <div className="ml-auto">
-          <NumericInput
+          <AlphanumericInput
             subLabel=""
             label={""}
             value="1"
@@ -146,7 +148,7 @@ const CuiLocalesComponent: React.FC<CuiComponentProps> = ({
           <p className="px-2 text-sm font-bold">N° DE LOCAL</p>
         </div>
         <div className="ml-auto">
-          <NumericInput
+          <AlphanumericInput
             subLabel=""
             label={""}
             value="1"

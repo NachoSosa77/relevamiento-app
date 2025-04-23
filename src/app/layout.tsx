@@ -3,10 +3,9 @@
 import { persistor, store } from "@/redux/store";
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import { PersistGate } from "redux-persist/integration/react";
 import "./globals.css";
-
 
 export default function RootLayout({
   children,
@@ -32,7 +31,7 @@ export default function RootLayout({
       <body className="bg-white mb-8">
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-          <ToastContainer />
+            <ToastContainer />
             {children}
           </PersistGate>
         </Provider>
