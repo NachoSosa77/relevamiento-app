@@ -20,6 +20,9 @@ export default function PlanoComponent() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
   //const institucionState = useAppSelector((state) => state.espacio_escolar); // Usa el hook personalizado
 
   const handleSiChange = (checked: boolean) => {
@@ -48,10 +51,38 @@ export default function PlanoComponent() {
     }
   };
 
-  const handleFileUpload = (file: File | null) => {
-    // Aquí puedes hacer algo con el archivo, como enviarlo a un servidor
-    console.log("Archivo subido:", file);
+  const handleFiles = (files: File[] | null) => {
+    if (files && relevamientoId) {
+      handleFilesUpload(files, relevamientoId);
+    }
   };
+
+
+  const handleFilesUpload = async (files: File[], relevamientoId: number) => {
+    const formData = new FormData();
+  
+    files.forEach((file) => {
+      formData.append("files", file); // importante: usar el mismo nombre 'files' (plural)
+    });
+  
+    formData.append("relevamientoId", relevamientoId.toString());
+  
+    const res = await fetch("/api/archivos", {
+      method: "POST",
+      body: formData,
+    });
+  
+    const data = await res.json();
+  
+    if (data.success) {
+      console.log("Archivos subidos:", data.archivos); // ahora será un array
+    } else {
+      console.error("Error subiendo archivos", data);
+    }
+  };
+  
+
+  
 
   const handleCantidadConstruccionesChange = (value: number | undefined) => {
     dispatch(setCantidadConstrucciones(value));
@@ -99,7 +130,7 @@ export default function PlanoComponent() {
             ></Check>
           </div>
           <div className="mr-4">
-            <FileUpload onFileChange={handleFileUpload} />
+            <FileUpload onFileChange={handleFiles} />
           </div>
         </div>
       </div>

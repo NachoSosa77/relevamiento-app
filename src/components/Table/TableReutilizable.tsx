@@ -7,7 +7,7 @@ interface ReusableTableProps<T> {
   columns: {
     Header: string;
     accessor: keyof T;
-    Cell?: React.FC<{ value: T[keyof T]; row: { original: T } }>;
+    Cell?: React.FC<{ value: T[keyof T]; row: { original: T; index: number } }>;
   }[];
   onRemove?: (id: number) => void;
 }
@@ -45,7 +45,7 @@ const ReusableTable: React.FC<ReusableTableProps<any>> = ({
                     // Ahora pasamos 'row' junto con 'value'
                     <column.Cell
                       value={row[column.accessor]}
-                      row={{ original: row }}
+                      row={{ original: row, index: rowIndex }}
                     />
                   ) : (
                     row[column.accessor]

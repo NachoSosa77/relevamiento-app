@@ -1,5 +1,6 @@
-// ReusableForm.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface ReusableFormProps<T> {
   columns: {
@@ -8,19 +9,14 @@ interface ReusableFormProps<T> {
     inputType?: "number" | "date" | "time" | "text";
   }[];
   onSubmit: (data: T) => void;
-  onCancel: () => void; // Nueva prop para la función cancelar
-  initialValues?: T; // Nueva prop para los valores iniciales
-  }
-
-interface FormData {
-  [key: string]: string | number | undefined; // O los tipos específicos que necesites
-  // O definir propiedades específicas
-  // nombre?: string;
-  // fechaNacimiento?: Date;
-  // ...
+  onCancel: () => void;
+  initialValues?: T;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface FormData {
+  [key: string]: string | number | undefined;
+}
+
 const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   columns,
   onSubmit,
@@ -31,9 +27,14 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
 
   useEffect(() => {
     if (initialValues) {
+      // Reset the formData if there are new initialValues (e.g., when editing)
       setFormData(initialValues);
+      toast.info("Datos precargados correctamente");
+    } else {
+      // Reset the formData if there's no initialValues (e.g., when adding new data)
+      setFormData({});
     }
-  }, [initialValues]);
+  }, [initialValues]); // This effect will trigger every time the initialValues change
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -45,67 +46,45 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     onSubmit(formData);
-    setFormData({}); // Limpia el formulario después de enviar
+    toast.success("Datos cargados correctamente");
+    setFormData({}); // Reset the form after submit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap -m-2">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       {columns.map((column) => (
-        <div key={column.accessor as string | number} className="w-1/2 p-2">
+        <div key={column.accessor.toString()} className="flex flex-col">
           <label
-            htmlFor={column.accessor as string}
-            className="block text-gray-700 font-bold mb-2"
+            htmlFor={column.accessor.toString()}
+            className="text-sm font-semibold text-gray-700 mb-1"
           >
             {column.Header}
           </label>
-          {(() => {
-            switch (column.inputType) {
-              case "number":
-                return (
-                  <input
-                    type="number"
-                    id={column.accessor.toString()}
-                    name={column.accessor.toString()}
-                    value={formData[column.accessor]}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                  />
-                );
-              case "text":
-              default:
-                return (
-                  <input
-                    type="text"
-                    id={column.accessor.toString()}
-                    name={column.accessor.toString()}
-                    value={formData[column.accessor] || ""}
-                    onChange={handleInputChange}
-                    className="shadow text-sm text-slate-400 border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                  />
-                );
-            }
-          })()}
+          <input
+            type={column.inputType || "text"}
+            id={column.accessor.toString()}
+            name={column.accessor.toString()}
+            value={formData[column.accessor] || ""}
+            onChange={handleInputChange}
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150 ease-in-out"
+          />
         </div>
       ))}
-      <div className="w-full p-2 flex">
-        {/* Contenedor para los botones */}
-        <div className="w-1/2 pr-2">
-          <button
-            type="button" // Importante: type="button" para evitar el submit del formulario
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            onClick={onCancel} // Llama a la función onCancel al hacer clic
-          >
-            Cancelar
-          </button>
-        </div>
-        <div className="w-1/2 pl-2">
-          <button
-            type="submit"
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Guardar
-          </button>
-        </div>
+
+      <div className="md:col-span-2 flex justify-end gap-4 mt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded shadow-md transition"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded shadow-md transition"
+        >
+          Guardar
+        </button>
       </div>
     </form>
   );

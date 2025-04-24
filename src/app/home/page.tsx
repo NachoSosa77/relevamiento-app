@@ -6,16 +6,21 @@ import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setCui, setInstitucionId, setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
+import {
+  setCui,
+  setInstitucionId,
+  setRelevamientoId,
+} from "@/redux/slices/espacioEscolarSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { relevamientoService } from "@/services/relevamientoService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-
 export default function HomePage() {
-  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(undefined);
+  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(
+    undefined
+  );
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
   const [relevamientos, setRelevamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +53,10 @@ export default function HomePage() {
   const fetchRelevamientos = async () => {
     if (!cuiInputValue) return;
     try {
-      const data = await relevamientoService.getRelevamientoByCui(cuiInputValue);
-      setRelevamientos(data);  // Guardamos los relevamientos en el estado
+      const data = await relevamientoService.getRelevamientoByCui(
+        cuiInputValue
+      );
+      setRelevamientos(data); // Guardamos los relevamientos en el estado
     } catch (error) {
       console.error("Error al obtener el relevamiento:", error);
       toast.error("Error al obtener el relevamiento");
@@ -58,23 +65,24 @@ export default function HomePage() {
 
   const handleNuevoRelevamiento = async () => {
     if (!cuiInputValue) return;
-
+  
     try {
       const data = await relevamientoService.createRelevamiento(cuiInputValue);
-
-      if (data.response.status === 200) {
-        toast.success("Relevamiento creado correctamente");
-        const nuevoRelevamientoId = data.inserted.id;
-        dispatch(setRelevamientoId(nuevoRelevamientoId));
-        router.push("/espacios-escolares");
-      } else {
-        toast.error("No se pudo crear el relevamiento");
-      }
+  
+      // Acá accedés directamente a lo que devolvés en el endpoint
+      const nuevoRelevamientoId = data.inserted.id;
+  
+      toast.success("Relevamiento creado correctamente");
+      dispatch(setRelevamientoId(nuevoRelevamientoId));
+      router.push("/espacios-escolares");
     } catch (error) {
       console.error("Error en la creación del relevamiento:", error);
       toast.error("Error al crear el relevamiento");
     }
   };
+  
+  
+  
 
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
@@ -131,7 +139,7 @@ export default function HomePage() {
           <table className="min-w-full bg-white border border-rounded-lg border-gray-300 mt-4 text-sm text-center">
             <thead>
               <tr className="bg-gray-200">
-              <th className="px-4 py-2 border-b">Fecha</th>
+                <th className="px-4 py-2 border-b">Fecha</th>
                 <th className="px-4 py-2 border-b">ID Relevamiento</th>
                 <th className="px-4 py-2 border-b">CUI</th>
                 <th className="px-4 py-2 border-b">Acciones</th>
@@ -140,13 +148,17 @@ export default function HomePage() {
             <tbody>
               {relevamientos.map((relevamiento) => (
                 <tr key={relevamiento.id}>
-                  <th className="px-4 py-2 border-b">{new Date(relevamiento.created_at).toLocaleDateString("es-ES")}</th>
+                  <th className="px-4 py-2 border-b">
+                    {new Date(relevamiento.created_at).toLocaleDateString(
+                      "es-ES"
+                    )}
+                  </th>
                   <td className="px-4 py-2 border-b">{relevamiento.id}</td>
                   <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
                   <td className="px-4 py-2 border-b">
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-1 mr-2"
-                      onClick={()=> handleView(relevamiento.id)}
+                      onClick={() => handleView(relevamiento.id)}
                     >
                       Ver
                     </button>

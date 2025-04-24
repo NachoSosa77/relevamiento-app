@@ -1,17 +1,17 @@
 // Columnas de la tabla
 
-import { Respondentes } from "@/interfaces/Respondientes";
+import { Respondiente } from "@/interfaces/Respondientes";
 
 interface RespondientesHeaderColumn {
   Header: string;
-  accessor: keyof Respondentes;
+  accessor: keyof Respondiente;
   inputType: "number" | "date" | "time" | "text";
 }
 
 export const respondientesHeader: RespondientesHeaderColumn[] = [
   {
     Header: "Nombre y apellido",
-    accessor: "nombreCompleto",
+    accessor: "nombre_completo",
     inputType: "text",
   },
   { Header: "Cargo", accessor: "cargo", inputType: "text" },

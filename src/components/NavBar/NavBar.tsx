@@ -1,5 +1,6 @@
 import { UserData } from "@/interfaces/UserData";
 import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
+import { persistor } from "@/redux/store";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,6 +53,7 @@ const handleLogout = async () => {
     dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
     setUser(null);
     setShowLogoutModal(false);
+    persistor.purge();  
     router.push("/");
   } catch (error) {
     console.error("Error al cerrar sesión:", error);

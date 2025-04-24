@@ -186,10 +186,10 @@ const FormReutilizable: React.FC<FormValues> = () => {
         </div>
        <ReusableTable data={tableData} columns={columns} />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-2">
           <button
             type="submit"
-            className="text-sm font-bold bg-gray-100 p-4 rounded-md flex-nowrap"
+            className="text-sm font-bold bg-gray-200 p-4 rounded-md flex-nowrap"
           >
             Cargar Información
           </button>

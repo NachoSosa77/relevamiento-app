@@ -1,7 +1,9 @@
-export interface Visitas {
-    id: number;
+export interface Visita {
+    id?: number;
+    numero_visita: string;
     fecha: string;
-    horaInicio: string;
-    horaFin: string;
+    hora_inicio: string;
+    hora_finalizacion: string;
     observaciones: string;
+    relevamiento_id?: number;
 }

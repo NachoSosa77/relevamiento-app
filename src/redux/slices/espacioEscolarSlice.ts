@@ -1,6 +1,8 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { LocalesConstruccion } from "@/interfaces/Locales";
+import { Respondiente } from "@/interfaces/Respondientes";
+import { Visita } from "@/interfaces/Visitas";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface EspacioEscolarState {
@@ -12,9 +14,10 @@ interface EspacioEscolarState {
   plano: string | null;
   observaciones: string | null;
   locales: LocalesConstruccion[];
-  contextId: number | null;
   areasExteriores: AreasExteriores[];
   relevamientoId: number | undefined;
+  visitas: Visita[];
+  respondientes: Respondiente[];
 }
 
 const initialState: EspacioEscolarState = {
@@ -26,9 +29,10 @@ const initialState: EspacioEscolarState = {
   plano: null,
   observaciones: null,
   locales: [],
-  contextId: null,
   areasExteriores: [],
   relevamientoId: undefined,
+  visitas: [],
+  respondientes: [],
 };
 
 const espacioEscolarSlice = createSlice({
@@ -90,6 +94,33 @@ const espacioEscolarSlice = createSlice({
       state.areasExteriores = [];
     },
     resetEspacioEscolar: () => initialState,
+    agregarVisita(state, action: PayloadAction<Visita>) {
+      state.visitas = [...state.visitas, action.payload]; // Utilizando el spread operator
+    },
+    // Acción para actualizar una visita
+    actualizarVisita(state, action: PayloadAction<Visita>) {
+      const index = state.visitas.findIndex(
+        (visita) => visita.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.visitas[index] = action.payload; // Actualizamos la visita en el estado
+      }
+    },
+
+    // Acción para eliminar una visita
+    eliminarVisita(state, action: PayloadAction<number>) {
+      state.visitas = state.visitas.filter(
+        (visita) => visita.id !== action.payload
+      ); // Filtramos la visita a eliminar
+    },
+    agregarRespondiente(state, action: PayloadAction<Respondiente>) {
+      state.respondientes = [...state.respondientes, action.payload]; // Utilizando el spread operator
+    },
+    eliminarRespondiente(state, action: PayloadAction<number>) {
+      state.respondientes = state.respondientes.filter(
+        (_, index) => index !== action.payload
+      ); // Filtramos el respondiente a eliminar
+    },
   },
 });
 
@@ -108,6 +139,11 @@ export const {
   deleteAreasExteriores,
   resetAreasExteriores,
   resetEspacioEscolar,
+  agregarVisita,
+  actualizarVisita,
+  eliminarVisita,
+  agregarRespondiente,
+  eliminarRespondiente,
 } = espacioEscolarSlice.actions;
 
 export default espacioEscolarSlice.reducer;

@@ -1,17 +1,26 @@
-import { respondientesHeader } from "@/app/relevamiento-predio/config/respondientesHeader";
-import { Respondentes } from "@/interfaces/Respondientes";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Respondiente } from "@/interfaces/Respondientes";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { agregarRespondiente, eliminarRespondiente } from "@/redux/slices/espacioEscolarSlice";
+import axios from "axios";
 import { useState } from "react";
 import Modal from "react-modal";
+import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
+
 export default function RespondientesDelCuiComponent() {
-  const [respondentes, setRespondentes] = useState<Respondentes[]>([]);
+  const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  /* const handleSubmit = (data: FormData) => {
-    console.log('Datos enviados:', data);
-    // Aquí puedes enviar los datos a tu servidor o realizar otras acciones
-  }; */
+
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
+
+  const respondientes = useAppSelector(
+    (state) => state.espacio_escolar.respondientes
+  );
 
   const agregarRespondente = () => {
     setIsModalOpen(true);
@@ -21,10 +30,78 @@ export default function RespondientesDelCuiComponent() {
     setIsModalOpen(false);
   };
 
-  const manejarEnvio = (nuevoRespondente: Respondentes) => {
-    setRespondentes([...respondentes, nuevoRespondente]);
+  const manejarEnvio = (nuevoRespondente: Respondiente) => {
+    if (!relevamientoId) {
+      toast.error("❌ Relevamiento ID no disponible.");
+      return;
+    }
+
+    const respondienteConRelevamiento = {
+      ...nuevoRespondente,
+      relevamiento_id: relevamientoId,
+    };
+
+    dispatch(agregarRespondiente(respondienteConRelevamiento));
+    toast.success("✅ Respondiente agregado correctamente en Redux");
     cerrarModal();
   };
+
+  const handleEliminar = (index: number) => {
+    dispatch(eliminarRespondiente(index));
+  };
+
+  const enviarRespondientesABaseDeDatos = async () => {
+    if (!respondientes.length || !relevamientoId) {
+      toast.error("❌ No hay respondientes o Relevamiento ID no disponible.");
+      return;
+    }
+
+    try {
+      const respondientesConId = respondientes.map((r) => ({
+        ...r,
+        relevamiento_id: relevamientoId,
+      }));
+
+      const response = await axios.post("/api/respondientes", {
+        respondientes: respondientesConId,
+      });
+
+      if (response.status === 200 && response.data.success) {
+        toast.success("✅ Respondientes enviados correctamente a la base de datos");
+      } else {
+        toast.error("❌ Falló el envío de respondientes");
+      }
+    } catch (error) {
+      toast.error("❌ Error al enviar los respondientes a la base de datos");
+    }
+  };
+
+  const respondientesHeader = [
+    {
+      Header: "Nombre y apellido",
+      accessor: "nombre_completo",
+    },
+    { Header: "Cargo", accessor: "cargo" },
+    {
+      Header: "Denominación del establecimiento educativo",
+      accessor: "establecimiento",
+    },
+    { Header: "Teléfono de contacto", accessor: "telefono" },
+    {
+      Header: "Acciones",
+      accessor: "acciones",
+      Cell: ({ row }: { row: { original: Respondiente; index: number } }) => (
+        <div className="flex space-x-2 justify-center">
+          <button
+            onClick={() => handleEliminar(row.index)}
+            className="bg-red-500 text-white p-1 rounded"
+          >
+            Eliminar
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="mx-10">
@@ -33,19 +110,31 @@ export default function RespondientesDelCuiComponent() {
           <p>RESPONDIENTES DEL CUI</p>
         </div>
       </div>
-      <div className="flex flex-col p-2 justify-center items-cente text-sm">
-        <ReusableTable columns={respondientesHeader} data={respondentes} />
-        <button
-          onClick={agregarRespondente}
-          className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Agregar Respondente
-        </button>
+      <div className="flex flex-col p-2 justify-center text-sm">
+        <ReusableTable columns={respondientesHeader} data={respondientes || []} />
+        <div className="flex justify-end gap-2 mt-2">
+          <button
+            onClick={agregarRespondente}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Agregar Respondente
+          </button>
+          <button
+            onClick={enviarRespondientesABaseDeDatos}
+            disabled={!respondientes.length}
+            className={`${
+              !respondientes.length ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"
+            } text-white font-bold py-2 px-4 rounded`}
+          >
+            Enviar a base de datos
+          </button>
+        </div>
       </div>
+
       <Modal
         isOpen={isModalOpen}
         onRequestClose={cerrarModal}
-        contentLabel="Agregar Visita Modal"
+        contentLabel="Agregar Respondente Modal"
         className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50"
         ariaHideApp={false}

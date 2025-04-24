@@ -5,11 +5,11 @@ import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivado
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
-import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { UserData } from "@/interfaces/UserData";
 import { useAppSelector } from "@/redux/hooks";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
+
 
 export default function RelevamientoPredioPage() {
   const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
@@ -69,7 +69,6 @@ export default function RelevamientoPredioPage() {
       <VisitasComponent />
       <RespondientesDelCuiComponent />
       <EstablecimientosPrivados />
-      <ObservacionesComponent onSave={() => {}} />
     </div>
   );
 }
