@@ -51,39 +51,6 @@ export default function PlanoComponent() {
     }
   };
 
-  const handleFiles = (files: File[] | null) => {
-    if (files && relevamientoId) {
-      handleFilesUpload(files, relevamientoId);
-    }
-  };
-
-
-  const handleFilesUpload = async (files: File[], relevamientoId: number) => {
-    const formData = new FormData();
-  
-    files.forEach((file) => {
-      formData.append("files", file); // importante: usar el mismo nombre 'files' (plural)
-    });
-  
-    formData.append("relevamientoId", relevamientoId.toString());
-  
-    const res = await fetch("/api/archivos", {
-      method: "POST",
-      body: formData,
-    });
-  
-    const data = await res.json();
-  
-    if (data.success) {
-      console.log("Archivos subidos:", data.archivos); // ahora será un array
-    } else {
-      console.error("Error subiendo archivos", data);
-    }
-  };
-  
-
-  
-
   const handleCantidadConstruccionesChange = (value: number | undefined) => {
     dispatch(setCantidadConstrucciones(value));
   };
@@ -130,7 +97,7 @@ export default function PlanoComponent() {
             ></Check>
           </div>
           <div className="mr-4">
-            <FileUpload onFileChange={handleFiles} />
+            <FileUpload relevamientoId={relevamientoId} />
           </div>
         </div>
       </div>

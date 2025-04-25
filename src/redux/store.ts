@@ -10,6 +10,7 @@ import {
   REHYDRATE,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import archivoReducer from "./slices/archivoSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
 import institucionReducer from "./slices/institucionSlice";
 
@@ -17,6 +18,7 @@ import institucionReducer from "./slices/institucionSlice";
 const rootReducer = combineReducers({
   espacio_escolar: espacioEscolarReducer,
   institucion: institucionReducer,
+  archivos: archivoReducer,
 });
 
 const persistConfig = {

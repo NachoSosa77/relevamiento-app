@@ -15,7 +15,7 @@ interface EspacioEscolarState {
   observaciones: string | null;
   locales: LocalesConstruccion[];
   areasExteriores: AreasExteriores[];
-  relevamientoId: number | undefined;
+  relevamientoId: number;
   visitas: Visita[];
   respondientes: Respondiente[];
 }
@@ -30,7 +30,7 @@ const initialState: EspacioEscolarState = {
   observaciones: null,
   locales: [],
   areasExteriores: [],
-  relevamientoId: undefined,
+  relevamientoId: 0,
   visitas: [],
   respondientes: [],
 };
@@ -45,7 +45,7 @@ const espacioEscolarSlice = createSlice({
     setInstitucionId: (state, action: PayloadAction<number | undefined>) => {
       state.institucion = action.payload;
     },
-    setRelevamientoId: (state, action: PayloadAction<number | undefined>) => {
+    setRelevamientoId: (state, action: PayloadAction<number>) => {
       state.relevamientoId = action.payload;
     },
     setInstitucionesData: (
