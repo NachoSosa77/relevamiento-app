@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
@@ -61,12 +60,23 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const connection = await getConnection();
-    const query = "SELECT * FROM areas_exteriores"; // Consulta para traer todas las áreas externas
+    const relevamientoId = req.url.split("/").pop(); // Obtener el último segmento de la URL como relevamientoId
 
-    const [areasExteriores] = await connection.query<AreaExterior[]>(query);
+    let query = "SELECT * FROM areas_exteriores";
+    const params: any[] = [];
+
+    if (relevamientoId) {
+      query += " WHERE relevamiento_id = ?";
+      params.push(Number(relevamientoId));
+    }
+
+    const [areasExteriores] = await connection.query<AreaExterior[]>(
+      query,
+      params
+    );
     connection.release();
 
-    return NextResponse.json({ areasExteriores }); // Devuelve todas las áreas externas
+    return NextResponse.json({ areasExteriores });
   } catch (err: any) {
     console.error("Error al obtener las áreas externas:", err);
     return NextResponse.json(

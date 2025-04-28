@@ -1,11 +1,15 @@
 export interface ServiciosBasicos {
-    id: string;
+    id?: number;
+    id_servicio: string; // Ej: "2.1"
     servicio: string;
-    enPredio: string;
-    disponibilidad: string;
+    en_predio?: string; // Opcional
+    disponibilidad?: string;
     distancia: string;
     prestadores: string;
+    relevamiento_id?: number; // El ID del relevamiento relacionado
+
   }
+
   export interface Column {
     header: string;
     key: keyof ServiciosBasicos;

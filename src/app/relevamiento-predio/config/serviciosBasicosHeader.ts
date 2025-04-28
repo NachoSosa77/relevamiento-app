@@ -5,7 +5,7 @@ export const serviciosColumns: Column[] = [
   { header: "Servicios básicos", key: "servicio", type: "text" },
   {
     header: "En el predio",
-    key: "enPredio",
+    key: "en_predio",
     type: "select",
     options: ["Sí", "No"],
   },
@@ -15,88 +15,88 @@ export const serviciosColumns: Column[] = [
     type: "select",
     options: ["Sí", "No"],
     conditional: (servicio) =>
-      servicio.enPredio === "No" && servicio.id != "2.6", // Solo habilitado si enPredio es "No"
+      servicio.en_predio === "No" && servicio.id_servicio != "2.6", // Solo habilitado si en_predio es "No"
   },
   {
     header: "Distancia al predio (en m.)",
     key: "distancia",
     type: "input",
     conditional: (servicio) =>
-      servicio.enPredio === "No" &&
+      servicio.en_predio === "No" &&
       servicio.disponibilidad === "Sí" &&
-      servicio.id != "2.6", // Solo habilitado si enPredio y disponibilidad son "Sí"
+      servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
   },
   {
     header: "Prestadores de servicios",
     key: "prestadores",
     type: "input",
     conditional: (servicio) =>
-      (servicio.enPredio === "Sí" || servicio.disponibilidad === "Sí") &&
-      servicio.id != "2.6", // Solo habilitado si enPredio y disponibilidad son "Sí"
+      (servicio.en_predio === "Sí" || servicio.disponibilidad === "Sí") &&
+      servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
   },
 ];
 
 export const serviciosData: ServiciosBasicos[] = [
   {
-    id: "2.1",
+    id_servicio: "2.1",
     servicio: "Alumbrado público",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.2",
+    id_servicio: "2.2",
     servicio: "Electricidad de Red",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.3",
+    id_servicio: "2.3",
     servicio: "Gas natural de red",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.4",
+    id_servicio: "2.4",
     servicio: "Agua corriente",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.5",
+    id_servicio: "2.5",
     servicio: "Red cloacal",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.6",
+    id_servicio: "2.6",
     servicio: "Planta de tratamiendo de líquidos cloacales",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.7",
+    id_servicio: "2.7",
     servicio: "Red de desagües pluviales",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",
   },
   {
-    id: "2.8",
+    id_servicio: "2.8",
     servicio: "Recolección de residuos",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
     prestadores: "",

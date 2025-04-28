@@ -1,9 +1,12 @@
 export interface ServiciosTransporteComunicaciones {
-  id: string;
+  id?: number;
+  id_servicio: string;
   servicio: string;
-  enPredio: string;
-  disponibilidad: string;
+  en_predio?: string;
+  disponibilidad?: string;
   distancia: string;
+  relevamiento_id?: number; // El ID del relevamiento relacionado
+
 }
 export interface Column {
   header: string;

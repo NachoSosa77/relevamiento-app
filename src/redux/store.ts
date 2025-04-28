@@ -13,12 +13,18 @@ import storage from "redux-persist/lib/storage";
 import archivoReducer from "./slices/archivoSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
 import institucionReducer from "./slices/institucionSlice";
+import serviciosFactoresReducer from "./slices/serviciosFactoresSlice";
+import serviciosReducer from "./slices/serviciosSlice";
+import serviciosTransporteReducer from "./slices/serviciosTransporteSlice";
 
 // Combinar los reducers
 const rootReducer = combineReducers({
   espacio_escolar: espacioEscolarReducer,
   institucion: institucionReducer,
   archivos: archivoReducer,
+  servicios_basicos: serviciosReducer,
+  servicios_transporte: serviciosTransporteReducer,
+  servicios_factores: serviciosFactoresReducer,
 });
 
 const persistConfig = {

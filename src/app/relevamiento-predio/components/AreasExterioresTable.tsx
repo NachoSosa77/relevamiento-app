@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AreasExteriores, Column } from "@/interfaces/AreaExterior";
-import { areasExterioresService } from "@/services/areasExterioresService";
+import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { areasExterioresColumns } from "../config/areaExterior";
@@ -11,9 +12,11 @@ interface Opcion {
 }
 
 const AreasExterioresTable: React.FC = () => {
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  ); // Usamos el relevamientoId desde Redux
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [servicios, setServicios] = useState<AreasExteriores[]>([]);
-  const [areaId, setAreaId] = useState<number | null>(null);
   const [tipoOpciones, setTipoOpciones] = useState<Opcion[]>([]);
   const [terminacionPisoOpciones, setTerminacionPisoOpciones] = useState<
     string[]
@@ -66,21 +69,23 @@ const AreasExterioresTable: React.FC = () => {
     fetchOpcionesTerminacionPiso();
   }, []);
 
-  // 🚀 Cargar datos de un área específica
+  // 🚀 Cargar datos de áreas exteriores asociadas al relevamientoId
   useEffect(() => {
-    if (areaId) {
-      fetchAreaData(areaId);
-    }
-  }, [areaId]);
-
-  const fetchAreaData = async (id: number) => {
-    try {
-      const data = await areasExterioresService.getAreasExterioresById(id);
-      setServicios([data]);
-    } catch (error) {
-      console.error("Error al cargar los datos:", error);
-    }
-  };
+    const fetchAreasExteriores = async () => {
+      if (relevamientoId) {
+        try {
+          const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
+          console.log("Datos de áreas exteriores:", response);
+          
+          setServicios(response.data.areasExteriores);
+        } catch (error) {
+          console.error("Error al obtener áreas exteriores:", error);
+        }
+      }
+    };
+  
+    fetchAreasExteriores();
+  }, [relevamientoId]);
 
   // 🚀 Actualizar estado local cuando el usuario edita un campo
   const handleUpdateField = (
@@ -120,35 +125,19 @@ const AreasExterioresTable: React.FC = () => {
     }
   };
 
-  /* // 🚀 Manejar el cambio en la selección de terminación de piso
-  const handleUpdateTerminacionPiso = (id: number, value: string) => {
-    setServicios((prev) =>
-      prev.map((servicio) =>
-        servicio.id === id ? { ...servicio, terminacion_piso: value } : servicio
-      )
-    );
-  }; */
-
   return (
     <div className="p-4 mx-10">
-      <div>
-        <label className="text-sm mr-4">ID del Área Exterior:</label>
-        <input
-          type="number"
-          value={areaId || ""}
-          onChange={(e) => setAreaId(Number(e.target.value))}
-          className="border p-1 rounded-lg"
-        />
-      </div>
-
       {columnsConfig.length > 0 ? (
         <table className="w-full border-collapse mt-4">
           <thead>
             <tr className="bg-gray-200">
               {columnsConfig.map((column) => (
-                <th key={column.key} className={`border p-2 text-left ${
-                  column.key === "id" ? "bg-black text-white" : ""
-                }`}>
+                <th
+                  key={column.key}
+                  className={`border p-2 text-left ${
+                    column.key === "id" ? "bg-black text-white" : ""
+                  }`}
+                >
                   {column.header}
                 </th>
               ))}
@@ -162,13 +151,9 @@ const AreasExterioresTable: React.FC = () => {
                     key={`${servicio.id}-${column.key}`}
                     className="border p-2"
                   >
-                    {/* Mostrar el nombre en lugar del ID en "Tipo de Área" */}
                     {column.key === "tipo" ? (
-                      tipoOpciones.find(
-                        (opcion) => opcion.id === Number(servicio.tipo)
-                      )?.label || "Desconocido"
+                      servicio.tipo || "Desconocido" // Se mostró directamente el tipo
                     ) : column.key === "terminacion_piso" ? (
-                      // Mostrar un select en "Terminación del piso"
                       <select
                         value={servicio.terminacion_piso || ""}
                         onChange={(e) =>

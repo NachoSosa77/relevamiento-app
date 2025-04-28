@@ -1,10 +1,12 @@
 export interface FactoresRiesgoAmbiental {
-  id: string;
-  riesgo: string;
-  respuesta: string;
-  mitigacion: string;
-  descripcion: string;
-  descripcionOtro: string;
+  id?: number;
+  id_servicio: string;
+  riesgo?: string;
+  respuesta?: string;
+  mitigacion?: string;
+  descripcion?: string;
+  descripcionOtro?: string;
+  relevamiento_id?: number; // Agregado para el envío al backend
 }
 
 export interface Column {

@@ -4,7 +4,7 @@ import {
 } from "@/interfaces/FactoresRiesgoAmbienta";
 
 export const factoresRiesgoColumns: Column[] = [
-  { header: "4", key: "id", type: "text" },
+  { header: "4", key: "id_servicio", type: "text" },
   { header: "FACTORES DE RIESGO AMBIENTAL", key: "riesgo", type: "text" },
   {
     header: "",
@@ -18,7 +18,8 @@ export const factoresRiesgoColumns: Column[] = [
     type: "select",
     options: ["Sí", "No"],
     conditional: (factores) =>
-      factores.respuesta === "Sí" && ["4.5", "4.6"].includes(factores.id),
+      factores.respuesta === "Sí" &&
+      ["4.5", "4.6"].includes(factores.id_servicio),
   },
   {
     header: "Descripción",
@@ -30,7 +31,8 @@ export const factoresRiesgoColumns: Column[] = [
       "Otro",
     ],
     conditional: (factores) =>
-      factores.mitigacion === "Sí" && ["4.5", "4.6"].includes(factores.id),
+      factores.mitigacion === "Sí" &&
+      ["4.5", "4.6"].includes(factores.id_servicio),
   },
   {
     header: "Indique:",
@@ -39,13 +41,13 @@ export const factoresRiesgoColumns: Column[] = [
     conditional: (factores) =>
       factores.mitigacion === "Sí" &&
       factores.descripcion === "Otro" &&
-      ["4.5", "4.6"].includes(factores.id),
+      ["4.5", "4.6"].includes(factores.id_servicio),
   },
 ];
 
 export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
   {
-    id: "4.1",
+    id_servicio: "4.1",
     riesgo:
       "¿El predio se encuentra a menos de 500 mts de basurales / rellenos sanitarios?",
     respuesta: "",
@@ -54,7 +56,7 @@ export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
     descripcionOtro: "",
   },
   {
-    id: "4.2",
+    id_servicio: "4.2",
     riesgo: "¿El predio se encuentra a menos de 500 mts de mataderos?",
     respuesta: "",
     mitigacion: "",
@@ -62,7 +64,7 @@ export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
     descripcionOtro: "",
   },
   {
-    id: "4.3",
+    id_servicio: "4.3",
     riesgo:
       "¿El predio se encuentra a menos de 500 mts de depósitos de sustancias inflamables o explosivos?",
     respuesta: "",
@@ -71,7 +73,7 @@ export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
     descripcionOtro: "",
   },
   {
-    id: "4.4",
+    id_servicio: "4.4",
     riesgo:
       "¿El predio se encuentra a menos de 500 mts de fábricas u otro foco contaminante?",
     respuesta: "",
@@ -80,7 +82,7 @@ export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
     descripcionOtro: "",
   },
   {
-    id: "4.5",
+    id_servicio: "4.5",
     riesgo: "¿Es zona inundable?",
     respuesta: "",
     mitigacion: "",
@@ -88,7 +90,7 @@ export const factoresRiesgoData: FactoresRiesgoAmbiental[] = [
     descripcionOtro: "",
   },
   {
-    id: "4.6",
+    id_servicio: "4.6",
     riesgo: "¿Existe algún otro factor de riesgo ambiental?",
     respuesta: "",
     mitigacion: "",

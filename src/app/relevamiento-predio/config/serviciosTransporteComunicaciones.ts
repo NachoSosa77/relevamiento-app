@@ -4,7 +4,7 @@ import {
 } from "@/interfaces/ServiciosTransporteComunicaciones";
 
 export const serviciosTransporteComunicaciones: Column[] = [
-  { header: "3", key: "id", type: "text" },
+  { header: "3", key: "id_servicio", type: "text" },
   {
     header: "SERVICIOS DE TRANSPORTE Y COMUNICACIONES",
     key: "servicio",
@@ -12,16 +12,16 @@ export const serviciosTransporteComunicaciones: Column[] = [
   },
   {
     header: "En el predio",
-    key: "enPredio",
+    key: "en_predio",
     type: "select",
     options: (servicio) => {
-      if (servicio.id == "3.2") {
+      if (servicio.id_servicio == "3.2") {
         return ["Continua", "Diaria", "Semanal", "Otra"];
       } else {
         return ["Sí", "No"];
       }
     },
-    conditional: (servicio) => servicio.id != "3.3", // Solo habilitado si el servicio es diferente a "3.3"
+    conditional: (servicio) => servicio.id_servicio != "3.3", // Solo habilitado si el servicio es diferente a "3.3"
   },
   {
     header: "Disponibilidad En la zona (1 km de radio)",
@@ -29,87 +29,88 @@ export const serviciosTransporteComunicaciones: Column[] = [
     type: "select",
     options: ["Sí", "No"],
     conditional: (servicio) =>
-      servicio.enPredio === "No" && servicio.id != "2.6", // Solo habilitado si enPredio es "No"
+      (servicio.en_predio === "No" && servicio.id_servicio !== "2.6") ||
+      servicio.id_servicio === "3.3", // Habilitado si en_predio es "No" (excepto "2.6") o si id_servicio es "3.3"
   },
   {
     header: "Distancia al predio (en m.)",
     key: "distancia",
     type: "input",
     conditional: (servicio) =>
-      servicio.enPredio === "No" &&
+      servicio.en_predio === "No" &&
       servicio.disponibilidad === "Sí" &&
-      servicio.id != "2.6", // Solo habilitado si enPredio y disponibilidad son "Sí"
+      servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
   },
 ];
 
 export const serviciosDataTransporte: ServiciosTransporteComunicaciones[] = [
   {
-    id: "3.1",
+    id_servicio: "3.1",
     servicio: "Pavimento",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.2",
+    id_servicio: "3.2",
     servicio: "Frecuencia de transporte público",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.3",
+    id_servicio: "3.3",
     servicio: "Correo postal",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.4",
+    id_servicio: "3.4",
     servicio: "Telefonía por cable",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.5",
+    id_servicio: "3.5",
     servicio: "Telefonía celular",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.6",
+    id_servicio: "3.6",
     servicio: "Acceso a internet",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.7",
+    id_servicio: "3.7",
     servicio: "Señal de radio AM",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.8",
+    id_servicio: "3.8",
     servicio: "Señal de radio FM",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.9",
+    id_servicio: "3.9",
     servicio: "TV por aire",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },
   {
-    id: "3.10",
+    id_servicio: "3.10",
     servicio: "TV por cable/satelital",
-    enPredio: "",
+    en_predio: "",
     disponibilidad: "",
     distancia: "",
   },

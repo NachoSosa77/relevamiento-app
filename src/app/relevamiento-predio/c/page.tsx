@@ -56,7 +56,7 @@ export default function RelevamientoCPage() {
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
 
-  console.log('SELECTED INSTITUCIONS', selectedInstitutions );
+  //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
 
   useEffect(() => {
     if (institucionesRedux.length > 0) {

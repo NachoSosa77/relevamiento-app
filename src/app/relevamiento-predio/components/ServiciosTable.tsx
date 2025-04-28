@@ -1,26 +1,58 @@
-import { Column, ServiciosBasicos } from '@/interfaces/ServiciosBasicos';
-import React, { ChangeEvent, useState } from 'react';
-
+import { Column, ServiciosBasicos } from "@/interfaces/ServiciosBasicos";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setServicios } from "@/redux/slices/serviciosSlice";
+import React, { ChangeEvent, useState } from "react";
+import { toast } from "react-toastify";
 
 interface ServiciosBasicosFormProps {
   serviciosData: ServiciosBasicos[];
   columnsConfig: Column[];
 }
 
-const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosData, columnsConfig }) => {
-  const [servicios, setServicios] = useState<ServiciosBasicos[]>(serviciosData);
-  const [formData, setFormData] = useState<ServiciosBasicos[]>(serviciosData);
+const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
+  serviciosData,
+  columnsConfig,
+}) => {
+  const dispatch = useAppDispatch();
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
 
+  console.log("relevamientoId", relevamientoId);
+  const [servicios, setServiciosLocal] = useState<ServiciosBasicos[]>(serviciosData);
+
+  // Función para manejar los cambios en los inputs/selects
   const handleChange = (index: number, field: keyof ServiciosBasicos, value: string) => {
     const updatedServicios = [...servicios];
     updatedServicios[index] = { ...updatedServicios[index], [field]: value };
-    setServicios(updatedServicios);
-    setFormData(updatedServicios);
+    setServiciosLocal(updatedServicios); // Actualizamos el estado local con los nuevos valores
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Función para manejar el envío del formulario
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('SERVICIOS SUBMITTED', formData);
+  
+    // Agregamos relevamiento_id a cada servicio
+    const serviciosConRelevamiento = servicios.map((servicio) => ({
+      ...servicio,
+      relevamiento_id: relevamientoId,
+    }));
+  
+    // Enviar el array directamente en lugar de un objeto que lo envuelve
+    const response = await fetch("/api/servicios_basicos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(serviciosConRelevamiento), // Envía el array directamente
+    });
+  
+    if (response.ok) {
+      dispatch(setServicios(serviciosConRelevamiento)); // Guardamos los datos en Redux
+      toast("✅ Servicios cargados correctamente!");
+    } else {
+      toast("❌ Error al cargar los servicios.");
+    }
   };
 
   return (
@@ -31,7 +63,9 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
             {columnsConfig.map((column) => (
               <th
                 key={column.key}
-                className={`border p-2 text-center ${column.key === 'id' ? 'bg-black text-white' : ''}`}
+                className={`border p-2 text-center ${
+                  column.key === "id" ? "bg-black text-white" : ""
+                }`}
               >
                 {column.header}
               </th>
@@ -40,13 +74,18 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
         </thead>
         <tbody>
           {servicios.map((servicio, index) => (
-            <tr key={servicio.id}>
+            <tr key={servicio.id_servicio}>
               {columnsConfig.map((column) => (
-                <td key={`${servicio.id}-${column.key}`} className="border p-2 text-center">
-                  {column.type === 'select' && (
+                <td
+                  key={`${servicio.id_servicio}-${column.key}`}
+                  className="border p-2 text-center"
+                >
+                  {column.type === "select" && (
                     <select
-                      value={servicio[column.key] as string}
-                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleChange(index, column.key, e.target.value)}
+                      value={servicio[column.key] as string} // Asegúrate de que el valor esté vinculado correctamente
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                        handleChange(index, column.key, e.target.value)
+                      }
                       className="w-full p-2 border rounded"
                       disabled={column.conditional && !column.conditional(servicio)}
                     >
@@ -64,16 +103,20 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
                           ))}
                     </select>
                   )}
-                  {column.type === 'input' && (
+                  {column.type === "input" && (
                     <input
                       type="text"
-                      value={servicio[column.key] as string}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(index, column.key, e.target.value)}
+                      value={servicio[column.key] as string} // Asegúrate de que el valor esté vinculado correctamente
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        handleChange(index, column.key, e.target.value)
+                      }
                       className="w-full p-2 border rounded"
                       disabled={column.conditional && !column.conditional(servicio)}
                     />
                   )}
-                  {column.type === 'text' && <div>{servicio[column.key] as string}</div>}
+                  {column.type === "text" && (
+                    <div>{servicio[column.key] as string}</div>
+                  )}
                 </td>
               ))}
             </tr>
@@ -81,7 +124,10 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({ serviciosDa
         </tbody>
       </table>
       <div className="flex justify-end mt-4">
-        <button type="submit" className="text-sm font-bold bg-slate-200 p-4 rounded-md">
+        <button
+          type="submit"
+          className="text-sm font-bold bg-slate-200 p-4 rounded-md"
+        >
           Cargar Información
         </button>
       </div>
