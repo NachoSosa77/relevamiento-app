@@ -1,8 +1,11 @@
-"use client";
-
-
-import axios from "axios";
-import { useState } from "react";
+import { useAppSelector } from "@/redux/hooks";
+import {
+  addConstruccion,
+  setConstruccionTemporal,
+} from "@/redux/slices/construccionesSlice";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 interface Plantas {
   id?: number;
@@ -26,13 +29,20 @@ const columnas: Column[] = [
 ];
 
 export default function CantidadPlantas() {
+  const dispatch = useDispatch();
+  const construccionTemporal = useAppSelector(
+    (state) => state.construcciones.construccionTemporal
+  );
+
+  // Iniciar el estado de plantas con los valores de construccionTemporal
   const [plantas, setPlantas] = useState<Plantas>({
-    subsuelo: undefined,
-    pb: undefined,
-    pisos_superiores: undefined,
-    total_plantas: undefined,
+    subsuelo: construccionTemporal?.plantas?.subsuelo ?? undefined,
+    pb: construccionTemporal?.plantas?.pb ?? undefined,
+    pisos_superiores: construccionTemporal?.plantas?.pisos_superiores ?? undefined,
+    total_plantas: construccionTemporal?.plantas?.total_plantas ?? undefined,
   });
 
+  // Calcular el total de plantas
   const calcularTotal = (datos: Plantas) => {
     return (
       (datos.subsuelo || 0) + (datos.pb || 0) + (datos.pisos_superiores || 0)
@@ -53,22 +63,49 @@ export default function CantidadPlantas() {
         plantas.pb === undefined ||
         plantas.pisos_superiores === undefined
       ) {
-        alert("Por favor, complete todos los campos.");
+        toast.error("Por favor, complete todos los campos.");
         return;
       }
-      await axios.post("/api/cantidad_plantas", plantas);
-      alert("Datos guardados correctamente");
+
+      toast.success("Datos guardados correctamente");
+
+      // Limpiar el estado local de plantas después de guardar
       setPlantas({
         subsuelo: undefined,
         pb: undefined,
         pisos_superiores: undefined,
         total_plantas: undefined,
       });
+
+      // Actualizar los datos en Redux
+      if (construccionTemporal) {
+        const nuevaConstruccion = {
+          ...construccionTemporal,
+          plantas,
+        };
+
+        dispatch(addConstruccion(nuevaConstruccion));
+        dispatch(setConstruccionTemporal(nuevaConstruccion));
+
+        console.log("Construcción actualizada con plantas:", nuevaConstruccion);
+      }
     } catch (error) {
       console.error("Error al guardar los datos:", error);
-      alert("Hubo un error al guardar los datos.");
+      toast.error("Hubo un error al guardar los datos.");
     }
   };
+
+  // Usar useEffect para actualizar el estado si construccionTemporal cambia
+  useEffect(() => {
+    if (construccionTemporal?.plantas) {
+      setPlantas({
+        subsuelo: construccionTemporal.plantas.subsuelo,
+        pb: construccionTemporal.plantas.pb,
+        pisos_superiores: construccionTemporal.plantas.pisos_superiores,
+        total_plantas: construccionTemporal.plantas.total_plantas,
+      });
+    }
+  }, [construccionTemporal]);
 
   return (
     <div className="mx-10">
@@ -82,7 +119,7 @@ export default function CantidadPlantas() {
         <div className="flex items-center p-1 border bg-slate-200 text-slate-400 text-xs">
           <p>
             Ingrese la cantidad de pisos de la construcción. El nivel de acceso
-            se considerará como PLANTA BAJA
+            se considerará como PLANTA BAJA.
           </p>
         </div>
       </div>
@@ -106,7 +143,7 @@ export default function CantidadPlantas() {
           <tbody>
             <tr>
               {columnas.map((column) => (
-                <td key={column.key} className="border p-2">
+                <td key={column.key} className="border p-2 text-center">
                   {column.key !== "total_plantas" ? (
                     <input
                       type="number"

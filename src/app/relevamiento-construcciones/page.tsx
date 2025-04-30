@@ -5,11 +5,12 @@ import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
+import { selectServiciosAgua } from "@/redux/slices/servicioAguaSlice";
 import { RootState } from "@/redux/store";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import AguaFormComponent from "./components/AguaFormComponent";
 import AntiguedadComponent from "./components/Antiguedad";
-import CalidadAgua from "./components/CalidadAgua";
 import CantidadPlantas from "./components/CantidadPlantas";
 import CaracteristicasConservacion from "./components/CaracteristicasConservacion";
 import Comedor from "./components/Comdedor";
@@ -22,12 +23,6 @@ import {
 } from "./components/ServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import { servicioAccesibilidad } from "./config/relevamientoAccesibilidad";
-import {
-  almacenamientoAgua,
-  calidadAgua,
-  provisionAgua,
-  servicioAgua,
-} from "./config/relevamientoAgua";
 import { usoComedor } from "./config/relevamientoComedor";
 import { servicioDesague } from "./config/relevamientoDesague";
 import {
@@ -46,6 +41,7 @@ import {
   caracteristicasConstruccion,
   serviciosBasicos,
 } from "./config/separadoresServicios";
+// ... otros imports
 
 export default function RelevamientoConstruccionesPage() {
   const [selectedInstitutions, setSelectedInstitutions] =
@@ -58,8 +54,20 @@ export default function RelevamientoConstruccionesPage() {
   const institucionesRedux = useSelector(
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
+  const construccionTemporal = useSelector(
+    (state: RootState) => state.construcciones.construccionTemporal
+  );
+  // Usar useEffect para escuchar cuando el estado cambia
+  console.log("Construcción temporal:", construccionTemporal);
+  console.log('relevamientoId', relevamientoId);
 
-  
+  const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
+  useEffect(() => {
+    console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux);
+  }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
     if (institucionesRedux.length > 0) {
@@ -89,37 +97,10 @@ export default function RelevamientoConstruccionesPage() {
         label="COMPLETE UN FORMULARIO POR CADA CONSTRUCCIÓN DEL PREDIO"
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
       />
-      <CantidadPlantas />
+      <CantidadPlantas/>
       <AntiguedadComponent />
       <ServiciosBasicos data={serviciosBasicos} />
-      <ServiciosReu
-        id={3}
-        label={"AGUA"}
-        sub_id={3.1}
-        sublabel={"TIPO DE PROVISIÓN DE AGUA"}
-        servicios={servicioAgua}
-      />
-      <ServiciosReu
-        id={0}
-        label={""}
-        sub_id={3.2}
-        sublabel={"TIPO DE ALMACENAMIENTO"}
-        servicios={almacenamientoAgua}
-      />
-      <ServiciosReu
-        id={0}
-        label={""}
-        sub_id={3.3}
-        sublabel={"ALCANCE DE LA PROVISIÓN DE AGUA"}
-        servicios={provisionAgua}
-      />
-      <CalidadAgua
-        id={0}
-        label={""}
-        sub_id={3.4}
-        sublabel={"CALIDAD DEL AGUA PARA CONSUMO HUMANO"}
-        servicios={calidadAgua}
-      />
+      <AguaFormComponent relevamientoId={relevamientoId}/>
       <ServiciosReu
         id={4}
         label={"DESAGUES CLOACALES"}

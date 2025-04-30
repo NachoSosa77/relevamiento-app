@@ -1,15 +1,24 @@
 import React from "react";
+type SelectValue = string | number | string[];
 
-interface SelectProps {
+// Hacemos que SelectProps sea genérico para permitir tanto 'string' como 'number'
+interface SelectProps<T> {
   label: string;
-  value: string;
-  options: {value: number; label: string}[];
+  value: SelectValue;
+  options: { value: T; label: string }[]; // Usamos 'T' tanto en 'value' como en las opciones
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  multiple?: boolean; // nuevo prop
 }
 
-const Select: React.FC<SelectProps> = ({label, value, options, onChange}) => {
+const Select = <T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+  multiple = false
+}: SelectProps<T>) => {
   return (
-    <div className="flex flex-col justify-center ">
+    <div className="flex flex-col justify-center">
       <p className="text-sm text-black font-bold">{label}</p>
       <div className="flex flex-col justify-end border rounded-lg">
         <select
@@ -17,10 +26,13 @@ const Select: React.FC<SelectProps> = ({label, value, options, onChange}) => {
           value={value}
           onChange={onChange}
           className="p-2 border rounded"
+          multiple={multiple} // Usamos el nuevo prop aquí
         >
-          <option value="" disabled>Seleccionar</option>
+          {!multiple && <option value="" disabled>Seleccionar</option>}
           {options.map((option, index) => (
-            <option key={index} value={option.value}>{option.label}</option>
+            <option key={index} value={option.value}>
+              {option.label}
+            </option>
           ))}
         </select>
       </div>

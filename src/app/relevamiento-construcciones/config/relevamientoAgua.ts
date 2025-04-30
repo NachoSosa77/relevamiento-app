@@ -72,15 +72,15 @@ export const provisionAgua = [
   },
 ];
 
-export const calidadAgua = [
+export const calidadPropAgua = [
   {
     id: "3.4.1",
-    question: "¿Se realiza tratamiento potabilizador del agua?",
+    question: "Se realiza tratamiento potabilizador del agua",
     showCondition: true,
   },
   {
     id: "3.4.2",
-    question: "¿Se realiza control sanitario de la calidad del agua?",
+    question: "Se realiza control sanitario de la calidad del agua",
     showCondition: false,
   },
 ];

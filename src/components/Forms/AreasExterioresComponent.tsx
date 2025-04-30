@@ -13,6 +13,7 @@ import AlphanumericInput from "../ui/AlphanumericInput";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
 import Select from "../ui/SelectComponent";
 
+
 interface FormData {
   identificacion_plano: number;
   tipo: string;

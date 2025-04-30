@@ -9,6 +9,7 @@ import DecimalNumericInput from "../ui/DecimalNumericInput";
 import FileUpload from "../ui/FileUpLoad";
 import NumericInput from "../ui/NumericInput";
 
+
 export default function PlanoComponent() {
   const [showComponents, setShowComponents] = useState<boolean | null>(null); // Estado para controlar la visibilidad de los componentes
   const [siChecked, setSiChecked] = useState(false); // Estado para el checkbox "SI"

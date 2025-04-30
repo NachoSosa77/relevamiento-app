@@ -1,4 +1,3 @@
-
 interface SeparadorData {
   label: string;
   value: string;

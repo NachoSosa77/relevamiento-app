@@ -1,6 +1,9 @@
 "use client";
 
+import { useAppSelector } from "@/redux/hooks";
+import { agregarServicioAgua } from "@/redux/slices/servicioAguaSlice";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 
 interface Servicio {
   id: string;
@@ -14,6 +17,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
+  tipoServicio?: "provision" | "almacenamiento" | "alcance" | "calidad" | null; // Prop opcional
 }
 
 export default function ServiciosReu({
@@ -22,30 +26,55 @@ export default function ServiciosReu({
   sub_id,
   sublabel,
   servicios,
+  tipoServicio,
 }: ServiciosReuProps) {
   const [selectedServicios, setSelectedServicios] = useState<
     { servicio: string; estado?: string }[]
   >([]);
+  const dispatch = useDispatch();
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  ); // Asumo que 'espacio_escolar' contiene el relevamientoId
+
+  console.log("Relevamiento ID:", relevamientoId);
 
   const handleServicioSelect = (servicioId: string) => {
     const servicio = servicios.find((s) => s.id === servicioId);
     if (!servicio) return;
-    const alreadySelected = selectedServicios.some((s) => s.servicio === servicio.question);
+    const alreadySelected = selectedServicios.some(
+      (s) => s.servicio === servicio.question
+    );
     if (!alreadySelected) {
-      setSelectedServicios((prev) => [...prev, { servicio: servicio.question }]);
+      setSelectedServicios((prev) => [
+        ...prev,
+        { servicio: servicio.question },
+      ]);
     }
   };
 
   const handleEstadoChange = (servicioQuestion: string, estado: string) => {
     setSelectedServicios((prev) =>
-      prev.map((s) =>
-        s.servicio === servicioQuestion ? { ...s, estado } : s
-      )
+      prev.map((s) => (s.servicio === servicioQuestion ? { ...s, estado } : s))
     );
   };
 
   const handleGuardar = () => {
-    console.log("Servicios seleccionados:", selectedServicios);
+    if (tipoServicio === "provision" && relevamientoId) {
+      selectedServicios.forEach(({ servicio, estado }) => {
+        dispatch(
+          agregarServicioAgua({
+            servicio: servicio,
+            estado: estado,
+            relevamiento_id: relevamientoId,
+          })
+        );
+      });
+      setSelectedServicios([]);
+      console.log("Servicios de provisión despachados a Redux");
+    } else {
+      console.log("Guardar local:", selectedServicios);
+      // Aquí podrías agregar lógica para otros 'tipoServicio' si es necesario
+    }
   };
 
   return (
@@ -95,7 +124,9 @@ export default function ServiciosReu({
             </td>
           </tr>
           {selectedServicios.map(({ servicio, estado }) => {
-            const currentServicio = servicios.find((s) => s.question === servicio);
+            const currentServicio = servicios.find(
+              (s) => s.question === servicio
+            );
             return (
               <tr key={servicio}>
                 <td className="border p-2">{servicio}</td>
@@ -103,7 +134,9 @@ export default function ServiciosReu({
                   {currentServicio?.showCondition ? (
                     <select
                       value={estado || ""}
-                      onChange={(e) => handleEstadoChange(servicio, e.target.value)}
+                      onChange={(e) =>
+                        handleEstadoChange(servicio, e.target.value)
+                      }
                       className="w-full p-2 border rounded"
                     >
                       <option value="">Seleccionar estado</option>

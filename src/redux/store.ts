@@ -11,12 +11,13 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import archivoReducer from "./slices/archivoSlice";
+import construccionesReducer from "./slices/construccionesSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
 import institucionReducer from "./slices/institucionSlice";
+import servicioAguaReducer from "./slices/servicioAguaSlice";
 import serviciosFactoresReducer from "./slices/serviciosFactoresSlice";
 import serviciosReducer from "./slices/serviciosSlice";
 import serviciosTransporteReducer from "./slices/serviciosTransporteSlice";
-
 // Combinar los reducers
 const rootReducer = combineReducers({
   espacio_escolar: espacioEscolarReducer,
@@ -25,6 +26,8 @@ const rootReducer = combineReducers({
   servicios_basicos: serviciosReducer,
   servicios_transporte: serviciosTransporteReducer,
   servicios_factores: serviciosFactoresReducer,
+  construcciones: construccionesReducer,
+  servicio_agua: servicioAguaReducer,
 });
 
 const persistConfig = {
