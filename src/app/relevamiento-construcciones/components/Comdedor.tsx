@@ -1,8 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 
 import { useState } from "react";
 import { tipoComedorOpciones } from "../config/tipoComerdor";
+//import { toast } from "react-toastify";
+import { useAppSelector } from "@/redux/hooks";
+import { toast } from "react-toastify";
 
 interface Servicio {
   id: string;
@@ -18,39 +22,87 @@ interface ServiciosReuProps {
   servicios: Servicio[];
 }
 
-interface EspecificacionesAccesibilidad {
-  id?: number;
-  estado: string;
-  cantidad_bocas: string;
+interface EspecificacionesComedor {
+  disponibilidad: string;
+  tipos_comedor?: string[]; // Aquí guardamos los nombres o questions
 }
 
 export default function Comedor({
   id,
   label,
   servicios,
-  sub_id,
-  sublabel,
 }: ServiciosReuProps) {
   const [responses, setResponses] = useState<
-    Record<
-      string,
-      {
-        disponibilidad: string;
-        estado: string;
-        cantidad: string;
-      }
-    >
+    Record<string, EspecificacionesComedor>
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "cantidad",
+    field: "disponibilidad" | "ubicacion",
     value: string
   ) => {
     setResponses((prev) => ({
       ...prev,
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
+  };
+
+  const handleCheckboxChange = (servicioId: string, name: string) => {
+    setResponses((prev) => {
+      const current = prev[servicioId]?.tipos_comedor || [];
+      const updated = current.includes(name)
+        ? current.filter((item) => item !== name)
+        : [...current, name];
+
+      return {
+        ...prev,
+        [servicioId]: {
+          ...prev[servicioId],
+          tipos_comedor: updated,
+        },
+      };
+    });
+  };
+
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
+
+  const handleGuardar = async () => {
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: Object.keys(responses).map((key) => ({
+        servicio:
+          servicios.find((servicio) => servicio.id === key)?.question ||
+          "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        tipos_comedor: responses[key]?.tipos_comedor || [], // nuevo campo
+      })),
+    };
+
+    console.log("Datos a enviar:", payload);
+
+     try {
+          const response = await fetch("/api/uso_comedor", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json();
+      
+          if (!response.ok) {
+            throw new Error(result.error || "Error al guardar los datos");
+          }
+      
+          toast.success("Relevamiento uso comedor guardado correctamente");
+      
+          console.log("Respuesta de la API:", result);
+        } catch (error: any) {
+          console.error("Error al enviar los datos:", error);
+          toast.error(error.message || "Error al guardar los datos");
+        }  
   };
 
   return (
@@ -82,34 +134,48 @@ export default function Comedor({
               <td className="border p-2">{question}</td>
               {!showCondition ? (
                 <>
-                <td className="border p-2 text-center">
+                  <td className="border p-2 text-center">
                     <div className="grid grid-cols-3 gap-2">
-                    {tipoComedorOpciones.map((opcion) => (
-                    <label key={opcion.id} className="text-sm">
-                        {opcion.prefijo}
-                        <input 
-                          type="checkbox"
-                          name={`disponibilidad-${id}`}
-                          value=""
-                          onChange={() =>{}}
-                         />                         
-                    </label>
+                      {tipoComedorOpciones.map((opcion) => (
+                        <label key={opcion.id} className="text-sm">
+                          {opcion.prefijo}
+                          <input
+                            type="checkbox"
+                            name={`disponibilidad-${id}`}
+                            checked={
+                              responses[id]?.tipos_comedor?.includes(
+                                opcion.name
+                              ) || false
+                            }
+                            onChange={() =>
+                              handleCheckboxChange(id, opcion.name)
+                            }
+                            disabled={responses[id]?.disponibilidad === "No"} // 👈 desactiva si es No
+                          />
+                        </label>
                       ))}
-                      </div>
-                </td>
-                <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
-                <p>A - En comedor B - SUM/patio cubierto/gimnasio C - En aulas D - áreas de circulación E - Otro</p>
-              </td>
-              <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
-                <p>El servicio se presta en aulas (C): pase al ítem 10. Resto: al ítem 9.3</p>
-              </td>
-              
+                    </div>
+                  </td>
+                  <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
+                    <p>
+                      A - En comedor B - SUM/patio cubierto/gimnasio C - En
+                      aulas D - áreas de circulación E - Otro
+                    </p>
+                  </td>
+                  <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
+                    <p>
+                      El servicio se presta en aulas (C): pase al ítem 10.
+                      Resto: al ítem 9.3
+                    </p>
+                  </td>
                 </>
               ) : (
                 <>
-                  <td className={`border p-2 text-center ${
-                  !showCondition ? "bg-slate-200 text-slate-400" : ""
-                }`}>
+                  <td
+                    className={`border p-2 text-center ${
+                      !showCondition ? "bg-slate-200 text-slate-400" : ""
+                    }`}
+                  >
                     <input
                       type="radio"
                       name={`disponibilidad-${id}`}
@@ -130,7 +196,10 @@ export default function Comedor({
                     />
                   </td>
                   <td className="border p-2 text-center text-xs bg-slate-200 text-slate-400">
-                    <p>Si: Pase al ítem 9.2 y complete el cuadro. No: pase al ítem 10</p>
+                    <p>
+                      Si: Pase al ítem 9.2 y complete el cuadro. No: pase al
+                      ítem 10
+                    </p>
                   </td>
                 </>
               )}
@@ -138,6 +207,14 @@ export default function Comedor({
           ))}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

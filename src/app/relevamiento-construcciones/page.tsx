@@ -57,16 +57,16 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  const construccionTemporal = useSelector(
+  /* const construccionTemporal = useSelector(
     (state: RootState) => state.construcciones.construccionTemporal
-  );
+  ); */
   // Usar useEffect para escuchar cuando el estado cambia
-  console.log("Construcción temporal:", construccionTemporal);
-  console.log('relevamientoId', relevamientoId);
+  //console.log("Construcción temporal:", construccionTemporal);
+  //console.log('relevamientoId', relevamientoId);
 
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
-    console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux);
+    /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */;
   }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
@@ -107,6 +107,7 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={4}
         sublabel={"DESAGUES CLOACALES"}
         servicios={servicioDesague}
+        endpoint="/api/servicio_desague"
       />
       <ServiciosReu
         id={5}
@@ -114,6 +115,7 @@ export default function RelevamientoConstruccionesPage() {
         sub_id={5}
         sublabel={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
         servicios={servicioGas}
+        endpoint="/api/servicio_gas"
       />
       <ElectricidadServicio
         id={6}

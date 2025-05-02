@@ -14,16 +14,13 @@ interface AreaExterior extends RowDataPacket {
   terminacion_piso?: string;
 }
 
-interface Params {
-  params: {
-    relevamientoId: string;
-  };
-}
-
-export async function GET(req: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ relevamientoId: string }> }
+) {
   try {
     const connection = await getConnection();
-    const { relevamientoId } = await params;
+    const relevamientoId = (await params).relevamientoId;
 
     if (!relevamientoId) {
       return NextResponse.json(

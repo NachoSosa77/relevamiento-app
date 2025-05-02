@@ -1,7 +1,7 @@
 "use client";
 
 import Select from "@/components/ui/SelectComponent";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   almacenamientoAgua,
   provisionAgua,
@@ -32,11 +32,60 @@ export default function ServicioBasicoComponent({
   });
   const [alcanceSeleccionado, setAlcanceSeleccionado] = useState<string>("");
 
+  const getQuestionById = useCallback(
+    (id: string, options: { id: string; question: string }[]): string => {
+      return options.find((opt) => opt.id === id)?.question || "";
+    },
+    []
+  );
 
-  const handleChange = (field: keyof ServicioBasicoData, value: string) => {
-    const updatedData = { ...data, [field]: value };
+  // Dependencia añadida a `useCallback` para que siempre use la última versión de `processQuestions`
+  const processQuestions = useCallback(
+    (data: ServicioBasicoData) => {
+      console.log("Alcance original:", data.alcance); // Verifica los IDs originales
+      return {
+        tipo_provision: getQuestionById(data.tipo_provision, servicioAgua),
+        tipo_provision_estado: data.tipo_provision_estado,
+        tipo_almacenamiento: getQuestionById(
+          data.tipo_almacenamiento,
+          almacenamientoAgua
+        ),
+        tipo_almacenamiento_estado: data.tipo_almacenamiento_estado,
+        alcance: data.alcance.map((id) => {
+          const question = getQuestionById(id, provisionAgua);
+          console.log(`ID: ${id} -> Pregunta: ${question}`); // Verifica cada transformación
+          return question;
+        }),
+      };
+    },
+    [getQuestionById]
+  );
+
+  const handleAlcanceChange = (newAlcance: string[]) => {
+    const updatedData = { ...data, alcance: newAlcance };
     setData(updatedData);
-    onChange(updatedData);
+
+    const transformed = processQuestions(updatedData);
+    onChange(transformed);
+  };
+
+  const handleChange = useCallback(
+    (field: keyof ServicioBasicoData, value: string) => {
+      const updatedData = { ...data, [field]: value };
+      setData(updatedData);
+
+      // Solo pasa los datos procesados al padre
+      const transformed = processQuestions(updatedData);
+      onChange(transformed);
+    },
+    [data, onChange, processQuestions] // Incluimos `processQuestions` en las dependencias
+  );
+
+  const handleAddAlcance = () => {
+    if (alcanceSeleccionado && !data.alcance.includes(alcanceSeleccionado)) {
+      const updatedAlcance = [...data.alcance, alcanceSeleccionado];
+      handleAlcanceChange(updatedAlcance); // ✅ ahora sí se procesa correctamente
+    }
   };
 
   return (
@@ -69,9 +118,7 @@ export default function ServicioBasicoComponent({
             }))}
           />
         </div>
-        {
-          // Muestra el TextInput solo si el servicio seleccionado tiene showCondition: true
-          data.tipo_provision &&
+        {data.tipo_provision &&
           servicioAgua.some(
             (opt) => opt.id === data.tipo_provision && opt.showCondition
           ) && (
@@ -89,8 +136,7 @@ export default function ServicioBasicoComponent({
                 ]}
               />
             </div>
-          )
-        }
+          )}
       </div>
       <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
         <div className="w-6 h-6 flex justify-center text-black font-bold">
@@ -140,7 +186,7 @@ export default function ServicioBasicoComponent({
         </div>
         <div className="h-6 flex items-center justify-center bg-slate-200">
           <p className="px-2 text-sm font-bold">
-            ALCANCE DE LA PROVICIÓN DE AGUA
+            ALCANCE DE LA PROVISIÓN DE AGUA
           </p>
         </div>
       </div>
@@ -174,12 +220,12 @@ export default function ServicioBasicoComponent({
                     <td className="p-2 text-center">
                       <button
                         type="button"
-                        onClick={() =>
-                          setData((prev) => ({
-                            ...prev,
-                            alcance: prev.alcance.filter((a) => a !== alc),
-                          }))
-                        }
+                        onClick={() => {
+                          const updatedAlcance = data.alcance.filter(
+                            (a) => a !== alc
+                          );
+                          handleAlcanceChange(updatedAlcance);
+                        }}
                         className="text-red-500 text-sm"
                       >
                         Quitar
@@ -191,34 +237,16 @@ export default function ServicioBasicoComponent({
             </tbody>
           </table>
         </div>
-
       </div>
       <div className="flex items-center justify-end">
-
         <button
           type="button"
-          onClick={() => {
-            if (
-              alcanceSeleccionado &&
-              !data.alcance.includes(alcanceSeleccionado)
-            ) {
-              setData((prev) => {
-                const updated = { ...prev, alcance: [...prev.alcance, alcanceSeleccionado] };
-                onChange(updated);
-                return updated;
-              });
-              setAlcanceSeleccionado("");
-            }
-          }}
+          onClick={handleAddAlcance}
           className="ml-2 px-2 py-1 text-sm bg-blue-500 text-white rounded"
         >
           Agregar
         </button>
       </div>
-      <div className="mt-2">
-
-      </div>
-
     </div>
   );
 }

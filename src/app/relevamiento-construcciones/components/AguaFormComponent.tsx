@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { calidadPropAgua } from "../config/relevamientoAgua";
@@ -22,7 +22,7 @@ interface ServicioBasicoData {
 interface CalidadAguaData {
   tratamiento: string;
   tipo_tratamiento: string;
-  constrol_sanitario: string;
+  control_sanitario: string;
   cantidad_veces: string;
 }
 
@@ -38,7 +38,7 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
   const [calidadAgua, setCalidadAgua] = useState<CalidadAguaData>({
     tratamiento: "",
     tipo_tratamiento: "",
-    constrol_sanitario: "",
+    control_sanitario: "",
     cantidad_veces: "",
   });
 
@@ -48,15 +48,30 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
       ...calidadAgua,
       relevamiento_id: relevamientoId,
     };
-
+  
     try {
-      await axios.post("/api/agua", data);
-      toast.success("Datos enviados correctamente");
-    } catch (error) {
-      toast.error("Error al enviar los datos");
-      console.error(error);
+      const response = await fetch("/api/servicio_agua", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+  
+      toast.success("Servicio de agua guardado correctamente");
+      console.log("Respuesta:", result);
+    } catch (error: any) {
+      console.error("Error al enviar datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
     }
   };
+  
 
   return (
     <div className="mx-10 text-sm">

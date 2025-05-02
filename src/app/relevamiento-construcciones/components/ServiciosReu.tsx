@@ -1,9 +1,8 @@
 "use client";
 
 import { useAppSelector } from "@/redux/hooks";
-import { agregarServicioAgua } from "@/redux/slices/servicioAguaSlice";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 interface Servicio {
   id: string;
@@ -17,7 +16,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
-  tipoServicio?: "provision" | "almacenamiento" | "alcance" | "calidad" | null; // Prop opcional
+  endpoint: string; // <- NUEVO
 }
 
 export default function ServiciosReu({
@@ -26,17 +25,15 @@ export default function ServiciosReu({
   sub_id,
   sublabel,
   servicios,
-  tipoServicio,
+  endpoint,
 }: ServiciosReuProps) {
   const [selectedServicios, setSelectedServicios] = useState<
     { servicio: string; estado?: string }[]
   >([]);
-  const dispatch = useDispatch();
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   ); // Asumo que 'espacio_escolar' contiene el relevamientoId
 
-  console.log("Relevamiento ID:", relevamientoId);
 
   const handleServicioSelect = (servicioId: string) => {
     const servicio = servicios.find((s) => s.id === servicioId);
@@ -58,22 +55,42 @@ export default function ServiciosReu({
     );
   };
 
-  const handleGuardar = () => {
-    if (tipoServicio === "provision" && relevamientoId) {
-      selectedServicios.forEach(({ servicio, estado }) => {
-        dispatch(
-          agregarServicioAgua({
-            servicio: servicio,
-            estado: estado,
-            relevamiento_id: relevamientoId,
-          })
-        );
+  const handleGuardar = async () => {
+    // Creamos el payload a enviar
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: selectedServicios.map(({ servicio, estado }) => ({
+        servicio,
+        estado,
+      })),
+    };
+
+    console.log("Datos a enviar:", payload);
+
+    // Hacer la solicitud POST a la API correcta
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
-      setSelectedServicios([]);
-      console.log("Servicios de provisión despachados a Redux");
-    } else {
-      console.log("Guardar local:", selectedServicios);
-      // Aquí podrías agregar lógica para otros 'tipoServicio' si es necesario
+
+      if (!response.ok) {
+        throw new Error("Error al guardar los servicios");
+      }
+
+      const result = await response.json();
+      console.log("Respuesta de la API:", result);
+
+      // Mostrar toast de éxito
+      toast.success("Servicios guardados exitosamente");
+    } catch (error) {
+      console.error("Error al enviar los datos:", error);
+
+      // Mostrar toast de error
+      toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
     }
   };
 

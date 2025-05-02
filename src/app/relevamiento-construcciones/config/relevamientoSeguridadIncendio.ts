@@ -66,7 +66,7 @@ export const seguridadIncendio = [
   },
   {
     id: "7.14",
-    question: "Alarme de emergencia contra catástrofe",
+    question: "Alarmas de emergencia ante catástrofe",
     showCondition: false,
   },
   {

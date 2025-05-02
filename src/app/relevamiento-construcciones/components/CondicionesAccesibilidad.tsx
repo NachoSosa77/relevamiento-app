@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import TextInput from "@/components/ui/TextInput";
+import NumericInput from "@/components/ui/NumericInput";
+import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface Servicio {
   id: string;
@@ -38,13 +42,18 @@ export default function CondicionesAccesibilidad({
         disponibilidad: string;
         estado: string;
         cantidad: string;
+        mantenimiento: string;
       }
     >
   >({});
 
+  const relevamientoId = useAppSelector(
+        (state) => state.espacio_escolar.relevamientoId
+      );
+
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "cantidad",
+    field: "disponibilidad" | "estado" | "cantidad" | "mantenimiento",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -52,6 +61,47 @@ export default function CondicionesAccesibilidad({
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
   };
+
+  const [cantidadOptions, setCantidadOptions] = useState<{
+    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
+  }>({});
+
+   const handleGuardar = async () => {
+        const payload = {
+          relevamiento_id: relevamientoId,
+          servicios: Object.keys(responses).map((key) => ({
+            servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+            disponibilidad: responses[key]?.disponibilidad || "",
+            estado: responses[key]?.estado || "",
+            cantidad: cantidadOptions[key] || 0,
+            mantenimiento: responses[key]?.mantenimiento || "",
+          })),
+        };
+      
+        console.log("Datos a enviar:", payload);
+      
+           try {
+          const response = await fetch("/api/condiciones_accesibilidad", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json();
+      
+          if (!response.ok) {
+            throw new Error(result.error || "Error al guardar los datos");
+          }
+      
+          toast.success("Relevamiento condiciones accesibilidad guardados correctamente");
+      
+          console.log("Respuesta de la API:", result);
+        } catch (error: any) {
+          console.error("Error al enviar los datos:", error);
+          toast.error(error.message || "Error al guardar los datos");
+        }  
+      }; 
 
   return (
     <div className="mx-10 text-sm">
@@ -165,47 +215,49 @@ export default function CondicionesAccesibilidad({
                     {/* TextInput para 8.1, 8.2, 8.3 */}
                     {(id === "8.1" || id === "8.2" || id === "8.3") && (
                       <div className="flex gap-2 items-center justify-center">
-                        <TextInput
-                          className="text-sm"
-                          label="Cantidad"
-                          sublabel=""
-                          value={responses[id]?.cantidad || ""}
-                          onChange={(e) =>
-                            setResponses((prev) => ({
-                              ...prev,
-                              [id]: { ...prev[id], cantidad: e.target.value },
-                            }))
-                          }
+                        <p className="text-xs font-bold">Cantidad</p>
+                        <NumericInput
+                          disabled={false}
+                          label=""
+                          subLabel=""
+                          value={cantidadOptions[id] || 0}
+                          onChange={(value: number | undefined) =>{
+                            setCantidadOptions({
+                              ...cantidadOptions,
+                              [id]: value ?? 0,
+                            });
+                          }}
                         />
                       </div>
                     )}
                     {/* TextInput para 8.1, 8.2, 8.3 */}
                     {(id === "8.1" || id === "8.2") && (
                       <div className="flex gap-2 items-center justify-center">
+                        <p className="text-xs font-bold">¿Se realiza mantenimiento?</p>
                         <label>
-                        <input
-                          type="radio"
-                          name={`disponibilidad-${id}-8.3`}
-                          value="No"
-                          onChange={() =>
-                            handleResponseChange(id, "disponibilidad", "No")
-                          }
-                          className="mr-1"
-                        />
-                        No
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`disponibilidad-${id}`}
-                          value="Malo"
-                          onChange={() =>
-                            handleResponseChange(id, "disponibilidad", "Si")
-                          }
-                          className="mr-1"
-                        />
-                        Si
-                      </label>
+                          <input
+                            type="radio"
+                            name={`mantenimiento-${id}-8.3`}
+                            value="No"
+                            onChange={() =>
+                              handleResponseChange(id, "mantenimiento", "No")
+                            }
+                            className="mr-1"
+                          />
+                          No
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`mantenimiento-${id}`}
+                            value="Malo"
+                            onChange={() =>
+                              handleResponseChange(id, "mantenimiento", "Si")
+                            }
+                            className="mr-1"
+                          />
+                          Si
+                        </label>
                       </div>
                     )}
                   </div>
@@ -215,6 +267,15 @@ export default function CondicionesAccesibilidad({
           ))}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
+
     </div>
   );
 }

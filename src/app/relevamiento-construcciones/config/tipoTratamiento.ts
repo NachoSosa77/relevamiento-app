@@ -1,14 +1,14 @@
 export const tipoTratamientoOpciones = [
   {
     id: "1",
-    name: "Filtrado",
+    question: "Filtrado",
   },
   {
     id: "2",
-    name: "Decantación",
+    question: "Decantación",
   },
   {
     id: "3",
-    name: "Cloración",
+    question: "Cloración",
   },
 ];

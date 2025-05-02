@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import TextInput from "@/components/ui/TextInput";
+import NumericInput from "@/components/ui/NumericInput";
+import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface Servicio {
   id: string;
@@ -20,8 +24,11 @@ interface ServiciosReuProps {
 
 interface EspecificacionesSeguridadIncendio {
   id?: number;
-  estado: string;
-  cantidad_bocas: string;
+  servicio: string;
+  disponibilidad: string;
+  cantidad: number;
+  carga_anual_matafuegos: string;
+  simulacros_evacuacion: string;
 }
 
 export default function SeguridadIncendio({
@@ -36,16 +43,20 @@ export default function SeguridadIncendio({
       string,
       {
         disponibilidad: string;
-        estado: string;
-        cantidad: string;
-        ubicacion: string;
+  cantidad: number;
+  carga_anual_matafuegos: string;
+  simulacros_evacuacion: string;
       }
     >
   >({});
 
+  const relevamientoId = useAppSelector(
+      (state) => state.espacio_escolar.relevamientoId
+    );
+
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "cantidad" | "ubicacion",
+    field: "disponibilidad" | "carga_anual_matafuegos" | "cantidad" | "simulacros_evacuacion",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -53,6 +64,47 @@ export default function SeguridadIncendio({
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
   };
+
+  const [cantidadOptions, setCantidadOptions] = useState<{
+      [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
+    }>({});
+
+  const handleGuardar = async () => {
+      const payload = {
+        relevamiento_id: relevamientoId,
+        servicios: Object.keys(responses).map((key) => ({
+          servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+          disponibilidad: responses[key]?.disponibilidad || "",
+          carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
+          cantidad: cantidadOptions[key] || 0,
+          simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
+        })),
+      };
+    
+      console.log("Datos a enviar:", payload);
+    
+        try {
+        const response = await fetch("/api/instalaciones_seguridad_incendio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(result.error || "Error al guardar los datos");
+        }
+    
+        toast.success("Relevamiento instalaciones de seguridad e incendio guardado correctamente");
+    
+        console.log("Respuesta de la API:", result);
+      } catch (error: any) {
+        console.error("Error al enviar los datos:", error);
+        toast.error(error.message || "Error al guardar los datos");
+      } 
+    }; 
 
   return (
     <div className="mx-10 text-sm">
@@ -142,20 +194,21 @@ export default function SeguridadIncendio({
                   <div className="flex gap-2 items-center justify-center">
                     {/* TextInput para 7.2 y 7.7 */}
                     {(id === "7.2" || id === "7.7") && (
-                      <TextInput
+                      <NumericInput
+                      disabled={false}
                         label={
                           id === "7.2"
                             ? "Cantidad de bocas de incendio"
                             : "Cantidad de salidas"
                         }
-                        sublabel=""
-                        value={responses[id]?.cantidad || ""}
-                        onChange={(e) =>
-                          setResponses((prev) => ({
-                            ...prev,
-                            [id]: { ...prev[id], cantidad: e.target.value },
-                          }))
-                        }
+                        subLabel=""
+                        value={cantidadOptions[id] || 0}
+                        onChange={(value: number | undefined) =>{
+                          setCantidadOptions({
+                            ...cantidadOptions,
+                            [id]: value ?? 0,
+                          });
+                        }}
                       />
                     )}
 
@@ -165,13 +218,17 @@ export default function SeguridadIncendio({
                       id === "7.5" ||
                       id === "7.6") && (
                       <div className="flex gap-2">
-                        <TextInput
+                        <NumericInput
+                        disabled={false}
                           label="Cantidad"
-                          sublabel=""
-                          value={responses[id]?.estado || ""}
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Regular")
-                          }
+                          subLabel=""
+                          value={cantidadOptions[id] || 0}
+                          onChange={(value: number | undefined) =>{
+                            setCantidadOptions({
+                              ...cantidadOptions,
+                              [id]: value ?? 0,
+                            });
+                          }}
                         />
                         <div className="flex gap-2 items-center justify-center">
                           ¿Se realiza carga anual de los matafuegos?{" "}
@@ -181,7 +238,7 @@ export default function SeguridadIncendio({
                               name={`carga-anual-${id}`}
                               value="No"
                               onChange={() =>
-                                handleResponseChange(id, "disponibilidad", "No")
+                                handleResponseChange(id, "carga_anual_matafuegos", "No")
                               }
                               className="mr-1"
                             />
@@ -195,7 +252,7 @@ export default function SeguridadIncendio({
                               onChange={() =>
                                 handleResponseChange(
                                   id,
-                                  "disponibilidad",
+                                  "carga_anual_matafuegos",
                                   "No sabe"
                                 )
                               }
@@ -209,7 +266,7 @@ export default function SeguridadIncendio({
                               name={`carga-anual-${id}`}
                               value="Si"
                               onChange={() =>
-                                handleResponseChange(id, "disponibilidad", "Si")
+                                handleResponseChange(id, "carga_anual_matafuegos", "Si")
                               }
                               className="mr-1"
                             />
@@ -225,10 +282,10 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En todas"
                             onChange={() =>
-                              handleResponseChange(id, "ubicacion", "En todas")
+                              handleResponseChange(id, "disponibilidad", "En todas")
                             }
                             className="mr-1"
                           />
@@ -237,12 +294,12 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En algunas"
                             onChange={() =>
                               handleResponseChange(
                                 id,
-                                "ubicacion",
+                                "disponibilidad",
                                 "En algunas"
                               )
                             }
@@ -253,12 +310,12 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En ninguna"
                             onChange={() =>
                               handleResponseChange(
                                 id,
-                                "ubicacion",
+                                "disponibilidad",
                                 "En ninguna"
                               )
                             }
@@ -276,10 +333,10 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`carga-anual-${id}`}
+                            name={`simulacros_evacuacion-${id}`}
                             value="No"
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "No")
+                              handleResponseChange(id, "simulacros_evacuacion", "No")
                             }
                             className="mr-1"
                           />
@@ -288,12 +345,12 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`carga-anual-${id}`}
+                            name={`simulacros_evacuacion-${id}`}
                             value="No sabe"
                             onChange={() =>
                               handleResponseChange(
                                 id,
-                                "disponibilidad",
+                                "simulacros_evacuacion",
                                 "No sabe"
                               )
                             }
@@ -304,10 +361,10 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`carga-anual-${id}`}
+                            name={`simulacros_evacuacion-${id}`}
                             value="Si"
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "Si")
+                              handleResponseChange(id, "simulacros_evacuacion", "Si")
                             }
                             className="mr-1"
                           />
@@ -367,10 +424,10 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En todos"
                             onChange={() =>
-                              handleResponseChange(id, "ubicacion", "En todos")
+                              handleResponseChange(id, "disponibilidad", "En todos")
                             }
                             className="mr-1"
                           />
@@ -379,12 +436,12 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En algunos"
                             onChange={() =>
                               handleResponseChange(
                                 id,
-                                "ubicacion",
+                                "disponibilidad",
                                 "En algunos"
                               )
                             }
@@ -395,12 +452,12 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="En ninguno"
                             onChange={() =>
                               handleResponseChange(
                                 id,
-                                "ubicacion",
+                                "disponibilidad",
                                 "En ninguno"
                               )
                             }
@@ -411,10 +468,10 @@ export default function SeguridadIncendio({
                         <label>
                           <input
                             type="radio"
-                            name={`ubicacion-${id}`}
+                            name={`disponibilidad-${id}`}
                             value="Ns"
                             onChange={() =>
-                              handleResponseChange(id, "ubicacion", "Ns")
+                              handleResponseChange(id, "disponibilidad", "Ns")
                             }
                             className="mr-1"
                           />
@@ -429,6 +486,14 @@ export default function SeguridadIncendio({
           ))}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

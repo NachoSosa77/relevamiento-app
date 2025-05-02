@@ -3,19 +3,21 @@
 
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
+import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+//import { toast } from "react-toastify";
 
 interface Opcion {
-    id: number;
-    prefijo: string;
-    name: string;
-  }
+  id: number;
+  prefijo: string;
+  name: string;
+}
 
 interface Estructura {
   id: string;
   question: string;
   showCondition: boolean;
-  opciones:Opcion[];
+  opciones: Opcion[];
 }
 
 interface EstructuraReuProps {
@@ -42,6 +44,47 @@ export default function CaracteristicasConservacion({
       ...prev,
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
+  };
+
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
+
+  const handleGuardar = async () => {
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: Object.keys(responses).map((key) => ({
+        estructuras:
+          estructuras.find((estructuras) => estructuras.id === key)?.opciones ||
+          "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        estado: responses[key]?.estado || "", // nuevo campo
+      })),
+    };
+
+    console.log("Datos a enviar:", payload);
+
+    /* try {
+            const response = await fetch("/api/estado_conservacion", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+        
+            if (!response.ok) {
+              throw new Error(result.error || "Error al guardar los datos");
+            }
+        
+            toast.success("Relevamiento características constructivas y estado de conservación guardado correctamente");
+        
+            console.log("Respuesta de la API:", result);
+          } catch (error: any) {
+            console.error("Error al enviar los datos:", error);
+            toast.error(error.message || "Error al guardar los datos");
+          }   */
   };
 
   return (
@@ -71,10 +114,15 @@ export default function CaracteristicasConservacion({
               <td className="border p-2">{question}</td>
               <td className="border p-2 text-center">
                 {id !== "13.1" ? (
-                  <Select label="" value="" onChange={(e) => {}} options={opciones.map((option) => ({
-                                                value: option.id,
-                                                label: option.name,
-                                              }))} />
+                  <Select
+                    label=""
+                    value={responses[id]?.disponibilidad || ""}
+                    onChange={(e) => handleResponseChange(id, "disponibilidad", e.target.value)}
+                    options={opciones.map((option) => ({
+                      value: option.id,
+                      label: `${option.prefijo} ${option.name}`,
+                    }))}
+                  />
                 ) : (
                   <label>
                     <input
@@ -141,21 +189,28 @@ export default function CaracteristicasConservacion({
                   </label>
                 )}
               </td>
-                {
-                    !showCondition &&
+              {!showCondition && (
                 <td className="border p-2 text-center">
-                    <TextInput
+                  <TextInput
                     label="Indique cuales"
                     sublabel=""
                     value=""
                     onChange={(e) => {}}
-                    />
+                  />
                 </td>
-                }
+              )}
             </tr>
           ))}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

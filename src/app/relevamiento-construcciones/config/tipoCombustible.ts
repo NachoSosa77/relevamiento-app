@@ -1,14 +1,14 @@
 export const tipoCombustibleOpciones = [
   {
     id: 1,
-    name: "Diesel",
+    question: "Diesel",
   },
   {
     id: 2,
-    name: "Nafta",
+    question: "Nafta",
   },
   {
     id: 3,
-    name: "Gas",
+    question: "Gas",
   },
 ];

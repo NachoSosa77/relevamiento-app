@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
-
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
+import NumericInput from "@/components/ui/NumericInput";
 import Select from "@/components/ui/SelectComponent";
-import TextInput from "@/components/ui/TextInput";
+import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { tipoCombustibleOpciones } from "../config/tipoCombustible";
 
 interface Servicio {
@@ -21,13 +21,6 @@ interface ServiciosReuProps {
   servicios: Servicio[];
 }
 
-interface EspecificacionesElectricidad {
-  id?: number;
-  potencia: string;
-  tipoCombustible: string;
-  estado_bateria?: string;
-}
-
 export default function ElectricidadServicio({
   id,
   label,
@@ -35,20 +28,32 @@ export default function ElectricidadServicio({
   sublabel,
   servicios,
 }: ServiciosReuProps) {
-  const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
-  >({});
+  const [responses, setResponses] = useState<{
+    [key: string]: {
+      disponibilidad: string;
+      estado: string;
+      especificaciones?: string;
+      estado_bateria?: string;
+    };
+  }>({});
 
-  const [combustipleOption, setcCombustibleOption] =
-    useState<EspecificacionesElectricidad>({
-      potencia: "",
-      tipoCombustible: "",
-      estado_bateria: "",
-    });
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
+
+  // Estado para almacenar el tipo de combustible de cada servicio
+  const [combustibleOptions, setCombustibleOptions] = useState<{
+    [key: string]: string;
+  }>({});
+
+  // Estado para almacenar la potencia de cada servicio
+  const [potenciaOptions, setPotenciaOptions] = useState<{
+    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
+  }>({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado",
+    field: "disponibilidad" | "estado" | "especificaciones" | "estado_bateria",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -56,6 +61,45 @@ export default function ElectricidadServicio({
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
   };
+
+  const handleGuardar = async () => {
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: Object.keys(responses).map((key) => ({
+        servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        estado: responses[key]?.estado || "",
+        estado_bateria: responses[key]?.estado_bateria || "",
+        tipo_combustible: combustibleOptions[key] || "",
+        potencia: potenciaOptions[key] || 0, // Aseguramos que se pase potencia correctamente
+      })),
+    };
+  
+    console.log("Datos a enviar:", payload);
+  
+     try {
+      const response = await fetch("/api/servicio_electricidad", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+  
+      toast.success("Servicio de electricidad guardado correctamente");
+  
+      console.log("Respuesta de la API:", result);
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    } 
+  };
+  
 
   return (
     <div className="mx-10 text-sm">
@@ -70,7 +114,7 @@ export default function ElectricidadServicio({
         </div>
       )}
       {sub_id !== id && (
-        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200 ">
+        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
           <div className="w-6 h-6 flex justify-center text-black font-bold">
             <p>{sub_id}</p>
           </div>
@@ -189,74 +233,68 @@ export default function ElectricidadServicio({
                     "No corresponde"
                   ) : (
                     <div className="flex gap-2 items-center justify-center">
-                      <label>
-                        <TextInput
-                          className=""
-                          label={id === "6.1.2" || id === "6.1.4" ? "Potencia" : "Potencia (Vp panel x N paneles)"}
-                          sublabel=""
-                          value=""
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Regular")
-                          }
-                        />
-                      </label>
-                      {id === "6.1.2" ? (
-                        <label className="flex items-center justify-center gap-2">
-                          Tipo de combustible
+                      {id === "6.1.2" || id === "6.1.4" ? (
+                        <p className="mr-2 font-bold whitespace-nowrap">
+                          Potencia
+                        </p>
+                      ) : (
+                        <p className="mr-2 font-bold whitespace-nowrap">
+                          Potencia (Vp panel x N paneles)
+                        </p>
+                      )}
+                      <NumericInput
+                        subLabel=""
+                        disabled={false}
+                        label=""
+                        value={potenciaOptions[id] || 0} // Aquí usamos el id de cada servicio
+                        onChange={(value: number | undefined) => {
+                          setPotenciaOptions({
+                            ...potenciaOptions,
+                            [id]: value ?? 0, // Usamos el id de cada servicio para almacenar potencia
+                          });
+                        }}
+                      />
+                      {id === "6.1.2" && (
+                        <label className="flex items-center">
+                          <p className="mr-2 font-bold">Tipo de combustible:</p>
                           <Select
                             label=""
-                            options={tipoCombustibleOpciones.map((option) => ({
-                              value: option.id,
-                              label: option.name,
-                            }))}
-                            value={combustipleOption.tipoCombustible}
+                            value={combustibleOptions[id] || ""} // Aquí usamos el 'question' como valor
                             onChange={(e) =>
-                              setcCombustibleOption({
-                                ...combustipleOption,
-                                tipoCombustible: e.target.value,
+                              setCombustibleOptions({
+                                ...combustibleOptions,
+                                [id]: e.target.value, // Guardamos el 'question' seleccionado en lugar del 'id'
                               })
                             }
+                            options={tipoCombustibleOpciones.map((option) => ({
+                              value: option.question, // 'question' como el valor
+                              label: option.question, // 'question' como la etiqueta también
+                            }))}
                           />
                         </label>
-                      ) : (
-                        <div className="flex gap-2 items-center justify-center">
-                          Estado baterías{" "}
-                          <label>
-                            <input
-                              type="radio"
-                              name={`estado-${id}`}
-                              value="Bueno"
-                              onChange={() =>
-                                handleResponseChange(id, "estado", "Bueno")
-                              }
-                              className="mr-1"
-                            />
-                            B
-                          </label>
-                          <label>
-                            <input
-                              type="radio"
-                              name={`estado-${id}`}
-                              value="Regular"
-                              onChange={() =>
-                                handleResponseChange(id, "estado", "Regular")
-                              }
-                              className="mr-1"
-                            />
-                            R
-                          </label>
-                          <label>
-                            <input
-                              type="radio"
-                              name={`estado-${id}`}
-                              value="Malo"
-                              onChange={() =>
-                                handleResponseChange(id, "estado", "Malo")
-                              }
-                              className="mr-1"
-                            />
-                            M
-                          </label>
+                      )}
+                      {/* Select solo para 6.1.3 y 6.1.4 */}
+                      {(id === "6.1.3" || id === "6.1.4") && (
+                        <div className="flex items-center">
+                          <p className="mr-2 font-bold whitespace-nowrap">
+                            Estado de la batería:
+                          </p>
+                          <Select
+                            label=""
+                            value={responses[id]?.estado_bateria || ""}
+                            onChange={(e) =>
+                              handleResponseChange(
+                                id,
+                                "estado_bateria",
+                                e.target.value
+                              )
+                            }
+                            options={[
+                              { value: "Bueno", label: "Bueno" },
+                              { value: "Regular", label: "Regular" },
+                              { value: "Malo", label: "Malo" },
+                            ]}
+                          />
                         </div>
                       )}
                     </div>
@@ -267,6 +305,15 @@ export default function ElectricidadServicio({
           ))}
         </tbody>
       </table>
+
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }
