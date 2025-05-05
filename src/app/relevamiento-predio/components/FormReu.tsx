@@ -6,21 +6,19 @@ import "react-toastify/dist/ReactToastify.css";
 interface FormValues {
   question: string;
   setMostrarObras: (value: boolean) => void;
-  onConfirm: () => void; // Nueva prop para llamar después de enviar datos
+  onConfirm: () => void;
 }
 
-const FormReu: React.FC<FormValues> = ({setMostrarObras, question, onConfirm}) => {
+const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = event.target;
-    
-    if (name === "question" && value === "Si") {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+
+    if (value === "Si") {
       setMostrarObras(true);
       setShowConfirmButton(false);
-    } else if (name === "question" && value === "No") {
+    } else if (value === "No") {
       setMostrarObras(false);
       setShowConfirmButton(true);
     }
@@ -46,52 +44,51 @@ const FormReu: React.FC<FormValues> = ({setMostrarObras, question, onConfirm}) =
   };
 
   return (
-    <div className="flex p-4 mx-10 items-center justify-center">
+    <div className="mx-10 mt-4">
       <ToastContainer />
-      <form className="flex flex-col gap-4">
-        <div className="flex items-center justify-center">
-          <label
-            htmlFor="question"
-            className="border p-2 bg-slate-200 justify-center items-center"
-          >
-            {question}
-          </label>
-          <div className="flex items-center p-2 gap-2 text-sm font-bold ">
-            <label>
-              <input
-                className="mr-2"
-                type="radio"
-                name="question"
-                value="Si"
-                onChange={handleChange}
-              />
-              Sí
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <form className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <label className="text-base font-semibold text-gray-700">
+              {question}
             </label>
-            <label>
-              <input
-                className="mr-2"
-                type="radio"
-                name="question"
-                value="No"
-                onChange={handleChange}
-              />
-              No
-            </label>
-          </div>          
-        </div>
-            
-        {showConfirmButton && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleConfirmNo}
-              className="text-sm font-bold bg-red-500 text-white p-4 rounded-md flex-nowrap"
-            >
-              ¿Confirma que no existen obras en el predio?
-            </button>
+            <div className="flex gap-4 text-sm font-medium text-gray-800">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="question"
+                  value="Si"
+                  onChange={handleChange}
+                  className="accent-blue-600"
+                />
+                Sí
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="question"
+                  value="No"
+                  onChange={handleChange}
+                  className="accent-blue-600"
+                />
+                No
+              </label>
+            </div>
           </div>
-        )}
-      </form>
+
+          {showConfirmButton && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleConfirmNo}
+                className="text-sm font-bold bg-red-600 hover:bg-red-700 transition-colors text-white px-5 py-3 rounded-lg"
+              >
+                ¿Confirma que no existen obras en el predio?
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
  
+ 
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
@@ -29,7 +30,7 @@ interface EstructuraReuProps {
   locales: Locales[];
 }
 
-export default function EquipamientoCantidad({
+export default function EquipamientoCantidadSanitarios({
   id,
   label,
   locales,
@@ -77,8 +78,8 @@ export default function EquipamientoCantidad({
 
     console.log("Datos a enviar:", datosFiltrados);
 
-    try {
-      const response = await fetch("/api/equipamiento_cocina_offices", {
+     try {
+      const response = await fetch("/api/equipamiento_sanitarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosFiltrados),
@@ -87,7 +88,7 @@ export default function EquipamientoCantidad({
     } catch (error) {
       console.error(error);
       toast("Error al guardar los datos");
-    } 
+    }  
   };
 
   return (
@@ -140,7 +141,7 @@ export default function EquipamientoCantidad({
               {showCondition && (
                 <td className="border p-2 text-center">
                   <div className="flex gap-2 items-center justify-center">
-                    {["B", "R", "M"].map((estado) => (
+                    {["Bueno", "Regular", "Malo"].map((estado) => (
                       <label key={estado}>
                         <input
                           type="radio"

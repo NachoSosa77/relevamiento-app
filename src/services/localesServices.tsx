@@ -73,6 +73,27 @@ const updateConstruccionById = async (id: number, data: { destino_original: stri
   return await response.json();
 };
 
+const updateConstruccionAntiRoboById = async (
+  id: number,
+  data: { proteccion_contra_robo: string }
+) => {
+  console.log("Enviando a API:", { id, data });
+  const response = await fetch(`/api/locales_por_construccion/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar proteccion_contra_robo");
+  }
+
+  return await response.json();
+};
+
+
 export const updateDimensionesById = async (
   id: number,
   data: {
@@ -107,4 +128,5 @@ export const localesService = {
   getLocalById, // Agregamos el nuevo servicio
   updateConstruccionById,
   updateDimensionesById,
+  updateConstruccionAntiRoboById
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -5,6 +6,7 @@ import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+import { toast } from "react-toastify";
 //import { toast } from "react-toastify";
 
 interface Opcion {
@@ -32,12 +34,12 @@ export default function CaracteristicasConservacion({
   estructuras,
 }: EstructuraReuProps) {
   const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
+    Record<string, { disponibilidad: string; estado: string; estructura: string }>
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado",
+    field: "disponibilidad" | "estado" | "estructura",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -51,40 +53,38 @@ export default function CaracteristicasConservacion({
   );
 
   const handleGuardar = async () => {
-    const payload = {
+    const payload = Object.keys(responses).map((key) => ({
+      estructura: responses[key]?.estructura || "",
+      disponibilidad: responses[key]?.disponibilidad || "",
+      estado: responses[key]?.estado || "",
       relevamiento_id: relevamientoId,
-      servicios: Object.keys(responses).map((key) => ({
-        estructuras:
-          estructuras.find((estructuras) => estructuras.id === key)?.opciones ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        estado: responses[key]?.estado || "", // nuevo campo
-      })),
-    };
+    }));
 
     console.log("Datos a enviar:", payload);
 
-    /* try {
-            const response = await fetch("/api/estado_conservacion", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            });
-            const result = await response.json();
-        
-            if (!response.ok) {
-              throw new Error(result.error || "Error al guardar los datos");
-            }
-        
-            toast.success("Relevamiento características constructivas y estado de conservación guardado correctamente");
-        
-            console.log("Respuesta de la API:", result);
-          } catch (error: any) {
-            console.error("Error al enviar los datos:", error);
-            toast.error(error.message || "Error al guardar los datos");
-          }   */
+    try {
+      const response = await fetch("/api/estado_conservacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+
+      toast.success(
+        "Relevamiento características constructivas y estado de conservación guardado correctamente"
+      );
+
+      console.log("Respuesta de la API:", result);
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }
   };
 
   return (
@@ -116,10 +116,12 @@ export default function CaracteristicasConservacion({
                 {id !== "13.1" ? (
                   <Select
                     label=""
-                    value={responses[id]?.disponibilidad || ""}
-                    onChange={(e) => handleResponseChange(id, "disponibilidad", e.target.value)}
+                    value={responses[id]?.estructura || ""}
+                    onChange={(e) =>
+                      handleResponseChange(id, "estructura", e.target.value)
+                    }
                     options={opciones.map((option) => ({
-                      value: option.id,
+                      value: option.name,
                       label: `${option.prefijo} ${option.name}`,
                     }))}
                   />

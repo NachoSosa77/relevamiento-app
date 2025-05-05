@@ -34,14 +34,8 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json(); // Obtener datos del request
-    const {
-      tipo_obra,
-      estado,
-      financiamiento,
-      destino,
-      superficie_total,
-      cue,
-    } = body;
+    const { tipo_obra, estado, financiamiento, destino, superficie_total } =
+      body;
 
     // 🔍 Validar que los campos requeridos estén presentes
     if (
@@ -59,9 +53,9 @@ export async function POST(req: Request) {
 
     const connection = await getConnection();
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total, cue) 
-       VALUES (?, ?, ?, JSON_ARRAY(?), ?, ?)`,
-      [tipo_obra, estado, financiamiento, destino, superficie_total, cue]
+      `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total) 
+       VALUES (?, ?, ?, JSON_ARRAY(?), ?)`,
+      [tipo_obra, estado, financiamiento, destino, superficie_total]
     );
     connection.release();
 

@@ -5,44 +5,22 @@ import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivado
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Navbar from "@/components/NavBar/NavBar";
-import { UserData } from "@/interfaces/UserData";
+import { useUser } from "@/hooks/useUser";
 import { useAppSelector } from "@/redux/hooks";
-import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
-
 
 export default function RelevamientoPredioPage() {
-  const [user, setUser] = useState<UserData | null>(null); // Estado para guardar la info del usuario
-
+  const { user, loading, error } = useUser();
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
-  // Obtiene el usuario actual
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/get-token", { credentials: "include" });
-        const data = await res.json();
-        //console.log("Token obtenido desde backend:", data.token);
-
-        if (data.token) {
-          const decodedUser: UserData = jwtDecode(data.token);
-          setUser(decodedUser);
-        }
-      } catch (error) {
-        console.error("Error obteniendo token:", error);
-      }
-    };
-
-    fetchUser();
-  }, []); //El array vacío asegura que esto se ejecuta solo una vez al montar el componente
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="h-full bg-white text-black">
       <Navbar />
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
-          <h1 className="font-bold">GESTIÓN ESTATAL</h1>
-          <h4 className="text-sm">FORMULARIO DE RELEVAMIENTO DEL PREDIO</h4>
+          <h1 className="font-bold">FORMULARIO DE RELEVAMIENTO DEL PREDIO</h1>
         </div>
         <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
           <p>1</p>
@@ -62,8 +40,7 @@ export default function RelevamientoPredioPage() {
           <p>
             {user?.nombre} {user?.apellido}
           </p>
-          <p>Dni:</p>
-          <p>34.835.912</p>
+          <p>Dni: {user?.dni}</p>
         </div>
       </div>
       <VisitasComponent />

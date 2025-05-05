@@ -14,25 +14,25 @@ export async function POST(req: Request) {
     }
 
     const insertQuery = `
-      INSERT INTO acondicionamiento_termico (cantidad, disponibilidad, temperatura, tipo, relevamiento_id, local_id)
+      INSERT INTO equipamiento_sanitarios (equipamiento, cantidad, cantidad_funcionamiento, estado, relevamiento_id, local_id)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     for (const item of data) {
       const {
+        equipamiento,
         cantidad,
-        disponibilidad,
-        temperatura,
-        tipo,
+        cantidad_funcionamiento,
+        estado,
         relevamiento_id,
         local_id,
       } = item;
 
       await connection.execute(insertQuery, [
+        equipamiento ?? null,
         cantidad ?? null,
-        disponibilidad ?? null,
-        temperatura ?? null,
-        tipo ?? null,
+        cantidad_funcionamiento ?? null,
+        estado ?? null,
         relevamiento_id ?? null,
         local_id ?? null,
       ]);
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al insertar aberturas:", error);
+    console.error("Error al insertar los datos:", error);
     return NextResponse.json(
       { error: "Error al insertar los datos" },
       { status: 500 }

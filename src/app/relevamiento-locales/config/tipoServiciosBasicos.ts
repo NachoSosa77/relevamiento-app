@@ -15,6 +15,38 @@ export const tipoServiciosBasicos = [
         name: "Cañeria a la vista",
       },
     ],
+    motivos: [
+      {
+        id: 1,
+        prefijo: "A",
+        name: "Rotura de bomba",
+      },
+      {
+        id: 2,
+        prefijo: "B",
+        name: "Caudal/presión insuficiente",
+      },
+      {
+        id: 3,
+        prefijo: "C",
+        name: "Cañeria/grifería rota",
+      },
+      {
+        id: 4,
+        prefijo: "D",
+        name: "Servicio inhabilitado (contaminación)",
+      },
+      {
+        id: 4,
+        prefijo: "E",
+        name: "No sabe",
+      },
+      {
+        id: 4,
+        prefijo: "F",
+        name: "Otro",
+      },
+    ],
   },
   {
     id: "8.1.2",
@@ -32,6 +64,38 @@ export const tipoServiciosBasicos = [
         name: "Cañeria a la vista",
       },
     ],
+    motivos: [
+      {
+        id: 1,
+        prefijo: "A",
+        name: "Rotura de bomba",
+      },
+      {
+        id: 2,
+        prefijo: "B",
+        name: "Caudal/presión insuficiente",
+      },
+      {
+        id: 3,
+        prefijo: "C",
+        name: "Cañeria/grifería rota",
+      },
+      {
+        id: 4,
+        prefijo: "D",
+        name: "Servicio inhabilitado (contaminación)",
+      },
+      {
+        id: 4,
+        prefijo: "E",
+        name: "No sabe",
+      },
+      {
+        id: 4,
+        prefijo: "F",
+        name: "Otro",
+      },
+    ],
   },
   {
     id: "8.1.3",
@@ -47,6 +111,33 @@ export const tipoServiciosBasicos = [
         id: 2,
         prefijo: "B",
         name: "Cañeria a la vista",
+      },
+    ],
+    motivos: [
+      {
+        id: 1,
+        prefijo: "A",
+        name: "Artefactos obsoletos",
+      },
+      {
+        id: 2,
+        prefijo: "B",
+        name: "Perdidad de la cañeria",
+      },
+      {
+        id: 3,
+        prefijo: "C",
+        name: "Servicio inhabilitado",
+      },
+      {
+        id: 4,
+        prefijo: "D",
+        name: "No sabe",
+      },
+      {
+        id: 5,
+        prefijo: "E",
+        name: "Otro",
       },
     ],
   },
@@ -79,6 +170,18 @@ export const tipoServiciosBasicos = [
         id: 5,
         prefijo: "E",
         name: "Cables sueltos",
+      },
+    ],
+    motivos: [
+      {
+        id: 1,
+        prefijo: "A",
+        name: "Tablero fuera de servicio",
+      },
+      {
+        id: 2,
+        prefijo: "B",
+        name: "Cables en mal estado",
       },
     ],
   },
@@ -154,7 +257,7 @@ export const tipoServiciosBasicos = [
   },
 ];
 
-export const estadoServicios = [
+/* export const estadoServicios = [
   {
     id: "8.2.1",
     question: "Agua fría",
@@ -196,7 +299,7 @@ export const estadoServicios = [
     id: "8.2.2",
     question: "Agua caliente",
     showCondition: true,
-    opciones: [
+    motivos: [
       {
         id: 1,
         prefijo: "A",
@@ -233,7 +336,7 @@ export const estadoServicios = [
     id: "8.2.3",
     question: "Gas",
     showCondition: true,
-    opciones: [
+    motivos: [
       {
         id: 1,
         prefijo: "A",
@@ -265,7 +368,7 @@ export const estadoServicios = [
     id: "8.2.4",
     question: "Electricidad",
     showCondition: true,
-    opciones: [
+    motivos: [
       {
         id: 1,
         prefijo: "A",
@@ -278,4 +381,4 @@ export const estadoServicios = [
       },
     ],
   },
-];
+]; */

@@ -5,12 +5,13 @@
 
 import Navbar from "@/components/NavBar/NavBar";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AcondicionamientoTermico from "../../components/AcondicionamientoTermico";
 import Dimensiones from "../../components/Dimensiones";
 import EquipamientoCantidad from "../../components/EquipamientoCantidad";
+import EquipamientoCantidadSanitarios from "../../components/EquipamientoCantidadSanitarios";
 import IluminacionVentilacion from "../../components/IlumicacionVentilacion";
 import ServiciosBasicos from "../../components/InstalacionesBasicas";
 import SistemaContraRobo from "../../components/SistemaContraRobo";
@@ -23,17 +24,17 @@ import {
 import { tipoAcondicionamiento } from "../../config/tipoAcondicionamiento";
 import { tipo_ilumincacion } from "../../config/tipoIlumincaion";
 import { tipoAberturas, tipoMateriales } from "../../config/tipoMateriales";
-import {
-  estadoServicios,
-  tipoServiciosBasicos,
-} from "../../config/tipoServiciosBasicos";
+import { tipoServiciosBasicos } from "../../config/tipoServiciosBasicos";
 import { tipo_Sistema_Contra_Robo } from "../../config/tipoSistemaContraRobo";
 
 const DetalleLocalPage = () => {
+  const router = useRouter();
   const { id } = useParams();
   const [local, setLocal] = useState<any | null>(null);
   const [aulaComúnField, setAulaComúnField] = useState<string>(""); // El campo adicional para "Aula común"
-  const [opcionSeleccionada, setOpcionSeleccionada] = useState<"Si" | "No" | null>(null);
+  const [opcionSeleccionada, setOpcionSeleccionada] = useState<
+    "Si" | "No" | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +61,8 @@ const DetalleLocalPage = () => {
 
   const obtenerDestinoOriginal = (): string => {
     if (opcionSeleccionada === "No") return "No";
-    if (opcionSeleccionada === "Si") return aulaComúnField.trim() || "No especificado";
+    if (opcionSeleccionada === "Si")
+      return aulaComúnField.trim() || "No especificado";
     return "No especificado"; // en caso de no haber nada seleccionado
   };
 
@@ -69,15 +71,21 @@ const DetalleLocalPage = () => {
     console.log("Destino Original a guardar:", valorAGuardar);
 
     try {
-      const response = await localesService.updateConstruccionById(local.id, { destino_original: valorAGuardar });
+      const response = await localesService.updateConstruccionById(local.id, {
+        destino_original: valorAGuardar,
+      });
       // Manejar la respuesta (si es necesario)
       toast("Información guardada correctamente");
     } catch (error) {
       console.error(error);
       toast("Error al guardar los datos");
     }
-    
+
     // luego harás el PUT acá
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   if (loading) return <p>Cargando...</p>;
@@ -87,7 +95,19 @@ const DetalleLocalPage = () => {
       <Navbar />
       <div className="justify-center mt-20 mb-8 mx-4">
         <div className="mx-10 mt-10">
-          <h1 className="text-lg font-semibold mb-4">Detalle del Local</h1>
+          <div className="flex justify-start mt-10">
+            <button
+              onClick={handleBack}
+              className="bg-blue-500 text-sm text-white font-bold px-4 py-2 rounded-md"
+            >
+              Volver
+            </button>
+          </div>
+          <div className="flex justify-center">
+            <h1 className="text-lg font-semibold mb-4">
+              Local seleccionado: {local?.id ?? "N/A"}{" "}
+            </h1>
+          </div>
           <div className="overflow-x-auto rounded-xl shadow border border-gray-200">
             <table className="min-w-full text-sm text-left bg-white">
               <tbody>
@@ -190,33 +210,37 @@ const DetalleLocalPage = () => {
         label="ACONDICIONAMIENTO TÉRMICO"
         locales={tipoAcondicionamiento}
       />
-      <SistemaContraRobo
-        id={7}
-        label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
-        locales={tipo_Sistema_Contra_Robo}
-      />
+      {local?.tipo === "Pedagógico" && (
+        <SistemaContraRobo
+          id={7}
+          label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
+          locales={tipo_Sistema_Contra_Robo}
+        />
+      )}
+
       <ServiciosBasicos
-        id={8}
+        id="8"
         sub_id={8.1}
         label="INSTALACIONES BÁSICAS"
         locales={tipoServiciosBasicos}
       />
-      <ServiciosBasicos
-        id={8}
-        sub_id={8.2}
-        label="MOTIVO PRINCIPAL..."
-        locales={estadoServicios}
-      />
-      <EquipamientoCantidad
-        id={9}
-        label="EQUIPAMIENTO DE COCINA/OFFICES"
-        locales={equipamientoCocina}
-      />
-      <EquipamientoCantidad
-        id={10}
-        label="EQUIPAMIENTO SANITARIO"
-        locales={equipamientoSanitario}
-      />
+      {(local?.nombre_local === "Cocina" ||
+        local?.nombre_local === "Office") && (
+        <EquipamientoCantidad
+          id={9}
+          label="EQUIPAMIENTO DE COCINA/OFFICES"
+          locales={equipamientoCocina}
+        />
+      )}
+
+      {(local?.nombre_local === "Sanitarios Alumnos" ||
+        local?.nombre_local === "Sanitarios docentes/personal") && (
+          <EquipamientoCantidadSanitarios
+            id={10}
+            label="EQUIPAMIENTO SANITARIO"
+            locales={equipamientoSanitario}
+          />
+        )}
     </div>
   );
 };

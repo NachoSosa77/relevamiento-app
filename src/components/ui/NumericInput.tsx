@@ -25,7 +25,7 @@ const NumericInput: React.FC<InputProps> = ({
       <p className="text-sm text-black">{label}</p>
       <div className="flex flex-row p-1 justify-end border rounded-lg">
         <input
-          className="text-black mr-2 w-full text-center p-0"
+          className="text-black mr-2 w-full text-center"
           type="text"
           id={label}
           value={value !== undefined ? value.toString() : ""} // Maneja undefine}

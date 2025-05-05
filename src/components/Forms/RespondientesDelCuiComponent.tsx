@@ -42,7 +42,6 @@ export default function RespondientesDelCuiComponent() {
     };
 
     dispatch(agregarRespondiente(respondienteConRelevamiento));
-    toast.success("✅ Respondiente agregado correctamente en Redux");
     cerrarModal();
   };
 
@@ -67,7 +66,7 @@ export default function RespondientesDelCuiComponent() {
       });
 
       if (response.status === 200 && response.data.success) {
-        toast.success("✅ Respondientes enviados correctamente a la base de datos");
+        toast.success("Respondientes enviados correctamente a la base de datos");
       } else {
         toast.error("❌ Falló el envío de respondientes");
       }

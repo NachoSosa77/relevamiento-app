@@ -49,11 +49,9 @@ export default function VisitasComponent() {
     if (editingVisita) {
       // Si estamos editando una visita, la actualizamos
       dispatch(actualizarVisita(visitaConRelevamiento));
-      toast.success("✅ Visita actualizada correctamente en Redux");
     } else {
       // Si no estamos editando, la agregamos como nueva
       dispatch(agregarVisita(visitaConRelevamiento));
-      toast.success("✅ Visita agregada correctamente en Redux");
     }
 
     cerrarModal();
@@ -85,7 +83,7 @@ export default function VisitasComponent() {
   
       // ✅ Verificamos que el backend haya confirmado el éxito
       if (response.status === 200 && response.data.success) {
-        toast.success("✅ Visitas enviadas correctamente a la base de datos");
+        toast.success("Visitas enviadas correctamente a la base de datos");
       } else {
         console.error("Error desde backend:", response.data);
         toast.error("❌ Hubo un problema al guardar las visitas");

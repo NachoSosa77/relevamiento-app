@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const connection = await getConnection();
     const [rows] = await connection.query<OpcionTerminacionPiso[]>(
-      "SELECT name, prefijo FROM terminacion_piso"
+      "SELECT name, prefijo FROM opciones_terminacion_piso"
     );
     connection.release();
 

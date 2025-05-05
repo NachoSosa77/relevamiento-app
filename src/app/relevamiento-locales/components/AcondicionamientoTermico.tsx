@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
 import { useAppSelector } from "@/redux/hooks";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface ResponseData {
   [id: string]: {
@@ -74,9 +76,9 @@ export default function AcondicionamientoTermico({
       }));
     });
 
-    console.log("Datos a enviar:", payload);
+    //console.log("Datos a enviar:", payload);
 
-    /* try {
+     try {
       const response = await fetch("/api/acondicionamiento_termico", {
         method: "POST",
         headers: {
@@ -88,7 +90,7 @@ export default function AcondicionamientoTermico({
     } catch (error) {
       console.error(error);
       toast("Error al guardar los datos");
-    } */
+    } 
   };
 
   return (
@@ -113,13 +115,6 @@ export default function AcondicionamientoTermico({
         <tbody>
           {locales.map((local) => {
             const { id, question, showCondition, opciones } = local;
-
-            console.log("Renderizando fila para local:", {
-              id,
-              showCondition,
-              opciones,
-            });
-
             return (
               <tr key={id} className="border">
                 <td className="border p-2 text-center">{id}</td>
@@ -134,9 +129,6 @@ export default function AcondicionamientoTermico({
                   ) : (
                     <div className="flex flex-col text-sm">
                       {opciones.map((tipo) => {
-                        console.log(
-                          `Renderizando tipo "${tipo}" para local ${id}`
-                        );
                         return (
                           <span key={tipo} className="border p-1 rounded mt-2">
                             {tipo}
@@ -148,48 +140,61 @@ export default function AcondicionamientoTermico({
                 </td>
                 <td className="border p-2 text-center">
                   {showCondition && opciones.length > 0 ? (
-                    opciones.map((tipo) => (
-                      <div key={tipo} className="flex flex-col mt-2">
-                        {tiposConDisponibilidad.includes(tipo) ? (
-                          <div className="flex gap-2 items-center justify-center border rounded p-1">
-                            {["Si", "No"].map((opcion) => (
-                              <div key={opcion} >
-                                <input
-                                  type="radio"
-                                  name={`disponibilidad-${id}-${tipo}`}
-                                  value={opcion}
-                                  checked={
-                                    responses[id]?.[tipo]?.disponibilidad ===
-                                    opcion
-                                  }
-                                  onChange={() =>
-                                    handleResponseChange(
-                                      id,
-                                      tipo,
-                                      "disponibilidad",
+                    opciones.map((tipo) => {
+                      const esNoTiene = tipo.toLowerCase().includes("no tiene");
+                      return (
+                        <div key={tipo} className="flex flex-col mt-2">
+                          {esNoTiene ? (
+                            <div className="bg-slate-200 text-slate-500 text-center p-2 rounded">
+                              No corresponde
+                            </div>
+                          ) : tiposConDisponibilidad.includes(tipo) ? (
+                            <div className="flex gap-2 items-center justify-center border rounded p-2">
+                              {["Si", "No"].map((opcion) => (
+                                <div key={opcion}>
+                                  <input
+                                    type="radio"
+                                    name={`disponibilidad-${id}-${tipo}`}
+                                    value={opcion}
+                                    checked={
+                                      responses[id]?.[tipo]?.disponibilidad ===
                                       opcion
-                                    )
-                                  }
-                                  className="mr-1"
-                                />
-                                {opcion}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <NumericInput
-                            disabled={false}
-                            label=""
-                            subLabel=""
-                            value={responses[id]?.[tipo]?.cantidad ?? 0}
-                            onChange={(value) =>
-                              handleResponseChange(id, tipo, "cantidad", value)
-                            }
-                          />
-                        )}
-                      </div>
-                    ))
+                                    }
+                                    onChange={() =>
+                                      handleResponseChange(
+                                        id,
+                                        tipo,
+                                        "disponibilidad",
+                                        opcion
+                                      )
+                                    }
+                                    className="mr-1"
+                                  />
+                                  {opcion}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <NumericInput
+                              disabled={false}
+                              label=""
+                              subLabel=""
+                              value={responses[id]?.[tipo]?.cantidad ?? 0}
+                              onChange={(value) =>
+                                handleResponseChange(
+                                  id,
+                                  tipo,
+                                  "cantidad",
+                                  value
+                                )
+                              }
+                            />
+                          )}
+                        </div>
+                      );
+                    })
                   ) : (
+                    
                     <NumericInput
                       disabled={false}
                       label=""

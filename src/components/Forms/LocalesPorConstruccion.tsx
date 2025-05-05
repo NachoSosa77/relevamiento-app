@@ -378,7 +378,7 @@ export default function LocalesPorConstruccion() {
         <div className="flex justify-center mt-4">
           <button
             type="button"
-            className="text-sm font-bold bg-blue-500 text-white p-2 rounded-md"
+            className="text-sm font-bold bg-blue-500 hover:bg-blue-100 text-white p-2 rounded-md"
             onClick={handleGuardarDatos}
           >
             Guardar Datos

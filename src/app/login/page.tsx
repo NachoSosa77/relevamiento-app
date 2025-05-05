@@ -1,4 +1,3 @@
- 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -82,7 +81,9 @@ export default function LoginPage() {
     setPassword(value);
     setErrors((prev) => ({
       ...prev,
-      password: !validatePassword(value) ? "La contraseña debe tener al menos 8 caracteres" : "",
+      password: !validatePassword(value)
+        ? "La contraseña debe tener al menos 8 caracteres"
+        : "",
     }));
   };
 
@@ -95,14 +96,12 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password}),
+        body: JSON.stringify({ email, password }),
         credentials: "include", // Si usas cookies para sesiones
       });
       //console.log('response', response)
       //console.log(email)
       //console.log(password)
-      
-
 
       if (!response.ok) {
         throw new Error("Credenciales incorrectas o error en el servidor");
@@ -202,7 +201,9 @@ export default function LoginPage() {
               )}
             </div>
 
-            {errors.general && <p className="mt-2 text-sm text-destructive">{errors.general}</p>}
+            {errors.general && (
+              <p className="mt-2 text-sm text-destructive">{errors.general}</p>
+            )}
 
             {/* <div className="flex items-center justify-between">
             <div className="flex items-center">

@@ -47,11 +47,11 @@ export default function RelevamientoConstruccionesPage() {
         <div className="flex flex-col items-end">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
           <h4 className="text-sm">
-            FORMULARIO DE RELEVAMIENTO DE LAS CONSTRUCCIONES
+            FORMULARIO DE RELEVAMIENTO DE LOCALES PEDAGÓGICOS Y DE SERVICIOS
           </h4>
         </div>
         <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
-          <p>2</p>
+          <p>3</p>
         </div>
       </div>
 

@@ -115,87 +115,112 @@ export default function RelevamientoCPage() {
       </div>
       <EstablecimientosPredio selectedInstitutions={selectedInstitutions} />
 
-      <div className="flex items-center mx-10 mt-2 bg-slate-200 ">
-        <div className="w-10 h-10 flex justify-center items-center border text-white font-bold bg-black text-sm">
-          <p>1</p>
-        </div>
-        <p className="ml-2 text-sm font-bold">SITUACIÓN DEL DOMINIO</p>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <div className="flex items-center mx-10 bg-slate-200">
-          <div className="w-10 h-10 flex justify-center items-center">
-            <p>1.1</p>
+      <div className="mx-10 mt-6">
+        {/* Encabezado de sección */}
+        <div className="flex items-center bg-gray-100 rounded-t-md px-4 py-2 shadow-sm">
+          <div className="w-10 h-10 flex justify-center items-center border text-white font-bold bg-black rounded-full text-sm">
+            <p>1</p>
           </div>
-          <p className="ml-2 text-sm">
-            ¿Cúal es la situación de dominio de este predio?
+          <p className="ml-4 text-base font-semibold text-gray-800">
+            SITUACIÓN DEL DOMINIO
           </p>
-          <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-            <p>Descripción:</p>
-            <Select
-              label=""
-              options={SituacionDominio.map((local) => ({
-                value: local.id,
-                label: local.name,
-              }))}
-              value={selectSituacion?.toString() || ""}
-              onChange={handleSelectChange}
-            />
-            {selectSituacion === 5 && (
-              <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-                <p>Otra situación. Indique:</p>
-                <TextInput
-                  sublabel=""
-                  label={""}
-                  value={formData.descripcionOtro}
-                  onChange={(event) =>
-                    handleInputChange("descripcionOtro", event)
-                  }
-                />
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 bg-white p-6 border border-gray-200 rounded-b-md shadow-sm"
+        >
+          {/* Pregunta 1.1 */}
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className="w-10 h-10 flex justify-center items-center font-bold text-sm text-gray-600">
+                <p>1.1</p>
               </div>
-            )}
+              <p className="ml-4 text-sm text-gray-800">
+                ¿Cuál es la situación de dominio de este predio?
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 ml-14">
+              <p className="text-sm text-gray-700">Descripción:</p>
+              <Select
+                label=""
+                options={SituacionDominio.map((local) => ({
+                  value: local.id,
+                  label: local.name,
+                }))}
+                value={selectSituacion?.toString() || ""}
+                onChange={handleSelectChange}
+              />
+              {selectSituacion === 5 && (
+                <div className="flex items-center gap-2 text-sm">
+                  <p>Otra situación. Indique:</p>
+                  <TextInput
+                    sublabel=""
+                    label=""
+                    value={formData.descripcionOtro}
+                    onChange={(event) =>
+                      handleInputChange("descripcionOtro", event)
+                    }
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center mx-10 bg-slate-200">
-          <div className="w-10 h-10 flex justify-center items-center">
-            <p>1.2</p>
+
+          {/* Pregunta 1.2 */}
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className="w-10 h-10 flex justify-center items-center font-bold text-sm text-gray-600">
+                <p>1.2</p>
+              </div>
+              <p className="ml-4 text-sm text-gray-800">
+                ¿Existe algún juicio en curso con respecto a la tenencia de este
+                predio?
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 ml-14 text-sm text-gray-700">
+              <label className="flex items-center gap-2">
+                <span>Sí</span>
+                <Check
+                  label=""
+                  checked={selectedJuicio === "SI"}
+                  onChange={() => handleJuicioChange("SI")}
+                  disabled={false}
+                />
+              </label>
+              <label className="flex items-center gap-2">
+                <span>No</span>
+                <Check
+                  label=""
+                  checked={selectedJuicio === "NO"}
+                  onChange={() => handleJuicioChange("NO")}
+                  disabled={false}
+                />
+              </label>
+              <label className="flex items-center gap-2">
+                <span>No sabe</span>
+                <Check
+                  label=""
+                  checked={selectedJuicio === "NO_SABE"}
+                  onChange={() => handleJuicioChange("NO_SABE")}
+                  disabled={false}
+                />
+              </label>
+            </div>
           </div>
-          <p className="ml-2 text-sm ">
-            ¿Existe algún juicio en curso con respecto a la tenencia de este
-            predio?
-          </p>
-          <div className="ml-4 flex justify-center items-center gap-2 text-sm">
-            <p>Si</p>
-            <Check
-              label=""
-              checked={selectedJuicio === "SI"}
-              onChange={() => handleJuicioChange("SI")}
-              disabled={false}
-            />
-            <p>No</p>
-            <Check
-              label=""
-              checked={selectedJuicio === "NO"}
-              onChange={() => handleJuicioChange("NO")}
-              disabled={false}
-            />
-            <p>No sabe</p>
-            <Check
-              label=""
-              checked={selectedJuicio === "NO_SABE"}
-              onChange={() => handleJuicioChange("NO_SABE")}
-              disabled={false}
-            />
+
+          {/* Botón */}
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              className="bg-black text-white text-sm font-semibold px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            >
+              Cargar Información
+            </button>
           </div>
-        </div>
-        <div className="flex justify-end mx-10 mt-2">
-          <button
-            type="submit"
-            className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
-          >
-            Cargar Información
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
+
       <div className="flex flex-col mt-3 mx-10 bg-black border">
         <div className="p-2 justify-center items-center text-white font-bold">
           <p>SERVICIOS</p>

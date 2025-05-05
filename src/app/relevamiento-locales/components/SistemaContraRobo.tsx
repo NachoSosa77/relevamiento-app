@@ -2,7 +2,10 @@
 "use client";
 
 import Select from "@/components/ui/SelectComponent";
+import { localesService } from "@/services/localesServices";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface Opcion {
   id: number;
@@ -28,28 +31,48 @@ export default function SistemaContraRobo({
   label,
   locales,
 }: EstructuraReuProps) {
-  const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
-  >({});
-  const [opcionSeleccionada, setOpcionSeleccionada] = useState<string | null>(
-    null
-  );
-  const [radioSeleccion, setRadioSeleccion] = useState<string | null>(null);
+  const params = useParams();
+  const localId = Number(params.id);
 
-  const handleResponseChange = (
-    servicioId: string,
-    field: "disponibilidad" | "estado",
-    value: string
+  const [opcionesSeleccionadas, setOpcionesSeleccionadas] = useState<
+    Record<string, Opcion | null>
+  >({});
+
+  const handleOpcionChange = (
+    value: string,
+    opciones: Opcion[],
+    localId: string
   ) => {
-    setResponses((prev) => ({
+    const seleccionada =
+      opciones.find((opt) => String(opt.id) === value) || null;
+
+    setOpcionesSeleccionadas((prev) => ({
       ...prev,
-      [servicioId]: { ...prev[servicioId], [field]: value },
+      [localId]: seleccionada,
     }));
-    setRadioSeleccion(value);
   };
 
-  const handleOpcionChange = (value: string) => {
-    setOpcionSeleccionada(value);
+  const handleGuardar = async () => {
+    const datosAGuardar = Object.entries(opcionesSeleccionadas).map(
+      ([key, opcion]) => ({
+        id: localId, // o podrías usar Number(key) si es uno por fila
+        proteccion_contra_robo: opcion?.name || null,
+      })
+    );
+
+    console.log("Datos a enviar:", datosAGuardar);
+
+    try {
+      for (const dato of datosAGuardar) {
+        await localesService.updateConstruccionAntiRoboById(dato.id, {
+          proteccion_contra_robo: dato.proteccion_contra_robo!,
+        });
+      }
+      toast("Información guardada correctamente");
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      toast("Error al guardar los datos");
+    }
   };
 
   return (
@@ -78,11 +101,13 @@ export default function SistemaContraRobo({
               <td className="border p-2">
                 <Select
                   label=""
-                  value={opcionSeleccionada || ""}
-                  onChange={(e) => handleOpcionChange(e.target.value)}
+                  value={opcionesSeleccionadas[id]?.id.toString() || ""}
+                  onChange={(e) =>
+                    handleOpcionChange(e.target.value, opciones, id)
+                  }
                   options={opciones.map((option) => ({
                     value: option.id,
-                    label: option.name,
+                    label: `${option.prefijo} - ${option.name}`,
                   }))}
                 />
               </td>
@@ -90,6 +115,14 @@ export default function SistemaContraRobo({
           ))}
         </tbody>
       </table>
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

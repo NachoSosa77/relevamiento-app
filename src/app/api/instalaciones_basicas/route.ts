@@ -14,25 +14,25 @@ export async function POST(req: Request) {
     }
 
     const insertQuery = `
-      INSERT INTO acondicionamiento_termico (cantidad, disponibilidad, temperatura, tipo, relevamiento_id, local_id)
+      INSERT INTO instalaciones_basicas (servicio, tipo_instalacion, funciona, motivo, relevamiento_id, local_id)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     for (const item of data) {
       const {
-        cantidad,
-        disponibilidad,
-        temperatura,
-        tipo,
+        servicio,
+        tipo_instalacion,
+        funciona,
+        motivo,
         relevamiento_id,
         local_id,
       } = item;
 
       await connection.execute(insertQuery, [
-        cantidad ?? null,
-        disponibilidad ?? null,
-        temperatura ?? null,
-        tipo ?? null,
+        servicio ?? null,
+        tipo_instalacion ?? null,
+        funciona ?? null,
+        motivo ?? null,
         relevamiento_id ?? null,
         local_id ?? null,
       ]);

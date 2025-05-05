@@ -3,5 +3,6 @@ export interface UserData {
     nombre: string;
     apellido: string;
     email: string;
+    dni:number;
     role: string;
 }

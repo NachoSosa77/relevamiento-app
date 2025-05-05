@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const connection = await getConnection();
     const [opciones] = await connection.query<OpcionObraEnpredio[]>(
-      "SELECT * FROM tipo_obra"
+      "SELECT * FROM opciones_tipo_obra"
     );
     connection.release();
 

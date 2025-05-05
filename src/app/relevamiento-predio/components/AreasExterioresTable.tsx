@@ -4,6 +4,7 @@ import { AreasExteriores, Column } from "@/interfaces/AreaExterior";
 import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { areasExterioresColumns } from "../config/areaExterior";
 
 interface Opcion {
@@ -105,23 +106,23 @@ const AreasExterioresTable: React.FC = () => {
     console.log("ID recibido:", id);
     console.log("Servicios actuales:", servicios);
     if (id === undefined) {
-      alert("No se encontró el área exterior a actualizar.");
+      toast("No se encontró el área exterior a actualizar.");
       return;
     }
     const servicioActualizado = servicios.find((s) => s.id === id);
     console.log("Servicio encontrado:", servicioActualizado);
 
     if (!servicioActualizado) {
-      alert("No se encontró el área exterior a actualizar.");
+      toast("No se encontró el área exterior a actualizar.");
       return;
     }
 
     try {
       await axios.put(`/api/areas_exteriores/${id}`, servicioActualizado);
-      alert("Datos actualizados correctamente");
+      toast("Datos actualizados correctamente");
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
-      alert("Hubo un error al actualizar los datos.");
+      toast("Hubo un error al actualizar los datos.");
     }
   };
 

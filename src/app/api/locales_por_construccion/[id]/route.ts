@@ -69,7 +69,7 @@ export async function GET(
   }
 }
 
-// PUT - Actualizar campo destino_original por ID
+// PUT - Actualizar campos por ID escalable
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: number }> }
@@ -82,24 +82,33 @@ export async function PUT(
       return NextResponse.json({ message: "ID inválido" }, { status: 400 });
     }
 
-    if (!body.destino_original) {
+    // Lista blanca de campos que se pueden actualizar
+    const allowedFields = ["destino_original", "proteccion_contra_robo"];
+    const fieldsToUpdate = Object.entries(body).filter(([key]) =>
+      allowedFields.includes(key)
+    );
+
+    if (fieldsToUpdate.length === 0) {
       return NextResponse.json(
-        { message: "Falta el campo destino_original" },
+        { message: "No se enviaron campos válidos para actualizar" },
         { status: 400 }
       );
     }
 
+    const setClause = fieldsToUpdate.map(([key]) => `${key} = ?`).join(", ");
+    const values = fieldsToUpdate.map(([, value]) => value);
+
     const connection = await getConnection();
 
     const [result] = await connection.query(
-      `UPDATE locales_por_construccion SET destino_original = ? WHERE id = ?`,
-      [body.destino_original, id]
+      `UPDATE locales_por_construccion SET ${setClause} WHERE id = ?`,
+      [...values, id]
     );
 
     connection.release();
 
     return NextResponse.json({
-      message: "Destino original actualizado correctamente",
+      message: "Actualización exitosa",
       result,
     });
   } catch (err: any) {

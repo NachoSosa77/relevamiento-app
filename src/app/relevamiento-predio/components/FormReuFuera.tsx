@@ -7,22 +7,20 @@ import "react-toastify/dist/ReactToastify.css";
 interface FormValues {
   question: string;
   setMostrarFuera: (value: boolean) => void;
-  onConfirm: () => void; // Nueva función para ejecutar después de enviar datos
+  onConfirm: () => void;
 }
 
 const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const router = useRouter(); // Inicializar useRouter
+  const router = useRouter();
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = event.target;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
 
-    if (name === "question" && value === "Si") {
+    if (value === "Si") {
       setMostrarFuera(true);
       setShowConfirmButton(false);
-    } else if (name === "question" && value === "No") {
+    } else if (value === "No") {
       setMostrarFuera(false);
       setShowConfirmButton(true);
     }
@@ -30,7 +28,7 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
 
   const handleConfirmNo = async () => {
     try {
-      await axios.post("/api/obras_fuera_predio", { // Cambiar el endpoint
+      await axios.post("/api/obras_fuera_predio", {
         tipo_obra: "Sin obras fuera del predio",
         domicilio: "Sin obras fuera del predio",
         cue: null,
@@ -38,8 +36,8 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
       });
       toast.success("Datos enviados correctamente");
       setShowConfirmButton(false);
-      onConfirm(); // Llamar a la función onConfirm después de enviar datos
-      router.push("/relevamiento-construcciones"); // Redirigir a /relevamiento-construcciones
+      onConfirm();
+      router.push("/relevamiento-construcciones");
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       toast.error("Hubo un error al enviar los datos");
@@ -47,52 +45,51 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
   };
 
   return (
-    <div className="flex p-4 mx-10 items-center justify-center">
+    <div className="mx-10 mt-4">
       <ToastContainer />
-      <form className="flex flex-col gap-4">
-        <div className="flex items-center justify-center">
-          <label
-            htmlFor="question"
-            className="border p-2 bg-slate-200 justify-center items-center"
-          >
-            {question}
-          </label>
-          <div className="flex items-center p-2 gap-2 text-sm font-bold ">
-            <label>
-              <input
-                className="mr-2"
-                type="radio"
-                name="question"
-                value="Si"
-                onChange={handleChange}
-              />
-              Sí
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <form className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <label className="text-base font-semibold text-gray-700">
+              {question}
             </label>
-            <label>
-              <input
-                className="mr-2"
-                type="radio"
-                name="question"
-                value="No"
-                onChange={handleChange}
-              />
-              No
-            </label>
+            <div className="flex gap-4 text-sm font-medium text-gray-800">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="question"
+                  value="Si"
+                  onChange={handleChange}
+                  className="accent-blue-600"
+                />
+                Sí
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="question"
+                  value="No"
+                  onChange={handleChange}
+                  className="accent-blue-600"
+                />
+                No
+              </label>
+            </div>
           </div>
-        </div>
 
-        {showConfirmButton && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleConfirmNo}
-              className="text-sm font-bold bg-red-500 text-white p-4 rounded-md flex-nowrap"
-            >
-              ¿Confirma que no existen obras fuera del predio?
-            </button>
-          </div>
-        )}
-      </form>
+          {showConfirmButton && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleConfirmNo}
+                className="text-sm font-bold bg-red-600 hover:bg-red-700 transition-colors text-white px-5 py-3 rounded-lg"
+              >
+                ¿Confirma que no existen obras fuera del predio?
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
 };

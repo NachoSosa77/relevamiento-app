@@ -158,7 +158,7 @@ export default function EspaciosEscolaresPage() {
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
           <h1 className="font-bold">PLANILLA GENERAL</h1>
-          <h4 className="text-sm">DE ESPACIOS ESCOLARES</h4>
+          <h4 className="text-sm">DE RELEVAMIENTO PEDAGÓGICO</h4>
         </div>
       </div>
 
