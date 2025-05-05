@@ -76,7 +76,7 @@ export default function RelevamientoConstruccionesPage() {
   }, [institucionesRedux]);
 
   return (
-    <div className="h-full bg-white text-black">
+    <div className="h-full bg-white text-black text-sm">
       <Navbar />
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">

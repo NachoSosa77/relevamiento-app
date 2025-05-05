@@ -1,181 +1,121 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import AlphanumericInput from "@/components/ui/AlphanumericInput";
-import { InstitucionesData } from "@/interfaces/Instituciones";
-import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
+import { useAppSelector } from "@/redux/hooks";
+import { localesService } from "@/services/localesServices";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-
-interface CuiComponentProps {
+interface CuiLocalesComponentProps {
   label: string;
   sublabel: string;
-  selectedInstitution: InstitucionesData | null; // Nueva prop para la institución seleccionada
-  onInstitutionSelected: (institution: InstitucionesData | null) => void;
+  onLocalSelected: (local: any | null) => void;
   isReadOnly: boolean;
-  initialCui: number | null; // Añade la propiedad initialCui
-  onCuiInputChange: (cui: number | null) => void; // Añade la función onCuiInputChange
 }
 
-const CuiLocalesComponent: React.FC<CuiComponentProps> = ({
+const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   label,
   sublabel,
-  selectedInstitution,
-  onInstitutionSelected,
+  onLocalSelected,
   isReadOnly,
-  initialCui,
-  onCuiInputChange,
 }) => {
-  const [inputValue, setInputValue] = useState("");
-  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<
-    InstitucionesData[]
-  >([]);
+  const [locales, setLocales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLocal, setSelectedLocal] = useState<any | null>(null); // Para guardar el local seleccionado
+    const [isClient, setIsClient] = useState(false); // Estado para saber si estamos en el cliente
+    const router = useRouter(); // Hook de navegación
+
+    useEffect(() => {
+      setIsClient(true); // Actualizamos el estado cuando el componente esté montado en el cliente
+    }, []);
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
 
   useEffect(() => {
-    const fetchInstituciones = async () => {
+    const fetchLocales = async () => {
       try {
-        const response = await establecimientosService.getAllEstablecimientos();
-        console.log("data response", response.instituciones);
-        if (response && Array.isArray(response.instituciones)) {
-          setInstituciones(response.instituciones);
-        } else {
-          setInstituciones([]);
-        }
-      } catch (error: any) {
-        setError(error?.message);
+        const response = await localesService.getLocalesPorRelevamiento(
+          relevamientoId
+        );
+        setLocales(response.locales || []);
+      } catch (err) {
+        setError("Error al obtener los locales");
       } finally {
         setLoading(false);
       }
     };
 
-    if (!isReadOnly) {
-      fetchInstituciones();
+    if (relevamientoId) {
+      fetchLocales();
     }
-  }, [isReadOnly]);
+  }, [relevamientoId]);
 
-  useEffect(() => {
-    if (!isReadOnly) {
-      if (inputValue === "") {
-        setFilteredInstitutions([]);
-      } else {
-        const filtered = instituciones.filter(
-          (inst) => String(inst.cui) === inputValue
-        );
-        setFilteredInstitutions(filtered);
-      }
+  const handleLocalSelect = (local: any) => {
+    setSelectedLocal(local);
+    onLocalSelected(local);
+    if (isClient) {  // Verificamos que estamos en el cliente antes de hacer la navegación
+      router.push(`/relevamiento-locales/detalle-local/${local.id}`); // Navegar al detalle usando el ID del local
     }
-  }, [inputValue, instituciones, isReadOnly]);
-
-  const handleChange = (newValue: string) => {
-    setInputValue(newValue);
-    onCuiInputChange(Number(newValue));
   };
 
-  const handleInstitutionSelect = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedCueString = event.target.value;
-    const selectedCueNumber = Number(selectedCueString); // Convierte a número
-    const selected = filteredInstitutions.find(
-      (inst) => inst.cue === selectedCueNumber
-    );
-    onInstitutionSelected(selected || null);
-  };
+  
 
-  useEffect(() => {
-    if (initialCui !== null) {
-      setInputValue(initialCui.toString());
-    } else {
-      setInputValue("");
-    }
-  }, [initialCui]);
-
-  if (loading && !isReadOnly) {
-    return <div>Cargando instituciones...</div>;
-  }
-
-  if (error && !isReadOnly) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <p className="mx-10">Cargando locales...</p>;
+  if (error) return <p className="mx-10 text-red-500">{error}</p>;
 
   return (
     <div className="mx-10">
-      <p className="text-sm">{label}</p>
-      <div className="flex items-center justify-between gap-2 mt-2 p-2 border">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
-          <p>A</p>
-        </div>
-        <div className="h-6 flex items-center justify-center ">
-          <p className="px-2 text-sm font-bold">CUI</p>
-        </div>
-        <div className="ml-auto">
-          <AlphanumericInput
-            subLabel=""
-            label={""}
-            value={inputValue}
-            onChange={handleChange}
-            disabled={isReadOnly} // Deshabilita el input si es de solo lectura
+      <p className="text-sm font-semibold">{label}</p>
+      <p className="text-xs text-gray-500 mb-2">{sublabel}</p>
 
-          />
-        </div>
-        <div className="h-6 flex items-center justify-center ">
-          <p className="px-2 text-sm font-bold">N° DE CONSTRUCCIÓN</p>
-        </div>
-        <div className="ml-auto">
-          <AlphanumericInput
-            subLabel=""
-            label={""}
-            value="1"
-            onChange={handleChange}
-            disabled={isReadOnly} // Deshabilita el input si es de solo lectura
-          />
-        </div>
-        <div className="h-6 flex items-center justify-center ">
-          <p className="px-2 text-sm font-bold">N° PLANTA</p>
-        </div>
-        <div className="ml-auto">
-          <AlphanumericInput
-            subLabel=""
-            label={""}
-            value="1"
-            onChange={handleChange}
-            disabled={isReadOnly} // Deshabilita el input si es de solo lectura
-          />
-        </div>
-        <div className="h-6 flex items-center justify-center ">
-          <p className="px-2 text-sm font-bold">N° DE LOCAL</p>
-        </div>
-        <div className="ml-auto">
-          <AlphanumericInput
-            subLabel=""
-            label={""}
-            value="1"
-            onChange={handleChange}
-            disabled={isReadOnly} // Deshabilita el input si es de solo lectura
-          />
-        </div>
-      </div>
-      <div className="flex p-1 bg-gray-100 border">
-        <p className="text-xs text-gray-400">{sublabel}</p>
-      </div>
-      {/* Muestra las instituciones encontradas */}
-      {!isReadOnly &&
-        filteredInstitutions.length > 0 && ( // Select solo si no es de solo lectura y hay resultados
-          <select
-            className="mt-2 p-2 border"
-            value={selectedInstitution?.cue || ""}
-            onChange={handleInstitutionSelect}
-          >
-            <option value="">Selecciona una institución</option>
-            {filteredInstitutions.map((inst) => (
-              <option key={inst.cue} value={inst.cue}>
-                {inst.institucion} ({inst.modalidad_nivel})
-              </option>
+      {locales.length === 0 ? (
+        <p className="text-gray-500">
+          No hay locales cargados para este relevamiento.
+        </p>
+      ) : (
+        <table className="w-full mt-2 border text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-2 py-1 text-center">Local Id</th>
+              <th className="border px-2 py-1 text-center">Nombre</th>
+              <th className="border px-2 py-1 text-center">CUI</th>
+              <th className="border px-2 py-1 text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {locales.map((local) => (
+              <tr key={local.id} className={`${
+                selectedLocal?.id === local.id ? "bg-blue-100" : ""
+              } hover:bg-gray-100 transition-colors`}>
+                <td className="border px-2 py-1 text-center">{local.id}</td>
+                <td className="border px-2 py-1 text-center">
+                  {local.nombre_local}
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  {local.cui_number}
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  <button
+                    onClick={() => handleLocalSelect(local)}
+                    disabled={isReadOnly}
+                    className={`px-3 py-1 rounded text-white ${
+                      isReadOnly
+                        ? "bg-gray-400"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    Seleccionar
+                  </button>
+                </td>
+              </tr>
             ))}
-          </select>
-        )}
+          </tbody>
+        </table>
+      )}
+
+      
     </div>
   );
 };

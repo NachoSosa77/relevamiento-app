@@ -19,7 +19,7 @@ export const tipoAcondicionamiento = [
       "Calefacción a gas",
       "Calefacción eléctrica",
       "Aire acondicionado individual",
-      "Calefacción cetral",
+      "Calefacción central",
       "Salamandra a leña/kerosena",
       "No tiene",
     ],

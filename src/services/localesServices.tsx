@@ -1,29 +1,7 @@
 import { LocalesConstruccion } from '@/interfaces/Locales';
 import axios from 'axios';
 
-// Obtener todas las áreas exteriores
-/* const getAllAreasExteriores = async (): Promise<AreasExteriores[]> => {
-  try {
-    const response = await axios.get(`/api/areas_exteriores`);
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener áreas exteriores:', error);
-    throw error;
-  }
-}; */
-
-// Obtener un área exterior por ID
-/* const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
-  try {
-    const response = await axios.get(`/api/areas_exteriores/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener el área exterior:', error);
-    throw error;
-  }
-}; */
-
-
+// Obtener opciones de locales
 const getOpcionesLocales = async () => {
   try {
     const response = await axios.get(`/api/locales_por_construccion/opciones`);
@@ -34,6 +12,7 @@ const getOpcionesLocales = async () => {
   }
 };
 
+// Guardar locales
 const postLocales = async (data: (LocalesConstruccion & { cui_number: number })[]) => {
   const res = await fetch("/api/locales_por_construccion", {
     method: "POST",
@@ -53,21 +32,79 @@ const postLocales = async (data: (LocalesConstruccion & { cui_number: number })[
   }
 
   return res.json();
-}
+};
 
-// Actualizar un área exterior por ID
-/* const updateAreasExteriores = async (id: number, formData: AreasExteriores) => {
+// Obtener locales por relevamiento
+const getLocalesPorRelevamiento = async (relevamientoId: number) => {
   try {
-    const response = await axios.put(`/api/areas_exteriores/${id}`, formData);
+    const response = await axios.get(`/api/locales_por_construccion/by_relevamiento/${relevamientoId}`);
     return response.data;
   } catch (error) {
-    console.error('Error al actualizar el área exterior:', error);
+    console.error("Error al obtener locales por relevamiento:", error);
     throw error;
   }
-}; */
+};
+
+// Obtener un local por su ID
+const getLocalById = async (localId: number) => {
+  try {
+    const response = await axios.get(`/api/locales_por_construccion/${localId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener el local por id:", error);
+    throw error;
+  }
+};
+
+const updateConstruccionById = async (id: number, data: { destino_original: string }) => {
+  console.log("Enviando a API:", { id, data });
+  const response = await fetch(`/api/locales_por_construccion/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar destino_original");
+  }
+
+  return await response.json();
+};
+
+export const updateDimensionesById = async (
+  id: number,
+  data: {
+    largo_predominante: number;
+    ancho_predominante: number;
+    diametro: number;
+    altura_maxima: number;
+    altura_minima: number;
+  }
+) => {
+  const response = await fetch(`/api/locales_por_construccion/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar dimensiones");
+  }
+
+  return await response.json();
+};
+
 
 // Exportar las funciones como un servicio
 export const localesService = {
   getOpcionesLocales,
-  postLocales
+  postLocales,
+  getLocalesPorRelevamiento,
+  getLocalById, // Agregamos el nuevo servicio
+  updateConstruccionById,
+  updateDimensionesById,
 };

@@ -6,13 +6,14 @@ import { NextResponse } from "next/server";
 interface OpcionLocales extends RowDataPacket {
   id: number;
   name: string;
+  tipo: string;
 }
 
 export async function GET() {
   try {
     const connection = await getConnection();
     const [opciones] = await connection.query<OpcionLocales[]>(
-      "SELECT * FROM tipo_local"
+      "SELECT * FROM locales"
     );
     connection.release();
 

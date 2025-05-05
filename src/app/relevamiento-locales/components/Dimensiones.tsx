@@ -1,18 +1,23 @@
 "use client";
 
-import NumericInput from "@/components/ui/NumericInput";
+import DecimalNumericInput from "@/components/ui/DecimalNumericInput";
 import { Dimension } from "@/interfaces/DimensionLocales";
+import { localesService } from "@/services/localesServices";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function Dimensiones() {
+  const params = useParams();
+  const id = Number(params.id);
   const [dimensiones, setDimensiones] = useState<Dimension[]>([
     {
-      id: 0,
-      largo: 0,
-      ancho: 0,
+      id: Number(id),
+      largo_predominante: 0,
+      ancho_predominante: 0,
       diametro: 0,
-      alturaMaxima: 0,
-      alturaMinima: 0,
+      altura_maxima: 0,
+      altura_minima: 0,
     },
   ]);
 
@@ -21,11 +26,23 @@ export default function Dimensiones() {
     field: keyof Omit<Dimension, "id">,
     value: number
   ) => {
-    setDimensiones((prevDimensiones) =>
-      prevDimensiones.map((dimension) =>
-        dimension.id === id ? { ...dimension, [field]: value } : dimension
-      )
+    setDimensiones((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
     );
+  };
+
+  const handleGuardar = async () => {
+  const dimension = dimensiones[0];
+
+  try {
+    //console.log("Enviando:", dimension);
+    const result = await localesService.updateDimensionesById(id, dimension);
+    console.log("Resultado:", result);
+    toast("Dimensiones actualizadas correctamente.");
+  } catch (error) {
+    console.error("Error al guardar dimensiones:", error);
+    toast("Ocurrió un error al guardar.");
+  }
   };
   return (
     <div className="mx-10 text-sm">
@@ -47,29 +64,37 @@ export default function Dimensiones() {
               <td className="border p-2">{dimension.id}</td>
               <td className="border p-2"></td>
               <td className="border p-2">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   subLabel="m"
-                  value={dimension.largo}
+                  value={dimension.largo_predominante}
                   onChange={(value) =>
-                    handleInputChange(dimension.id, "largo", Number(value))
+                    handleInputChange(
+                      dimension.id,
+                      "largo_predominante",
+                      Number(value)
+                    )
                   }
                   disabled={false}
                 />
               </td>
               <td className="border p-2">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   subLabel="m"
-                  value={dimension.ancho}
+                  value={dimension.ancho_predominante}
                   onChange={(value) =>
-                    handleInputChange(dimension.id, "ancho", Number(value))
+                    handleInputChange(
+                      dimension.id,
+                      "ancho_predominante",
+                      Number(value)
+                    )
                   }
                   disabled={false}
                 />
               </td>
               <td className="border p-2">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   subLabel="m"
                   value={dimension.diametro}
@@ -80,26 +105,42 @@ export default function Dimensiones() {
                 />
               </td>
               <td className="border p-2">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   subLabel="m"
-                  value={dimension.alturaMaxima}
+                  value={dimension.altura_maxima}
                   onChange={(value) =>
-                    handleInputChange(dimension.id, "alturaMaxima", Number(value))
+                    handleInputChange(
+                      dimension.id,
+                      "altura_maxima",
+                      Number(value)
+                    )
                   }
                   disabled={false}
                 />
               </td>
               <td className="border p-2">
-                <NumericInput
+                <DecimalNumericInput
                   label=""
                   subLabel="m"
-                  value={dimension.alturaMinima}
+                  value={dimension.altura_minima}
                   onChange={(value) =>
-                    handleInputChange(dimension.id, "alturaMinima", Number(value))
+                    handleInputChange(
+                      dimension.id,
+                      "altura_minima",
+                      Number(value)
+                    )
                   }
                   disabled={false}
                 />
+              </td>
+              <td>
+                  <button
+                    onClick={handleGuardar}
+                    className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+                  >
+                    Guardar Información
+                  </button>
               </td>
             </tr>
           ))}

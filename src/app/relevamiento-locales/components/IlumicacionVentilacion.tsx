@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import AlphanumericInput from "@/components/ui/AlphanumericInput";
-import NumericInput from "@/components/ui/NumericInput";
+import DecimalNumericInput from "@/components/ui/DecimalNumericInput";
+import { useAppSelector } from "@/redux/hooks";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface ResponseData {
   [id: string]: {
-    [tipo: string]: {
-      cantidad: number;
-      estado: string;
-    };
+    disponibilidad?: string;
+    superficieIluminacion?: number;
+    superficieVentilacion?: number;
   };
 }
 
@@ -31,21 +33,52 @@ export default function IluminacionVentilacion({
   label,
   locales,
 }: EstructuraReuProps) {
+  const params = useParams();
+  const localId = Number(params.id);
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  );
   const [responses, setResponses] = useState<ResponseData>({});
 
   const handleResponseChange = (
     id: string,
-    tipo: string,
-    field: "cantidad" | "estado",
+    field: "superficieIluminacion" | "superficieVentilacion" | "disponibilidad",
     value: number | string | undefined
   ) => {
     setResponses((prev) => ({
       ...prev,
       [id]: {
         ...prev[id],
-        [tipo]: { ...prev[id]?.[tipo], [field]: value },
+        [field]: value,
       },
     }));
+  };
+
+  const handleGuardar = async () => {
+    const payload = locales.map(({ id, question }) => ({
+      condicion: question,
+      disponibilidad: responses[id]?.disponibilidad,
+      superficie_iluminacion: responses[id]?.superficieIluminacion,
+      superficie_ventilacion: responses[id]?.superficieVentilacion,
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    }));
+
+    console.log("Datos a enviar:", payload);
+
+     try {
+      const response = await fetch("/api/iluminacion_ventilacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      toast("Información guardada correctamente");
+    } catch (error) {
+      console.error(error);
+      toast("Error al guardar los datos");
+    } 
   };
 
   return (
@@ -77,22 +110,24 @@ export default function IluminacionVentilacion({
                   <label>
                     <input
                       type="radio"
-                      name={`estado-${id}`}
-                      value={""}
-                      checked={false}
-                      onChange={() => {}}
+                      name={`disponibilidad-${id}`}
+                      checked={responses[id]?.disponibilidad === "Si"}
+                      value="Si"
+                      onChange={() =>
+                        handleResponseChange(id, "disponibilidad", "Si")
+                      }
                       className="mr-1"
                     />
                     Si
                   </label>
                 ) : (
-                  <AlphanumericInput
+                  <DecimalNumericInput
                     disabled={false}
                     label={"Superficie de iluminación"}
                     subLabel="m2"
-                    value={responses[id]?.["default"]?.cantidad ?? undefined}
+                    value={responses[id]?.superficieIluminacion ?? 0}
                     onChange={(value) =>
-                      handleResponseChange(id, "default", "cantidad", value)
+                      handleResponseChange(id, "superficieIluminacion", value)
                     }
                   />
                 )}
@@ -102,22 +137,24 @@ export default function IluminacionVentilacion({
                   <label>
                     <input
                       type="radio"
-                      name={`estado-${id}`}
-                      value={""}
-                      checked={false}
-                      onChange={() => {}}
+                      name={`disponibilidad-${id}`}
+                      value="No"
+                      checked={responses[id]?.disponibilidad === "No"}
+                      onChange={() =>
+                        handleResponseChange(id, "disponibilidad", "No")
+                      }
                       className="mr-1"
                     />
                     No
                   </label>
                 ) : (
-                  <NumericInput
+                  <DecimalNumericInput
                     disabled={false}
                     label="Superficie de ventilación"
                     subLabel="m2"
-                    value={responses[id]?.["default"]?.cantidad ?? undefined}
+                    value={responses[id]?.superficieVentilacion ?? 0}
                     onChange={(value) =>
-                      handleResponseChange(id, "default", "cantidad", value)
+                      handleResponseChange(id, "superficieVentilacion", value)
                     }
                   />
                 )}
@@ -126,6 +163,14 @@ export default function IluminacionVentilacion({
           ))}
         </tbody>
       </table>
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

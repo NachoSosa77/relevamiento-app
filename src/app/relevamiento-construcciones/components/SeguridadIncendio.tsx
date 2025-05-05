@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -43,20 +43,24 @@ export default function SeguridadIncendio({
       string,
       {
         disponibilidad: string;
-  cantidad: number;
-  carga_anual_matafuegos: string;
-  simulacros_evacuacion: string;
+        cantidad: number;
+        carga_anual_matafuegos: string;
+        simulacros_evacuacion: string;
       }
     >
   >({});
 
   const relevamientoId = useAppSelector(
-      (state) => state.espacio_escolar.relevamientoId
-    );
+    (state) => state.espacio_escolar.relevamientoId
+  );
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "carga_anual_matafuegos" | "cantidad" | "simulacros_evacuacion",
+    field:
+      | "disponibilidad"
+      | "carga_anual_matafuegos"
+      | "cantidad"
+      | "simulacros_evacuacion",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -66,45 +70,49 @@ export default function SeguridadIncendio({
   };
 
   const [cantidadOptions, setCantidadOptions] = useState<{
-      [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
-    }>({});
+    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
+  }>({});
 
   const handleGuardar = async () => {
-      const payload = {
-        relevamiento_id: relevamientoId,
-        servicios: Object.keys(responses).map((key) => ({
-          servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-          disponibilidad: responses[key]?.disponibilidad || "",
-          carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
-          cantidad: cantidadOptions[key] || 0,
-          simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
-        })),
-      };
-    
-      console.log("Datos a enviar:", payload);
-    
-        try {
-        const response = await fetch("/api/instalaciones_seguridad_incendio", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-        const result = await response.json();
-    
-        if (!response.ok) {
-          throw new Error(result.error || "Error al guardar los datos");
-        }
-    
-        toast.success("Relevamiento instalaciones de seguridad e incendio guardado correctamente");
-    
-        console.log("Respuesta de la API:", result);
-      } catch (error: any) {
-        console.error("Error al enviar los datos:", error);
-        toast.error(error.message || "Error al guardar los datos");
-      } 
-    }; 
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: Object.keys(responses).map((key) => ({
+        servicio:
+          servicios.find((servicio) => servicio.id === key)?.question ||
+          "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
+        cantidad: cantidadOptions[key] || 0,
+        simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
+      })),
+    };
+
+    console.log("Datos a enviar:", payload);
+
+    try {
+      const response = await fetch("/api/instalaciones_seguridad_incendio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+
+      toast.success(
+        "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
+      );
+
+      console.log("Respuesta de la API:", result);
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }
+  };
 
   return (
     <div className="mx-10 text-sm">
@@ -195,7 +203,7 @@ export default function SeguridadIncendio({
                     {/* TextInput para 7.2 y 7.7 */}
                     {(id === "7.2" || id === "7.7") && (
                       <NumericInput
-                      disabled={false}
+                        disabled={false}
                         label={
                           id === "7.2"
                             ? "Cantidad de bocas de incendio"
@@ -203,7 +211,7 @@ export default function SeguridadIncendio({
                         }
                         subLabel=""
                         value={cantidadOptions[id] || 0}
-                        onChange={(value: number | undefined) =>{
+                        onChange={(value: number | undefined) => {
                           setCantidadOptions({
                             ...cantidadOptions,
                             [id]: value ?? 0,
@@ -219,11 +227,11 @@ export default function SeguridadIncendio({
                       id === "7.6") && (
                       <div className="flex gap-2">
                         <NumericInput
-                        disabled={false}
+                          disabled={false}
                           label="Cantidad"
                           subLabel=""
                           value={cantidadOptions[id] || 0}
-                          onChange={(value: number | undefined) =>{
+                          onChange={(value: number | undefined) => {
                             setCantidadOptions({
                               ...cantidadOptions,
                               [id]: value ?? 0,
@@ -238,7 +246,11 @@ export default function SeguridadIncendio({
                               name={`carga-anual-${id}`}
                               value="No"
                               onChange={() =>
-                                handleResponseChange(id, "carga_anual_matafuegos", "No")
+                                handleResponseChange(
+                                  id,
+                                  "carga_anual_matafuegos",
+                                  "No"
+                                )
                               }
                               className="mr-1"
                             />
@@ -266,7 +278,11 @@ export default function SeguridadIncendio({
                               name={`carga-anual-${id}`}
                               value="Si"
                               onChange={() =>
-                                handleResponseChange(id, "carga_anual_matafuegos", "Si")
+                                handleResponseChange(
+                                  id,
+                                  "carga_anual_matafuegos",
+                                  "Si"
+                                )
                               }
                               className="mr-1"
                             />
@@ -285,7 +301,11 @@ export default function SeguridadIncendio({
                             name={`disponibilidad-${id}`}
                             value="En todas"
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En todas")
+                              handleResponseChange(
+                                id,
+                                "disponibilidad",
+                                "En todas"
+                              )
                             }
                             className="mr-1"
                           />
@@ -336,7 +356,11 @@ export default function SeguridadIncendio({
                             name={`simulacros_evacuacion-${id}`}
                             value="No"
                             onChange={() =>
-                              handleResponseChange(id, "simulacros_evacuacion", "No")
+                              handleResponseChange(
+                                id,
+                                "simulacros_evacuacion",
+                                "No"
+                              )
                             }
                             className="mr-1"
                           />
@@ -364,7 +388,11 @@ export default function SeguridadIncendio({
                             name={`simulacros_evacuacion-${id}`}
                             value="Si"
                             onChange={() =>
-                              handleResponseChange(id, "simulacros_evacuacion", "Si")
+                              handleResponseChange(
+                                id,
+                                "simulacros_evacuacion",
+                                "Si"
+                              )
                             }
                             className="mr-1"
                           />
@@ -427,7 +455,11 @@ export default function SeguridadIncendio({
                             name={`disponibilidad-${id}`}
                             value="En todos"
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En todos")
+                              handleResponseChange(
+                                id,
+                                "disponibilidad",
+                                "En todos"
+                              )
                             }
                             className="mr-1"
                           />

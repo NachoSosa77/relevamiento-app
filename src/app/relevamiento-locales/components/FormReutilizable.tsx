@@ -1,9 +1,12 @@
+ 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
+import { useAppSelector } from "@/redux/hooks";
 import { useState } from "react";
+//import { toast } from "react-toastify";
 
 interface Opcion {
   id: number;
@@ -30,23 +33,25 @@ export default function FormReutilizable({
   locales,
 }: EstructuraReuProps) {
   const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string }>
+    Record<string, { disponibilidad: string; descripcion: string }>
   >({});
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<string | null>(
     null
   );
-  const [radioSeleccion, setRadioSeleccion] = useState<string | null>(
-    null
-  );
+  const [radioSeleccion, setRadioSeleccion] = useState<string | null>(null);
+
+  const relevamientoId = useAppSelector(
+      (state) => state.espacio_escolar.relevamientoId
+    );
 
   const handleResponseChange = (
-    servicioId: string,
-    field: "disponibilidad" | "estado",
+    localId: string,
+    field: "disponibilidad" | "descripcion",
     value: string
   ) => {
     setResponses((prev) => ({
       ...prev,
-      [servicioId]: { ...prev[servicioId], [field]: value },
+      [localId]: { ...prev[localId], [field]: value },
     }));
     setRadioSeleccion(value);
   };
@@ -54,6 +59,50 @@ export default function FormReutilizable({
   const handleOpcionChange = (value: string) => {
     setOpcionSeleccionada(value);
   };
+
+  const handleGuardar = async () => {
+    const payload = {
+      relevamiento_id: relevamientoId,
+      locales: Object.keys(responses).map((key) => {
+        const local = locales.find((local) => local.id === key);
+        const opcion = local?.opciones.find(
+          (opcion) => opcion.id.toString() === opcionSeleccionada
+        );
+  
+        return {
+          local: opcion?.name || "Unknown",
+          disponibilidad: responses[key]?.disponibilidad || "",
+          descripcion: responses[key]?.descripcion || "",
+        };
+      }),
+    };
+  
+      console.log("Datos a enviar:", payload);
+  
+      /* try {
+        const response = await fetch("/api/instalaciones_seguridad_incendio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+  
+        if (!response.ok) {
+          throw new Error(result.error || "Error al guardar los datos");
+        }
+  
+        toast.success(
+          "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
+        );
+  
+        console.log("Respuesta de la API:", result);
+      } catch (error: any) {
+        console.error("Error al enviar los datos:", error);
+        toast.error(error.message || "Error al guardar los datos");
+      } */
+    };
 
   return (
     <div className="mx-10 text-sm">
@@ -131,7 +180,7 @@ export default function FormReutilizable({
                 )}
               </td>
               <td className="border p-2 text-center">
-                {(opcionSeleccionada === "17" && id === "1.1") && (
+                {opcionSeleccionada === "17" && id === "1.1" && (
                   <TextInput
                     label="Indique"
                     sublabel=""
@@ -139,21 +188,27 @@ export default function FormReutilizable({
                     onChange={(e) => {}}
                   />
                 )}
-                { (radioSeleccion === "Si" && id === "1.2") &&
-                (
-                    <TextInput
+                {radioSeleccion === "Si" && id === "1.2" && (
+                  <TextInput
                     label="Indique"
                     sublabel=""
                     value=""
                     onChange={(e) => {}}
                   />
-                    )
-                }
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }

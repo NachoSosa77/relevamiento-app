@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
-import AlphanumericInput from "@/components/ui/AlphanumericInput";
 import NumericInput from "@/components/ui/NumericInput";
+import { useAppSelector } from "@/redux/hooks";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface ResponseData {
   [id: string]: {
@@ -31,6 +35,11 @@ export default function TableCantidadReutilizable({
   label,
   locales,
 }: EstructuraReuProps) {
+    const params = useParams();
+    const localId = Number(params.id);
+    const relevamientoId = useAppSelector(
+      (state) => state.espacio_escolar.relevamientoId
+    );
   const [responses, setResponses] = useState<ResponseData>({});
 
   const handleResponseChange = (
@@ -47,6 +56,39 @@ export default function TableCantidadReutilizable({
       },
     }));
   };
+
+  const handleGuardar = async () => {
+    const payload = locales.flatMap(({ id, question }) => {
+      const respuesta = responses[id];
+      if (!respuesta) return [];
+    
+      return Object.entries(respuesta).map(([tipo, valores]) => ({
+        abertura: question,
+        tipo,
+        estado: valores.estado,
+        cantidad: valores.cantidad,
+        relevamiento_id: relevamientoId,
+        local_id: localId,
+      }));
+    });
+    
+  
+      console.log("Datos a enviar:", payload);
+  
+       try {
+        const response = await fetch("/api/aberturas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        toast("Información guardada correctamente");
+      } catch (error) {
+        console.error(error);
+        toast("Error al guardar los datos");
+      } 
+    };
 
   return (
     <div className="mx-10 text-sm">
@@ -89,16 +131,17 @@ export default function TableCantidadReutilizable({
                 <td className="border p-2 text-center">
                   {showCondition && opciones.length > 0 ? (
                     opciones.map((tipo) => (
-                      <AlphanumericInput
+                      <div key={tipo} className="flex flex-col mt-2">
+                      <NumericInput
                         disabled={false}
-                        key={tipo}  
                         label=""
                         subLabel=""
-                        value={responses[id]?.[tipo]?.cantidad || ""}
+                        value={responses[id]?.[tipo]?.cantidad ?? 0}
                         onChange={(value) =>
                           handleResponseChange(id, tipo, "cantidad", value)
                         }
                       />
+                      </div>
                     ))
                   ) : (
                     <NumericInput
@@ -119,7 +162,7 @@ export default function TableCantidadReutilizable({
                         key={tipo}
                         className="flex gap-2 items-center justify-center"
                       >
-                        {["B", "R", "M"].map((estado) => (
+                        {["Bueno", "Regular", "Malo"].map((estado) => (
                           <label key={estado}>
                             <input
                               type="radio"
@@ -129,7 +172,7 @@ export default function TableCantidadReutilizable({
                               onChange={() =>
                                 handleResponseChange(id, tipo, "estado", estado)
                               }
-                              className="mr-1"
+                              className="mr-1 mt-4"
                             />
                             {estado}
                           </label>
@@ -138,7 +181,7 @@ export default function TableCantidadReutilizable({
                     ))
                   ) : (
                     <div className="flex gap-2 items-center justify-center">
-                      {["B", "R", "M"].map((estado) => (
+                      {["Bueno", "Regular", "Malo"].map((estado) => (
                         <label key={estado}>
                           <input
                             type="radio"
@@ -167,6 +210,14 @@ export default function TableCantidadReutilizable({
           ))}
         </tbody>
       </table>
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleGuardar}
+          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
   );
 }
