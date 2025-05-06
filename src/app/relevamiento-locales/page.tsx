@@ -3,12 +3,11 @@
 
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
 import Navbar from "@/components/NavBar/NavBar";
-import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
 
-export default function RelevamientoConstruccionesPage() {
+export default function RelevamientoLocalesPage() {
   const selectedInstitutionsRedux = useAppSelector(
     (state) => state.espacio_escolar.institucionesSeleccionadas
   );
@@ -61,9 +60,6 @@ export default function RelevamientoConstruccionesPage() {
         label="COMPLETE UN FORMULARIO EXCLUSIVAMENTE POR CADA LOCAL..."
         sublabel="Transcriba de la hoja de ruta el Número de CUI..."
       />
-
-      
-      <ObservacionesComponent onSave={() => {}} />
     </div>
   );
 }

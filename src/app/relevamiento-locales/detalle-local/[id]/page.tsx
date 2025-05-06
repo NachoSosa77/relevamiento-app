@@ -4,6 +4,7 @@
 "use client";
 
 import Navbar from "@/components/NavBar/NavBar";
+import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -37,6 +38,7 @@ const DetalleLocalPage = () => {
   >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const localId = id;
 
   useEffect(() => {
     if (!id) return; // Asegúrate de que el id esté disponible
@@ -54,6 +56,29 @@ const DetalleLocalPage = () => {
 
     fetchLocal();
   }, [id]);
+
+  const handleSaveObservaciones = async (obs: string) => {
+    if (!localId) return;
+
+    try {
+      const res = await fetch("/api/locales_por_construccion/observaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          localId,
+          observaciones: obs,
+        }),
+      });
+
+      if (res.ok) {
+        router.push("/relevamiento-locales");
+      } else {
+        console.error("Error al guardar observaciones");
+      }
+    } catch (err) {
+      console.error("Error de red al guardar:", err);
+    }
+  };
 
   const handleAulaComúnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAulaComúnField(e.target.value);
@@ -241,6 +266,9 @@ const DetalleLocalPage = () => {
             locales={equipamientoSanitario}
           />
         )}
+
+        <ObservacionesComponent onSave={handleSaveObservaciones} />
+
     </div>
   );
 };

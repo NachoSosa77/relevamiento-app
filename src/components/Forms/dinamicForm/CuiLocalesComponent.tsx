@@ -32,6 +32,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
+  console.log(relevamientoId)
 
   useEffect(() => {
     const fetchLocales = async () => {

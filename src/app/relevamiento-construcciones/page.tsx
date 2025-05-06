@@ -7,6 +7,7 @@ import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { selectServiciosAgua } from "@/redux/slices/servicioAguaSlice";
 import { RootState } from "@/redux/store";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import AguaFormComponent from "./components/AguaFormComponent";
@@ -16,6 +17,7 @@ import CaracteristicasConservacion from "./components/CaracteristicasConservacio
 import Comedor from "./components/Comdedor";
 import CondicionesAccesibilidad from "./components/CondicionesAccesibilidad";
 import ElectricidadServicio from "./components/ElectricidadServicio";
+import EnergiasAlternativas from "./components/EnergiasAlternativas";
 import SeguridadIncendio from "./components/SeguridadIncendio";
 import {
   default as SeparadorReutilizable,
@@ -44,6 +46,7 @@ import {
 // ... otros imports
 
 export default function RelevamientoConstruccionesPage() {
+  const router = useRouter();
   const [selectedInstitutions, setSelectedInstitutions] =
     useState<InstitucionesData[] | null>(null);
 
@@ -57,13 +60,7 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  /* const construccionTemporal = useSelector(
-    (state: RootState) => state.construcciones.construccionTemporal
-  ); */
-  // Usar useEffect para escuchar cuando el estado cambia
-  //console.log("Construcción temporal:", construccionTemporal);
-  //console.log('relevamientoId', relevamientoId);
-
+  console.log(relevamientoId)
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
     /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */;
@@ -74,6 +71,29 @@ export default function RelevamientoConstruccionesPage() {
       setSelectedInstitutions(institucionesRedux);
     }
   }, [institucionesRedux]);
+
+  const handleSaveObservaciones = async (obs: string) => {
+    if (!relevamientoId) return;
+
+    try {
+      const res = await fetch("/api/relevamientos/observaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          relevamientoId,
+          observaciones: obs,
+        }),
+      });
+
+      if (res.ok) {
+        router.push("/relevamiento-locales");
+      } else {
+        console.error("Error al guardar observaciones");
+      }
+    } catch (err) {
+      console.error("Error de red al guardar:", err);
+    }
+  };
 
   return (
     <div className="h-full bg-white text-black text-sm">
@@ -168,13 +188,13 @@ export default function RelevamientoConstruccionesPage() {
         label="PAREDES Y CERRAMIENTOS EXTERIORES"
         estructuras={paredesCerramientos}
       />
-      <CaracteristicasConservacion
+      <EnergiasAlternativas
         id={13}
         label="ENERGÍAS ALTERNATIVAS"
         estructuras={energiasAlternativas}
       />
 
-      <ObservacionesComponent onSave={()=>{}}/>
+      <ObservacionesComponent onSave={handleSaveObservaciones}/>
     </div>
   );
 }
