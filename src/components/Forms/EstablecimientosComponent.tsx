@@ -6,8 +6,7 @@ import { setInstitucionesData } from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Importar el estilo para el toast
-import { default as establecimientos_columns } from "../Table/TableColumns/establecimientosColumns";
+import "react-toastify/dist/ReactToastify.css";
 import ReusableTable from "../Table/TableReutilizable";
 import CuiComponent from "./dinamicForm/CuiComponent";
 
@@ -20,26 +19,40 @@ const EstablecimientosComponent: React.FC = () => {
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
   const dispatch = useAppDispatch();
 
-  // Cargar instituciones desde localStorage al iniciar
+  // Cargar instituciones desde localStorage si el CUI coincide
   useEffect(() => {
-    const storedInstituciones = localStorage.getItem("institucionesSeleccionadas");
-    if (storedInstituciones) {
-      // Si hay instituciones almacenadas, las cargamos en Redux y en el estado local
-      const institucionesDesdeLocalStorage: InstitucionesData[] = JSON.parse(storedInstituciones);
-      setInstituciones(institucionesDesdeLocalStorage);
-      dispatch(setInstitucionesData(institucionesDesdeLocalStorage));
+    const stored = localStorage.getItem("institucionesSeleccionadas");
+    if (stored) {
+      try {
+        const { cui, instituciones }: { cui: number; instituciones: InstitucionesData[] } = JSON.parse(stored);
+        if (cui === selectedCui) {
+          setInstituciones(instituciones);
+          dispatch(setInstitucionesData(instituciones));
+        } else {
+          // Limpiar si el CUI es distinto
+          localStorage.removeItem("institucionesSeleccionadas");
+          setInstituciones([]);
+          dispatch(setInstitucionesData([]));
+        }
+      } catch (error) {
+        console.error("Error al leer instituciones desde localStorage:", error);
+      }
     }
-  }, [dispatch]);
+  }, [selectedCui, dispatch]);
 
-  // Persistir cambios en las instituciones seleccionadas
+  // Guardar instituciones en localStorage cuando cambien
   useEffect(() => {
-    if (instituciones.length > 0) {
-      // Guardamos en localStorage siempre que las instituciones cambien
-      localStorage.setItem("institucionesSeleccionadas", JSON.stringify(instituciones));
-      dispatch(setInstitucionesData(instituciones)); // Sincronizamos Redux con el estado local
+    if (instituciones.length > 0 && selectedCui) {
+      const dataAGuardar = {
+        cui: selectedCui,
+        instituciones,
+      };
+      localStorage.setItem("institucionesSeleccionadas", JSON.stringify(dataAGuardar));
+      dispatch(setInstitucionesData(instituciones));
     }
-  }, [instituciones, dispatch]);
+  }, [instituciones, selectedCui, dispatch]);
 
+  // Obtener institución al seleccionar una nueva
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
@@ -76,25 +89,57 @@ const EstablecimientosComponent: React.FC = () => {
     }
   };
 
-  const openModal = () => {
-    setModalIsOpen(true);
-  };
+  const openModal = () => setModalIsOpen(true);
+  const closeModal = () => setModalIsOpen(false);
 
-  const closeModal = () => {
-    setModalIsOpen(false);
-  };
-
-  // Función para eliminar una institución del estado
   const handleRemoveInstitution = (id: number) => {
-    setInstituciones((prevInstituciones) =>
-      prevInstituciones.filter((institution) => institution.id !== id)
+    const nuevasInstituciones = instituciones.filter(
+      (institution) => institution.id !== id
     );
+    setInstituciones(nuevasInstituciones);
     toast.success("¡Institución eliminada!");
   };
 
+  const establecimientos_columns = [
+    {
+      Header: "Establecimiento",
+      accessor: "institucion",
+    },
+    {
+      Header: "Modalidad/Nivel",
+      accessor: "modalidad_nivel",
+    },
+    { Header: "CUE", accessor: "cue" },
+    { Header: "CUI", accessor: "cui" },
+    { Header: "Matrícula", accessor: "matricula" },
+    { Header: "Calle", accessor: "calle" },
+    { Header: "Referencia", accessor: "modalidad_nivel" },
+    { Header: "Provincia", accessor: "provincia" },
+    {
+      Header: "Departamento",
+      accessor: "departamento",
+    },
+    {
+      Header: "Localidad/Paraje",
+      accessor: "localidad",
+    },
+    {
+      Header: "Acciones",
+      accessor: "acciones",
+      Cell: ({ row }: { row: { original: { id: number } } }) => (
+        <button
+          onClick={() => handleRemoveInstitution(row.original.id)}
+          className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition duration-300"
+        >
+          Eliminar
+        </button>
+      ),
+    },
+  ];
+
   if (!instituciones || instituciones.length === 0) {
     return (
-      <div className="mx-10 mt-4">
+      <div className="mx-10 mt-4 text-gray-500">
         <p>No se ha seleccionado ninguna institución.</p>
       </div>
     );
@@ -102,31 +147,28 @@ const EstablecimientosComponent: React.FC = () => {
 
   return (
     <div className="mx-10 mt-4 text-sm">
-      <div className="flex mt-2 p-2 border items-center">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex mt-2 p-2 border items-center rounded-lg bg-white text-black">
+        <div className="w-6 h-6 flex justify-center items-center bg-black rounded-full text-white">
           <p>B</p>
         </div>
         <div>
-          <p className="text-sm font-bold justify-center ml-4">
-            ESTABLECIMIENTOS EDUCATIVOS
-          </p>
+          <p className="text-sm font-bold ml-4">ESTABLECIMIENTOS EDUCATIVOS</p>
         </div>
       </div>
-      <div className="flex p-1 bg-gray-100 border">
-        <p className="text-sm text-gray-400">
+      <div className="flex p-3 bg-gray-100 border rounded-lg mt-4">
+        <p className="text-sm text-gray-600">
           Transcriba de la hoja de ruta el domicilio postal del CUE-Anexos del o
           los directivos respondientes. Si es necesario utilice la columna
           Referencia para especificar el domicilio.
         </p>
       </div>
       <ReusableTable
-        data={instituciones} 
+        data={instituciones}
         columns={establecimientos_columns}
-        onRemove={handleRemoveInstitution} // Pasar la función de eliminación
       />
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-6">
         <button
-          className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
           onClick={openModal}
         >
           Agregar establecimiento
@@ -135,26 +177,26 @@ const EstablecimientosComponent: React.FC = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="modal-content bg-white p-4 rounded-lg shadow-md w-2/3 max-w-4xl relative"
+        className="modal-content bg-white p-6 rounded-lg shadow-md w-2/3 max-w-4xl relative"
         overlayClassName="modal-overlay fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
         ariaHideApp={false}
       >
         <CuiComponent
           label={""}
-          initialCui={selectedCui} // Pasa el valor inicial del CUI
-          onCuiInputChange={() => {}} // Pasa la función para actualizar el CUI
+          initialCui={selectedCui}
+          onCuiInputChange={() => {}}
           isReadOnly={false}
           sublabel=""
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button
-            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded`}
-            onClick={handleSave} // Llama a handleSave aquí
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            onClick={handleSave}
           >
             Guardar
           </button>
           <button
-            className="bg-slate-500 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
             onClick={closeModal}
           >
             Cancelar

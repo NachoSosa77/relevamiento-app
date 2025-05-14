@@ -1,4 +1,4 @@
-import { LocalesConstruccion } from '@/interfaces/Locales';
+import { Construccion, LocalesPorConstruccion } from '@/interfaces/Locales';
 import axios from 'axios';
 
 // Obtener opciones de locales
@@ -13,7 +13,7 @@ const getOpcionesLocales = async () => {
 };
 
 // Guardar locales
-const postLocales = async (data: (LocalesConstruccion & { cui_number: number })[]) => {
+const postLocales = async (data: (LocalesPorConstruccion & { construccion_id: number })[]) => {
   const res = await fetch("/api/locales_por_construccion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -33,6 +33,28 @@ const postLocales = async (data: (LocalesConstruccion & { cui_number: number })[
 
   return res.json();
 };
+
+const postConstrucciones = async (data: Construccion) => {
+  const res = await fetch("/api/construcciones", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const contentType = res.headers.get("Content-Type");
+
+  if (!res.ok) {
+    const errorData = contentType?.includes("application/json")
+      ? await res.json()
+      : await res.text();
+
+    console.error("Error del servidor:", errorData);
+    throw new Error("Error al guardar la construcción");
+  }
+
+  return res.json();
+};
+
 
 // Obtener locales por relevamiento
 const getLocalesPorRelevamiento = async (relevamientoId: number) => {
@@ -124,6 +146,7 @@ export const updateDimensionesById = async (
 export const localesService = {
   getOpcionesLocales,
   postLocales,
+  postConstrucciones,
   getLocalesPorRelevamiento,
   getLocalById, // Agregamos el nuevo servicio
   updateConstruccionById,

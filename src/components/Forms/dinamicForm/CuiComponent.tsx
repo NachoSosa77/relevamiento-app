@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-
-
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch } from "@/redux/hooks";
@@ -28,9 +26,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState<number | undefined>(undefined);
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<
-    InstitucionesData[]
-  >([]);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<InstitucionesData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,11 +59,8 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
         setFilteredInstitutions([]);
       } else {
         const filtered = instituciones.filter(
-          (inst) => {
-            return inst.cui === inputValue;
-          }
+          (inst) => inst.cui === inputValue
         );
-        console.log(filtered);
         setFilteredInstitutions(filtered);
       }
     }
@@ -76,7 +69,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const handleChange = (newValue: number | undefined) => {
     setInputValue(newValue);
     onCuiInputChange(newValue);
-    dispatch(setCui(newValue)); // Reinicia la institución seleccionada al cambiar el CUI
+    dispatch(setCui(newValue));
   };
 
   const handleInstitutionSelect = (
@@ -86,8 +79,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
     const selected = filteredInstitutions.find(
       (inst) => inst.id === selectedId
     );
-    //console.log("selected?.id:", selected?.id); // Agrega este console.log
-    dispatch(setInstitucionSeleccionada(selected?.id)); // Corrección aquí
+    dispatch(setInstitucionSeleccionada(selected?.id));
   };
 
   useEffect(() => {
@@ -109,31 +101,29 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   return (
     <div className="mx-10">
       <p className="text-sm">{label}</p>
-      <div className="flex mt-2 p-2 border items-center">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex mt-2 p-2 border items-center rounded-lg bg-white text-black">
+        <div className="w-6 h-6 flex justify-center items-center bg-black rounded-full text-white">
           <p>A</p>
         </div>
         <div>
-          <p className="text-sm font-bold justify-center ml-4">
-            CUI (Código Único de Infraestructura)
-          </p>
+          <p className="text-sm font-bold ml-4">CUI (Código Único de Infraestructura)</p>
         </div>
         <div className="ml-auto">
           <NumericInput
             subLabel=""
-            label={""}
+            label=""
             value={inputValue}
             onChange={handleChange}
             disabled={isReadOnly}
           />
         </div>
       </div>
-      <div className="flex p-1 bg-gray-100 border">
+      <div className="flex p-1 bg-gray-100 border rounded-lg">
         <p className="text-xs text-gray-400">{sublabel}</p>
       </div>
       {!isReadOnly && filteredInstitutions.length > 0 && (
         <select
-          className="mt-2 p-2 border"
+          className="mt-2 p-2 border rounded-lg"
           onChange={handleInstitutionSelect}
         >
           <option value="">Selecciona una institución</option>

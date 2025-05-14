@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// ReusableTable.tsx
 import React from "react";
 
 interface ReusableTableProps<T> {
@@ -12,16 +11,16 @@ interface ReusableTableProps<T> {
   onRemove?: (id: number) => void;
 }
 
-const ReusableTable: React.FC<ReusableTableProps<any>> = ({
-  data,
-  columns,
-}) => {
+const ReusableTable: React.FC<ReusableTableProps<any>> = ({ data, columns }) => {
   return (
-    <table className="w-full mt-2 border-collapse table-auto text-sm text-center">
+    <table className="w-full mt-2 text-sm text-center rounded-lg shadow-lg bg-white">
       <thead>
-        <tr className="bg-gray-200">
+        <tr className="bg-gray-100 rounded-t-lg">
           {columns.map((column, columnIndex) => (
-            <th key={`${columnIndex}-${column.Header}`} className="border p-2">
+            <th
+              key={`${columnIndex}-${column.Header}`}
+              className="border p-2 rounded-tl-lg rounded-tr-lg"
+            >
               {column.Header}
             </th>
           ))}
@@ -38,11 +37,13 @@ const ReusableTable: React.FC<ReusableTableProps<any>> = ({
           </tr>
         ) : (
           data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={rowIndex} className="border-b hover:bg-gray-50">
               {columns.map((column, columnIndex) => (
-                <td key={`${rowIndex}-${columnIndex}`} className="border py-2">
+                <td
+                  key={`${rowIndex}-${columnIndex}`}
+                  className="border p-2 rounded-lg"
+                >
                   {column.Cell ? (
-                    // Ahora pasamos 'row' junto con 'value'
                     <column.Cell
                       value={row[column.accessor]}
                       row={{ original: row, index: rowIndex }}

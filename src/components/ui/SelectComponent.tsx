@@ -19,7 +19,7 @@ const Select = <T extends string | number>({
 }: SelectProps<T>) => {
   return (
     <div className="flex flex-col justify-center">
-      <p className="text-sm text-black font-bold">{label}</p>
+      <p className="text-sm text-black">{label}</p>
       <div className="flex flex-col justify-end border rounded-lg">
         <select
           id={label}

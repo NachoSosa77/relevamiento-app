@@ -1,8 +1,13 @@
-// archivoSlice.ts (o donde manejes el estado de los archivos)
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface Archivo {
+  archivo_url: string;
+  tipo_archivo: string;
+  relevamiento_id: string;
+}
+
 interface ArchivoState {
-  archivosSubidos: string[]; // Puedes almacenar solo las URLs, o los objetos completos si lo prefieres
+  archivosSubidos: Archivo[];
 }
 
 const initialState: ArchivoState = {
@@ -13,11 +18,14 @@ const archivoSlice = createSlice({
   name: "archivos",
   initialState,
   reducers: {
-    setArchivosSubidos: (state, action: PayloadAction<string[]>) => {
+    setArchivosSubidos: (state, action: PayloadAction<Archivo[]>) => {
       state.archivosSubidos = action.payload;
+    },
+    resetArchivos: (state) => {
+      state.archivosSubidos = [];
     },
   },
 });
 
-export const { setArchivosSubidos } = archivoSlice.actions;
+export const { setArchivosSubidos, resetArchivos } = archivoSlice.actions;
 export default archivoSlice.reducer;

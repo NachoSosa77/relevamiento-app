@@ -5,12 +5,28 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json(); // Obtener datos del request
-    const { relevamiento_id, numero_construccion, antiguedad, destino } = body;
-    console.log(body); // Para ver qué datos llegan
+    const body = await req.json();
 
-    // 🔍 Validar que los campos requeridos estén presentes
-    if (!relevamiento_id || !numero_construccion || !antiguedad || !destino) {
+    const {
+      relevamiento_id,
+      numero_construccion,
+      superficie_cubierta,
+      superficie_semicubierta,
+      superficie_total,
+      antiguedad,
+      destino,
+    } = body;
+
+    // Validación básica
+    if (
+      relevamiento_id === undefined ||
+      numero_construccion === undefined ||
+      superficie_cubierta === undefined ||
+      superficie_semicubierta === undefined ||
+      superficie_total === undefined ||
+      !antiguedad ||
+      !destino
+    ) {
       return NextResponse.json(
         { message: "Faltan campos obligatorios" },
         { status: 400 }
@@ -18,23 +34,42 @@ export async function POST(req: Request) {
     }
 
     const connection = await getConnection();
+
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO construcciones (relevamiento_id, numero_construccion, antiguedad, destino) 
-       VALUES (?, ?, ?, ?)`,
-      [relevamiento_id, numero_construccion, antiguedad, destino]
+      `INSERT INTO construcciones (
+        relevamiento_id,
+        numero_construccion,
+        superficie_cubierta,
+        superficie_semicubierta,
+        superficie_total,
+        antiguedad,
+        destino
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        relevamiento_id,
+        numero_construccion,
+        superficie_cubierta,
+        superficie_semicubierta,
+        superficie_total,
+        antiguedad,
+        destino,
+      ]
     );
+
     connection.release();
 
-    // Devolvemos el ID de la construcción creada
     return NextResponse.json(
-      { message: "Construcción creada correctamente", id: result.insertId },
+      {
+        message: "Construcción creada correctamente",
+        construccion_id: result.insertId,
+      },
       { status: 201 }
     );
   } catch (err: any) {
     console.error("Error al insertar los datos de la construcción:", err);
     return NextResponse.json(
       {
-        message: "Error al insertar los datos de la construcción:",
+        message: "Error al insertar los datos de la construcción",
         error: err.message,
       },
       { status: 500 }

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.3",
     "@nextui-org/react": "^2.6.11",
     "@radix-ui/react-popover": "^1.1.5",
     "@react-pdf-viewer/core": "^3.12.0",

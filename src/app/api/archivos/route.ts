@@ -3,7 +3,6 @@ import { existsSync } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: Request) {
   const connection = await getConnection();
@@ -34,8 +33,7 @@ export async function POST(req: Request) {
 
   for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const extension = file.name.split(".").pop();
-    const fileName = `${uuidv4()}.${extension}`;
+    const fileName = file.name.replace(/\s+/g, "_"); // Reemplaza espacios por guiones bajos (opcional)
     const absolutePath = path.join(archivosPath, fileName);
 
     try {

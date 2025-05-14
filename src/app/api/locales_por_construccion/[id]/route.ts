@@ -43,7 +43,7 @@ export async function GET(
         loc.tipo,
         loc.name AS nombre_local
       FROM locales_por_construccion lpc
-      JOIN locales loc ON lpc.local_id = loc.id
+      JOIN opciones_locales loc ON lpc.local_id = loc.id
       WHERE lpc.id = ?
     `,
       [idNumber]

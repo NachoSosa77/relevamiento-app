@@ -8,9 +8,9 @@ interface Plantas {
 }
 
 interface Construccion {
+  id: number;
   numero_construccion: number;
   relevamiento_id: number;
-  instituciones_ids: number[];
   plantas?: Plantas; // Nuevo campo
   antiguedad?: string; // Agregar antiguedad si es necesario
   destino?: string; // Agregar destino si es necesario

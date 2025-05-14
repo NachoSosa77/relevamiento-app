@@ -12,9 +12,11 @@ interface Props {
 
 const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   const dispatch = useAppDispatch();
-  
+
   // Verifica si el estado está inicializado correctamente
-  const archivosSubidosRedux = useAppSelector((state) => state.archivos?.archivosSubidos || []);
+  const archivosSubidosRedux = useAppSelector(
+    (state) => state.archivos?.archivosSubidos || []
+  );
 
   const [archivos, setArchivos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -27,7 +29,9 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
     const nuevosArchivos = Array.from(files);
     setArchivos((prev) => [...prev, ...nuevosArchivos]);
 
-    const nuevasPreviews = nuevosArchivos.map((file) => URL.createObjectURL(file));
+    const nuevasPreviews = nuevosArchivos.map((file) =>
+      URL.createObjectURL(file)
+    );
     setPreviews((prev) => [...prev, ...nuevasPreviews]);
   };
 
@@ -90,17 +94,47 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Muestra los archivos previos que se han guardado en Redux */}
-        {archivosSubidosRedux.map((src, index) => (
-          <iframe key={index} src={src} className="w-full h-64 border rounded shadow-sm" />
-        ))}
+        {archivosSubidosRedux.map((archivo, index) =>
+          archivo.tipo_archivo === "pdf" ? (
+            <iframe
+              key={index}
+              src={archivo.archivo_url}
+              className="w-full h-64 border rounded shadow-sm"
+            />
+          ) : (
+            <div
+              key={index}
+              className="relative w-full h-64 rounded overflow-hidden shadow-sm"
+            >
+              <Image
+                src={archivo.archivo_url}
+                alt={`archivo-${index}`}
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+          )
+        )}
 
         {/* Muestra las vistas previas de los archivos seleccionados en el estado local */}
         {previews.map((src, index) =>
           archivos[index]?.type.includes("pdf") ? (
-            <iframe key={index} src={src} className="w-full h-64 border rounded shadow-sm" />
+            <iframe
+              key={index}
+              src={src}
+              className="w-full h-64 border rounded shadow-sm"
+            />
           ) : (
-            <div key={index} className="relative w-full h-64 rounded overflow-hidden shadow-sm">
-              <Image src={src} alt={`preview-${index}`} fill style={{ objectFit: "cover" }} />
+            <div
+              key={index}
+              className="relative w-full h-64 rounded overflow-hidden shadow-sm"
+            >
+              <Image
+                src={src}
+                alt={`preview-${index}`}
+                fill
+                style={{ objectFit: "cover" }}
+              />
             </div>
           )
         )}

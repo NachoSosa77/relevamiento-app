@@ -172,8 +172,8 @@ export default function EspaciosEscolaresPage() {
 
       <EstablecimientosComponent />
       <PlanoComponent />
+      <LocalesPorConstruccion/>
       <AreasExterioresComponent />
-      <LocalesPorConstruccion />
       <ObservacionesComponent
         onSave={handleSaveObservacion}
         initialObservations={""}

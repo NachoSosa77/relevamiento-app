@@ -17,14 +17,18 @@ const DecimalNumericInput: React.FC<InputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
 
+  // Solo sincroniza cuando el valor externo cambia pero no mientras el usuario escribe
   useEffect(() => {
     if (value !== undefined && !isNaN(value)) {
-      // Siempre mostramos con 2 decimales y coma
-      const formatted = value.toFixed(2).replace(".", ",");
-      setInputValue(formatted);
-    } else {
+      const formatted = value.toString().replace(".", ",");
+      if (formatted !== inputValue) {
+        setInputValue(formatted);
+      }
+    }
+    if (value === undefined && inputValue !== "") {
       setInputValue("");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,24 +40,29 @@ const DecimalNumericInput: React.FC<InputProps> = ({
     // Reemplazamos el punto por coma si lo hay
     raw = raw.replace(".", ",");
 
-    // Permitimos solo una coma en el número
+    // Permitimos solo una coma
     const parts = raw.split(",");
-    if (parts.length > 2) return; // Si hay más de una coma, es inválido
+    if (parts.length > 2) return;
 
-    // Limitar los decimales a 2, si existe una coma
+    // Limitar los decimales a 2 si ya hay coma
     if (parts.length === 2) {
-      parts[1] = parts[1].slice(0, 2); // Solo 2 decimales
+      parts[1] = parts[1].slice(0, 2);
       raw = `${parts[0]},${parts[1]}`;
     }
 
     setInputValue(raw);
 
-    // Convertimos a float (usando punto como separador decimal internamente)
     const parsed = parseFloat(raw.replace(",", "."));
+    onChange(!isNaN(parsed) ? parsed : undefined);
+  };
+
+  const handleBlur = () => {
+    if (inputValue === "") return;
+
+    const parsed = parseFloat(inputValue.replace(",", "."));
     if (!isNaN(parsed)) {
-      onChange(parsed);
-    } else {
-      onChange(undefined);
+      const formatted = parsed.toFixed(2).replace(".", ",");
+      setInputValue(formatted); // Aplica formato final
     }
   };
 
@@ -66,6 +75,7 @@ const DecimalNumericInput: React.FC<InputProps> = ({
           type="text"
           value={inputValue}
           onChange={handleChange}
+          onBlur={handleBlur}
           maxLength={12}
           inputMode="decimal"
           pattern="[0-9]*[.,]?[0-9]{0,2}"

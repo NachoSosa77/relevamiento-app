@@ -1,6 +1,6 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { InstitucionesData } from "@/interfaces/Instituciones";
-import { LocalesConstruccion } from "@/interfaces/Locales";
+import { LocalesPorConstruccion } from "@/interfaces/Locales";
 import { Respondiente } from "@/interfaces/Respondientes";
 import { Visita } from "@/interfaces/Visitas";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -13,7 +13,7 @@ interface EspacioEscolarState {
   superficieTotalPredio: number | undefined;
   plano: string | null;
   observaciones: string | null;
-  locales: LocalesConstruccion[];
+  locales: LocalesPorConstruccion[];
   areasExteriores: AreasExteriores[];
   relevamientoId: number;
   visitas: Visita[];
@@ -60,6 +60,7 @@ const espacioEscolarSlice = createSlice({
           (institucion) => institucion.id !== action.payload
         );
     },
+
     setCantidadConstrucciones: (
       state,
       action: PayloadAction<number | undefined>
@@ -78,7 +79,7 @@ const espacioEscolarSlice = createSlice({
     setObservaciones: (state, action: PayloadAction<string | null>) => {
       state.observaciones = action.payload;
     },
-    setLocales: (state, action: PayloadAction<LocalesConstruccion[]>) => {
+    setLocales: (state, action: PayloadAction<LocalesPorConstruccion[]>) => {
       state.locales = action.payload;
     },
     addAreasExteriores: (state, action: PayloadAction<AreasExteriores>) => {
@@ -89,6 +90,9 @@ const espacioEscolarSlice = createSlice({
       state.areasExteriores = state.areasExteriores.filter(
         (area) => area.identificacion_plano !== action.payload
       );
+    },
+    resetInstituciones: (state) => {
+      state.institucionesSeleccionadas = [];
     },
     resetAreasExteriores: (state) => {
       state.areasExteriores = [];
@@ -144,6 +148,7 @@ export const {
   eliminarVisita,
   agregarRespondiente,
   eliminarRespondiente,
+  resetInstituciones,
 } = espacioEscolarSlice.actions;
 
 export default espacioEscolarSlice.reducer;

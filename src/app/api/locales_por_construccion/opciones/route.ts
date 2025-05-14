@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const connection = await getConnection();
     const [opciones] = await connection.query<OpcionLocales[]>(
-      "SELECT * FROM locales"
+      "SELECT * FROM opciones_locales"
     );
     connection.release();
 

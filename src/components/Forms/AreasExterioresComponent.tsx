@@ -13,7 +13,6 @@ import AlphanumericInput from "../ui/AlphanumericInput";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
 import Select from "../ui/SelectComponent";
 
-
 interface FormData {
   identificacion_plano: number;
   tipo: string;
@@ -107,15 +106,6 @@ export default function AreasExterioresComponent() {
     }
   };
 
-  /* const handleEditar = (item: AreasExteriores) => {
-    setFormData({
-      identificacion_plano: item.identificacion_plano,
-      tipo: item.tipo,
-      superficie: item.superficie,
-    });
-    setSelectArea(item.identificacion_plano);
-  }; */
-
   const handleEliminar = (identificacion_plano: number) => {
     dispatch(deleteAreasExteriores(identificacion_plano));
   };
@@ -129,15 +119,9 @@ export default function AreasExterioresComponent() {
       accessor: "acciones",
       Cell: ({ row }: { row: { original: AreasExteriores } }) => (
         <div className="flex space-x-2 justify-center">
-          {/* <button
-            onClick={() => handleEditar(row.original)}
-            className="bg-blue-500 text-white p-1 rounded"
-          >
-            Editar
-          </button> */}
           <button
             onClick={() => handleEliminar(row.original.identificacion_plano)}
-            className="bg-red-500 text-white p-1 rounded"
+            className="bg-red-500 text-white p-1 rounded-lg hover:bg-red-600"
           >
             Eliminar
           </button>
@@ -155,13 +139,13 @@ export default function AreasExterioresComponent() {
         <p className="text-lg font-bold ml-4">ÁREAS EXTERIORES</p>
       </div>
       <form onSubmit={handleSubmit}>
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full mt-2 text-sm text-center rounded-lg shadow-lg bg-white">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Identificación en el plano</th>
+            <tr className="bg-gray-100 rounded-t-lg">
+              <th className="border p-2 rounded-tl-lg rounded-tr-lg">Identificación en el plano</th>
               <th className="border p-2">Tipo</th>
               <th className="border p-2">Superficie</th>
-              <th className="border p-2">Acciones</th>
+              <th className="border p-2 rounded-tr-lg">Acciones</th>
             </tr>
           </thead>
           <tbody>

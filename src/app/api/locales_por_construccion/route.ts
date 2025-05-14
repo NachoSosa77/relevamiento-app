@@ -20,29 +20,21 @@ export async function POST(req: NextRequest) {
     for (const local of body) {
       const [result] = await connection.query<ResultSetHeader>(
         `INSERT INTO locales_por_construccion (
-          numero_construccion,
-          superficie_cubierta,
-          superficie_semicubierta,
-          superficie_total,
+          construccion_id,
           identificacion_plano,
           numero_planta,
           tipo,
           local_sin_uso,
           superficie,
-          cui_number,
           relevamiento_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?,?)`,
         [
-          local.numero_construccion,
-          local.superficie_cubierta,
-          local.superficie_semicubierta,
-          local.superficie_total,
+          local.construccion_id,
           local.identificacion_plano,
           local.numero_planta,
           local.tipo,
           local.local_sin_uso,
           local.superficie,
-          local.cui_number,
           local.relevamiento_id, // 👈 nuevo valor insertado
         ]
       );
