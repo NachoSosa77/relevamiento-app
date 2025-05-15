@@ -2,17 +2,14 @@
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { useAppSelector } from "@/redux/hooks";
-import { setConstruccionEnviada } from "@/redux/slices/construccionesSlice";
 import axios from "axios";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { antiguedadDestinoOpciones } from "../config/antiguedadDestinoOpciones";
 
 export default function AntiguedadComponent() {
-  const { numero_construccion, relevamiento_id, instituciones_ids, plantas } =
+  const { numero_construccion, relevamiento_id, plantas } =
     useAppSelector((state) => state.construcciones.construccionTemporal) || {};
-  const dispatch = useDispatch();
   const construccionEnviada = useAppSelector(
     (state) => state.construcciones.construccionEnviada
   );
@@ -36,7 +33,6 @@ export default function AntiguedadComponent() {
         relevamiento_id: relevamiento_id!,
         antiguedad: antiguedad.ano,
         destino: antiguedad.destino,
-        instituciones_ids: instituciones_ids || [],
       };
 
       const { data: construccionData } = await axios.post(
@@ -53,19 +49,9 @@ export default function AntiguedadComponent() {
       await axios.post("/api/plantas", plantasPayload);
 
       // Paso 3: Relacionar la construcción con las instituciones
-      const institucionesPayload = (instituciones_ids || []).map(
-        (institucion_id) => ({
-          construccion_id,
-          institucion_id,
-        })
-      );
 
-      console.log("Datos de instituciones a enviar:", institucionesPayload);
-
-      await axios.post("/api/construccion_institucion", institucionesPayload);
 
       // Actualizar el estado de Redux con los datos enviados
-      dispatch(setConstruccionEnviada(payload));
 
       toast("Construcción, plantas e instituciones guardadas correctamente");
       setAntiguedad({ ano: "", destino: "" });

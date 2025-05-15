@@ -33,16 +33,28 @@ export default function RelevamientoPredioPage() {
         label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"
         sublabel=""
       />
-      <div className="flex mt-2 mx-10 p-2 border items-center justify-center gap-4">
-        <div className=" flex gap-4 items-center justify-center w-1/2 h-1/2 border bg-slate-200 p-2 font-bold text-sm">
-          <p>Censista</p>
-          <p>Nombre y apellido:</p>
-          <p>
-            {user?.nombre} {user?.apellido}
-          </p>
-          <p>Dni: {user?.dni}</p>
+      <div className="mx-10 mt-4">
+        <div className="flex items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-md p-4">
+          <div className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto justify-center">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col gap-1 text-gray-700 text-sm font-medium shadow-sm w-full sm:w-[400px]">
+              <p className="text-blue-600 font-semibold text-xs uppercase tracking-wide">
+                Censista
+              </p>
+              <div className="flex gap-2">
+                <span className="text-gray-500">Nombre y apellido:</span>
+                <span>
+                  {user?.nombre} {user?.apellido}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-gray-500">DNI:</span>
+                <span>{user?.dni}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
       <VisitasComponent />
       <RespondientesDelCuiComponent />
       <EstablecimientosPrivados />

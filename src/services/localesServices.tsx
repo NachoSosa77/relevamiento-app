@@ -1,4 +1,4 @@
-import { Construccion, LocalesPorConstruccion } from '@/interfaces/Locales';
+import { Construccion, LocalesConstruccion } from '@/interfaces/Locales';
 import axios from 'axios';
 
 // Obtener opciones de locales
@@ -13,7 +13,7 @@ const getOpcionesLocales = async () => {
 };
 
 // Guardar locales
-const postLocales = async (data: (LocalesPorConstruccion & { construccion_id: number })[]) => {
+const postLocales = async (data: (LocalesConstruccion & { construccion_id: number })[]) => {
   const res = await fetch("/api/locales_por_construccion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

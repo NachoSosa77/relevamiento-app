@@ -1,4 +1,5 @@
 import { UserData } from "@/interfaces/UserData";
+import { resetArchivos } from "@/redux/slices/archivoSlice";
 import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
 import { persistor } from "@/redux/store";
 import { jwtDecode } from "jwt-decode";
@@ -51,6 +52,7 @@ const handleLogout = async () => {
   try {
     await fetch("/api/auth/logout", { method: "POST" }); // ⬅️ Llama al endpoint para borrar la cookie en el servidor
     dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
+    dispatch(resetArchivos())
     setUser(null);
     setShowLogoutModal(false);
     persistor.purge();  

@@ -1,3 +1,4 @@
+ 
 "use client";
 
 import { SituacionDominio } from "@/app/lib/SituacionDominio";
@@ -56,6 +57,10 @@ export default function RelevamientoCPage() {
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
 
+  /* const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  ) */
+
   //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
 
   useEffect(() => {
@@ -92,12 +97,12 @@ export default function RelevamientoCPage() {
     console.log(formData);
   };
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" }); // Limpia el formulario
+  const handleSubmit = async (event: FormEvent) => {
+  event.preventDefault();
+
+    setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" });
     setSelectSituacion(null);
-    console.log(formData);
-  };
+};
 
   return (
     <div className="h-full bg-white text-black text-sm mb-10">

@@ -121,56 +121,72 @@ export default function VisitasComponent() {
     },
   ];
 
-  return (
-    <div className="mx-10">
-      <div className="flex mt-2 border items-center justify-between bg-black">
-        <div className="flex p-2 justify-center items-center text-white text-sm">
-          <p>VISITAS REALIZADAS PARA COMPLETAR EL CENSO</p>
-        </div>
-      </div>
+  const visitasForm = [
+    { Header: "N° visita", accessor: "numero_visita" },
+    { Header: "Fecha", accessor: "fecha" },
+    { Header: "Hora inicio", accessor: "hora_inicio" },
+    {
+      Header: "Hora finalización",
+      accessor: "hora_finalizacion",
+    },
+    { Header: "Observaciones", accessor: "observaciones" },
+  ];
 
-      <div className="flex flex-col p-2 justify-center text-sm">
-        {/* Mostrar las visitas agregadas en Redux */}
+  return (
+  <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
+    <div className="bg-gray-100 border border-gray-300 rounded-xl shadow-sm px-6 py-3 mb-6">
+      <p className="text-gray-800 text-sm font-medium text-center">
+        VISITAS REALIZADAS PARA COMPLETAR EL CENSO
+      </p>
+    </div>
+
+    <div className="space-y-6">
+      {/* Tabla de visitas */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-md p-2">
         <ReusableTable
           data={visitas || []}
-          columns={visitasHeader} // Añadimos botones de editar y eliminar en cada fila
+          columns={visitasHeader}
         />
-
-        <div className="flex space-x-4 justify-end">
-          <button
-            onClick={agregarVisitaModal}
-            className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-end"
-          >
-            Agregar Visita
-          </button>
-
-          <button
-            onClick={enviarVisitasABaseDeDatos}
-            className="mt-2 bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded self-end"
-            disabled={visitas.length === 0} // Deshabilitado si no hay visitas
-          >
-            Enviar Visitas a la Base de Datos
-          </button>
-        </div>
       </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={cerrarModal}
-        contentLabel="Agregar Visita Modal"
-        className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-        ariaHideApp={false}
-      >
-        <div className="bg-white p-6 rounded-xl w-1/2 shadow-lg">
-          <ReusableForm
-            columns={visitasHeader}
-            onSubmit={manejarEnvio} // Solo estamos agregando visitas a Redux
-            onCancel={cerrarModal}
-            initialValues={editingVisita} // Pasamos los datos para editar
-          />
-        </div>
-      </Modal>
+      {/* Botones de acción */}
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={agregarVisitaModal}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
+        >
+          + Agregar Visita
+        </button>
+
+        <button
+          onClick={enviarVisitasABaseDeDatos}
+          className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50"
+          disabled={visitas.length === 0}
+        >
+          Guardar Información
+        </button>
+      </div>
     </div>
-  );
+
+    {/* Modal de formulario */}
+    <Modal
+      isOpen={isModalOpen}
+      onRequestClose={cerrarModal}
+      contentLabel="Agregar Visita Modal"
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      ariaHideApp={false}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xl">
+        <ReusableForm
+          columns={visitasForm}
+          onSubmit={manejarEnvio}
+          onCancel={cerrarModal}
+          initialValues={editingVisita}
+        />
+      </div>
+    </Modal>
+  </div>
+);
+
 }

@@ -13,13 +13,13 @@ interface ReusableTableProps<T> {
 
 const ReusableTable: React.FC<ReusableTableProps<any>> = ({ data, columns }) => {
   return (
-    <table className="w-full mt-2 text-sm text-center rounded-lg shadow-lg bg-white">
+    <table className="w-full text-sm text-center bg-white">
       <thead>
         <tr className="bg-gray-100 rounded-t-lg">
           {columns.map((column, columnIndex) => (
             <th
               key={`${columnIndex}-${column.Header}`}
-              className="border p-2 rounded-tl-lg rounded-tr-lg"
+              className="border p-2"
             >
               {column.Header}
             </th>

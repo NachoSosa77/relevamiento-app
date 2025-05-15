@@ -101,20 +101,30 @@ export default function RespondientesDelCuiComponent() {
       ),
     },
   ];
+  const respondientesForm = [
+    {
+      Header: "Nombre y apellido",
+      accessor: "nombre_completo",
+    },
+    { Header: "Cargo", accessor: "cargo" },
+    {
+      Header: "Denominación del establecimiento educativo",
+      accessor: "establecimiento",
+    },
+    { Header: "Teléfono de contacto", accessor: "telefono" },
+  ];
 
   return (
-    <div className="mx-10">
-      <div className="flex mt-2 border items-center justify-between bg-black">
-        <div className="flex p-2 justify-center items-center text-white text-sm">
-          <p>RESPONDIENTES DEL CUI</p>
+    <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
+      <div className="bg-gray-100 border border-gray-300 rounded-xl shadow-sm px-6 py-3 mb-6">
+          <p className="text-gray-800 text-sm font-medium text-center">RESPONDIENTES DEL CUI</p>
         </div>
-      </div>
-      <div className="flex flex-col p-2 justify-center text-sm">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-md p-2">
         <ReusableTable columns={respondientesHeader} data={respondientes || []} />
         <div className="flex justify-end gap-2 mt-2">
           <button
             onClick={agregarRespondente}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
           >
             Agregar Respondente
           </button>
@@ -122,10 +132,10 @@ export default function RespondientesDelCuiComponent() {
             onClick={enviarRespondientesABaseDeDatos}
             disabled={!respondientes.length}
             className={`${
-              !respondientes.length ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"
-            } text-white font-bold py-2 px-4 rounded`}
+              !respondientes.length ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+            } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
           >
-            Enviar a base de datos
+            Guardar información
           </button>
         </div>
       </div>
@@ -140,7 +150,7 @@ export default function RespondientesDelCuiComponent() {
       >
         <div className="bg-white p-4 rounded w-1/2">
           <ReusableForm
-            columns={respondientesHeader}
+            columns={respondientesForm}
             onSubmit={manejarEnvio}
             onCancel={cerrarModal}
           />

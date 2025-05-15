@@ -7,9 +7,9 @@ export default function EstablecimientosPrivados() {
   }; */
 
   return (
-    <div className="mx-10 text-sm">
-      <div className="flex mt-2 p-2 border items-center">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+    <div className="mx-10 mt-2 border rounded-2xl p-4">
+      <div className="flex items-center">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white bg-black">
           <p>B</p>
         </div>
         <div className="flex p-2 justify-center items-center text-sm">
@@ -29,9 +29,7 @@ export default function EstablecimientosPrivados() {
           </p>
         </div>
       </div>
-      <div className="flex p-2 justify-center text-sm gap-2">
         <FormReutilizable question={""} />
-      </div>
     </div>
   );
 }

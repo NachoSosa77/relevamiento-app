@@ -16,12 +16,13 @@ export interface Construccion {
   destino?: string;
 }
 
-export interface LocalesPorConstruccion {
+export interface LocalesConstruccion {
   id?: number;
   construccion_id?: number;
   identificacion_plano: number;
   numero_planta: number;
   tipo: string;
+  local_id: number;
   local_sin_uso: string;
   superficie?: number;
   tipo_superficie: string;

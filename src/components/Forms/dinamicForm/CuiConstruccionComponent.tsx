@@ -2,9 +2,7 @@
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
-import { setConstruccionTemporal } from "@/redux/slices/construccionesSlice";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { toast } from "react-toastify"; // Importa el toast
 import EstablecimientosEducativos from "../EstablecimientosEducativos";
 
@@ -24,7 +22,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   isReadOnly,
   initialCui,
 }) => {
-  const dispatch = useDispatch();
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
@@ -81,17 +78,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
                   relevamientoId &&
                   selectedInstitutions
                 ) {
-                  const instituciones_ids = selectedInstitutions
-                    .map((inst) => inst.id)
-                    .filter((id): id is number => typeof id === "number");
-
-                  dispatch(
-                    setConstruccionTemporal({
-                      numero_construccion: numeroConstruccion,
-                      relevamiento_id: relevamientoId,
-                      instituciones_ids,
-                    })
-                  );
                   toast.success("Número de construcción cargado exitosamente!");
                   console.log("Número de construcción:", numeroConstruccion);
                 } else {
