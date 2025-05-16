@@ -6,7 +6,8 @@ export async function POST(req: Request) {
   const connection = await getConnection();
   try {
     const body = await req.json();
-    const { relevamiento_id, descripcion, descripcionOtro, juicioCurso } = body;
+    const { relevamiento_id, situacion, otra_situacion, situacion_juicio } =
+      body;
 
     if (!relevamiento_id) {
       return NextResponse.json(
@@ -16,15 +17,15 @@ export async function POST(req: Request) {
     }
 
     const query = `
-      INSERT INTO predio (relevamiento_id, descripcion, descripcionOtro, juicioCurso)
+      INSERT INTO predio (relevamiento_id, situacion, otra_situacion, situacion_juicio)
       VALUES (?, ?, ?, ?)
     `;
 
     await connection.execute(query, [
       relevamiento_id,
-      descripcion || "",
-      descripcionOtro || "",
-      juicioCurso || "",
+      situacion || "",
+      otra_situacion || "",
+      situacion_juicio || "",
     ]);
 
     return NextResponse.json(

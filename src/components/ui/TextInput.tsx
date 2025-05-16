@@ -24,7 +24,7 @@ const TextInput: React.FC<InputProps> = ({
 
   return (
     <div className={`flex items-center justify-center gap-2 text-sm ${className || ""}`}>
-      <p className="text-xs text-black font-bold">{label}:</p>
+      <p className="text-xs text-black font-bold">{label}</p>
       <div className="flex justify-end border rounded-lg">
         <input
           className="p-1 border rounded"

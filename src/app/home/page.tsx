@@ -92,7 +92,7 @@ export default function HomePage() {
 
   const handleView = (relevamientoId: number) => {
     // Redirigir a la página de detalle con el id del relevamiento
-    router.push(`/home/relevamiento/detalle?id=${relevamientoId}`);
+    router.push(`/home/relevamiento/detalle/${relevamientoId}`);
   };
 
   if (loading) return <div>Cargando instituciones...</div>;
@@ -121,7 +121,7 @@ export default function HomePage() {
         disabled={!selectedInstitutionId}
         onClick={fetchRelevamientos} // Función para buscar los relevamientos
       >
-        Buscar
+        Buscar Relevamientos
       </button>
 
       <button

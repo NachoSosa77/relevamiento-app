@@ -78,6 +78,16 @@ const getLocalById = async (localId: number) => {
   }
 };
 
+const getLocalesByConstruccionId = async (construccionId: number | undefined) => {
+  try {
+    const response = await axios.get(`/api/locales_por_construccion/construccion/${construccionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener los locales:", error);
+    throw error;
+  }
+};
+
 const updateConstruccionById = async (id: number, data: { destino_original: string }) => {
   console.log("Enviando a API:", { id, data });
   const response = await fetch(`/api/locales_por_construccion/${id}`, {
@@ -151,5 +161,6 @@ export const localesService = {
   getLocalById, // Agregamos el nuevo servicio
   updateConstruccionById,
   updateDimensionesById,
-  updateConstruccionAntiRoboById
+  updateConstruccionAntiRoboById,
+  getLocalesByConstruccionId
 };

@@ -1,4 +1,3 @@
- 
 "use client";
 
 import { SituacionDominio } from "@/app/lib/SituacionDominio";
@@ -8,9 +7,11 @@ import Check from "@/components/ui/Checkbox";
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import AreasExterioresTable from "../components/AreasExterioresTable";
 import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
 import FormReu from "../components/FormReu";
@@ -57,9 +58,9 @@ export default function RelevamientoCPage() {
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
 
-  /* const relevamientoId = useAppSelector(
+  const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
-  ) */
+  );
 
   //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
 
@@ -94,15 +95,41 @@ export default function RelevamientoCPage() {
   const handleJuicioChange = (juicio: string) => {
     setSelectedJuicio(juicio);
     setFormData({ ...formData, juicioCurso: juicio });
-    console.log(formData);
   };
 
   const handleSubmit = async (event: FormEvent) => {
   event.preventDefault();
+  
+  const payload = {
+    relevamiento_id: relevamientoId, // este deberías traerlo del Redux o prop
+    situacion: formData.descripcion,
+    otra_situacion: formData.descripcionOtro,
+    situacion_juicio: formData.juicioCurso
+  };
+  console.log(payload)
 
-    setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" });
-    setSelectSituacion(null);
+   try {
+    const response = await fetch("/api/predio", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error("Error en el envío");
+
+    console.log("Enviado con éxito");
+    toast.success("Enviado con éxito")
+  } catch (error) {
+    console.error("Error al enviar:", error);
+    toast.error("Error al enviar")
+  }
+ 
+  setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" });
+  setSelectSituacion(null);
 };
+
 
   return (
     <div className="h-full bg-white text-black text-sm mb-10">
@@ -188,8 +215,8 @@ export default function RelevamientoCPage() {
                 <span>Sí</span>
                 <Check
                   label=""
-                  checked={selectedJuicio === "SI"}
-                  onChange={() => handleJuicioChange("SI")}
+                  checked={selectedJuicio === "Si"}
+                  onChange={() => handleJuicioChange("Si")}
                   disabled={false}
                 />
               </label>
@@ -197,8 +224,8 @@ export default function RelevamientoCPage() {
                 <span>No</span>
                 <Check
                   label=""
-                  checked={selectedJuicio === "NO"}
-                  onChange={() => handleJuicioChange("NO")}
+                  checked={selectedJuicio === "No"}
+                  onChange={() => handleJuicioChange("No")}
                   disabled={false}
                 />
               </label>
@@ -206,8 +233,8 @@ export default function RelevamientoCPage() {
                 <span>No sabe</span>
                 <Check
                   label=""
-                  checked={selectedJuicio === "NO_SABE"}
-                  onChange={() => handleJuicioChange("NO_SABE")}
+                  checked={selectedJuicio === "No sabe"}
+                  onChange={() => handleJuicioChange("No sabe")}
                   disabled={false}
                 />
               </label>
