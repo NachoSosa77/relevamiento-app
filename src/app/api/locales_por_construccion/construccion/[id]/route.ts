@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: number }> }
 ) {
   try {
-    const construccionId = parseInt(params.id);
+    const construccionId = (await params).id;
     const connection = await getConnection();
 
     const [rows] = await connection.query(

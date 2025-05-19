@@ -12,16 +12,16 @@ import axios from 'axios';
   }
 }; 
 
-// Obtener un área exterior por ID
-/* const getAreasExterioresById = async (id: number): Promise<AreasExteriores> => {
+// Obtener un área exterior por relevamientoID
+ const getAreasExterioresByRelevamientoId = async (relevamientoId: number) => {
   try {
-    const response = await axios.get(`/api/areas_exteriores/${id}`);
+    const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
     return response.data;
   } catch (error) {
     console.error('Error al obtener el área exterior:', error);
     throw error;
   }
-}; */
+}; 
 
 // Crear una nueva área exterior
 const postAreasExteriores = async (data: (AreasExteriores & { cui_number: number })[]) => {
@@ -50,9 +50,9 @@ const getOpcionesAreasExteriores = async () => {
   }
 };
 
-const getAreasExterioresById = async (id: number) => {
+const getAreasExterioresById = async (relevamientoId: number) => {
   try {
-    const response = await axios.get(`/api/areas_exteriores/${id}`);
+    const response = await axios.get(`/api/areas_exteriores/${relevamientoId}`);
     return response.data;
   } catch (error) {
     console.error('Error al obtener opciones de áreas exteriores:', error);
@@ -76,5 +76,6 @@ export const areasExterioresService = {
   postAreasExteriores,
   getOpcionesAreasExteriores,
   getAreasExteriores,
-  getAreasExterioresById
+  getAreasExterioresById,
+  getAreasExterioresByRelevamientoId
 };

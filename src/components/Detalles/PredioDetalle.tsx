@@ -4,7 +4,9 @@
 import { predioService } from "@/services/Predio/predioService";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { AreaExternaTable } from "./AreaExternaTable";
 import { ConstruccionDetalleAccordion } from "./ConstruccionDetalleAcordion";
+import { ServiciosBasicosTable } from "./ServiciosBasicos";
 
 interface Props {
   relevamientoId: number;
@@ -42,27 +44,49 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
   if (!predio) return <div>No se encontró información del predio.</div>;
 
   return (
-  <div className="space-y-4">
-    <div className="border rounded p-4 bg-gray-50">
-      <h3 className="text-lg font-semibold mb-2">Información general del predio</h3>
-      <p><strong>Cantidad de construcciones:</strong> {predio.cantidad_construcciones}</p>
-      <p><strong>Superficie total:</strong> {predio.superficie_total_predio} m²</p>
-      {predio.plano && <p><strong>Plano:</strong> {predio.plano}</p>}
-      {predio.observaciones && <p><strong>Observaciones:</strong> {predio.observaciones}</p>}
-    </div>
+    <div className="space-y-4">
+      <div className="border rounded p-4 bg-gray-50">
+        <h3 className="text-lg font-semibold mb-2">
+          Información general del predio
+        </h3>
+        <p>
+          <strong>Cantidad de construcciones:</strong>{" "}
+          {predio.cantidad_construcciones}
+        </p>
+        <p>
+          <strong>Superficie total:</strong> {predio.superficie_total_predio} m²
+        </p>
+        {predio.plano && (
+          <p>
+            <strong>Plano:</strong> {predio.plano}
+          </p>
+        )}
+        {predio.observaciones && (
+          <p>
+            <strong>Observaciones:</strong> {predio.observaciones}
+          </p>
+        )}
+      </div>
+      <div>
+        <AreaExternaTable relevamientoId={relevamientoId} />
+      </div>
 
-    {predio.cantidad_construcciones > 0 && (
-  <div className="space-y-2">
-    <h3 className="text-md font-semibold">Construcciones registradas</h3>
-    {Array.from({ length: predio.cantidad_construcciones }).map((_, index) => (
-      <ConstruccionDetalleAccordion
-        key={index}
-        relevamientoId={relevamientoId}
-        numeroConstruccion={index + 1}
-      />
-    ))}
-  </div>
-)}
-  </div>
-);
+      {predio.cantidad_construcciones > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-md font-semibold">Construcciones registradas</h3>
+          {Array.from({ length: predio.cantidad_construcciones }).map(
+            (_, index) => (
+              <ConstruccionDetalleAccordion
+                key={index}
+                relevamientoId={relevamientoId}
+                numeroConstruccion={index + 1}
+              />
+            )
+          )}
+        </div>
+      )}
+
+      <ServiciosBasicosTable relevamientoId={relevamientoId} />
+    </div>
+  );
 };

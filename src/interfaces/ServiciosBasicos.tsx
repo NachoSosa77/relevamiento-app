@@ -10,6 +10,8 @@ export interface ServiciosBasicos {
 
   }
 
+  
+
   export interface Column {
     header: string;
     key: keyof ServiciosBasicos;

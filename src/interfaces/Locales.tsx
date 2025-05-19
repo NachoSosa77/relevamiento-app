@@ -28,4 +28,9 @@ export interface LocalesConstruccion {
   tipo_superficie: string;
   cui_number?: number;
   relevamiento_id?: number;
+  largo_predominante?: number,
+  ancho_predominante?: number,
+  altura_maxima?: number,
+  altura_minima?: number,
+  proteccion_contra_robo?: string,
 }
