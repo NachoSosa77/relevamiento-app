@@ -7,9 +7,9 @@ export async function POST(req: NextRequest) {
     const connection = await getConnection();
     const body = await req.json();
 
-    const { cui, usuarioId } = body;
+    const { cui } = body;
 
-    if (!cui || !usuarioId) {
+    if (!cui) {
       return NextResponse.json(
         { message: "CUI y usuarioId son requeridos" },
         { status: 400 }
@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     }
 
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO relevamientos (cui_id, usuario_id, estado) VALUES (?, ?, ?)`,
-      [cui, usuarioId, "incompleto"]
+      `INSERT INTO relevamientos (cui_id, estado) VALUES (?, ?)`,
+      [cui, "incompleto"]
     );
 
     connection.release();
@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
       inserted: {
         id: result.insertId,
         cui,
-        usuarioId,
         estado: "incompleto",
       },
     });
