@@ -10,7 +10,7 @@ import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setObservaciones, setPredioId } from "@/redux/slices/predioslice";
+import { setObservaciones, setPredioId } from "@/redux/slices/predioSlice";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation"; // ✅
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";

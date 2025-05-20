@@ -14,7 +14,7 @@ import archivoReducer from "./slices/archivoSlice";
 import construccionesReducer from "./slices/construccionesSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
 import institucionReducer from "./slices/institucionSlice";
-import predioReducer from "./slices/predioslice";
+import predioReducer from "./slices/predioSlice";
 import servicioAguaReducer from "./slices/servicioAguaSlice";
 import serviciosFactoresReducer from "./slices/serviciosFactoresSlice";
 import serviciosReducer from "./slices/serviciosSlice";
