@@ -1,6 +1,6 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { InstitucionesData } from "@/interfaces/Instituciones";
-import { LocalesPorConstruccion } from "@/interfaces/Locales";
+import { LocalesConstruccion } from "@/interfaces/Locales";
 import { Respondiente } from "@/interfaces/Respondientes";
 import { Visita } from "@/interfaces/Visitas";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -13,7 +13,7 @@ interface EspacioEscolarState {
   superficieTotalPredio: number | undefined;
   plano: string | null;
   observaciones: string | null;
-  locales: LocalesPorConstruccion[];
+  locales: LocalesConstruccion[];
   areasExteriores: AreasExteriores[];
   relevamientoId: number;
   visitas: Visita[];
@@ -79,7 +79,7 @@ const espacioEscolarSlice = createSlice({
     setObservaciones: (state, action: PayloadAction<string | null>) => {
       state.observaciones = action.payload;
     },
-    setLocales: (state, action: PayloadAction<LocalesPorConstruccion[]>) => {
+    setLocales: (state, action: PayloadAction<LocalesConstruccion[]>) => {
       state.locales = action.payload;
     },
     addAreasExteriores: (state, action: PayloadAction<AreasExteriores>) => {

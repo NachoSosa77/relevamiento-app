@@ -72,7 +72,7 @@ export const AreaExternaTable = ({ relevamientoId }: Props) => {
             </thead>
             <tbody>
               {areas.map((area) => (
-                <tr key={area.id}>
+                <tr key={area.id} className="text-center">
                   <td className="border border-gray-300 p-2">{area.identificacion_plano}</td>
                   <td className="border border-gray-300 p-2">{area.tipo}</td>
                   <td className="border border-gray-300 p-2">{area.superficie}</td>

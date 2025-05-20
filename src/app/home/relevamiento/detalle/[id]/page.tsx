@@ -52,7 +52,7 @@ const DetallePage = () => {
 
   return (
   <div className="p-6 max-w-4xl mx-auto space-y-6">
-    <button onClick={() => router.back()} className="text-blue-600 hover:underline text-sm">← Volver</button>
+    <button onClick={() => router.back()} className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-1 mr-2">Volver</button>
 
     <div className="space-y-1">
       <h1 className="text-2xl font-bold text-gray-800">Relevamiento #{relevamiento?.id}</h1>

@@ -7,25 +7,30 @@ export async function POST(req: NextRequest) {
     const connection = await getConnection();
     const body = await req.json();
 
-    const { cui } = body;
+    const { cui, usuarioId } = body;
 
-    if (!cui) {
+    if (!cui || !usuarioId) {
       return NextResponse.json(
-        { message: "CUI es requerido" },
+        { message: "CUI y usuarioId son requeridos" },
         { status: 400 }
       );
     }
 
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO relevamientos (cui_id) VALUES (?)`,
-      [cui]
+      `INSERT INTO relevamientos (cui_id, usuario_id, estado) VALUES (?, ?, ?)`,
+      [cui, usuarioId, "incompleto"]
     );
 
     connection.release();
 
     return NextResponse.json({
       message: "Relevamiento creado correctamente",
-      inserted: { id: result.insertId, cui },
+      inserted: {
+        id: result.insertId,
+        cui,
+        usuarioId,
+        estado: "incompleto",
+      },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {

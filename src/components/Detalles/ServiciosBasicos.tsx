@@ -62,7 +62,7 @@ export const ServiciosBasicosTable = ({ relevamientoId }: Props) => {
             </thead>
             <tbody>
               {servicios.map((servicio) => (
-                <tr key={servicio.id}>
+                <tr key={servicio.id} className="text-center">
                   <td className="border border-gray-300 p-2">{servicio.servicio}</td>
                    <td className="border border-gray-300 p-2">{servicio.en_predio}</td>
                 </tr>

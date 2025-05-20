@@ -45,9 +45,6 @@ const ConstruccionComponent = () => {
           {construcciones.map((c) => (
             <Tab.Panel key={c.id}>
               <LocalesPorConstruccionComponent
-                construccionId={c.id}
-                locales={[]}
-                onLocalesChange={() => {}}
               />
             </Tab.Panel>
           ))}
