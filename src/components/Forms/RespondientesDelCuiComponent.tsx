@@ -126,7 +126,7 @@ export default function RespondientesDelCuiComponent() {
             onClick={agregarRespondente}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
           >
-            Agregar Respondente
+            + Agregar Respondente
           </button>
           <button
             onClick={enviarRespondientesABaseDeDatos}

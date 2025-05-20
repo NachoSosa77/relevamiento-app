@@ -65,6 +65,25 @@ export default function AreasExterioresComponent() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (
+      !formData.identificacion_plano ||
+      !selectArea ||
+      formData.superficie <= 0
+    ) {
+      toast.warning("Completá todos los campos antes de agregar un área");
+      return;
+    }
+
+    const areaExistente = areasExteriores.some(
+      (area) => area.identificacion_plano === formData.identificacion_plano
+    );
+
+    if (areaExistente) {
+      toast.warning("Ya existe un área con esa identificación en el plano");
+      return;
+    }
+
     try {
       const newArea: AreasExteriores = {
         identificacion_plano: formData.identificacion_plano,
@@ -88,6 +107,10 @@ export default function AreasExterioresComponent() {
       return;
     }
     try {
+      if (!areasExteriores.length) {
+        toast.warning("No hay áreas exteriores para guardar");
+        return;
+      }
       const payload = areasExteriores.map((area) => ({
         ...area,
         cui_number,
@@ -121,7 +144,7 @@ export default function AreasExterioresComponent() {
         <div className="flex space-x-2 justify-center">
           <button
             onClick={() => handleEliminar(row.original.identificacion_plano)}
-            className="bg-red-500 text-white p-1 rounded-lg hover:bg-red-600"
+            className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition duration-300"
           >
             Eliminar
           </button>
@@ -131,82 +154,88 @@ export default function AreasExterioresComponent() {
   ];
 
   return (
-    <div className="mx-10 bg-white text-black">
-      <div className="flex mt-2 p-4 border items-center justify-between">
-        <div className="w-10 h-10 flex justify-center items-center text-white bg-black text-xl">
-          <p>4</p>
+    <div className="mx-8 my-6 border rounded-2xl">
+      <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-black text-sm font-semibold">
+            <p>4</p>
+          </div>
+          <p className="text-sm font-semibold text-gray-700">
+            ÁREAS EXTERIORES
+          </p>
         </div>
-        <p className="text-lg font-bold ml-4">ÁREAS EXTERIORES</p>
+        <form onSubmit={handleSubmit}>
+          <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
+            <thead>
+              <tr className="bg-gray-100 text-gray-700">
+                <th className="border p-2 rounded-tl-lg rounded-tr-lg">
+                  Identificación en el plano
+                </th>
+                <th className="border p-2">Tipo</th>
+                <th className="border p-2">Superficie</th>
+                <th className="border p-2 rounded-tr-lg">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border p-2">
+                  <AlphanumericInput
+                    disabled={false}
+                    subLabel="E"
+                    label=""
+                    value={formData.identificacion_plano}
+                    onChange={(value) =>
+                      handleInputChange("identificacion_plano", Number(value))
+                    }
+                  />
+                </td>
+                <td className="border p-2">
+                  <Select
+                    label=""
+                    value={selectArea?.toString() || ""}
+                    options={opcionesAreas.map((opcion) => ({
+                      value: opcion.id,
+                      label: `${opcion.prefijo} - ${opcion.name} `,
+                    }))}
+                    onChange={handleSelectChange}
+                  />
+                </td>
+                <td className="border p-2">
+                  <DecimalNumericInput
+                    disabled={false}
+                    subLabel="m²"
+                    label=""
+                    value={formData.superficie}
+                    onChange={(value) =>
+                      handleInputChange("superficie", Number(value))
+                    }
+                  />
+                </td>
+                <td className="border p-2 text-center">
+                  <button
+                    type="submit"
+                    className="text-sm bg-blue-600 text-white rounded-lg px-4 py-2"
+                  >
+                    + Agregar Área
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+        <ReusableTable data={areasExteriores} columns={columns} />
+        {areasExteriores.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <button
+              type="button"
+              className="bg-green-600 text-white px-6 py-2 rounded-lg"
+              onClick={handleGuardarDatos}
+            >
+              Guardar áreas exteriores
+            </button>
+          </div>
+        )}
       </div>
-      <form onSubmit={handleSubmit}>
-        <table className="w-full mt-2 text-sm text-center rounded-lg shadow-lg bg-white">
-          <thead>
-            <tr className="bg-gray-100 rounded-t-lg">
-              <th className="border p-2 rounded-tl-lg rounded-tr-lg">Identificación en el plano</th>
-              <th className="border p-2">Tipo</th>
-              <th className="border p-2">Superficie</th>
-              <th className="border p-2 rounded-tr-lg">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border p-2">
-                <AlphanumericInput
-                  disabled={false}
-                  subLabel="E"
-                  label=""
-                  value={formData.identificacion_plano}
-                  onChange={(value) =>
-                    handleInputChange("identificacion_plano", Number(value))
-                  }
-                />
-              </td>
-              <td className="border p-2">
-                <Select
-                  label=""
-                  value={selectArea?.toString() || ""}
-                  options={opcionesAreas.map((opcion) => ({
-                    value: opcion.id,
-                    label: `${opcion.prefijo} - ${opcion.name} `,
-                  }))}
-                  onChange={handleSelectChange}
-                />
-              </td>
-              <td className="border p-2">
-                <DecimalNumericInput
-                  disabled={false}
-                  subLabel="m²"
-                  label=""
-                  value={formData.superficie}
-                  onChange={(value) =>
-                    handleInputChange("superficie", Number(value))
-                  }
-                />
-              </td>
-              <td className="border p-2 text-center">
-                <button
-                  type="submit"
-                  className="text-sm font-bold bg-gray-100 p-2 rounded-md"
-                >
-                  Agregar Área
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
-      <ReusableTable data={areasExteriores} columns={columns} />
-      {areasExteriores.length > 0 && (
-        <div className="flex justify-center mt-4">
-          <button
-            type="button"
-            className="text-sm font-bold bg-blue-500 text-white p-2 rounded-md"
-            onClick={handleGuardarDatos}
-          >
-            Guardar Datos
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -41,3 +41,42 @@ WHERE relevamiento_id = ?`,
     );
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const connection = await getConnection();
+  const { id } = await params;
+
+  try {
+    const body = await req.json();
+    const { observaciones } = body;
+
+    if (!observaciones) {
+      return NextResponse.json(
+        { message: "Falta el campo 'observaciones'" },
+        { status: 400 }
+      );
+    }
+
+    const [result] = await connection.query(
+      `UPDATE espacios_escolares SET observaciones = ? WHERE id = ?`,
+      [observaciones, id]
+    );
+
+    connection.release();
+
+    return NextResponse.json({
+      message: "Observaciones actualizadas correctamente",
+      result,
+    });
+  } catch (error: any) {
+    console.error("Error al actualizar observaciones:", error);
+    connection.release();
+    return NextResponse.json(
+      { message: "Error interno", error: error.message },
+      { status: 500 }
+    );
+  }
+}

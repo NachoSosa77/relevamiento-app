@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     await connection.beginTransaction();
 
     const query = `
-      INSERT INTO servicios_basicos 
+      INSERT INTO servicios_basicos_predio 
       (id_servicio, servicio, disponibilidad, distancia, en_predio, prestadores, relevamiento_id)
       VALUES ?
     `;

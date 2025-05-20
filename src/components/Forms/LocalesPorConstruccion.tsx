@@ -120,12 +120,29 @@ export default function LocalesPorConstruccion() {
 
     if (!local) return;
 
+    // Validación de campos obligatorios
+    const camposInvalidos: (keyof LocalesConstruccion)[] = [];
+
+    if (!local.identificacion_plano)
+      camposInvalidos.push("identificacion_plano");
+    if (!local.tipo) camposInvalidos.push("tipo");
+    if (!local.local_id || local.local_id === 0)
+      camposInvalidos.push("local_id");
+    if (!local.tipo_superficie) camposInvalidos.push("tipo_superficie");
+    if (camposInvalidos.length > 0) {
+      toast.warning(
+        "Por favor, completa todos los campos obligatorios antes de agregar el local."
+      );
+      return;
+    }
+
+    // Si pasa la validación, agregamos el local
     setLocalesPorConstruccion((prev) => ({
       ...prev,
       [construccionIndex]: [...(prev[construccionIndex] || []), local],
     }));
 
-    // Reset form for this tab
+    // Reset form para este tab
     setFormValues((prev) => ({
       ...prev,
       [construccionIndex]: {
@@ -141,41 +158,49 @@ export default function LocalesPorConstruccion() {
   };
 
   const handleSubmit = async () => {
-    try {
-      // Solo locales del tab activo
-      const locales = localesPorConstruccion[activeIndex] || [];
-      const numeroConstruccion = activeIndex + 1;
+  try {
+    // Solo locales del tab activo
+    const locales = localesPorConstruccion[activeIndex] || [];
 
-      // 1. Crear construcción
-      const construccion = await localesService.postConstrucciones({
-        numero_construccion: numeroConstruccion,
-        relevamiento_id: relevamientoId,
-        superficie_cubierta:
-          superficiesPorConstruccion[activeIndex]?.cubierta || 0,
-        superficie_semicubierta:
-          superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
-        superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
-      });
-
-      // 2. Prepara locales para enviar
-      const localesConConstruccionId = locales.map((local) => ({
-        ...local,
-        construccion_id: construccion.construccion_id,
-        local_id: local.local_id,
-        tipo_superficie: local.tipo_superficie,
-        cui_number: cuiNumber,
-        local_sin_uso: local.local_sin_uso ? "No" : "Si", // verifica si esta inversión está ok
-        relevamiento_id: relevamientoId,
-      }));
-
-      await localesService.postLocales(localesConConstruccionId);
-
-      toast.success("Construcción y locales guardados correctamente");
-    } catch (error) {
-      console.error("Error al guardar:", error);
-      toast.error("Hubo un error al guardar los datos");
+    // Validación: impedir enviar si no hay locales
+    if (locales.length === 0) {
+      toast.warning("Debe agregar al menos un local antes de guardar.");
+      return;
     }
-  };
+
+    const numeroConstruccion = activeIndex + 1;
+
+    // 1. Crear construcción
+    const construccion = await localesService.postConstrucciones({
+      numero_construccion: numeroConstruccion,
+      relevamiento_id: relevamientoId,
+      superficie_cubierta:
+        superficiesPorConstruccion[activeIndex]?.cubierta || 0,
+      superficie_semicubierta:
+        superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
+      superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
+    });
+
+    // 2. Prepara locales para enviar
+    const localesConConstruccionId = locales.map((local) => ({
+      ...local,
+      construccion_id: construccion.construccion_id,
+      local_id: local.local_id,
+      tipo_superficie: local.tipo_superficie,
+      cui_number: cuiNumber,
+      local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
+      relevamiento_id: relevamientoId,
+    }));
+
+    await localesService.postLocales(localesConConstruccionId);
+
+    toast.success("Construcción y locales guardados correctamente");
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    toast.error("Hubo un error al guardar los datos");
+  }
+};
+
 
   const handleEliminarLocal = (
     construccionIndex: number,
@@ -355,7 +380,7 @@ export default function LocalesPorConstruccion() {
                       />
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end mb-4">
                       <button
                         onClick={() => handleAddLocal(idx)}
                         className="text-sm bg-blue-600 text-white rounded-lg px-4 py-2"
@@ -378,7 +403,9 @@ export default function LocalesPorConstruccion() {
                           Header: "Sin uso",
                           accessor: "local_sin_uso",
                           Cell: ({ value }) => (
-                            <span>{value ? "Sí" : "No"}</span>
+                            <span>
+                              {value === true || value === "Si" ? "Sí" : "No"}
+                            </span>
                           ),
                         },
                         { Header: "Superficie", accessor: "superficie" },

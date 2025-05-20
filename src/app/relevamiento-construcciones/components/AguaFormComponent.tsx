@@ -43,34 +43,50 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
   });
 
   const handleSubmit = async () => {
-    const data = {
-      ...servicioBasico,
-      ...calidadAgua,
-      relevamiento_id: relevamientoId,
-    };
-  
-    try {
-      const response = await fetch("/api/servicio_agua", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-  
-      const result = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
-  
-      toast.success("Servicio de agua guardado correctamente");
-      console.log("Respuesta:", result);
-    } catch (error: any) {
-      console.error("Error al enviar datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
-    }
+  // Validación básica
+  if (
+    !servicioBasico.tipo_provision ||
+    !servicioBasico.tipo_provision_estado ||
+    !servicioBasico.tipo_almacenamiento ||
+    !servicioBasico.tipo_almacenamiento_estado ||
+    servicioBasico.alcance.length === 0 ||
+    !calidadAgua.tratamiento ||
+    !calidadAgua.tipo_tratamiento ||
+    !calidadAgua.control_sanitario ||
+    !calidadAgua.cantidad_veces
+  ) {
+    toast.warning("Por favor, completá todos los campos antes de guardar.");
+    return;
+  }
+
+  const data = {
+    ...servicioBasico,
+    ...calidadAgua,
+    relevamiento_id: relevamientoId,
   };
+
+  try {
+    const response = await fetch("/api/servicio_agua", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success("Servicio de agua guardado correctamente");
+    console.log("Respuesta:", result);
+  } catch (error: any) {
+    console.error("Error al enviar datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
   
 
   return (

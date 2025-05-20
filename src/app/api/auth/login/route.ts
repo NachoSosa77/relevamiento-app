@@ -6,7 +6,7 @@ import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  // ⚠️ Debe ser POST, no una función llamada login
+  // Debe ser POST, no una función llamada login
   console.log("📩 Recibiendo solicitud de login...");
   try {
     const { email, password } = await req.json();
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     console.log("🔎 Usuarios encontrados:", users);
 
     if (users.length === 0) {
-      console.log("⚠️ No se encontró ningún usuario con ese email.");
+      console.log("No se encontró ningún usuario con ese email.");
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }

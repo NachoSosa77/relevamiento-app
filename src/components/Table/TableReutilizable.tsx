@@ -13,9 +13,9 @@ interface ReusableTableProps<T> {
 
 const ReusableTable: React.FC<ReusableTableProps<any>> = ({ data, columns }) => {
   return (
-    <table className="w-full text-sm text-center bg-white">
+    <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
       <thead>
-        <tr className="bg-gray-100 rounded-t-lg">
+        <tr className="bg-gray-100 text-gray-700">
           {columns.map((column, columnIndex) => (
             <th
               key={`${columnIndex}-${column.Header}`}

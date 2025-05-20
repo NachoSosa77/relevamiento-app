@@ -46,7 +46,6 @@ const ReusableForm: React.FC<ReusableFormProps<any>> = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     onSubmit(formData);
-    toast.success("Datos cargados correctamente");
     setFormData({}); // Reset the form after submit
   };
 

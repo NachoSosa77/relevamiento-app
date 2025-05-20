@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 interface FormValues {
@@ -46,7 +46,6 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
 
   return (
     <div className="mx-10 mt-4">
-      <ToastContainer />
       <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
         <form className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">

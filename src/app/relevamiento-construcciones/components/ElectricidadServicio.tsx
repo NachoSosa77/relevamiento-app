@@ -63,42 +63,62 @@ export default function ElectricidadServicio({
   };
 
   const handleGuardar = async () => {
-    const payload = {
-      relevamiento_id: relevamientoId,
-      servicios: Object.keys(responses).map((key) => ({
-        servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        estado: responses[key]?.estado || "",
-        estado_bateria: responses[key]?.estado_bateria || "",
-        tipo_combustible: combustibleOptions[key] || "",
-        potencia: potenciaOptions[key] || 0, // Aseguramos que se pase potencia correctamente
-      })),
-    };
-  
-    console.log("Datos a enviar:", payload);
-  
-     try {
-      const response = await fetch("/api/servicio_electricidad", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
-  
-      toast.success("Servicio de electricidad guardado correctamente");
-  
-      console.log("Respuesta de la API:", result);
-    } catch (error: any) {
-      console.error("Error al enviar los datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
-    } 
+  let hayError = false;
+
+  for (const servicio of servicios) {
+    const id = servicio.id;
+    const respuesta = responses[id];
+
+    if (
+      !respuesta?.disponibilidad ||
+      (servicio.showCondition && sub_id !== 6.2 && !respuesta?.estado) ||
+      potenciaOptions[id] === undefined ||
+      potenciaOptions[id] === 0 ||
+      (id === "6.1.2" && (!combustibleOptions[id] || combustibleOptions[id].trim() === "")) ||
+      ((id === "6.1.3" || id === "6.1.4") && (!respuesta?.estado_bateria || respuesta.estado_bateria.trim() === ""))
+    ) {
+      hayError = true;
+      break;
+    }
+  }
+
+  if (hayError) {
+    toast.warning("Por favor complete todos los campos requeridos antes de continuar");
+    return;
+  }
+
+  const payload = {
+    relevamiento_id: relevamientoId,
+    servicios: Object.keys(responses).map((key) => ({
+      servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+      disponibilidad: responses[key]?.disponibilidad || "",
+      estado: responses[key]?.estado || "",
+      estado_bateria: responses[key]?.estado_bateria || "",
+      tipo_combustible: combustibleOptions[key] || "",
+      potencia: potenciaOptions[key] || 0,
+    })),
   };
+
+  try {
+    const response = await fetch("/api/servicio_electricidad", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success("Servicio de electricidad guardado correctamente");
+  } catch (error: any) {
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
+
+
   
 
   return (

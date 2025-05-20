@@ -67,41 +67,60 @@ export default function CondicionesAccesibilidad({
   }>({});
 
    const handleGuardar = async () => {
-        const payload = {
-          relevamiento_id: relevamientoId,
-          servicios: Object.keys(responses).map((key) => ({
-            servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-            disponibilidad: responses[key]?.disponibilidad || "",
-            estado: responses[key]?.estado || "",
-            cantidad: cantidadOptions[key] || 0,
-            mantenimiento: responses[key]?.mantenimiento || "",
-          })),
-        };
-      
-        console.log("Datos a enviar:", payload);
-      
-           try {
-          const response = await fetch("/api/condiciones_accesibilidad", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-          const result = await response.json();
-      
-          if (!response.ok) {
-            throw new Error(result.error || "Error al guardar los datos");
-          }
-      
-          toast.success("Relevamiento condiciones accesibilidad guardados correctamente");
-      
-          console.log("Respuesta de la API:", result);
-        } catch (error: any) {
-          console.error("Error al enviar los datos:", error);
-          toast.error(error.message || "Error al guardar los datos");
-        }  
-      }; 
+  // Filtrar solo servicios que tengan datos válidos
+  const serviciosValidos = Object.keys(responses).filter((key) => {
+    const r = responses[key];
+    const cantidad = cantidadOptions[key] ?? 0;
+
+    return (
+      (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
+      (r?.estado && r.estado.trim() !== "") ||
+      cantidad > 0 ||
+      (r?.mantenimiento && r.mantenimiento.trim() !== "")
+    );
+  });
+
+  if (serviciosValidos.length === 0) {
+    toast.error("Debe completar al menos un servicio con datos antes de guardar");
+    return;
+  }
+
+  const payload = {
+    relevamiento_id: relevamientoId,
+    servicios: serviciosValidos.map((key) => ({
+      servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+      disponibilidad: responses[key]?.disponibilidad || "",
+      estado: responses[key]?.estado || "",
+      cantidad: cantidadOptions[key] || 0,
+      mantenimiento: responses[key]?.mantenimiento || "",
+    })),
+  };
+
+  console.log("Datos a enviar:", payload);
+
+  try {
+    const response = await fetch("/api/condiciones_accesibilidad", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success("Relevamiento condiciones accesibilidad guardados correctamente");
+
+    console.log("Respuesta de la API:", result);
+  } catch (error: any) {
+    console.error("Error al enviar los datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

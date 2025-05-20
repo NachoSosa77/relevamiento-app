@@ -77,6 +77,16 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
     };
   }, [previews]);
 
+  const handleRemovePreview = (index: number) => {
+    setArchivos((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEliminarArchivoSubido = (index: number) => {
+    const nuevosArchivos = archivosSubidosRedux.filter((_, i) => i !== index);
+    dispatch(setArchivosSubidos(nuevosArchivos));
+  };
+
   return (
     <div className="space-y-4">
       <input
@@ -94,50 +104,62 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Muestra los archivos previos que se han guardado en Redux */}
-        {archivosSubidosRedux.map((archivo, index) =>
-          archivo.tipo_archivo === "pdf" ? (
-            <iframe
-              key={index}
-              src={archivo.archivo_url}
-              className="w-full h-64 border rounded shadow-sm"
-            />
-          ) : (
-            <div
-              key={index}
-              className="relative w-full h-64 rounded overflow-hidden shadow-sm"
+        {archivosSubidosRedux.map((archivo, index) => (
+          <div
+            key={index}
+            className="relative w-full h-64 rounded overflow-hidden shadow-sm border"
+          >
+            {/* Botón de eliminación */}
+            <button
+              onClick={() => handleEliminarArchivoSubido(index)}
+              className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              title="Eliminar archivo"
+              type="button"
             >
+              ×
+            </button>
+
+            {archivo.tipo_archivo === "pdf" ? (
+              <iframe src={archivo.archivo_url} className="w-full h-full" />
+            ) : (
               <Image
                 src={archivo.archivo_url}
                 alt={`archivo-${index}`}
                 fill
                 style={{ objectFit: "cover" }}
               />
-            </div>
-          )
-        )}
+            )}
+          </div>
+        ))}
 
         {/* Muestra las vistas previas de los archivos seleccionados en el estado local */}
-        {previews.map((src, index) =>
-          archivos[index]?.type.includes("pdf") ? (
-            <iframe
-              key={index}
-              src={src}
-              className="w-full h-64 border rounded shadow-sm"
-            />
-          ) : (
-            <div
-              key={index}
-              className="relative w-full h-64 rounded overflow-hidden shadow-sm"
+        {previews.map((src, index) => (
+          <div
+            key={index}
+            className="relative w-full h-64 rounded overflow-hidden shadow-sm border"
+          >
+            {/* Botón de eliminación */}
+            <button
+              onClick={() => handleRemovePreview(index)}
+              className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              title="Eliminar"
+              type="button"
             >
+              ×
+            </button>
+
+            {archivos[index]?.type.includes("pdf") ? (
+              <iframe src={src} className="w-full h-full" />
+            ) : (
               <Image
                 src={src}
                 alt={`preview-${index}`}
                 fill
                 style={{ objectFit: "cover" }}
               />
-            </div>
-          )
-        )}
+            )}
+          </div>
+        ))}
       </div>
 
       <button

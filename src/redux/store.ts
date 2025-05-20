@@ -14,6 +14,7 @@ import archivoReducer from "./slices/archivoSlice";
 import construccionesReducer from "./slices/construccionesSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
 import institucionReducer from "./slices/institucionSlice";
+import predioReducer from "./slices/predioslice";
 import servicioAguaReducer from "./slices/servicioAguaSlice";
 import serviciosFactoresReducer from "./slices/serviciosFactoresSlice";
 import serviciosReducer from "./slices/serviciosSlice";
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
   servicios_factores: serviciosFactoresReducer,
   construcciones: construccionesReducer,
   servicio_agua: servicioAguaReducer,
+  predio: predioReducer,
 });
 
 const persistConfig = {

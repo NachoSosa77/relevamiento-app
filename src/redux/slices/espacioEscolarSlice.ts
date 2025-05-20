@@ -114,8 +114,8 @@ const espacioEscolarSlice = createSlice({
     // Acción para eliminar una visita
     eliminarVisita(state, action: PayloadAction<number>) {
       state.visitas = state.visitas.filter(
-        (visita) => visita.id !== action.payload
-      ); // Filtramos la visita a eliminar
+        (visita) => visita.numero_visita !== action.payload
+      );
     },
     agregarRespondiente(state, action: PayloadAction<Respondiente>) {
       state.respondientes = [...state.respondientes, action.payload]; // Utilizando el spread operator

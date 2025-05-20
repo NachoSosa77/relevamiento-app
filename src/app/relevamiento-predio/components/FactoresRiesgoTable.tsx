@@ -17,12 +17,13 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
   serviciosData,
   columnsConfig,
 }) => {
-  const [servicios, setServicios] = useState<FactoresRiesgoAmbiental[]>(serviciosData);
+  const [servicios, setServicios] =
+    useState<FactoresRiesgoAmbiental[]>(serviciosData);
   const dispatch = useDispatch();
 
   const relevamientoId = useAppSelector(
-        (state) => state.espacio_escolar.relevamientoId
-      );
+    (state) => state.espacio_escolar.relevamientoId
+  );
 
   const handleChange = (
     index: number,
@@ -30,35 +31,51 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
     value: string
   ) => {
     const updatedServicios = [...servicios];
-    updatedServicios[index] = { ...updatedServicios[index], [field]: value };;
+    updatedServicios[index] = { ...updatedServicios[index], [field]: value };
     setServicios(updatedServicios);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-      
-        // Agregamos relevamiento_id a cada servicio
-        const serviciosConRelevamiento = servicios.map((servicio) => ({
-          ...servicio,
-          relevamiento_id: relevamientoId,
-        }));
-      
-        // Enviar el array directamente en lugar de un objeto que lo envuelve
-        const response = await fetch("/api/servicios_factores_riesgo", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(serviciosConRelevamiento), // Envía el array directamente
-        });
-      
-        if (response.ok) {
-          dispatch(setFactores(serviciosConRelevamiento)); // Guardamos los datos en Redux
-          toast("✅ Servicios cargados correctamente!");
-        } else {
-          toast("❌ Error al cargar los servicios.");
-        }
-      };
+  e.preventDefault();
+
+  // Validar que todos los campos select/input estén completos
+  const camposIncompletos = servicios.some((servicio) =>
+    columnsConfig.some((column) => {
+      const value = servicio[column.key];
+      return (
+        (column.type === "select" || column.type === "input") &&
+        typeof value === "string" &&
+        value.trim() === ""
+      );
+    })
+  );
+
+  if (camposIncompletos) {
+    toast.warning("Por favor, completá todos los campos antes de continuar.");
+    return; // Bloquea el envío
+  }
+
+  const serviciosConRelevamiento = servicios.map((servicio) => ({
+    ...servicio,
+    relevamiento_id: relevamientoId,
+  }));
+
+  const response = await fetch("/api/servicios_factores_riesgo", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(serviciosConRelevamiento),
+  });
+
+  if (response.ok) {
+    dispatch(setFactores(serviciosConRelevamiento));
+    toast("✅ Servicios cargados correctamente!");
+  } else {
+    toast.error("❌ Error al cargar los servicios.");
+  }
+};
+
 
   return (
     <div className="p-4 mx-10">
@@ -82,7 +99,10 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
             {servicios.map((servicio, index) => (
               <tr key={servicio.id_servicio}>
                 {columnsConfig.map((column) => (
-                  <td key={`${servicio.id}-${column.key}`} className="border p-2">
+                  <td
+                    key={`${servicio.id}-${column.key}`}
+                    className="border p-2"
+                  >
                     {column.type === "select" && (
                       <select
                         value={servicio[column.key]}
@@ -90,7 +110,9 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
                           handleChange(index, column.key, e.target.value)
                         }
                         className="w-full p-2 border rounded"
-                        disabled={column.conditional && !column.conditional(servicio)}
+                        disabled={
+                          column.conditional && !column.conditional(servicio)
+                        }
                       >
                         <option value="">Seleccionar</option>
                         {column.options?.map((option) => (
@@ -108,10 +130,14 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
                           handleChange(index, column.key, e.target.value)
                         }
                         className="w-full p-2 border rounded"
-                        disabled={column.conditional && !column.conditional(servicio)}
+                        disabled={
+                          column.conditional && !column.conditional(servicio)
+                        }
                       />
                     )}
-                    {column.type === "text" && <div>{servicio[column.key]}</div>}
+                    {column.type === "text" && (
+                      <div>{servicio[column.key]}</div>
+                    )}
                   </td>
                 ))}
               </tr>

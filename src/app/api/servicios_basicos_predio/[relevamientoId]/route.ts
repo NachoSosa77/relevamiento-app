@@ -30,7 +30,7 @@ export async function GET(
     }
 
     const [serviciosBasicos] = await connection.query<ServiciosBasicos[]>(
-      "SELECT * FROM servicios_basicos WHERE relevamiento_id = ?",
+      "SELECT * FROM servicios_basicos_predio WHERE relevamiento_id = ?",
       [Number(relevamientoId)]
     );
 

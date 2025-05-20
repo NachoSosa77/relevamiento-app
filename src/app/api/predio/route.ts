@@ -21,15 +21,21 @@ export async function POST(req: Request) {
       VALUES (?, ?, ?, ?)
     `;
 
-    await connection.execute(query, [
+    // 👇 Capturar el resultado de la inserción
+    const [result]: any = await connection.execute(query, [
       relevamiento_id,
       situacion || "",
       otra_situacion || "",
       situacion_juicio || "",
     ]);
 
+    const insertId = result.insertId; // 👈 Obtener el ID generado
+
     return NextResponse.json(
-      { message: "Datos guardados correctamente en predio" },
+      {
+        message: "Datos guardados correctamente en predio",
+        predioId: insertId, // 👈 Devolver el ID al frontend
+      },
       { status: 200 }
     );
   } catch (error: any) {

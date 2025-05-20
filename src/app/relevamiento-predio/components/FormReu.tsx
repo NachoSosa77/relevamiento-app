@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 interface FormValues {
@@ -44,9 +44,8 @@ const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm })
   };
 
   return (
-    <div className="mx-10 mt-4">
-      <ToastContainer />
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+    <div className="mx-8 my-6 border rounded-2xl">
+      <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <form className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <label className="text-base font-semibold text-gray-700">

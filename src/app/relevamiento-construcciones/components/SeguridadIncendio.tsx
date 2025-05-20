@@ -74,45 +74,64 @@ export default function SeguridadIncendio({
   }>({});
 
   const handleGuardar = async () => {
-    const payload = {
-      relevamiento_id: relevamientoId,
-      servicios: Object.keys(responses).map((key) => ({
-        servicio:
-          servicios.find((servicio) => servicio.id === key)?.question ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
-        cantidad: cantidadOptions[key] || 0,
-        simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
-      })),
-    };
+  // Filtrar solo servicios con datos válidos
+  const serviciosValidos = Object.keys(responses).filter((key) => {
+    const r = responses[key];
+    const cantidad = cantidadOptions[key] ?? 0;
 
-    console.log("Datos a enviar:", payload);
+    // Validar que haya al menos un campo no vacío o cantidad > 0
+    return (
+      (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
+      cantidad > 0 ||
+      (r?.carga_anual_matafuegos && r.carga_anual_matafuegos.trim() !== "") ||
+      (r?.simulacros_evacuacion && r.simulacros_evacuacion.trim() !== "")
+    );
+  });
 
-    try {
-      const response = await fetch("/api/instalaciones_seguridad_incendio", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
+  if (serviciosValidos.length === 0) {
+    toast.error("Debe completar al menos un servicio con datos antes de guardar");
+    return;
+  }
 
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
-
-      toast.success(
-        "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
-      );
-
-      console.log("Respuesta de la API:", result);
-    } catch (error: any) {
-      console.error("Error al enviar los datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
-    }
+  const payload = {
+    relevamiento_id: relevamientoId,
+    servicios: serviciosValidos.map((key) => ({
+      servicio:
+        servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+      disponibilidad: responses[key]?.disponibilidad || "",
+      carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
+      cantidad: cantidadOptions[key] || 0,
+      simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
+    })),
   };
+
+  console.log("Datos a enviar:", payload);
+
+  try {
+    const response = await fetch("/api/instalaciones_seguridad_incendio", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success(
+      "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
+    );
+
+    console.log("Respuesta de la API:", result);
+  } catch (error: any) {
+    console.error("Error al enviar los datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

@@ -28,7 +28,7 @@ export default function EspaciosEscolaresPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  //console.log("relevamientoId desde Redux:", relevamientoId);
+  console.log("relevamientoId desde Redux:", relevamientoId);
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
@@ -153,7 +153,7 @@ export default function EspaciosEscolaresPage() {
   }
 
   return (
-    <div className="h-screen bg-white text-black text-sm mb-8">
+    <div className=" bg-white text-black text-sm">
       <Navbar />
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
@@ -172,7 +172,7 @@ export default function EspaciosEscolaresPage() {
 
       <EstablecimientosComponent />
       <PlanoComponent />
-      <LocalesPorConstruccion/>
+      <LocalesPorConstruccion />
       <AreasExterioresComponent />
       <ObservacionesComponent
         onSave={handleSaveObservacion}

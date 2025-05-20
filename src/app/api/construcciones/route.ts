@@ -73,11 +73,10 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const relevamientoId = searchParams.get("relevamiento_id");
-  const numeroConstruccion = searchParams.get("numero");
 
-  if (!relevamientoId || !numeroConstruccion) {
+  if (!relevamientoId) {
     return NextResponse.json(
-      { message: "Faltan parámetros: relevamiento_id o numero" },
+      { message: "Falta el parámetro relevamiento_id" },
       { status: 400 }
     );
   }
@@ -86,25 +85,17 @@ export async function GET(req: Request) {
     const connection = await getConnection();
 
     const [rows] = await connection.query(
-      `SELECT * FROM construcciones 
-       WHERE relevamiento_id = ? AND numero_construccion = ?`,
-      [relevamientoId, numeroConstruccion]
+      `SELECT * FROM construcciones WHERE relevamiento_id = ?`,
+      [relevamientoId]
     );
 
     connection.release();
 
-    if (Array.isArray(rows) && rows.length > 0) {
-      return NextResponse.json(rows[0]);
-    } else {
-      return NextResponse.json(
-        { message: "Construcción no encontrada" },
-        { status: 404 }
-      );
-    }
+    return NextResponse.json(rows);
   } catch (err: any) {
-    console.error("Error al obtener construcción:", err);
+    console.error("Error al obtener construcciones:", err);
     return NextResponse.json(
-      { message: "Error al obtener construcción", error: err.message },
+      { message: "Error al obtener construcciones", error: err.message },
       { status: 500 }
     );
   }

@@ -21,10 +21,10 @@ const columns = [
     accessor: "corresponde",
   },
   {
-  Header: "Descripción",
-  accessor: "tipo_institucion",
-  Cell: ({ value }: { value: string }) => value || "-",
-},
+    Header: "Descripción",
+    accessor: "tipo_institucion",
+    Cell: ({ value }: { value: string }) => value || "-",
+  },
   { Header: "Descripción otro", accessor: "descripcion_otro" },
   { Header: "Nombre de la institución", accessor: "nombre_institucion" },
 ];
@@ -54,7 +54,7 @@ const FormReutilizable: React.FC = () => {
     setFormData((prev) => ({ ...prev, corresponde: value }));
 
     if (value === "No") {
-      router.push("/relevamiento-predio/c");
+        router.push("/relevamiento-predio/c?redirected=true");;
     }
   };
 
@@ -165,7 +165,7 @@ const FormReutilizable: React.FC = () => {
               />
             </BloquePregunta>
             {mostrarCampoOtro && (
-                <div className="flex items-center">
+              <div className="flex items-center">
                 <p className="text-sm text-gray-600">Otro. Indique:</p>
                 <TextInput
                   label=""
@@ -173,25 +173,23 @@ const FormReutilizable: React.FC = () => {
                   value={formData.descripcion_otro}
                   onChange={(e) => handleInputChange("descripcion_otro", e)}
                 />
-                </div>
+              </div>
             )}
 
             {/* B3 */}
             {mostrarCampoNombreInstitucion && (
               <BloquePregunta label="B3">
-                                <div className="flex items-center">
-
-                <p className="text-sm text-gray-800 font-medium">
-                  ¿Cuál es el nombre de la institución?
-                </p>
-                <TextInput
-                  label=""
-                  sublabel=""
-                  value={formData.nombre_institucion}
-                  onChange={(e) => handleInputChange("nombre_institucion", e)}
-                />
-                                </div>
-
+                <div className="flex items-center">
+                  <p className="text-sm text-gray-800 font-medium">
+                    ¿Cuál es el nombre de la institución?
+                  </p>
+                  <TextInput
+                    label=""
+                    sublabel=""
+                    value={formData.nombre_institucion}
+                    onChange={(e) => handleInputChange("nombre_institucion", e)}
+                  />
+                </div>
               </BloquePregunta>
             )}
           </>
@@ -204,9 +202,14 @@ const FormReutilizable: React.FC = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-all text-sm"
+            disabled={!tableData.length}
+            className={`${
+              !tableData.length
+                ? "bg-gray-400"
+                : "bg-green-600 hover:bg-green-700"
+            } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
           >
-            Cargar información
+            Guardar información
           </button>
         </div>
       </form>

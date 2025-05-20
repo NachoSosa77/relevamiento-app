@@ -25,15 +25,25 @@ export default function PlanoComponent() {
   );
 
   const handleSiChange = (checked: boolean) => {
-    setSiChecked(checked);
-    setNoChecked(!checked);
-    setShowComponents(checked ? true : null);
+    if (checked) {
+      setSiChecked(true);
+      setNoChecked(false);
+      setShowComponents(true);
+    } else {
+      setSiChecked(false);
+      setShowComponents(null);
+    }
   };
 
   const handleNoChange = (checked: boolean) => {
-    setNoChecked(checked);
-    setSiChecked(!checked);
-    setShowComponents(checked ? false : null);
+    if (checked) {
+      setNoChecked(true);
+      setSiChecked(false);
+      setShowComponents(false);
+    } else {
+      setNoChecked(false);
+      setShowComponents(null);
+    }
   };
 
   const handleCantidadConstruccionesChange = (value: number | undefined) => {
@@ -64,20 +74,10 @@ export default function PlanoComponent() {
             ¿Corresponde actualizar o realizar planos?
           </p>
         </div>
-        <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex flex-col justify-between items-center flex-wrap gap-4">
           <div className="flex gap-4 items-center">
-            <Check
-              label="Sí"
-              checked={siChecked}
-              onChange={handleSiChange}
-              disabled={noChecked}
-            />
-            <Check
-              label="No"
-              checked={noChecked}
-              onChange={handleNoChange}
-              disabled={siChecked}
-            />
+            <Check label="Sí" checked={siChecked} onChange={handleSiChange} />
+            <Check label="No" checked={noChecked} onChange={handleNoChange} />
           </div>
           <FileUpload relevamientoId={relevamientoId} />
         </div>

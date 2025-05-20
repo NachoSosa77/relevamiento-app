@@ -1,59 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
-import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { antiguedadDestinoOpciones } from "../config/antiguedadDestinoOpciones";
 
-export default function AntiguedadComponent() {
-  const { numero_construccion, relevamiento_id, plantas } =
-    useAppSelector((state) => state.construcciones.construccionTemporal) || {};
-  const construccionEnviada = useAppSelector(
-    (state) => state.construcciones.construccionEnviada
-  );
+interface Props {
+  construccionId: number | null;
+}
+
+export default function AntiguedadComponent({ construccionId }: Props) {
   const [antiguedad, setAntiguedad] = useState({ ano: "", destino: "" });
   const [loading, setLoading] = useState(false);
+  const [construccionEnviada, setConstruccionEnviada] = useState<{
+    antiguedad: string;
+    destino: string;
+  } | null>(null);
 
   const handleGuardarCambios = async () => {
-    // Validación de campos antes de continuar
     if (!antiguedad.ano.trim() || !antiguedad.destino) {
       toast("Por favor, complete todos los campos.");
       return;
     }
 
-    // Si la validación pasó, crear el payload y continuar con el flujo
     setLoading(true);
 
     try {
-      // Paso 1: Crear la construcción
       const payload = {
-        numero_construccion: numero_construccion!,
-        relevamiento_id: relevamiento_id!,
         antiguedad: antiguedad.ano,
         destino: antiguedad.destino,
       };
 
-      const { data: construccionData } = await axios.post(
-        "/api/construcciones",
-        payload
-      );
-      const construccion_id = construccionData.id;
+      await axios.patch(`/api/construcciones/${construccionId}`, payload);
 
-      // Paso 2: Crear las plantas con el construccion_id
-      const plantasPayload = {
-        construccion_id,
-        plantas, // Usamos el estado de Redux para las plantas
-      };
-      await axios.post("/api/plantas", plantasPayload);
-
-      // Paso 3: Relacionar la construcción con las instituciones
-
-
-      // Actualizar el estado de Redux con los datos enviados
-
-      toast("Construcción, plantas e instituciones guardadas correctamente");
+      toast("Datos de antigüedad y destino actualizados correctamente");
+      setConstruccionEnviada(payload);
       setAntiguedad({ ano: "", destino: "" });
     } catch (error: any) {
       console.error("Error al guardar los datos:", error);
@@ -109,8 +91,8 @@ export default function AntiguedadComponent() {
                 label=""
                 value={antiguedad.destino}
                 options={antiguedadDestinoOpciones.map((option) => ({
-                  value: option.id, // Esto sigue siendo el 'id' para la opción
-                  label: option.name, // 'name' es lo que se muestra
+                  value: option.id,
+                  label: option.name,
                 }))}
                 onChange={(e) => {
                   const selectedOption = antiguedadDestinoOpciones.find(
@@ -120,7 +102,7 @@ export default function AntiguedadComponent() {
                     setAntiguedad({
                       ...antiguedad,
                       destino: selectedOption.name,
-                    }); // Guardamos 'name' en el estado
+                    });
                   }
                 }}
               />
@@ -128,29 +110,31 @@ export default function AntiguedadComponent() {
           </div>
         </form>
       </div>
+
       {construccionEnviada && (
         <div className="mt-4">
-        <h3 className="text-lg font-semibold mb-2">Datos enviados:</h3>
-        <table className="table-auto w-full text-left bg-white shadow-md rounded-md">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 font-semibold text-gray-700">Campo</th>
-              <th className="px-4 py-2 font-semibold text-gray-700">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="hover:bg-gray-50">
-              <td className="px-4 py-2 font-medium">Año:</td>
-              <td className="px-4 py-2">{construccionEnviada.antiguedad}</td>
-            </tr>
-            <tr className="hover:bg-gray-50">
-              <td className="px-4 py-2 font-medium">Destino:</td>
-              <td className="px-4 py-2">{construccionEnviada.destino}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          <h3 className="text-lg font-semibold mb-2">Datos enviados:</h3>
+          <table className="table-auto w-full text-left bg-white shadow-md rounded-md">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 font-semibold text-gray-700">Campo</th>
+                <th className="px-4 py-2 font-semibold text-gray-700">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="hover:bg-gray-50">
+                <td className="px-4 py-2 font-medium">Año:</td>
+                <td className="px-4 py-2">{construccionEnviada.antiguedad}</td>
+              </tr>
+              <tr className="hover:bg-gray-50">
+                <td className="px-4 py-2 font-medium">Destino:</td>
+                <td className="px-4 py-2">{construccionEnviada.destino}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       )}
+
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardarCambios}

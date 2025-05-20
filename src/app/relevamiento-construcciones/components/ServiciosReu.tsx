@@ -56,43 +56,55 @@ export default function ServiciosReu({
   };
 
   const handleGuardar = async () => {
-    // Creamos el payload a enviar
-    const payload = {
-      relevamiento_id: relevamientoId,
-      servicios: selectedServicios.map(({ servicio, estado }) => ({
-        servicio,
-        estado,
-      })),
-    };
+  // Validar si se seleccionó al menos un servicio
+  if (selectedServicios.length === 0) {
+    toast.warning("Debes seleccionar al menos un servicio antes de guardar.");
+    return;
+  }
 
-    console.log("Datos a enviar:", payload);
-
-    // Hacer la solicitud POST a la API correcta
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al guardar los servicios");
-      }
-
-      const result = await response.json();
-      console.log("Respuesta de la API:", result);
-
-      // Mostrar toast de éxito
-      toast.success("Servicios guardados exitosamente");
-    } catch (error) {
-      console.error("Error al enviar los datos:", error);
-
-      // Mostrar toast de error
-      toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
+  // Validar que los servicios que requieren estado lo tengan asignado
+  for (const servicio of selectedServicios) {
+    const config = servicios.find((s) => s.question === servicio.servicio);
+    if (config?.showCondition && !servicio.estado) {
+      toast.warning(`Debes seleccionar un estado para el servicio: "${servicio.servicio}".`);
+      return;
     }
+  }
+
+  // Creamos el payload a enviar
+  const payload = {
+    relevamiento_id: relevamientoId,
+    servicios: selectedServicios.map(({ servicio, estado }) => ({
+      servicio,
+      estado,
+    })),
   };
+
+  console.log("Datos a enviar:", payload);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al guardar los servicios");
+    }
+
+    const result = await response.json();
+    console.log("Respuesta de la API:", result);
+
+    toast.success("Servicios guardados exitosamente");
+  } catch (error) {
+    console.error("Error al enviar los datos:", error);
+    toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

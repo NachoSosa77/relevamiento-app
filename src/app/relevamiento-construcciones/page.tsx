@@ -47,12 +47,14 @@ import {
 
 export default function RelevamientoConstruccionesPage() {
   const router = useRouter();
-  const [selectedInstitutions, setSelectedInstitutions] =
-    useState<InstitucionesData[] | null>(null);
+  const [selectedInstitutions, setSelectedInstitutions] = useState<
+    InstitucionesData[] | null
+  >(null);
+  const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-  const selectedCui = useAppSelector(
-          (state) => state.espacio_escolar.cui
-        );
+  console.log('CONSTRUCCION ID', construccionId);
+
+  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
   const institucionesRedux = useSelector(
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
@@ -60,10 +62,10 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log(relevamientoId)
+  console.log(relevamientoId);
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
-    /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */;
+    /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */
   }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
@@ -116,11 +118,12 @@ export default function RelevamientoConstruccionesPage() {
         isReadOnly={true}
         label="COMPLETE UN FORMULARIO POR CADA CONSTRUCCIÓN DEL PREDIO"
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
+        setConstruccionId={setConstruccionId}
       />
-      <CantidadPlantas/>
-      <AntiguedadComponent />
+      <CantidadPlantas construccionId={construccionId}/>
+      <AntiguedadComponent construccionId={construccionId}/>
       <ServiciosBasicos data={serviciosBasicos} />
-      <AguaFormComponent relevamientoId={relevamientoId}/>
+      <AguaFormComponent relevamientoId={relevamientoId} />
       <ServiciosReu
         id={4}
         label={"DESAGUES CLOACALES"}
@@ -194,7 +197,7 @@ export default function RelevamientoConstruccionesPage() {
         estructuras={energiasAlternativas}
       />
 
-      <ObservacionesComponent onSave={handleSaveObservaciones}/>
+      <ObservacionesComponent onSave={handleSaveObservaciones} />
     </div>
   );
 }

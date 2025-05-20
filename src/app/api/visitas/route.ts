@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     console.log("🔍 Visitas válidas para insertar:", visitasValidas);
 
     if (visitasValidas.length !== visitas.length) {
-      console.warn("⚠️ Algunas visitas tienen campos faltantes.");
+      console.warn("Algunas visitas tienen campos faltantes.");
       return NextResponse.json({
         success: false,
         error: "Algunas visitas tienen campos faltantes.",

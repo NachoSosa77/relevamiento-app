@@ -1,4 +1,7 @@
-import { Column, ServiciosTransporteComunicaciones } from "@/interfaces/ServiciosTransporteComunicaciones";
+import {
+  Column,
+  ServiciosTransporteComunicaciones,
+} from "@/interfaces/ServiciosTransporteComunicaciones";
 import { useAppSelector } from "@/redux/hooks";
 import { setServicios } from "@/redux/slices/serviciosTransporteSlice";
 import React, { ChangeEvent, useState } from "react";
@@ -16,45 +19,66 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
 }) => {
   const dispatch = useDispatch();
   const relevamientoId = useAppSelector(
-      (state) => state.espacio_escolar.relevamientoId
-    );
+    (state) => state.espacio_escolar.relevamientoId
+  );
 
-  const [servicios, setServiciosLocal] = useState<ServiciosTransporteComunicaciones[]>(serviciosData);
+  const [servicios, setServiciosLocal] =
+    useState<ServiciosTransporteComunicaciones[]>(serviciosData);
 
-  
-
-  const handleChange = (index: number, field: keyof ServiciosTransporteComunicaciones, value: string) => {
-      const updatedServicios = [...servicios];
-      updatedServicios[index] = { ...updatedServicios[index], [field]: value };
-      setServiciosLocal(updatedServicios); // Actualizamos el estado local con los nuevos valores
-    };
+  const handleChange = (
+    index: number,
+    field: keyof ServiciosTransporteComunicaciones,
+    value: string
+  ) => {
+    const updatedServicios = [...servicios];
+    updatedServicios[index] = { ...updatedServicios[index], [field]: value };
+    setServiciosLocal(updatedServicios); // Actualizamos el estado local con los nuevos valores
+  };
 
   // Función para manejar el envío del formulario
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-    
-      // Agregamos relevamiento_id a cada servicio
-      const serviciosConRelevamiento = servicios.map((servicio) => ({
-        ...servicio,
-        relevamiento_id: relevamientoId,
-      }));
-    
-      // Enviar el array directamente en lugar de un objeto que lo envuelve
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Validación: verificar que todos los campos requeridos estén completos
+    const camposIncompletos = servicios.some((servicio) =>
+      columnsConfig.some(
+        (column) =>
+          column.type !== "text" && // ignoramos columnas tipo texto (solo visual)
+          (!servicio[column.key] ||
+            servicio[column.key]?.toString().trim() === "")
+      )
+    );
+
+    if (camposIncompletos) {
+      toast.warning("Por favor, complete todos los campos antes de enviar.");
+      return;
+    }
+
+    const serviciosConRelevamiento = servicios.map((servicio) => ({
+      ...servicio,
+      relevamiento_id: relevamientoId,
+    }));
+
+    try {
       const response = await fetch("/api/servicios_transporte_comunicaciones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(serviciosConRelevamiento), // Envía el array directamente
+        body: JSON.stringify(serviciosConRelevamiento),
       });
-    
+
       if (response.ok) {
-        dispatch(setServicios(serviciosConRelevamiento)); // Guardamos los datos en Redux
-        toast("✅ Servicios cargados correctamente!");
+        dispatch(setServicios(serviciosConRelevamiento));
+        toast.success("✅ Servicios cargados correctamente!");
       } else {
-        toast("❌ Error al cargar los servicios.");
+        toast.error("❌ Error al cargar los servicios.");
       }
-    };
+    } catch (error) {
+      toast.error("❌ Error de red o del servidor.");
+      console.error(error);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 mx-10">
@@ -77,7 +101,10 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
           {servicios.map((servicio, index) => (
             <tr key={servicio.id_servicio}>
               {columnsConfig.map((column) => (
-                <td key={`${servicio.id_servicio}-${column.key}`} className="border p-2">
+                <td
+                  key={`${servicio.id_servicio}-${column.key}`}
+                  className="border p-2"
+                >
                   {column.type === "select" && (
                     <select
                       value={servicio[column.key]}

@@ -34,8 +34,14 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json(); // Obtener datos del request
-    const { tipo_obra, estado, financiamiento, destino, superficie_total } =
-      body;
+    const {
+      tipo_obra,
+      estado,
+      financiamiento,
+      destino,
+      superficie_total,
+      relevamiento_id,
+    } = body;
 
     // 🔍 Validar que los campos requeridos estén presentes
     if (
@@ -43,7 +49,8 @@ export async function POST(req: Request) {
       !estado ||
       !financiamiento ||
       !destino ||
-      !superficie_total
+      !superficie_total ||
+      !relevamiento_id
     ) {
       return NextResponse.json(
         { message: "Faltan campos obligatorios" },
@@ -53,9 +60,16 @@ export async function POST(req: Request) {
 
     const connection = await getConnection();
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total) 
-       VALUES (?, ?, ?, JSON_ARRAY(?), ?)`,
-      [tipo_obra, estado, financiamiento, destino, superficie_total]
+      `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total, relevamiento_id) 
+       VALUES (?, ?, ?, JSON_ARRAY(?), ?, ?)`,
+      [
+        tipo_obra,
+        estado,
+        financiamiento,
+        destino,
+        superficie_total,
+        relevamiento_id,
+      ]
     );
     connection.release();
 

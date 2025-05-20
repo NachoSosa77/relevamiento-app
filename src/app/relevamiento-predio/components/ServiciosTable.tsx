@@ -19,39 +19,64 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   );
 
   //console.log("relevamientoId", relevamientoId);
-  const [servicios, setServiciosLocal] = useState<ServiciosBasicos[]>(serviciosData);
+  const [servicios, setServiciosLocal] =
+    useState<ServiciosBasicos[]>(serviciosData);
 
   // Función para manejar los cambios en los inputs/selects
-  const handleChange = (index: number, field: keyof ServiciosBasicos, value: string) => {
+  const handleChange = (
+    index: number,
+    field: keyof ServiciosBasicos,
+    value: string
+  ) => {
     const updatedServicios = [...servicios];
     updatedServicios[index] = { ...updatedServicios[index], [field]: value };
     setServiciosLocal(updatedServicios); // Actualizamos el estado local con los nuevos valores
   };
 
   // Función para manejar el envío del formulario
+  // ...
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
+    // Validación antes de enviar
+    const esFormularioValido = servicios.every((servicio) =>
+      columnsConfig.every((column) => {
+        if (column.type === "text") return true; // no se valida texto estático
+        const valor = servicio[column.key];
+        return valor !== undefined && valor !== null && valor !== "";
+      })
+    );
+
+    if (!esFormularioValido) {
+      toast.warning("Por favor, completá todos los campos antes de enviar.");
+      return;
+    }
+
     // Agregamos relevamiento_id a cada servicio
     const serviciosConRelevamiento = servicios.map((servicio) => ({
       ...servicio,
       relevamiento_id: relevamientoId,
     }));
-  
-    // Enviar el array directamente en lugar de un objeto que lo envuelve
-    const response = await fetch("/api/servicios_basicos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(serviciosConRelevamiento), // Envía el array directamente
-    });
-  
-    if (response.ok) {
-      dispatch(setServicios(serviciosConRelevamiento)); // Guardamos los datos en Redux
-      toast("✅ Servicios cargados correctamente!");
-    } else {
-      toast("❌ Error al cargar los servicios.");
+
+    try {
+      const response = await fetch("/api/servicios_basicos_predio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(serviciosConRelevamiento),
+      });
+
+      if (response.ok) {
+        dispatch(setServicios(serviciosConRelevamiento));
+        toast.success("Servicios cargados correctamente!");
+      } else {
+        toast.error("Error al cargar los servicios.");
+      }
+    } catch (error) {
+      toast.error("Error inesperado al enviar los datos.");
+      console.error(error);
     }
   };
 
@@ -87,7 +112,9 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
                         handleChange(index, column.key, e.target.value)
                       }
                       className="w-full p-2 border rounded"
-                      disabled={column.conditional && !column.conditional(servicio)}
+                      disabled={
+                        column.conditional && !column.conditional(servicio)
+                      }
                     >
                       <option value="">Seleccionar</option>
                       {Array.isArray(column.options)
@@ -111,7 +138,9 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
                         handleChange(index, column.key, e.target.value)
                       }
                       className="w-full p-2 border rounded"
-                      disabled={column.conditional && !column.conditional(servicio)}
+                      disabled={
+                        column.conditional && !column.conditional(servicio)
+                      }
                     />
                   )}
                   {column.type === "text" && (
