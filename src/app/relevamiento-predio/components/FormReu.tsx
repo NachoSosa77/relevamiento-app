@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -11,7 +12,9 @@ interface FormValues {
 
 const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-
+  const relevamientoId = useAppSelector(
+    (state) => state.espacio_escolar.relevamientoId
+  )
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
 
@@ -31,8 +34,8 @@ const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm })
         estado: "Sin obras en el predio",
         financiamiento: "Sin obras en el predio",
         superficie_total: "Sin obras en el predio",
-        cue: null,
         destino: "Sin obras en el predio",
+        relevamiento_id: relevamientoId,
       });
       toast.success("Datos enviados correctamente");
       setShowConfirmButton(false);

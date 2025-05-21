@@ -7,7 +7,7 @@ import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AcondicionamientoTermico from "../../components/AcondicionamientoTermico";
 import Dimensiones from "../../components/Dimensiones";
@@ -38,24 +38,26 @@ const DetalleLocalPage = () => {
   >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hayCambios, setHayCambios] = useState(false);
   const localId = id;
 
-  useEffect(() => {
-    if (!id) return; // Asegúrate de que el id esté disponible
-
-    const fetchLocal = async () => {
-      setLoading(true);
-      try {
-        const fetchedLocal = await localesService.getLocalById(Number(id));
-        setLocal(fetchedLocal.local);
-      } catch (error) {
-        setError("No se pudo cargar el local.");
-      }
+  const fetchLocal = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const fetchedLocal = await localesService.getLocalById(Number(id));
+      setLocal(fetchedLocal.local);
+    } catch (error) {
+      setError("No se pudo cargar el local.");
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [id]); // ✅ id es la única dependencia real
 
+  useEffect(() => {
     fetchLocal();
-  }, [id]);
+  }, [fetchLocal]);
+  
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!localId) return;
@@ -71,9 +73,9 @@ const DetalleLocalPage = () => {
       });
 
       if (res.ok) {
-        router.push("/relevamiento-locales");
+        toast.success("Observaciones guardadas correctamente");
       } else {
-        console.error("Error al guardar observaciones");
+        toast.error("Error al guardar observaciones");
       }
     } catch (err) {
       console.error("Error de red al guardar:", err);
@@ -105,14 +107,39 @@ const DetalleLocalPage = () => {
       console.error(error);
       toast("Error al guardar los datos");
     }
+  };
 
-    // luego harás el PUT acá
+  const handleGuardarLocal = async () => {
+    try {
+      const actualizadosString = localStorage.getItem("localesActualizados");
+      const actualizados = actualizadosString
+        ? JSON.parse(actualizadosString)
+        : [];
+
+      if (!actualizados.includes(localId)) {
+        actualizados.push(localId);
+        localStorage.setItem(
+          "localesActualizados",
+          JSON.stringify(actualizados)
+        );
+      }
+
+      toast.success("Local guardado y marcado como actualizado");
+      router.push("/relevamiento-locales");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar el local");
+    }
+  };
+
+  const marcarComoModificado = () => {
+    setHayCambios(true);
   };
 
   const handleBack = () => {
     router.back();
   };
-
+  console.log("local", local);
   if (loading) return <p>Cargando...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (
@@ -130,7 +157,7 @@ const DetalleLocalPage = () => {
           </div>
           <div className="flex justify-center">
             <h1 className="text-lg font-semibold mb-4">
-              Local seleccionado: {local?.id ?? "N/A"}{" "}
+              Local seleccionado: {local?.identificacion_plano ?? "N/A"}{" "}
             </h1>
           </div>
           <div className="overflow-x-auto rounded-xl shadow border border-gray-200">
@@ -140,7 +167,9 @@ const DetalleLocalPage = () => {
                   <th className="px-4 py-2 font-medium text-gray-600">
                     Número de local
                   </th>
-                  <td className="px-4 py-2">{local?.id ?? "N/A"}</td>
+                  <td className="px-4 py-2">
+                    {local?.identificacion_plano ?? "N/A"}
+                  </td>
                 </tr>
                 <tr className="border-b">
                   <th className="px-4 py-2 font-medium text-gray-600">
@@ -214,7 +243,7 @@ const DetalleLocalPage = () => {
         </div>
       )}
 
-      <Dimensiones />
+      <Dimensiones onUpdate={marcarComoModificado} />
       <TableReutilizable
         id={3}
         label="MATERIALES PREDOMINANTES"
@@ -260,15 +289,32 @@ const DetalleLocalPage = () => {
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
         local?.nombre_local === "Sanitarios docentes/personal") && (
-          <EquipamientoCantidadSanitarios
-            id={10}
-            label="EQUIPAMIENTO SANITARIO"
-            locales={equipamientoSanitario}
-          />
-        )}
+        <EquipamientoCantidadSanitarios
+          id={10}
+          label="EQUIPAMIENTO SANITARIO"
+          locales={equipamientoSanitario}
+        />
+      )}
 
-        <ObservacionesComponent onSave={handleSaveObservaciones} />
-
+      <ObservacionesComponent onSave={handleSaveObservaciones} />
+      {hayCambios && (
+        <div className="text-green-600 text-sm mt-2 ml-10">
+          Cambios detectados. No olvides guardar.
+        </div>
+      )}
+      <div className="flex justify-center">
+        <button
+          disabled={!hayCambios}
+          onClick={handleGuardarLocal}
+          className={`mt-4 ml-10 px-4 py-2 rounded text-sm font-bold ${
+            hayCambios
+              ? "bg-green-600 text-white hover:bg-green-800"
+              : "bg-gray-300 text-gray-500"
+          }`}
+        >
+          Actualizar Local
+        </button>
+      </div>
     </div>
   );
 };

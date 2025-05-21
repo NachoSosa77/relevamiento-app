@@ -89,7 +89,7 @@ export default function SeguridadIncendio({
   });
 
   if (serviciosValidos.length === 0) {
-    toast.error("Debe completar al menos un servicio con datos antes de guardar");
+    toast.warning("Debe completar al menos un servicio con datos antes de guardar");
     return;
   }
 

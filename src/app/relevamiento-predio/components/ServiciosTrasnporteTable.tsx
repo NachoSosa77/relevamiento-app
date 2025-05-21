@@ -37,48 +37,48 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
 
   // Función para manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validación: verificar que todos los campos requeridos estén completos
-    const camposIncompletos = servicios.some((servicio) =>
-      columnsConfig.some(
-        (column) =>
-          column.type !== "text" && // ignoramos columnas tipo texto (solo visual)
-          (!servicio[column.key] ||
-            servicio[column.key]?.toString().trim() === "")
-      )
-    );
+  // Validar si al menos un campo (que no sea de tipo texto) fue modificado
+  const alMenosUnServicioValido = servicios.some((servicio) =>
+    columnsConfig.some((column) => {
+      if (column.type === "text") return false; // ignorar columnas visuales
+      const valor = servicio[column.key];
+      return valor !== undefined && valor !== null && valor !== "";
+    })
+  );
 
-    if (camposIncompletos) {
-      toast.warning("Por favor, complete todos los campos antes de enviar.");
-      return;
+  if (!alMenosUnServicioValido) {
+    toast.warning("Por favor, completá al menos un campo antes de enviar.");
+    return;
+  }
+
+  const serviciosConRelevamiento = servicios.map((servicio) => ({
+    ...servicio,
+    relevamiento_id: relevamientoId,
+  }));
+
+  try {
+    const response = await fetch("/api/servicios_transporte_comunicaciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(serviciosConRelevamiento),
+    });
+
+    if (response.ok) {
+      dispatch(setServicios(serviciosConRelevamiento));
+      toast.success("Servicios cargados correctamente!");
+    } else {
+      toast.error("Error al cargar los servicios.");
     }
+  } catch (error) {
+    toast.error("Error de red o del servidor.");
+    console.error(error);
+  }
+};
 
-    const serviciosConRelevamiento = servicios.map((servicio) => ({
-      ...servicio,
-      relevamiento_id: relevamientoId,
-    }));
-
-    try {
-      const response = await fetch("/api/servicios_transporte_comunicaciones", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serviciosConRelevamiento),
-      });
-
-      if (response.ok) {
-        dispatch(setServicios(serviciosConRelevamiento));
-        toast.success("✅ Servicios cargados correctamente!");
-      } else {
-        toast.error("❌ Error al cargar los servicios.");
-      }
-    } catch (error) {
-      toast.error("❌ Error de red o del servidor.");
-      console.error(error);
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 mx-10">

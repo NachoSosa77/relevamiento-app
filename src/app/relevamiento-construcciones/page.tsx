@@ -10,6 +10,7 @@ import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import AguaFormComponent from "./components/AguaFormComponent";
 import AntiguedadComponent from "./components/Antiguedad";
 import CantidadPlantas from "./components/CantidadPlantas";
@@ -52,7 +53,7 @@ export default function RelevamientoConstruccionesPage() {
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-  console.log('CONSTRUCCION ID', construccionId);
+  //console.log("CONSTRUCCION ID", construccionId);
 
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
@@ -62,7 +63,7 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log(relevamientoId);
+  //console.log(relevamientoId);
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
     /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */
@@ -75,26 +76,31 @@ export default function RelevamientoConstruccionesPage() {
   }, [institucionesRedux]);
 
   const handleSaveObservaciones = async (obs: string) => {
-    if (!relevamientoId) return;
+    if (!construccionId || !obs.trim()) return;
 
     try {
-      const res = await fetch("/api/relevamientos/observaciones", {
-        method: "POST",
+      const res = await fetch(`/api/construcciones/${construccionId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          relevamientoId,
-          observaciones: obs,
-        }),
+        body: JSON.stringify({ observaciones: obs }),
       });
 
       if (res.ok) {
-        router.push("/relevamiento-locales");
+        toast.success("Observaciones guardadas correctamente");
       } else {
         console.error("Error al guardar observaciones");
+        toast.error("Observaciones guardadas correctamente");
       }
     } catch (err) {
       console.error("Error de red al guardar:", err);
     }
+  };
+  const handleSaveConstruccion = () => {
+    toast.success("Construcción guardada correctamente 🎉", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+    router.push("/relevamiento-locales");
   };
 
   return (
@@ -115,13 +121,13 @@ export default function RelevamientoConstruccionesPage() {
         selectedInstitutions={selectedInstitutions}
         initialCui={selectedCui}
         onCuiInputChange={() => {}}
-        isReadOnly={true}
+        isReadOnly={false}
         label="COMPLETE UN FORMULARIO POR CADA CONSTRUCCIÓN DEL PREDIO"
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
         setConstruccionId={setConstruccionId}
       />
-      <CantidadPlantas construccionId={construccionId}/>
-      <AntiguedadComponent construccionId={construccionId}/>
+      <CantidadPlantas construccionId={construccionId} />
+      <AntiguedadComponent construccionId={construccionId} />
       <ServiciosBasicos data={serviciosBasicos} />
       <AguaFormComponent relevamientoId={relevamientoId} />
       <ServiciosReu
@@ -198,6 +204,14 @@ export default function RelevamientoConstruccionesPage() {
       />
 
       <ObservacionesComponent onSave={handleSaveObservaciones} />
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={handleSaveConstruccion}
+          className="px-4 py-2 w-80 bg-blue-600 text-white rounded-md hover:bg-blue-400"
+        >
+          Guardar construcción
+        </button>
+      </div>
     </div>
   );
 }

@@ -3,13 +3,12 @@ import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify"; // Importa el toast
+import { toast } from "react-toastify";
 import EstablecimientosEducativos from "../EstablecimientosEducativos";
 
 interface Construccion {
   id: number;
   numero_construccion: number;
-  // otros campos si hay
 }
 
 interface CuiComponentProps {
@@ -19,7 +18,7 @@ interface CuiComponentProps {
   isReadOnly: boolean;
   initialCui: number | undefined;
   onCuiInputChange: (cui: number | null) => void;
-  setConstruccionId: (id: number | null) => void; // Cambié para aceptar null también
+  setConstruccionId: (id: number | null) => void;
 }
 
 const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
@@ -43,7 +42,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       setConstrucciones([]);
       setSelectedConstruccionId(null);
       setNumeroConstruccion(0);
-      setConstruccionId(null); // informar al padre
+      setConstruccionId(null);
       return;
     }
 
@@ -51,25 +50,27 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       .then((res) => res.json())
       .then((data: Construccion[]) => {
         setConstrucciones(data);
-        if (data.length > 0) {
+
+        // Asignar sólo si no hay ninguna construcción seleccionada
+        if (data.length > 0 && selectedConstruccionId === null) {
           setSelectedConstruccionId(data[0].id);
           setNumeroConstruccion(data[0].numero_construccion);
-          setConstruccionId(data[0].id); // informar al padre
-        } else {
+          setConstruccionId(data[0].id);
+        } else if (data.length === 0) {
           setSelectedConstruccionId(null);
           setNumeroConstruccion(0);
-          setConstruccionId(null); // informar al padre
+          setConstruccionId(null);
         }
       })
       .catch(() => {
         toast.error("Error al cargar construcciones");
       });
-  }, [relevamientoId, setConstruccionId]);
+  }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
 
   const handleConstruccionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = Number(e.target.value);
     setSelectedConstruccionId(id);
-    setConstruccionId(id); // informar al padre
+    setConstruccionId(id);
 
     const construccion = construcciones.find((c) => c.id === id);
     if (construccion) {
@@ -77,11 +78,11 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
     }
   };
 
+
   return (
     <div className="mx-10">
       <p className="text-sm">{label}</p>
 
-      {/* Dropdown para seleccionar construcción existente */}
       <div className="mb-4">
         <label className="block font-semibold mb-1">Construcciones existentes</label>
         <select
@@ -99,7 +100,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
         </select>
       </div>
 
-      {/* Input para crear nueva o modificar número */}
       <div className="flex items-center justify-between gap-2 mt-2 p-2 border">
         <div className="w-6 h-6 flex justify-center text-white bg-black">
           <p>A</p>
@@ -130,8 +130,8 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
             onChange={(value) => {
               if (typeof value === "number") {
                 setNumeroConstruccion(value);
-                setSelectedConstruccionId(null); // si cambia número manualmente, no está seleccionando uno existente
-                setConstruccionId(null); // informar al padre que no hay construcción seleccionada
+                setSelectedConstruccionId(null);
+                setConstruccionId(null);
               }
             }}
           />

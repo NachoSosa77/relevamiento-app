@@ -51,17 +51,30 @@ export default function HomePage() {
 
   // Función para buscar relevamientos existentes por CUI
   const fetchRelevamientos = async () => {
-    if (!cuiInputValue) return;
-    try {
-      const data = await relevamientoService.getRelevamientoByCui(
-        cuiInputValue
-      );
-      setRelevamientos(data); // Guardamos los relevamientos en el estado
-    } catch (error) {
-      console.error("Error al obtener el relevamiento:", error);
-      toast.error("Error al obtener el relevamiento");
+  if (!cuiInputValue) return;
+
+  try {
+    const data = await relevamientoService.getRelevamientoByCui(cuiInputValue);
+
+    if (!data || data.length === 0) {
+      toast.info("No se encontraron relevamientos para este CUI.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setRelevamientos([]); // Limpia el estado si no hay resultados
+      return;
     }
-  };
+
+    setRelevamientos(data);
+  } catch (error) {
+    console.error("Error al obtener el relevamiento:", error);
+    toast.error("Error al obtener el relevamiento", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+  }
+};
+
 
   const handleNuevoRelevamiento = async () => {
     if (!cuiInputValue) return;

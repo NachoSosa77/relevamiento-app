@@ -4,6 +4,7 @@ export interface ObrasFueraPredio {
     domicilio: string;
     cue: number | null;
     destino: string[];
+    relevamiento_id: number | undefined;
   }
   
   export interface Column {

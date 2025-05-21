@@ -62,36 +62,47 @@ export default function AcondicionamientoTermico({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.flatMap(({ id, question }) => {
-      const respuesta = responses[id];
-      if (!respuesta) return [];
+  const payload = locales.flatMap(({ id, question }) => {
+    const respuesta = responses[id];
+    if (!respuesta) return [];
 
-      return Object.entries(respuesta).map(([tipo, valores]) => ({
-        temperatura: question,
-        tipo,
-        cantidad: valores.cantidad,
-        disponibilidad: valores.disponibilidad ?? null,
-        relevamiento_id: relevamientoId,
-        local_id: localId,
-      }));
+    return Object.entries(respuesta).map(([tipo, valores]) => ({
+      temperatura: question,
+      tipo,
+      cantidad: valores.cantidad,
+      disponibilidad: valores.disponibilidad ?? null,
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    }));
+  });
+
+  // Validación mínima: al menos una entrada con cantidad o disponibilidad
+  const hayDatos = payload.some(
+    (item) =>
+      (item.cantidad !== undefined && item.cantidad !== null) ||
+      (item.disponibilidad !== undefined && item.disponibilidad !== null && item.disponibilidad !== "")
+  );
+
+  if (!hayDatos) {
+    toast.warning("Por favor, completá al menos un dato antes de guardar.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/acondicionamiento_termico", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar los datos");
+  }
+};
 
-    //console.log("Datos a enviar:", payload);
-
-     try {
-      const response = await fetch("/api/acondicionamiento_termico", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      toast("Información guardada correctamente");
-    } catch (error) {
-      console.error(error);
-      toast("Error al guardar los datos");
-    } 
-  };
 
   return (
     <div className="mx-10 text-sm">

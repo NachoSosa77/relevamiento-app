@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 import NumericInput from "@/components/ui/NumericInput";
 import Select from "@/components/ui/SelectComponent";
 import { useAppSelector } from "@/redux/hooks";
@@ -63,63 +63,57 @@ export default function ElectricidadServicio({
   };
 
   const handleGuardar = async () => {
-  let hayError = false;
+    // Verificamos si hay al menos un servicio con algún dato no vacío
+    const hayAlgunDato = servicios.some((servicio) => {
+      const id = servicio.id;
+      const respuesta = responses[id];
 
-  for (const servicio of servicios) {
-    const id = servicio.id;
-    const respuesta = responses[id];
-
-    if (
-      !respuesta?.disponibilidad ||
-      (servicio.showCondition && sub_id !== 6.2 && !respuesta?.estado) ||
-      potenciaOptions[id] === undefined ||
-      potenciaOptions[id] === 0 ||
-      (id === "6.1.2" && (!combustibleOptions[id] || combustibleOptions[id].trim() === "")) ||
-      ((id === "6.1.3" || id === "6.1.4") && (!respuesta?.estado_bateria || respuesta.estado_bateria.trim() === ""))
-    ) {
-      hayError = true;
-      break;
-    }
-  }
-
-  if (hayError) {
-    toast.warning("Por favor complete todos los campos requeridos antes de continuar");
-    return;
-  }
-
-  const payload = {
-    relevamiento_id: relevamientoId,
-    servicios: Object.keys(responses).map((key) => ({
-      servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-      disponibilidad: responses[key]?.disponibilidad || "",
-      estado: responses[key]?.estado || "",
-      estado_bateria: responses[key]?.estado_bateria || "",
-      tipo_combustible: combustibleOptions[key] || "",
-      potencia: potenciaOptions[key] || 0,
-    })),
-  };
-
-  try {
-    const response = await fetch("/api/servicio_electricidad", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      // Revisamos si cualquiera de los campos tiene valor significativo
+      return (
+        (respuesta?.disponibilidad && respuesta.disponibilidad.trim() !== "") ||
+        (respuesta?.estado && respuesta.estado.trim() !== "") ||
+        (respuesta?.estado_bateria && respuesta.estado_bateria.trim() !== "") ||
+        (combustibleOptions[id] && combustibleOptions[id].trim() !== "") ||
+        (potenciaOptions[id] && potenciaOptions[id] !== 0)
+      );
     });
-    const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "Error al guardar los datos");
+    if (!hayAlgunDato) {
+      toast.warning("Por favor complete al menos un dato para continuar");
+      return;
     }
 
-    toast.success("Servicio de electricidad guardado correctamente");
-  } catch (error: any) {
-    toast.error(error.message || "Error al guardar los datos");
-  }
-};
+    const payload = {
+      relevamiento_id: relevamientoId,
+      servicios: Object.keys(responses).map((key) => ({
+        servicio:
+          servicios.find((servicio) => servicio.id === key)?.question ||
+          "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        estado: responses[key]?.estado || "",
+        estado_bateria: responses[key]?.estado_bateria || "",
+        tipo_combustible: combustibleOptions[key] || "",
+        potencia: potenciaOptions[key] || 0,
+      })),
+    };
 
+    try {
+      const response = await fetch("/api/servicio_electricidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
 
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
 
-  
+      toast.success("Servicio de electricidad guardado correctamente");
+    } catch (error: any) {
+      toast.error(error.message || "Error al guardar los datos");
+    }
+  };
 
   return (
     <div className="mx-10 text-sm">

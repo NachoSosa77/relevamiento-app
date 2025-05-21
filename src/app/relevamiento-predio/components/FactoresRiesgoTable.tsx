@@ -38,20 +38,20 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
-  // Validar que todos los campos select/input estén completos
-  const camposIncompletos = servicios.some((servicio) =>
+  // Validar que al menos un campo (select o input) esté completo
+  const alMenosUnCampoValido = servicios.some((servicio) =>
     columnsConfig.some((column) => {
       const value = servicio[column.key];
       return (
         (column.type === "select" || column.type === "input") &&
         typeof value === "string" &&
-        value.trim() === ""
+        value.trim() !== ""
       );
     })
   );
 
-  if (camposIncompletos) {
-    toast.warning("Por favor, completá todos los campos antes de continuar.");
+  if (!alMenosUnCampoValido) {
+    toast.warning("Por favor, completá al menos un campo antes de continuar.");
     return; // Bloquea el envío
   }
 
@@ -70,11 +70,12 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
 
   if (response.ok) {
     dispatch(setFactores(serviciosConRelevamiento));
-    toast("✅ Servicios cargados correctamente!");
+    toast.success("Servicios cargados correctamente!");
   } else {
-    toast.error("❌ Error al cargar los servicios.");
+    toast.error("Error al cargar los servicios.");
   }
 };
+
 
 
   return (

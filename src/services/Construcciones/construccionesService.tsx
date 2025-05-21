@@ -11,4 +11,11 @@ export const construccionService = {
 
     return response.data;
   },
-};
+
+  async getConstruccionesById(id: number) {
+    const response = await axios.get(`/api/construcciones/${id}`, {
+    });
+    console.log('construccion',response)
+    return response;
+},
+}

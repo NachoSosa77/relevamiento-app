@@ -2,9 +2,9 @@
 import { Visita } from "@/interfaces/Visitas";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-    actualizarVisita,
-    agregarVisita,
-    eliminarVisita,
+  actualizarVisita,
+  agregarVisita,
+  eliminarVisita,
 } from "@/redux/slices/espacioEscolarSlice";
 import axios from "axios"; // Importamos axios para enviar la solicitud
 import { useState } from "react";
@@ -131,7 +131,7 @@ export default function VisitasComponent() {
       const response = await axios.post("/api/visitas", visitasConRelevamiento);
 
       if (response.status === 200 && response.data.success) {
-        toast.success("✅ Visitas enviadas correctamente a la base de datos");
+        toast.success("Visitas enviadas correctamente a la base de datos");
       } else {
         console.error("Error desde backend:", response.data);
         toast.error("❌ Hubo un problema al guardar las visitas");

@@ -55,31 +55,42 @@ export default function IluminacionVentilacion({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.map(({ id, question }) => ({
-      condicion: question,
-      disponibilidad: responses[id]?.disponibilidad,
-      superficie_iluminacion: responses[id]?.superficieIluminacion,
-      superficie_ventilacion: responses[id]?.superficieVentilacion,
-      relevamiento_id: relevamientoId,
-      local_id: localId,
-    }));
+  const payload = locales.map(({ id, question }) => ({
+    condicion: question,
+    disponibilidad: responses[id]?.disponibilidad,
+    superficie_iluminacion: responses[id]?.superficieIluminacion,
+    superficie_ventilacion: responses[id]?.superficieVentilacion,
+    relevamiento_id: relevamientoId,
+    local_id: localId,
+  }));
 
-    console.log("Datos a enviar:", payload);
+  // Validación mínima: al menos un campo con datos
+  const hayDatos = payload.some(
+    (item) =>
+      (item.disponibilidad && item.disponibilidad.trim() !== "") 
+  );
 
-     try {
-      const response = await fetch("/api/iluminacion_ventilacion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      toast("Información guardada correctamente");
-    } catch (error) {
-      console.error(error);
-      toast("Error al guardar los datos");
-    } 
-  };
+  if (!hayDatos) {
+    toast.warning("Por favor, completá al menos un dato antes de guardar.");
+    return;
+  }
+
+
+  try {
+    const response = await fetch("/api/iluminacion_ventilacion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

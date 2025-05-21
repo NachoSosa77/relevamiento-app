@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 "use client";
 
 import { useState } from "react";
@@ -27,11 +27,7 @@ interface EspecificacionesComedor {
   tipos_comedor?: string[]; // Aquí guardamos los nombres o questions
 }
 
-export default function Comedor({
-  id,
-  label,
-  servicios,
-}: ServiciosReuProps) {
+export default function Comedor({ id, label, servicios }: ServiciosReuProps) {
   const [responses, setResponses] = useState<
     Record<string, EspecificacionesComedor>
   >({});
@@ -69,41 +65,58 @@ export default function Comedor({
   );
 
   const handleGuardar = async () => {
-    const payload = {
-      relevamiento_id: relevamientoId,
-      servicios: Object.keys(responses).map((key) => ({
-        servicio:
-          servicios.find((servicio) => servicio.id === key)?.question ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        tipos_comedor: responses[key]?.tipos_comedor || [], // nuevo campo
-      })),
-    };
+  // Verificamos si hay al menos un servicio con algún dato (disponibilidad o tipos_comedor)
+  const hayAlgunDato = servicios.some((servicio) => {
+    const respuesta = responses[servicio.id];
+    return (
+      (respuesta?.disponibilidad && respuesta.disponibilidad.trim() !== "") ||
+      (respuesta?.tipos_comedor && respuesta.tipos_comedor.length > 0)
+    );
+  });
 
-    console.log("Datos a enviar:", payload);
+  if (!hayAlgunDato) {
+    toast.warning("Por favor completa al menos un dato para continuar");
+    return;
+  }
 
-     try {
-          const response = await fetch("/api/uso_comedor", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-          const result = await response.json();
-      
-          if (!response.ok) {
-            throw new Error(result.error || "Error al guardar los datos");
-          }
-      
-          toast.success("Relevamiento uso comedor guardado correctamente");
-      
-          console.log("Respuesta de la API:", result);
-        } catch (error: any) {
-          console.error("Error al enviar los datos:", error);
-          toast.error(error.message || "Error al guardar los datos");
-        }  
+  // Construimos el payload con todos los servicios (aunque algunos tengan campos vacíos)
+  const payload = {
+    relevamiento_id: relevamientoId,
+    servicios: servicios.map((servicio) => {
+      const respuesta = responses[servicio.id] || {};
+      return {
+        servicio: servicio.question,
+        disponibilidad: respuesta.disponibilidad || "",
+        tipos_comedor: respuesta.tipos_comedor || [],
+      };
+    }),
   };
+
+  console.log("Datos a enviar:", payload);
+
+  try {
+    const response = await fetch("/api/uso_comedor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success("Relevamiento uso comedor guardado correctamente");
+    console.log("Respuesta de la API:", result);
+  } catch (error: any) {
+    console.error("Error al enviar los datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
+
 
   return (
     <div className="mx-10 text-sm">

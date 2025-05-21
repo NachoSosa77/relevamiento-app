@@ -7,7 +7,11 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-export default function Dimensiones() {
+type DimensionesProps = {
+  onUpdate?: () => void; // Esta función se llama cuando hay cambios
+};
+
+export default function Dimensiones({ onUpdate }: DimensionesProps) {
   const params = useParams();
   const id = Number(params.id);
   const [dimensiones, setDimensiones] = useState<Dimension[]>([
@@ -34,16 +38,30 @@ export default function Dimensiones() {
   const handleGuardar = async () => {
   const dimension = dimensiones[0];
 
+  // Validación mínima: verificar si al menos un campo tiene un valor
+  const hayDatos = Object.values(dimension).some(
+    (valor) =>
+      valor !== null &&
+      valor !== "" &&
+      !(typeof valor === "number" && valor === 0)
+  );
+
+  if (!hayDatos) {
+    toast.warning("Por favor, completá al menos un dato antes de guardar.");
+    return;
+  }
+
   try {
-    //console.log("Enviando:", dimension);
     const result = await localesService.updateDimensionesById(id, dimension);
     console.log("Resultado:", result);
-    toast("Dimensiones actualizadas correctamente.");
+    toast.success("Dimensiones actualizadas correctamente.");
+    if (onUpdate) onUpdate(); // Notifica al padre que hubo cambio
   } catch (error) {
     console.error("Error al guardar dimensiones:", error);
-    toast("Ocurrió un error al guardar.");
+    toast.error("Ocurrió un error al guardar.");
   }
-  };
+};
+
   return (
     <div className="mx-10 text-sm">
       <table className="w-full border mt-2 text-xs">
@@ -61,7 +79,7 @@ export default function Dimensiones() {
         <tbody>
           {dimensiones.map((dimension) => (
             <tr className="border" key={dimension.id}>
-              <td className="border p-2">{dimension.id}</td>
+              <td className="border p-2"></td>
               <td className="border p-2"></td>
               <td className="border p-2">
                 <DecimalNumericInput
@@ -135,12 +153,15 @@ export default function Dimensiones() {
                 />
               </td>
               <td>
+                <div className="flex justify-center items-center h-full">
+
                   <button
                     onClick={handleGuardar}
                     className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
                   >
                     Guardar Información
                   </button>
+                </div>
               </td>
             </tr>
           ))}

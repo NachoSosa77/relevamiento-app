@@ -82,11 +82,23 @@ export default function TableReutilizable({
           item: question,
           material: respuesta.material,
           estado: respuesta.estado,
-          relevamiento_id: relevamientoId, // de Redux
-          local_id: localId, // de URL
+          relevamiento_id: relevamientoId,
+          local_id: localId,
         };
       })
-      .filter(Boolean); // filtra los nulls
+      .filter(Boolean); // Filtra nulls
+
+    // Validación mínima: al menos un material o estado debe tener valor
+    const hayDatos = payload.some(
+      (item) =>
+        (item?.material && item.material.trim() !== "") ||
+        (item?.estado && item.estado.trim() !== "")
+    );
+
+    if (!hayDatos) {
+      toast.warning("Por favor, completá al menos un dato antes de guardar.");
+      return;
+    }
 
     console.log("Datos a enviar:", payload);
 
@@ -98,10 +110,10 @@ export default function TableReutilizable({
         },
         body: JSON.stringify(payload),
       });
-      toast("Información guardada correctamente");
+      toast.success("Información guardada correctamente");
     } catch (error) {
       console.error(error);
-      toast("Error al guardar los datos");
+      toast.error("Error al guardar los datos");
     }
   };
 

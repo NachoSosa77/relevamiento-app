@@ -38,6 +38,7 @@ export async function GET(
         lpc.local_id,
         lpc.relevamiento_id,
         lpc.cui_number,
+        lpc.identificacion_plano,
         lpc.numero_construccion,
         lpc.numero_planta,
         loc.tipo,

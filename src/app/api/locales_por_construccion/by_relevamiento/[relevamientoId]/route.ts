@@ -10,6 +10,7 @@ interface LocalPorConstruccion extends RowDataPacket {
   cui_number: number;
   numero_construccion: number;
   numero_planta: number;
+  identificacion_plano: number;
   tipo: string;
   nombre_local: string;
 }
@@ -41,6 +42,7 @@ export async function GET(
           lpc.numero_construccion,
           lpc.numero_planta,
           loc.tipo,
+          identificacion_plano,
           loc.name AS nombre_local
         FROM locales_por_construccion lpc
         JOIN opciones_locales loc ON lpc.local_id = loc.id

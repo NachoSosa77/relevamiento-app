@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +14,7 @@ interface FormValues {
 const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const router = useRouter();
-
+  const relevamientoId = useAppSelector((state) => state.espacio_escolar.relevamientoId);
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
 
@@ -33,6 +34,7 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
         domicilio: "Sin obras fuera del predio",
         cue: null,
         destino: "Sin obras fuera del predio",
+        relevamiento_id: relevamientoId,
       });
       toast.success("Datos enviados correctamente");
       setShowConfirmButton(false);
@@ -45,8 +47,8 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
   };
 
   return (
-    <div className="mx-10 mt-4">
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+    <div className="mx-8 my-6 border rounded-2xl">
+      <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <form className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <label className="text-base font-semibold text-gray-700">

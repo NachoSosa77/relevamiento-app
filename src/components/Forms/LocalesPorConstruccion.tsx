@@ -170,6 +170,9 @@ export default function LocalesPorConstruccion() {
 
     const numeroConstruccion = activeIndex + 1;
 
+    console.log("Active index:", activeIndex);
+console.log("Número construcción:", numeroConstruccion);
+
     // 1. Crear construcción
     const construccion = await localesService.postConstrucciones({
       numero_construccion: numeroConstruccion,

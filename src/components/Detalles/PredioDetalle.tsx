@@ -73,7 +73,7 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
 
       {predio.cantidad_construcciones > 0 && (
         <div className="space-y-2">
-          <h3 className="text-md font-semibold">Construcciones registradas</h3>
+          <h3 className="text-md font-semibold">Construcciones relevadas</h3>
           {Array.from({ length: predio.cantidad_construcciones }).map(
             (_, index) => (
               <ConstruccionDetalleAccordion

@@ -71,17 +71,8 @@ export default function RelevamientoCPage() {
   const predioId = useAppSelector((state) => state.predio.predioId);
 
   const predioObservaciones = useAppSelector((state) => state.predio.observaciones);
-  console.log("observaciones", predioObservaciones);
 
   //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const redirected = searchParams.get("redirected");
-
-    if (redirected === "true") {
-      toast.info("Redirigido desde la sección B");
-    }
-  }, []);
   useEffect(() => {
     if (institucionesRedux.length > 0) {
       setSelectedInstitutions(institucionesRedux);
@@ -378,8 +369,6 @@ export default function RelevamientoCPage() {
         initialObservations={""}
       />
       <div className="flex justify-center mt-4">
-        {" "}
-        {/* Contenedor flex con justify-center */}
         <button
           onClick={enviarDatosEspacioEscolar}
           className="px-4 py-2 w-80 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-400"

@@ -76,33 +76,42 @@ export default function ServiciosBasicos({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.map(({ id, question }) => {
-      const respuesta = responses[id];
-  
-      return {
-        servicio: question,
-        tipo_instalacion: respuesta?.disponibilidad || "No",
-        funciona: respuesta?.funciona || "No",
-        motivo: respuesta?.funciona === "No" ? respuesta?.motivo || "No" : "",
-        relevamiento_id: relevamientoId,
-        local_id: localId,
-      };
-    });
-  
-    console.log("Datos a enviar:", payload);
+  const payload = locales.map(({ id, question }) => {
+    const respuesta = responses[id];
 
-     try {
-       const response = await fetch("/api/instalaciones_basicas", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify(payload),
-       });
-       toast("Información guardada correctamente");
-     } catch (error) {
-       console.error(error);
-       toast("Error al guardar los datos");
-     }
-  };
+    return {
+      servicio: question,
+      tipo_instalacion: respuesta?.disponibilidad || "No",
+      funciona: respuesta?.funciona || "No",
+      motivo: respuesta?.funciona === "No" ? respuesta?.motivo || "No" : "",
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    };
+  });
+
+  const hayAlMenosUnDato = payload.some(
+    (item) =>
+      item.tipo_instalacion !== "No" || item.funciona !== "No" || (item.motivo && item.motivo.trim() !== "")
+  );
+
+  if (!hayAlMenosUnDato) {
+    toast.warning("Por favor, completá al menos un servicio antes de guardar.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/instalaciones_basicas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar los datos");
+  }
+};
+
 
   // IDs de los servicios que no deben renderizar la columna "Motivo"
   const noRenderMotivoIds = ["8.1.5", "8.1.6", "8.1.7"];
@@ -151,7 +160,7 @@ export default function ServiciosBasicos({
                         handleDisponibilidadChange(id, e.target.value)
                       }
                       options={opciones.map((option) => ({
-                        value: String(option.id), // Asegúrate de convertir a string aquí
+                        value: String(option.name), // Asegúrate de convertir a string aquí
                         label: option.name,
                       }))}
                     />

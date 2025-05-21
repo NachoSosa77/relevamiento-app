@@ -56,39 +56,46 @@ export default function EnergiasAlternativas({
   );
 
   const handleGuardar = async () => {
-    const payload = Object.keys(responses).map((key) => ({
+  const payload = Object.keys(responses)
+    .map((key) => ({
       estructura: "Energías alternativas",
-      disponibilidad: responses[key]?.disponibilidad || "",
-      estado: responses[key]?.estado || "",
+      disponibilidad: responses[key]?.disponibilidad?.trim() || "",
+      estado: responses[key]?.estado?.trim() || "",
       relevamiento_id: relevamientoId,
-    }));
+    }))
+    // Filtramos solo si ambos están vacíos, es decir, dejamos pasar si al menos uno tiene dato
+    .filter((item) => item.disponibilidad !== "" || item.estado !== "");
 
-    console.log("Datos a enviar:", payload);
+  if (payload.length === 0) {
+    toast.warning("No se completó ningún dato para guardar.");
+    return;
+  }
 
-    try {
-      const response = await fetch("/api/estado_conservacion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
+  console.log("Datos a enviar (filtrados):", payload);
 
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
+  try {
+    const response = await fetch("/api/estado_conservacion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
 
-      toast.success(
-        "Relevamiento características constructivas y estado de conservación guardado correctamente"
-      );
-
-      console.log("Respuesta de la API:", result);
-    } catch (error: any) {
-      console.error("Error al enviar los datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
     }
-  };
+
+    toast.success(
+      "Relevamiento características constructivas y estado de conservación guardado correctamente"
+    );
+  } catch (error: any) {
+    console.error("Error al enviar los datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

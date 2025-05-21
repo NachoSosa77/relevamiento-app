@@ -37,48 +37,47 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   // ...
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validación antes de enviar
-    const esFormularioValido = servicios.every((servicio) =>
-      columnsConfig.every((column) => {
-        if (column.type === "text") return true; // no se valida texto estático
-        const valor = servicio[column.key];
-        return valor !== undefined && valor !== null && valor !== "";
-      })
-    );
+  // Validar si al menos un servicio tiene al menos un campo de tipo select/modificable completo
+  const alMenosUnServicioValido = servicios.some((servicio) =>
+    columnsConfig.some((column) => {
+      if (column.type === "text") return false; // ignorar campos de solo texto
+      const valor = servicio[column.key];
+      return valor !== undefined && valor !== null && valor !== "";
+    })
+  );
 
-    if (!esFormularioValido) {
-      toast.warning("Por favor, completá todos los campos antes de enviar.");
-      return;
+  if (!alMenosUnServicioValido) {
+    toast.warning("Por favor, completá al menos un campo antes de enviar.");
+    return;
+  }
+
+  const serviciosConRelevamiento = servicios.map((servicio) => ({
+    ...servicio,
+    relevamiento_id: relevamientoId,
+  }));
+
+  try {
+    const response = await fetch("/api/servicios_basicos_predio", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(serviciosConRelevamiento),
+    });
+
+    if (response.ok) {
+      dispatch(setServicios(serviciosConRelevamiento));
+      toast.success("Servicios cargados correctamente!");
+    } else {
+      toast.error("Error al cargar los servicios.");
     }
-
-    // Agregamos relevamiento_id a cada servicio
-    const serviciosConRelevamiento = servicios.map((servicio) => ({
-      ...servicio,
-      relevamiento_id: relevamientoId,
-    }));
-
-    try {
-      const response = await fetch("/api/servicios_basicos_predio", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serviciosConRelevamiento),
-      });
-
-      if (response.ok) {
-        dispatch(setServicios(serviciosConRelevamiento));
-        toast.success("Servicios cargados correctamente!");
-      } else {
-        toast.error("Error al cargar los servicios.");
-      }
-    } catch (error) {
-      toast.error("Error inesperado al enviar los datos.");
-      console.error(error);
-    }
-  };
+  } catch (error) {
+    toast.error("Error inesperado al enviar los datos.");
+    console.error(error);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="p-4 mx-10">

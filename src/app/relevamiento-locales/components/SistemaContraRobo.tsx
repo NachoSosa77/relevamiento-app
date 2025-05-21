@@ -53,27 +53,35 @@ export default function SistemaContraRobo({
   };
 
   const handleGuardar = async () => {
-    const datosAGuardar = Object.entries(opcionesSeleccionadas).map(
-      ([key, opcion]) => ({
-        id: localId, // o podrías usar Number(key) si es uno por fila
-        proteccion_contra_robo: opcion?.name || null,
-      })
-    );
+  const datosAGuardar = Object.entries(opcionesSeleccionadas).map(
+    ([key, opcion]) => ({
+      id: localId, // o podrías usar Number(key) si es uno por fila
+      proteccion_contra_robo: opcion?.name || null,
+    })
+  );
 
-    console.log("Datos a enviar:", datosAGuardar);
+  const hayAlMenosUnDato = datosAGuardar.some(
+    (dato) => dato.proteccion_contra_robo && dato.proteccion_contra_robo.trim() !== ""
+  );
 
-    try {
-      for (const dato of datosAGuardar) {
-        await localesService.updateConstruccionAntiRoboById(dato.id, {
-          proteccion_contra_robo: dato.proteccion_contra_robo!,
-        });
-      }
-      toast("Información guardada correctamente");
-    } catch (error) {
-      console.error("Error al guardar:", error);
-      toast("Error al guardar los datos");
+  if (!hayAlMenosUnDato) {
+    toast.warning("Por favor, seleccioná al menos una opción antes de guardar.");
+    return;
+  }
+
+  try {
+    for (const dato of datosAGuardar) {
+      await localesService.updateConstruccionAntiRoboById(dato.id, {
+        proteccion_contra_robo: dato.proteccion_contra_robo!,
+      });
     }
-  };
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    toast.error("Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
- 
- 
+
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
@@ -76,19 +75,21 @@ export default function EquipamientoCantidadSanitarios({
       (item) => typeof item.cantidad === "number" && item.cantidad > 0
     );
 
-    console.log("Datos a enviar:", datosFiltrados);
-
-     try {
+    if (datosFiltrados.length === 0) {
+      toast.warning("Debe completar al menos un dato para guardar.");
+      return;
+    }
+    try {
       const response = await fetch("/api/equipamiento_sanitarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosFiltrados),
       });
-      toast("Información guardada correctamente");
+      toast.success("Información guardada correctamente");
     } catch (error) {
       console.error(error);
-      toast("Error al guardar los datos");
-    }  
+      toast.error("Error al guardar los datos");
+    }
   };
 
   return (

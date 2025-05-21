@@ -53,39 +53,71 @@ export default function CaracteristicasConservacion({
   );
 
   const handleGuardar = async () => {
-    const payload = Object.keys(responses).map((key) => ({
-      estructura: responses[key]?.estructura || "",
-      disponibilidad: responses[key]?.disponibilidad || "",
-      estado: responses[key]?.estado || "",
-      relevamiento_id: relevamientoId,
-    }));
+  // Validación
+  const estructurasValidas = estructuras.every((estructura) => {
+    const respuesta = responses[estructura.id];
 
-    console.log("Datos a enviar:", payload);
+    if (!respuesta) return false;
 
-    try {
-      const response = await fetch("/api/estado_conservacion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
-
-      toast.success(
-        "Relevamiento características constructivas y estado de conservación guardado correctamente"
+    if (estructura.showCondition && estructura.id !== "13.1") {
+      return (
+        !!respuesta.estructura?.trim() &&
+        !!respuesta.estado?.trim()
       );
-
-      console.log("Respuesta de la API:", result);
-    } catch (error: any) {
-      console.error("Error al enviar los datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
     }
-  };
+
+    if (!estructura.showCondition && estructura.id === "13.1") {
+      return (
+        respuesta.disponibilidad === "Si" ||
+        respuesta.disponibilidad === "No"
+      );
+    }
+
+    return true;
+  });
+
+  if (!estructurasValidas) {
+    toast.warning("Por favor, completa todas las respuestas antes de guardar.");
+    return;
+  }
+
+  // Construcción del payload
+  const payload = estructuras.map((estructura) => {
+    const respuesta = responses[estructura.id];
+    return {
+      estructura: respuesta.estructura || "",
+      disponibilidad: respuesta.disponibilidad || "",
+      estado: respuesta.estado || "",
+      relevamiento_id: relevamientoId,
+    };
+  });
+
+  console.log("Datos a enviar:", payload);
+
+  try {
+    const response = await fetch("/api/estado_conservacion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Error al guardar los datos");
+    }
+
+    toast.success(
+      "Relevamiento características constructivas y estado de conservación guardado correctamente"
+    );
+    console.log("Respuesta de la API:", result);
+  } catch (error: any) {
+    console.error("Error al enviar los datos:", error);
+    toast.error(error.message || "Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

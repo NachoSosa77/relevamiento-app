@@ -58,37 +58,48 @@ export default function TableCantidadReutilizable({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.flatMap(({ id, question }) => {
-      const respuesta = responses[id];
-      if (!respuesta) return [];
-    
-      return Object.entries(respuesta).map(([tipo, valores]) => ({
-        abertura: question,
-        tipo,
-        estado: valores.estado,
-        cantidad: valores.cantidad,
-        relevamiento_id: relevamientoId,
-        local_id: localId,
-      }));
+  const payload = locales.flatMap(({ id, question }) => {
+    const respuesta = responses[id];
+    if (!respuesta) return [];
+
+    return Object.entries(respuesta).map(([tipo, valores]) => ({
+      abertura: question,
+      tipo,
+      estado: valores.estado,
+      cantidad: valores.cantidad,
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    }));
+  });
+
+  // Validación mínima: al menos un estado o cantidad debe estar presente
+  const hayDatos = payload.some(
+    (item) =>
+      (item.estado && item.estado.trim() !== "") ||
+      (item.cantidad !== undefined && item.cantidad !== null)
+  );
+
+  if (!hayDatos) {
+    toast.warning("Por favor, completá al menos un dato antes de guardar.");
+    return;
+  }
+
+
+  try {
+    const response = await fetch("/api/aberturas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
-    
-  
-      console.log("Datos a enviar:", payload);
-  
-       try {
-        const response = await fetch("/api/aberturas", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-        toast("Información guardada correctamente");
-      } catch (error) {
-        console.error(error);
-        toast("Error al guardar los datos");
-      } 
-    };
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar los datos");
+  }
+};
+
 
   return (
     <div className="mx-10 text-sm">

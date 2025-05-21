@@ -20,7 +20,7 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
   const handleGuardarCambios = async () => {
     if (!antiguedad.ano.trim() || !antiguedad.destino) {
-      toast("Por favor, complete todos los campos.");
+      toast.warning("Por favor, complete todos los campos.");
       return;
     }
 
@@ -34,12 +34,12 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
       await axios.patch(`/api/construcciones/${construccionId}`, payload);
 
-      toast("Datos de antigüedad y destino actualizados correctamente");
+      toast.success("Datos de antigüedad y destino actualizados correctamente");
       setConstruccionEnviada(payload);
       setAntiguedad({ ano: "", destino: "" });
     } catch (error: any) {
       console.error("Error al guardar los datos:", error);
-      toast(
+      toast.error(
         `Hubo un error al guardar los datos: ${
           error.response?.data?.message || error.message
         }`

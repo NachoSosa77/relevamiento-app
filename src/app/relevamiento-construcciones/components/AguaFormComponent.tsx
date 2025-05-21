@@ -43,19 +43,20 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
   });
 
   const handleSubmit = async () => {
-  // Validación básica
-  if (
-    !servicioBasico.tipo_provision ||
-    !servicioBasico.tipo_provision_estado ||
-    !servicioBasico.tipo_almacenamiento ||
-    !servicioBasico.tipo_almacenamiento_estado ||
-    servicioBasico.alcance.length === 0 ||
-    !calidadAgua.tratamiento ||
-    !calidadAgua.tipo_tratamiento ||
-    !calidadAgua.control_sanitario ||
-    !calidadAgua.cantidad_veces
-  ) {
-    toast.warning("Por favor, completá todos los campos antes de guardar.");
+  // Verificamos si al menos uno de los campos está completo (no vacío o no nulo)
+  const hasSomeData =
+    servicioBasico.tipo_provision ||
+    servicioBasico.tipo_provision_estado ||
+    servicioBasico.tipo_almacenamiento ||
+    servicioBasico.tipo_almacenamiento_estado ||
+    (servicioBasico.alcance && servicioBasico.alcance.length > 0) ||
+    calidadAgua.tratamiento ||
+    calidadAgua.tipo_tratamiento ||
+    calidadAgua.control_sanitario ||
+    calidadAgua.cantidad_veces;
+
+  if (!hasSomeData) {
+    toast.warning("Por favor, completá al menos un campo antes de guardar.");
     return;
   }
 
@@ -87,6 +88,7 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
     toast.error(error.message || "Error al guardar los datos");
   }
 };
+
   
 
   return (

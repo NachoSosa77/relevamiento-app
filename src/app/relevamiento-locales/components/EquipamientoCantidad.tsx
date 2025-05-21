@@ -57,38 +57,42 @@ export default function EquipamientoCantidad({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.map(({ id, question }) => {
-      const respuesta = responses[id];
+  const payload = locales.map(({ id, question }) => {
+    const respuesta = responses[id];
 
-      return {
-        equipamiento: question,
-        cantidad: respuesta?.cantidad,
-        cantidad_funcionamiento: respuesta?.cantidad_funcionamiento,
-        estado: respuesta?.estado,
-        relevamiento_id: relevamientoId,
-        local_id: localId,
-      };
+    return {
+      equipamiento: question,
+      cantidad: respuesta?.cantidad,
+      cantidad_funcionamiento: respuesta?.cantidad_funcionamiento,
+      estado: respuesta?.estado,
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    };
+  });
+
+  // Filtrar solo los que tengan cantidad > 0
+  const datosFiltrados = payload.filter(
+    (item) => typeof item.cantidad === "number" && item.cantidad > 0
+  );
+
+  if (datosFiltrados.length === 0) {
+    toast.warning("Debe completar al menos un dato para guardar.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/equipamiento_cocina_offices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datosFiltrados),
     });
+    toast.success("Información guardada correctamente");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar los datos");
+  }
+};
 
-    // Filtrar solo los que tengan cantidad > 0
-    const datosFiltrados = payload.filter(
-      (item) => typeof item.cantidad === "number" && item.cantidad > 0
-    );
-
-    console.log("Datos a enviar:", datosFiltrados);
-
-    try {
-      const response = await fetch("/api/equipamiento_cocina_offices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datosFiltrados),
-      });
-      toast("Información guardada correctamente");
-    } catch (error) {
-      console.error(error);
-      toast("Error al guardar los datos");
-    } 
-  };
 
   return (
     <div className="mx-10 text-sm">

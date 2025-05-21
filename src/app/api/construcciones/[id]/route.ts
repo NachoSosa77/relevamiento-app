@@ -3,7 +3,6 @@
 import { getConnection } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
-// PATCH /api/construcciones/:id
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -12,12 +11,13 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
-    const { antiguedad, destino } = body;
+    const { antiguedad, destino, observaciones } = body;
 
-    if (!antiguedad && !destino) {
+    if (!antiguedad && !destino && !observaciones) {
       return NextResponse.json(
         {
-          message: "Se requiere al menos antigüedad o destino para actualizar",
+          message:
+            "Se requiere al menos antigüedad, destino u observaciones para actualizar",
         },
         { status: 400 }
       );
@@ -36,6 +36,11 @@ export async function PATCH(
     if (destino) {
       fields.push("destino = ?");
       values.push(destino);
+    }
+
+    if (observaciones) {
+      fields.push("observaciones = ?");
+      values.push(observaciones);
     }
 
     values.push(id); // Para el WHERE

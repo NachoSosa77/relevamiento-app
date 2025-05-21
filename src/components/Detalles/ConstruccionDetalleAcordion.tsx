@@ -34,23 +34,8 @@ export const ConstruccionDetalleAccordion = ({
 
   const openModal = (local: LocalesConstruccion) => {
     setLocalSeleccionado(local);
-    setShowModal(true);
-  };
+    setShowModal(true);  };
 
-  const toggleLocales = async () => {
-    if (!showLocales && locales.length === 0) {
-      try {
-        const data = await localesService.getLocalesByConstruccionId(
-          construccion?.id
-        );
-        console.log(data)
-        setLocales(data);
-      } catch (error) {
-        toast.error("No se pudieron cargar los locales");
-      }
-    }
-    setShowLocales(!showLocales);
-  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -59,6 +44,7 @@ export const ConstruccionDetalleAccordion = ({
           relevamientoId,
           numeroConstruccion
         );
+        console.log('ACA TENDRIAN',data)
         setConstruccion(data);
       } catch (error) {
         // No mostrar toast para evitar spam, solo marcar como no cargado
@@ -69,6 +55,21 @@ export const ConstruccionDetalleAccordion = ({
 
     fetch();
   }, [relevamientoId, numeroConstruccion]);
+
+  const toggleLocales = async () => {
+    if (!showLocales && locales.length === 0) {
+      try {
+        const data = await localesService.getLocalesByConstruccionId(construccion?.id);
+        console.log('ACA TENDRIAN QUE ESTAR LOS LOCALES',data)
+        setLocales(data);
+      } catch (error) {
+        toast.error("No se pudieron cargar los locales");
+      }
+    }
+    setShowLocales(!showLocales);
+  };
+
+  
 
   const toggle = () => setExpanded(!expanded);
 

@@ -23,16 +23,16 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocal, setSelectedLocal] = useState<any | null>(null); // Para guardar el local seleccionado
-    const [isClient, setIsClient] = useState(false); // Estado para saber si estamos en el cliente
-    const router = useRouter(); // Hook de navegación
+  const [localesActualizados, setLocalesActualizados] = useState<number[]>([]);
+  const [isClient, setIsClient] = useState(false); // Estado para saber si estamos en el cliente
+  const router = useRouter(); // Hook de navegación
 
-    useEffect(() => {
-      setIsClient(true); // Actualizamos el estado cuando el componente esté montado en el cliente
-    }, []);
+  useEffect(() => {
+    setIsClient(true); // Actualizamos el estado cuando el componente esté montado en el cliente
+  }, []);
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log(relevamientoId)
 
   useEffect(() => {
     const fetchLocales = async () => {
@@ -53,15 +53,33 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
     }
   }, [relevamientoId]);
 
+  useEffect(() => {
+    const onStorageChange = () => {
+      const actualizadosString = localStorage.getItem("localesActualizados");
+      const actualizados = actualizadosString
+        ? JSON.parse(actualizadosString).map(Number) // convertir a números acá
+        : [];
+      setLocalesActualizados(actualizados);
+    };
+
+    window.addEventListener("storage", onStorageChange);
+
+    // También lo llamamos una vez para inicializar
+    onStorageChange();
+
+    return () => {
+      window.removeEventListener("storage", onStorageChange);
+    };
+  }, []);
+
   const handleLocalSelect = (local: any) => {
     setSelectedLocal(local);
     onLocalSelected(local);
-    if (isClient) {  // Verificamos que estamos en el cliente antes de hacer la navegación
+    if (isClient) {
+      // Verificamos que estamos en el cliente antes de hacer la navegación
       router.push(`/relevamiento-locales/detalle-local/${local.id}`); // Navegar al detalle usando el ID del local
     }
   };
-
-  
 
   if (loading) return <p className="mx-10">Cargando locales...</p>;
   if (error) return <p className="mx-10 text-red-500">{error}</p>;
@@ -79,24 +97,44 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
         <table className="w-full mt-2 border text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border px-2 py-1 text-center">Local Id</th>
-              <th className="border px-2 py-1 text-center">Nombre</th>
-              <th className="border px-2 py-1 text-center">CUI</th>
-              <th className="border px-2 py-1 text-center">Acción</th>
+              <th className="border px-2 py-1 text-center">Cui</th>
+              <th className="border px-2 py-1 text-center">N° Construcción</th>
+              <th className="border px-2 py-1 text-center">N° Planta</th>
+              <th className="border px-2 py-1 text-center">N° Local</th>
+              <th className="border px-2 py-1 text-center">Tipo local</th>
+              <th className="border px-2 py-1 text-center"></th>
+              {localesActualizados.length > 0 && (
+                <th className="border px-2 py-1 text-center"></th>
+              )}
             </tr>
           </thead>
           <tbody>
             {locales.map((local) => (
-              <tr key={local.id} className={`${
-                selectedLocal?.id === local.id ? "bg-blue-100" : ""
-              } hover:bg-gray-100 transition-colors`}>
-                <td className="border px-2 py-1 text-center">{local.id}</td>
-                <td className="border px-2 py-1 text-center">
-                  {local.nombre_local}
-                </td>
+              <tr key={local.id} className="">
                 <td className="border px-2 py-1 text-center">
                   {local.cui_number}
                 </td>
+                <td className="border px-2 py-1 text-center">
+                  L {local.numero_construccion}
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  P {local.numero_planta}
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  L {local.identificacion_plano}
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  {local.nombre_local}
+                </td>
+                {localesActualizados.length > 0 && (
+                  <td className="border px-2 py-1 text-center">
+                    {localesActualizados.includes(local.id) ? (
+                      <span className="text-green-500">✔️</span>
+                    ) : (
+                      <span className="text-red-500"></span>
+                    )}
+                  </td>
+                )}
                 <td className="border px-2 py-1 text-center">
                   <button
                     onClick={() => handleLocalSelect(local)}
@@ -115,8 +153,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
           </tbody>
         </table>
       )}
-
-      
     </div>
   );
 };

@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
           local_sin_uso,
           superficie,
           relevamiento_id,
-          cui_number
-        ) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?)`,
+          cui_number,
+          numero_construccion
+        ) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?)`,
         [
           local.construccion_id,
           local.identificacion_plano,
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
           local.superficie,
           local.relevamiento_id, // 👈 nuevo valor insertado
           local.cui_number,
+          local.numero_construccion,
         ]
       );
 

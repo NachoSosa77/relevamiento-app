@@ -3,21 +3,25 @@ import { getConnection } from "@/app/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 
-interface OpcionObraEnpredio extends RowDataPacket {
+// Asegurate de que estos campos coincidan con los reales de tu tabla
+interface ObraFueraPredio extends RowDataPacket {
   id: number;
-  name: string;
-  prefijo: string;
+  tipo_obra: string;
+  domicilio: string;
+  cue: string | null;
+  destino: string;
+  relevamiento_id: number;
 }
 
 export async function GET() {
   try {
     const connection = await getConnection();
-    const [opciones] = await connection.query<OpcionObraEnpredio[]>(
+    const [obras] = await connection.query<ObraFueraPredio[]>(
       "SELECT * FROM obras_fuera_predio"
     );
     connection.release();
 
-    return NextResponse.json(opciones);
+    return NextResponse.json(obras);
   } catch (err: any) {
     console.error("Error al obtener las obras en predio:", err);
     return NextResponse.json(
@@ -30,14 +34,22 @@ export async function GET() {
   }
 }
 
-// ✅ Método POST: Insertar una nueva obra en el predio
 export async function POST(req: Request) {
   try {
-    const body = await req.json(); // Obtener datos del request
-    const { tipo_obra, domicilio, cue, destino } = body;
+    const body = await req.json();
+    console.log("🟡 Back recibió:", body);
 
-    // 🔍 Validar que los campos requeridos estén presentes
-    if (!tipo_obra || !domicilio || !destino) {
+    const { tipo_obra, domicilio, cue, destino, relevamiento_id } = body;
+
+    console.log("🟢 Campos procesados:", {
+      tipo_obra,
+      domicilio,
+      cue,
+      destino,
+      relevamiento_id,
+    });
+
+    if (!tipo_obra || !domicilio || !destino || !relevamiento_id) {
       return NextResponse.json(
         { message: "Faltan campos obligatorios" },
         { status: 400 }
@@ -46,9 +58,16 @@ export async function POST(req: Request) {
 
     const connection = await getConnection();
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO obras_fuera_predio (tipo_obra, domicilio, cue, destino) 
-       VALUES (?, ?, ?, JSON_ARRAY(?))`,
-      [tipo_obra, domicilio, cue, destino]
+      `INSERT INTO obras_fuera_predio 
+      (tipo_obra, domicilio, cue, destino, relevamiento_id) 
+      VALUES (?, ?, ?, ?, ?)`,
+      [
+        tipo_obra,
+        domicilio,
+        cue ?? null, // Si cue no es obligatorio, permitir null
+        JSON.stringify(destino),
+        relevamiento_id,
+      ]
     );
     connection.release();
 
@@ -57,7 +76,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (err: any) {
-    console.error("Error al insertar obra en predio:", err);
+    console.error("🔴 Error al insertar obra en predio:", err);
     return NextResponse.json(
       { message: "Error al insertar obra en predio", error: err.message },
       { status: 500 }
