@@ -1,17 +1,18 @@
+import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
 import { UserData } from "@/interfaces/UserData";
 import { resetArchivos } from "@/redux/slices/archivoSlice";
 import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
 import { persistor } from "@/redux/store";
 import { jwtDecode } from "jwt-decode";
+import Image from 'next/image';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  AiOutlineBell,
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineMenu,
-  AiOutlineUser,
+  AiOutlineUser
 } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 
@@ -47,8 +48,6 @@ const Navbar = () => {
 
 
 const handleLogout = async () => {
-  console.log("Logging out...");
-
   try {
     await fetch("/api/auth/logout", { method: "POST" }); // ⬅️ Llama al endpoint para borrar la cookie en el servidor
     dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
@@ -69,21 +68,21 @@ const handleLogout = async () => {
 
   return (
     <nav className="navbar fixed top-0 w-full z-50 transition-all duration-300 border bg-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto p-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left section - Logo */}
-          <div className="flex-shrink-0 flex items-center">
+          <div className="flex justify-start">
+            <Image src={logo} alt="Logo" width={300} height={100}/>
+          <div className="flex items-center">
             <Link href="/home">
-              <AiOutlineHome className="h-7 w-7 text-black cursor-pointer" />
+              <AiOutlineHome className="h-9 w-9 ml-2 text-black cursor-pointer" />
             </Link>
+          </div>
           </div>
 
           {/* Right section - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Notifications */}
-            <div className="relative">
-              <AiOutlineBell className="h-7 w-7 text-black cursor-pointer" />
-            </div>
 
             {/* User Profile Dropdown */}
             {user && (
@@ -93,7 +92,7 @@ const handleLogout = async () => {
                   className="flex items-center space-x-3 focus:outline-none"
                   aria-label="User menu"
                 >
-                  <AiOutlineUser className="h-7 w-7 rounded-full object-cover text-black cursor-pointer" />
+                  <AiOutlineUser className="h-9 w-9 rounded-full object-cover text-black cursor-pointer" />
                 </button>
 
                 {/* Dropdown Menu */}

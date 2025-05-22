@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import { Construccion } from "@/interfaces/Locales";
 import { predioService } from "@/services/Predio/predioService";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -21,24 +22,31 @@ interface Predio {
 
 export const PredioDetalle = ({ relevamientoId }: Props) => {
   const [predio, setPredio] = useState<Predio | null>(null);
+  const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
 
   useEffect(() => {
-    const fetchPredio = async () => {
+    const fetchPredioYConstrucciones = async () => {
       try {
-        const data = await predioService.getPredioByRelevamientoId(
-          relevamientoId
-        );
-        if (data.length > 0) {
-          setPredio(data[0]);
+        const [predioData, construccionesData] = await Promise.all([
+          predioService.getPredioByRelevamientoId(relevamientoId),
+          fetch(`/api/construcciones?relevamiento_id=${relevamientoId}`).then(
+            (res) => res.json()
+          ),
+        ]);
+
+        if (predioData.length > 0) {
+          setPredio(predioData[0]);
         } else {
           toast.info("No hay datos del predio para este relevamiento");
         }
+
+        setConstrucciones(construccionesData || []);
       } catch (err) {
-        toast.error("Error al cargar los datos del predio");
+        toast.error("Error al cargar los datos del predio o construcciones");
       }
     };
 
-    fetchPredio();
+    fetchPredioYConstrucciones();
   }, [relevamientoId]);
 
   if (!predio) return <div>No se encontró información del predio.</div>;
@@ -74,14 +82,15 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
       {predio.cantidad_construcciones > 0 && (
         <div className="space-y-2">
           <h3 className="text-md font-semibold">Construcciones relevadas</h3>
-          {Array.from({ length: predio.cantidad_construcciones }).map(
-            (_, index) => (
-              <ConstruccionDetalleAccordion
-                key={index}
-                relevamientoId={relevamientoId}
-                numeroConstruccion={index + 1}
-              />
-            )
+          {construcciones.length > 0 && (
+            <div className="space-y-2">
+              {construcciones.map((construccion, index) => (
+                <ConstruccionDetalleAccordion
+                  key={construccion.id}
+                  construccion={construccion} // Podés pasarle la construcción entera si querés: construccion={construccion}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}

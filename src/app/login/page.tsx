@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -120,11 +122,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-dark.background dark:to-dark.secondary.DEFAULT py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark.card.DEFAULT p-8 rounded-lg shadow-lg">
+        <div className="flex justify-center">
+          <Image src={logo} alt="Logo" width={350} height={100} />
+        </div>
         <div className="text-center">
-          <h2 className="text-heading font-heading text-foreground dark:text-dark.foreground">
+          <h2 className="text-heading font-heading text-custom dark:text-dark.foreground">
             Bienvenido
           </h2>
-          <p className="mt-2 text-body text-accent-foreground dark:text-dark.accent.foreground">
+          <p className="text-body text-accent-foreground dark:text-dark.accent.foreground">
             Inicia sesión en tu cuenta
           </p>
         </div>
@@ -134,7 +139,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-body text-foreground dark:text-dark.foreground"
+                className="block text-sm font-body text-custom dark:text-dark.foreground"
               >
                 Correo Electrónico
               </label>
@@ -162,7 +167,7 @@ export default function LoginPage() {
             <div className="relative">
               <label
                 htmlFor="password"
-                className="block text-sm font-body text-foreground dark:text-dark.foreground"
+                className="block text-sm font-body text-custom dark:text-dark.foreground"
               >
                 Contraseña
               </label>
@@ -231,7 +236,7 @@ export default function LoginPage() {
           <div className="space-y-4">
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-body text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark.primary.DEFAULT dark:text-dark.primary.foreground"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-body text-primary-foreground bg-custom hover:bg-custom/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark.primary.DEFAULT dark:text-dark.primary.foreground"
             >
               {isLoading ? "Cargando..." : "Iniciar Sesión"}
             </button>

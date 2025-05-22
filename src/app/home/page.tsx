@@ -3,7 +3,6 @@
 "use client";
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
-import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -112,12 +111,10 @@ export default function HomePage() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="h-full overflow-hidden bg-white text-black">
-      <Navbar />
-      <div className="flex justify-end mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-end">
-          <h1 className="font-bold">PLANILLA GENERAL</h1>
-          <h4 className="text-sm">DE RELEVAMIENTO PEDAGÓGICO</h4>
+    <div className="h-full mt-8 overflow-hidden bg-white text-black">
+      <div className="flex justify-center mt-20 mb-8 mx-4">
+        <div className="flex flex-col items-center">
+          <h1 className="font-bold">FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO</h1>
         </div>
       </div>
 

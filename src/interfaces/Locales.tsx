@@ -16,6 +16,10 @@ export interface Construccion {
   destino?: string;
 }
 
+export interface Servicios {
+  sanitarios?: boolean;
+}
+
 export interface LocalesConstruccion {
   id?: number;
   construccion_id?: number;
@@ -33,4 +37,6 @@ export interface LocalesConstruccion {
   altura_maxima?: number,
   altura_minima?: number,
   proteccion_contra_robo?: string,
+  observaciones?: string,
+  servicios?: Servicios;  // <-- Lo agregamos acá
 }

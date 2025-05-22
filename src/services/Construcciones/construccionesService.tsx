@@ -15,7 +15,13 @@ export const construccionService = {
   async getConstruccionesById(id: number) {
     const response = await axios.get(`/api/construcciones/${id}`, {
     });
-    console.log('construccion',response)
+    console.log('construccion', response)
     return response;
-},
+  },
+  async getByRelevamientoId(id: number) {
+    const res = await fetch(`/api/construcciones?relevamiento_id=${id}`);
+    if (!res.ok) throw new Error("Error al obtener construcciones");
+    return await res.json();
+  },
+
 }

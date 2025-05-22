@@ -74,9 +74,9 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const relevamientoId = searchParams.get("relevamiento_id");
 
-  if (!relevamientoId) {
+  if (!relevamientoId || isNaN(Number(relevamientoId))) {
     return NextResponse.json(
-      { message: "Falta el parámetro relevamiento_id" },
+      { message: "Parámetro relevamiento_id inválido o faltante" },
       { status: 400 }
     );
   }
@@ -85,13 +85,13 @@ export async function GET(req: Request) {
     const connection = await getConnection();
 
     const [rows] = await connection.query(
-      `SELECT * FROM construcciones WHERE relevamiento_id = ?`,
+      `SELECT * FROM construcciones WHERE relevamiento_id = ? ORDER BY numero_construccion ASC`,
       [relevamientoId]
     );
 
     connection.release();
 
-    return NextResponse.json(rows);
+    return NextResponse.json(rows, { status: 200 });
   } catch (err: any) {
     console.error("Error al obtener construcciones:", err);
     return NextResponse.json(
