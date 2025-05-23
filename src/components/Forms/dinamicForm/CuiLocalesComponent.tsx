@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { LocalesConstruccion } from "@/interfaces/Locales";
 import { useAppSelector } from "@/redux/hooks";
+import { setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
+import { relevamientoService } from "@/services/relevamientoService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 interface CuiLocalesComponentProps {
   label: string;
   sublabel: string;
-  onLocalSelected: (local: any | null) => void;
+  onLocalSelected: (local: LocalesConstruccion | null) => void;
   isReadOnly: boolean;
 }
 
@@ -19,17 +23,18 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   onLocalSelected,
   isReadOnly,
 }) => {
-  const [locales, setLocales] = useState<any[]>([]);
+  const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLocal, setSelectedLocal] = useState<any | null>(null); // Para guardar el local seleccionado
-  const [localesActualizados, setLocalesActualizados] = useState<number[]>([]);
-  const [isClient, setIsClient] = useState(false); // Estado para saber si estamos en el cliente
-  const router = useRouter(); // Hook de navegación
+  const [selectedLocalId, setSelectedLocalId] = useState<number | undefined>(
+    undefined
+  );
+  const [relevamientoGuardado, setRelevamientoGuardado] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    setIsClient(true); // Actualizamos el estado cuando el componente esté montado en el cliente
-  }, []);
+  const dispatch = useDispatch();
+dispatch(setRelevamientoId(56));
+
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
@@ -40,6 +45,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
         const response = await localesService.getLocalesPorRelevamiento(
           relevamientoId
         );
+        console.log("response", response.locales);
         setLocales(response.locales || []);
       } catch (err) {
         setError("Error al obtener los locales");
@@ -51,33 +57,31 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
     if (relevamientoId) {
       fetchLocales();
     }
-  }, [relevamientoId]);
+  }, [relevamientoId, router]);
 
-  useEffect(() => {
-    const onStorageChange = () => {
-      const actualizadosString = localStorage.getItem("localesActualizados");
-      const actualizados = actualizadosString
-        ? JSON.parse(actualizadosString).map(Number) // convertir a números acá
-        : [];
-      setLocalesActualizados(actualizados);
-    };
+  // Separar locales en completos e incompletos para mostrar en dos tablas
+  const localesCompletos = locales.filter((l) => l.estado === "completo");
+  const localesIncompletos = locales.filter((l) => l.estado !== "completo");
+  const todosCompletos = localesIncompletos.length === 0;
 
-    window.addEventListener("storage", onStorageChange);
-
-    // También lo llamamos una vez para inicializar
-    onStorageChange();
-
-    return () => {
-      window.removeEventListener("storage", onStorageChange);
-    };
-  }, []);
-
-  const handleLocalSelect = (local: any) => {
-    setSelectedLocal(local);
+  const handleLocalSelect = (local: LocalesConstruccion) => {
+    setSelectedLocalId(local.id);
     onLocalSelected(local);
-    if (isClient) {
-      // Verificamos que estamos en el cliente antes de hacer la navegación
-      router.push(`/relevamiento-locales/detalle-local/${local.id}`); // Navegar al detalle usando el ID del local
+    router.push(`/relevamiento-locales/detalle-local/${local.id}`);
+  };
+
+  const handleGuardarRelevamiento = async () => {
+    try {
+      await relevamientoService.updateEstadoRelevamiento(
+        relevamientoId,
+        "completo"
+      );
+      toast.success("Relevamiento marcado como completo");
+      setRelevamientoGuardado(true);
+      router.push("/home")
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al actualizar estado del relevamiento");
     }
   };
 
@@ -87,72 +91,135 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   return (
     <div className="mx-10">
       <p className="text-sm font-semibold">{label}</p>
-      <p className="text-xs text-gray-500 mb-2">{sublabel}</p>
+      <p className="text-xs text-gray-500 mb-4">{sublabel}</p>
 
-      {locales.length === 0 ? (
-        <p className="text-gray-500">
-          No hay locales cargados para este relevamiento.
-        </p>
-      ) : (
-        <table className="w-full mt-2 border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-2 py-1 text-center">Cui</th>
-              <th className="border px-2 py-1 text-center">N° Construcción</th>
-              <th className="border px-2 py-1 text-center">N° Planta</th>
-              <th className="border px-2 py-1 text-center">N° Local</th>
-              <th className="border px-2 py-1 text-center">Tipo local</th>
-              <th className="border px-2 py-1 text-center"></th>
-              {localesActualizados.length > 0 && (
-                <th className="border px-2 py-1 text-center"></th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {locales.map((local) => (
-              <tr key={local.id} className="">
-                <td className="border px-2 py-1 text-center">
-                  {local.cui_number}
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  L {local.numero_construccion}
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  P {local.numero_planta}
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  L {local.identificacion_plano}
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  {local.nombre_local}
-                </td>
-                {localesActualizados.length > 0 && (
-                  <td className="border px-2 py-1 text-center">
-                    {localesActualizados.includes(local.id) ? (
-                      <span className="text-green-500">✔️</span>
-                    ) : (
-                      <span className="text-red-500"></span>
-                    )}
-                  </td>
-                )}
-                <td className="border px-2 py-1 text-center">
-                  <button
-                    onClick={() => handleLocalSelect(local)}
-                    disabled={isReadOnly}
-                    className={`px-3 py-1 rounded text-white ${
-                      isReadOnly
-                        ? "bg-gray-400"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                  >
-                    Seleccionar
-                  </button>
-                </td>
+      {/* Tabla locales incompletos */}
+      <div>
+        <h3 className="mb-2 font-semibold text-red-600">Locales incompletos</h3>
+        {localesIncompletos.length === 0 ? (
+          <p className="text-gray-500">No hay locales incompletos.</p>
+        ) : (
+          <table className="w-full mb-6 border text-sm">
+            <thead className="bg-slate-100">
+              <tr>
+                <th className="border px-2 py-1 text-center">Cui</th>
+                <th className="border px-2 py-1 text-center">
+                  N° Construcción
+                </th>
+                <th className="border px-2 py-1 text-center">N° Identif. plano</th>
+                <th className="border px-2 py-1 text-center">Tipo local</th>
+                <th className="border px-2 py-1 text-center">Estado</th>
+                <th className="border px-2 py-1 text-center">Acción</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {localesIncompletos.map((local) => (
+                <tr
+                  key={local.id}
+                  className={
+                    local.id === selectedLocalId ? "bg-custom/50" : ""
+                  }
+                >
+                  <td className="border px-2 py-1 text-center">
+                    {local.cui_number}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    L {local.numero_construccion}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    L {local.identificacion_plano}
+                  </td>
+                  <td className="border px-2 py-1 text-center">{local.nombre_local}</td>
+                  <td className="border px-2 py-1 text-center text-red-600 font-bold">
+                    Incompleto
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    <button
+                      onClick={() => {handleLocalSelect(local)}}
+                      disabled={isReadOnly}
+                      className={`px-3 py-1 rounded text-white ${
+                        isReadOnly
+                          ? "bg-gray-400"
+                          : "bg-custom hover:bg-custom/50"
+                      }`}
+                    >
+                      Completar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Tabla locales completos */}
+      <div>
+        <h3 className="mb-2 font-semibold text-green-600">Locales completos</h3>
+        {localesCompletos.length === 0 ? (
+          <p className="text-gray-500">No hay locales completos.</p>
+        ) : (
+          <table className="w-full border text-sm">
+            <thead className="bg-green-100">
+              <tr>
+                <th className="border px-2 py-1 text-center">Cui</th>
+                <th className="border px-2 py-1 text-center">
+                  N° Construcción
+                </th>
+                <th className="border px-2 py-1 text-center">N° Identif. plano</th>
+                <th className="border px-2 py-1 text-center">Tipo local</th>
+                <th className="border px-2 py-1 text-center">Estado</th>
+                <th className="border px-2 py-1 text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {localesCompletos.map((local) => (
+                <tr
+                  key={local.id}
+                  className={
+                    local.id === selectedLocalId ? "bg-yellow-100" : ""
+                  }
+                >
+                  <td className="border px-2 py-1 text-center">
+                    {local.cui_number}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    L {local.numero_construccion}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    L {local.identificacion_plano}
+                  </td>
+                  <td className="border px-2 py-1 text-center">{local.nombre_local}</td>
+                  <td className="border px-2 py-1 text-center text-green-600 font-bold">
+                    Completo ✔️
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    <button
+                      onClick={() => {}}
+                      disabled={isReadOnly}
+                      className={`px-3 py-1 rounded text-white ${
+                        isReadOnly
+                          ? "bg-gray-400"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      Ver
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <button
+        disabled={!todosCompletos || relevamientoGuardado}
+        onClick={handleGuardarRelevamiento}
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
+      >
+        {relevamientoGuardado ? "Relevamiento guardado ✔️" : "Guardar Relevamiento"}
+      </button>
     </div>
   );
 };

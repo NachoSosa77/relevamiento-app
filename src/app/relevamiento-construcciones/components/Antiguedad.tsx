@@ -139,7 +139,7 @@ export default function AntiguedadComponent({ construccionId }: Props) {
         <button
           onClick={handleGuardarCambios}
           className={`text-sm font-bold p-4 rounded-md flex-nowrap ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-slate-200"
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-custom hover:bg-custom/50"
           }`}
           disabled={loading}
         >

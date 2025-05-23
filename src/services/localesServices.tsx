@@ -151,6 +151,27 @@ export const updateDimensionesById = async (
   return await response.json();
 };
 
+export const updateEstadoLocal = async (
+  id: number,
+  estado: string
+) => {
+  const response = await fetch(`/api/locales_por_construccion/${id}/estado`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ estado }), // <-- aquí usas el parámetro recibido
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar el estado del local");
+  }
+
+  return await response.json();
+};
+
+
+
 
 // Exportar las funciones como un servicio
 export const localesService = {
@@ -162,5 +183,6 @@ export const localesService = {
   updateConstruccionById,
   updateDimensionesById,
   updateConstruccionAntiRoboById,
-  getLocalesByConstruccionId
+  getLocalesByConstruccionId,
+  updateEstadoLocal
 };

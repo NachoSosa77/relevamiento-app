@@ -2,7 +2,6 @@
 "use client";
 
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
-import Navbar from "@/components/NavBar/NavBar";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
@@ -40,8 +39,7 @@ export default function RelevamientoLocalesPage() {
   } */
 
   return (
-    <div className="h-full bg-white text-black text-sm">
-      <Navbar />
+    <div className="mt-36 bg-white text-black text-sm">
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
@@ -49,7 +47,7 @@ export default function RelevamientoLocalesPage() {
             FORMULARIO DE RELEVAMIENTO DE LOCALES PEDAGÓGICOS Y DE SERVICIOS
           </h4>
         </div>
-        <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
+        <div className="w-10 h-10 rounded-full ml-4 flex justify-center items-center text-white bg-custom font-semibold text-xl">
           <p>3</p>
         </div>
       </div>

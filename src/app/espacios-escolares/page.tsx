@@ -182,7 +182,7 @@ export default function EspaciosEscolaresPage() {
           {/* Contenedor flex con justify-center */}
           <button
             onClick={enviarDatosEspacioEscolar}
-            className="px-4 py-2 w-80 bg-blue-600 text-white rounded-md hover:bg-blue-400"
+            className="px-4 py-2 w-80 bg-custom text-white rounded-md hover:bg-custom/50"
           >
             Guardar Espacio Escolar
           </button>

@@ -30,7 +30,7 @@ const initialState: EspacioEscolarState = {
   observaciones: null,
   locales: [],
   areasExteriores: [],
-  relevamientoId: 0,
+  relevamientoId: 56,
   visitas: [],
   respondientes: [],
 };

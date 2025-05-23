@@ -22,14 +22,14 @@ export const AccordionItem = ({ value, title, children }: AccordionItemProps) =>
   const isOpen = openItems.includes(value);
 
   return (
-    <div className="border rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-300">
+    <div className="border border-custom rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-300">
       <button
         onClick={() => toggleItem(value)}
-        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors duration-200"
+        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-custom/50 transition-colors duration-200"
       >
-        <span className="text-base font-medium text-gray-800">{title}</span>
+        <span className="text-base text-custom font-medium">{title}</span>
         <ChevronDown
-          className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+          className={`h-5 w-5 text-custom transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

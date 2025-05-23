@@ -54,12 +54,12 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
       >
         <div className="flex items-center gap-2">
           <span className="font-semibold">
-            Construcción #{construccion.numero_construccion ?? construccion.id}
+            N° de construcción {construccion.numero_construccion ?? construccion.id}
           </span>
           {construccion ? (
-            <CheckCircle className="text-green-500 w-4 h-4" />
+            <CheckCircle className="text-green-500 w-4 h-4 font-bold" />
           ) : (
-            <AlertTriangle className="text-yellow-500 w-4 h-4" />
+            <AlertTriangle className="text-yellow-500 w-4 h-4 font-bold" />
           )}
         </div>
         {expanded ? <ChevronUp /> : <ChevronDown />}
@@ -82,7 +82,7 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
 
           <button
             onClick={toggleLocales}
-            className="mt-3 text-blue-600 hover:underline text-sm"
+            className="px-4 py-2 w-52 bg-custom text-white rounded-md hover:bg-custom/50 mt-3"
           >
             {showLocales ? "Ocultar locales" : "Ver locales"}
           </button>

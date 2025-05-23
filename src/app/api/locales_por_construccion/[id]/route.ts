@@ -156,6 +156,8 @@ export async function PATCH(
       ]
     );
 
+    connection.release();
+
     return NextResponse.json({ success: true, updated: result });
   } catch (error) {
     console.error("Error al actualizar dimensiones:", error);

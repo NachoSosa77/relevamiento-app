@@ -3,9 +3,10 @@
 
 import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import api from "../api/api";
 
 interface Errors {
   email?: string;
@@ -15,6 +16,7 @@ interface Errors {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   /* const [formData, setFormData] = useState<FormDataUser>({
     id: 0,
     nombre: "",
@@ -95,25 +97,21 @@ export default function LoginPage() {
     setErrors({});
     setSuccess(null);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include", // Si usas cookies para sesiones
+      const response = await api.post("/auth/login", {
+        email,
+        password,
       });
-      //console.log('response', response)
-      //console.log(email)
-      //console.log(password)
 
-      if (!response.ok) {
-        throw new Error("Credenciales incorrectas o error en el servidor");
-      }
-      const data = await response.json();
+      const returnTo = searchParams.get("returnTo") || "/home";
+      router.push(returnTo);
+
       setSuccess("¡Bienvenido!");
-      console.log("Redirigiendo a /home...", data);
-      router.push("/home");
+      console.log("Redirigiendo a /home...", response.data);
     } catch (error: any) {
-      setErrors({ general: error.message || "Error desconocido" });
+      setErrors({
+        general:
+          error.response?.data?.message || error.message || "Error desconocido",
+      });
     } finally {
       setIsLoading(false);
     }

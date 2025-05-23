@@ -39,4 +39,7 @@ export interface LocalesConstruccion {
   proteccion_contra_robo?: string,
   observaciones?: string,
   servicios?: Servicios;  // <-- Lo agregamos acá
+  estado?: string;
+  numero_construccion?: number;
+  nombre_local?: string;
 }

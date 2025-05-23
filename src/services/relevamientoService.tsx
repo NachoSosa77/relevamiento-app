@@ -22,4 +22,19 @@ export const relevamientoService = {
     const response = await axios.get(`/api/relevamientos/id/${id}`);
     return response.data;
   },
+  updateEstadoRelevamiento: async (id: number, estado: string) => {
+    const response = await fetch(`/api/relevamientos/id/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ estado }), // <-- aquí usas el parámetro recibido
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar el estado del local");
+  }
+
+  return await response.json();
+  }
 };

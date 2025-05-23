@@ -4,6 +4,7 @@
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
+import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   setCui,
@@ -21,7 +22,7 @@ export default function HomePage() {
     undefined
   );
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
-  const [relevamientos, setRelevamientos] = useState<any[]>([]);
+  const [relevamientos, setRelevamientos] = useState<Relevamiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
@@ -50,40 +51,41 @@ export default function HomePage() {
 
   // Función para buscar relevamientos existentes por CUI
   const fetchRelevamientos = async () => {
-  if (!cuiInputValue) return;
+    if (!cuiInputValue) return;
 
-  try {
-    const data = await relevamientoService.getRelevamientoByCui(cuiInputValue);
+    try {
+      const data = await relevamientoService.getRelevamientoByCui(
+        cuiInputValue
+      );
 
-    if (!data || data.length === 0) {
-      toast.info("No se encontraron relevamientos para este CUI.", {
+      if (!data || data.length === 0) {
+        toast.info("No se encontraron relevamientos para este CUI.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setRelevamientos([]); // Limpia el estado si no hay resultados
+        return;
+      }
+
+      setRelevamientos(data);
+    } catch (error) {
+      console.error("Error al obtener el relevamiento:", error);
+      toast.error("Error al obtener el relevamiento", {
         position: "top-right",
         autoClose: 3000,
       });
-      setRelevamientos([]); // Limpia el estado si no hay resultados
-      return;
     }
-
-    setRelevamientos(data);
-  } catch (error) {
-    console.error("Error al obtener el relevamiento:", error);
-    toast.error("Error al obtener el relevamiento", {
-      position: "top-right",
-      autoClose: 3000,
-    });
-  }
-};
-
+  };
 
   const handleNuevoRelevamiento = async () => {
     if (!cuiInputValue) return;
-  
+
     try {
       const data = await relevamientoService.createRelevamiento(cuiInputValue);
-  
+
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
-  
+
       toast.success("Relevamiento creado correctamente");
       dispatch(setRelevamientoId(nuevoRelevamientoId));
       router.push("/espacios-escolares");
@@ -92,9 +94,6 @@ export default function HomePage() {
       toast.error("Error al crear el relevamiento");
     }
   };
-  
-  
-  
 
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
@@ -114,7 +113,9 @@ export default function HomePage() {
     <div className="h-full mt-8 overflow-hidden bg-white text-black">
       <div className="flex justify-center mt-20 mb-8 mx-4">
         <div className="flex flex-col items-center">
-          <h1 className="font-bold">FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO</h1>
+          <h1 className="font-bold">
+            FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO
+          </h1>
         </div>
       </div>
 
@@ -127,7 +128,7 @@ export default function HomePage() {
       />
 
       <button
-        className="bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+        className="bg-custom hover:bg-custom/75 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
         disabled={!selectedInstitutionId}
         onClick={fetchRelevamientos} // Función para buscar los relevamientos
       >
@@ -151,8 +152,9 @@ export default function HomePage() {
               <tr className="bg-gray-200">
                 <th className="px-4 py-2 border-b">Fecha</th>
                 <th className="px-4 py-2 border-b">ID Relevamiento</th>
-                <th className="px-4 py-2 border-b">CUI</th>
-                <th className="px-4 py-2 border-b">Acciones</th>
+                <th className="px-4 py-2 border-b">Cui</th>
+                <th className="px-4 py-2 border-b">Estado</th>
+                <th className="px-4 py-2 border-b"></th>
               </tr>
             </thead>
             <tbody>
@@ -165,9 +167,14 @@ export default function HomePage() {
                   </th>
                   <td className="px-4 py-2 border-b">{relevamiento.id}</td>
                   <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
+                  <td className={relevamiento.estado === "completo" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                    {relevamiento.estado === "completo"
+                      ? "Completo"
+                      : "Incompleto"}
+                  </td>
                   <td className="px-4 py-2 border-b">
                     <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-1 mr-2"
+                      className="bg-custom hover:bg-custom/75 text-white rounded-md px-4 py-1 mr-2"
                       onClick={() => handleView(relevamiento.id)}
                     >
                       Ver

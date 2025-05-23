@@ -66,8 +66,8 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
     <div className="mx-10 text-sm">
       <table className="w-full border mt-2 text-xs">
         <thead>
-          <tr className="bg-slate-200">
-            <th className="border p-2 bg-black text-white">2</th>
+          <tr className="bg-custom text-white">
+            <th className="border p-2 bg-white text-custom">2</th>
             <th className="border p-2">DIMENSIONES</th>
             <th className="border p-2">Largo predominante (en m.)</th>
             <th className="border p-2">Ancho predominante (en m.)</th>
@@ -157,7 +157,7 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
 
                   <button
                     onClick={handleGuardar}
-                    className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+                    className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
                   >
                     Guardar Información
                   </button>

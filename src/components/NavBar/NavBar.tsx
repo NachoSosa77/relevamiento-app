@@ -4,7 +4,7 @@ import { resetArchivos } from "@/redux/slices/archivoSlice";
 import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
 import { persistor } from "@/redux/store";
 import { jwtDecode } from "jwt-decode";
-import Image from 'next/image';
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ import {
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineMenu,
-  AiOutlineUser
+  AiOutlineUser,
 } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 
@@ -23,44 +23,41 @@ const Navbar = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true); // Nuevo estado para evitar renders en blanco
   const dispatch = useDispatch();
- 
 
   // Obtiene el usuario actual
- useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("/api/get-token", { credentials: "include" });
-      const data = await res.json();
-      //console.log("Token obtenido desde backend:", data.token);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/get-token", { credentials: "include" });
+        const data = await res.json();
+        //console.log("Token obtenido desde backend:", data.token);
 
-      if (data.token) {
-        const decodedUser: UserData = jwtDecode(data.token);
-        setUser(decodedUser);
+        if (data.token) {
+          const decodedUser: UserData = jwtDecode(data.token);
+          setUser(decodedUser);
+        }
+      } catch (error) {
+        console.error("Error obteniendo token:", error);
       }
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" }); // ⬅️ Llama al endpoint para borrar la cookie en el servidor
+      dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
+      dispatch(resetArchivos());
+      setUser(null);
+      setShowLogoutModal(false);
+      persistor.purge();
+      router.push("/");
     } catch (error) {
-      console.error("Error obteniendo token:", error);
+      console.error("Error al cerrar sesión:", error);
     }
-    setLoading(false)
   };
-
-  fetchUser();
-}, []);
-
-
-const handleLogout = async () => {
-  try {
-    await fetch("/api/auth/logout", { method: "POST" }); // ⬅️ Llama al endpoint para borrar la cookie en el servidor
-    dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
-    dispatch(resetArchivos())
-    setUser(null);
-    setShowLogoutModal(false);
-    persistor.purge();  
-    router.push("/");
-  } catch (error) {
-    console.error("Error al cerrar sesión:", error);
-  }
-};
-
 
   if (loading) {
     return null; // Evita que el navbar se renderice antes de obtener el usuario
@@ -69,31 +66,29 @@ const handleLogout = async () => {
   return (
     <nav className="navbar fixed top-0 w-full z-50 transition-all duration-300 border bg-slate-200">
       <div className="max-w-8xl mx-auto p-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center h-16">
           {/* Left section - Logo */}
-          <div className="flex justify-start">
-            <Image src={logo} alt="Logo" width={300} height={100}/>
           <div className="flex items-center">
-            <Link href="/home">
-              <AiOutlineHome className="h-9 w-9 ml-2 text-black cursor-pointer" />
-            </Link>
-          </div>
+            <Image src={logo} alt="Logo" width={300} height={100} />
           </div>
 
-          {/* Right section - Desktop */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Notifications */}
-
-            {/* User Profile Dropdown */}
+          <div className="hidden md:flex items-center space-x-4 ml-auto">
             {user && (
               <div className="relative">
+                <div className="flex items-center space-x-3">
+                  <Link href="/home">
+                    <AiOutlineHome className="h-9 w-9 ml-2 text-custom cursor-pointer" />
+                  </Link>
+                
+
                 <button
                   onClick={() => setIsOpen(!isOpen)}
                   className="flex items-center space-x-3 focus:outline-none"
                   aria-label="User menu"
                 >
-                  <AiOutlineUser className="h-9 w-9 rounded-full object-cover text-black cursor-pointer" />
+                  <AiOutlineUser className="h-9 w-9 rounded-full object-cover text-custom cursor-pointer" />
                 </button>
+                </div>
 
                 {/* Dropdown Menu */}
                 {isOpen && (
@@ -115,9 +110,9 @@ const handleLogout = async () => {
                     <hr className="border-border" />
                     <button
                       onClick={() => setShowLogoutModal(true)}
-                      className="w-full text-left px-4 py-2 text-sm text-black font-bold hover:bg-secondary transition-colors flex items-center space-x-2"
+                      className="w-full text-left px-4 py-2 text-sm text-custom font-bold hover:bg-custom/50 transition-colors flex items-center space-x-2"
                     >
-                      <AiOutlineLogout className="h-7 w-7 text-black cursor-pointer" />
+                      <AiOutlineLogout className="h-7 w-7 text-custom cursor-pointer" />
                       <span>Cerrar Sesión</span>
                     </button>
                   </div>
@@ -127,19 +122,19 @@ const handleLogout = async () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden ml-auto">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md hover:bg-secondary transition-colors"
+              className="inline-flex items-center justify-center p-2 rounded-md hover:bg-custom/50 transition-colors"
               aria-label="Main menu"
             >
-              <AiOutlineMenu className="h-6 w-6" />
+              <AiOutlineMenu className="h-6 w-6 text-custom" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout Confirmation Modal (sin cambios) */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

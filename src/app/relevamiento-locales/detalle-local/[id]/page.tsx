@@ -102,35 +102,25 @@ const DetalleLocalPage = () => {
         destino_original: valorAGuardar,
       });
       // Manejar la respuesta (si es necesario)
-      toast("Información guardada correctamente");
+      toast.success("Información guardada correctamente");
     } catch (error) {
       console.error(error);
-      toast("Error al guardar los datos");
+      toast.error("Error al guardar los datos");
     }
   };
 
   const handleGuardarLocal = async () => {
-    try {
-      const actualizadosString = localStorage.getItem("localesActualizados");
-      const actualizados = actualizadosString
-        ? JSON.parse(actualizadosString)
-        : [];
+  try {
+    // Asumiendo que tenés el localId disponible
+    await localesService.updateEstadoLocal(local.id, "completo");
 
-      if (!actualizados.includes(localId)) {
-        actualizados.push(localId);
-        localStorage.setItem(
-          "localesActualizados",
-          JSON.stringify(actualizados)
-        );
-      }
-
-      toast.success("Local guardado y marcado como actualizado");
-      router.push("/relevamiento-locales");
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al guardar el local");
-    }
-  };
+    toast.success("Local guardado correctamente");
+    router.push("/relevamiento-locales");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al guardar el local");
+  }
+};
 
   const marcarComoModificado = () => {
     setHayCambios(true);
@@ -143,14 +133,14 @@ const DetalleLocalPage = () => {
   if (loading) return <p>Cargando...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (
-    <div className="h-full bg-white text-black text-sm">
+    <div className="h-full bg-white text-black text-sm mt-32">
       <Navbar />
       <div className="justify-center mt-20 mb-8 mx-4">
         <div className="mx-10 mt-10">
           <div className="flex justify-start mt-10">
             <button
               onClick={handleBack}
-              className="bg-blue-500 text-sm text-white font-bold px-4 py-2 rounded-md"
+              className="bg-custom hover:bg-custom/50 text-sm text-white font-bold px-4 py-2 rounded-md"
             >
               Volver
             </button>
@@ -234,7 +224,7 @@ const DetalleLocalPage = () => {
             <div className="flex justify-end">
               <button
                 onClick={handleGuardar}
-                className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+                className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
               >
                 Guardar Información
               </button>
@@ -279,7 +269,7 @@ const DetalleLocalPage = () => {
         locales={tipoServiciosBasicos}
       />
       {(local?.nombre_local === "Cocina" ||
-        local?.nombre_local === "Office") && (
+        local?.nombre_local === "Office" || local?.nombre_local === "Otro local pedagógico" || local?.nombre_local === "Oficina" || local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidad
           id={9}
           label="EQUIPAMIENTO DE COCINA/OFFICES"
@@ -288,7 +278,7 @@ const DetalleLocalPage = () => {
       )}
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal") && (
+        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidadSanitarios
           id={10}
           label="EQUIPAMIENTO SANITARIO"

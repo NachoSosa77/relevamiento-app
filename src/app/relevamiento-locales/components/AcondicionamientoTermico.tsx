@@ -44,6 +44,8 @@ export default function AcondicionamientoTermico({
   const tiposConDisponibilidad = [
     "Aire acondicionado central",
     "Calefacción central",
+    "Calefacción a gas"
+
   ];
 
   const handleResponseChange = (
@@ -225,7 +227,7 @@ export default function AcondicionamientoTermico({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
-          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+          className="bg-custom hover:bg-custom/50 tezt-white text-sm font-bold px-4 py-2 rounded-md"
         >
           Guardar Información
         </button>
