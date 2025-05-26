@@ -1,4 +1,3 @@
-import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
 import { UserData } from "@/interfaces/UserData";
 import { resetArchivos } from "@/redux/slices/archivoSlice";
 import { resetEspacioEscolar } from "@/redux/slices/espacioEscolarSlice";
@@ -69,7 +68,7 @@ const Navbar = () => {
         <div className="flex items-center h-16">
           {/* Left section - Logo */}
           <div className="flex items-center">
-            <Image src={logo} alt="Logo" width={300} height={100} />
+            <Image src="/img/logo-ministerio.png" alt="Logo" width={300} height={100} priority />
           </div>
 
           <div className="hidden md:flex items-center space-x-4 ml-auto">

@@ -127,6 +127,8 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
                 alt={`archivo-${index}`}
                 fill
                 style={{ objectFit: "cover" }}
+                width={300}
+                height={100}
               />
             )}
           </div>

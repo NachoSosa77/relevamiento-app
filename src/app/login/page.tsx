@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -121,7 +120,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-dark.background dark:to-dark.secondary.DEFAULT py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark.card.DEFAULT p-8 rounded-lg shadow-lg">
         <div className="flex justify-center">
-          <Image src={logo} alt="Logo" width={350} height={100} />
+          <Image
+            src="/img/logo-ministerio.png"
+            alt="Logo"
+            width={350}
+            height={100}
+            priority
+          />
         </div>
         <div className="text-center">
           <h2 className="text-heading font-heading text-custom dark:text-dark.foreground">
