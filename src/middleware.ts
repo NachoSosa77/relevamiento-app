@@ -13,6 +13,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|login|singin|_next/static|_next/image|favicon.ico|img).*)",
+    "/((?!api|login|signin|forgot-password|_next/static|_next/image|favicon.ico|img).*)",
   ], // Protege todas las rutas excepto /login y las rutas de API y archivos estáticos
 };

@@ -4,4 +4,5 @@ export interface FormDataUser {
     apellido: string,
     email: string,
     password: string,
+    dni: string
 }
