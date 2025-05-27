@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -104,12 +105,10 @@ export default function LoginPage() {
         email,
         password,
       });
-
       const returnTo = searchParams.get("returnTo") || "/home";
-      router.push(returnTo);
-
       setSuccess("¡Bienvenido!");
-      console.log("Redirigiendo a /home...", response.data);
+      router.push(returnTo);
+      //console.log("Redirigiendo a /home...", response.data);
     } catch (error: any) {
       setErrors({
         general:

@@ -2,12 +2,10 @@
 "use client";
 import { LocalesConstruccion } from "@/interfaces/Locales";
 import { useAppSelector } from "@/redux/hooks";
-import { setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
 import { relevamientoService } from "@/services/relevamientoService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
 interface CuiLocalesComponentProps {
@@ -31,9 +29,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   );
   const [relevamientoGuardado, setRelevamientoGuardado] = useState(false);
   const router = useRouter();
-
-  const dispatch = useDispatch();
-dispatch(setRelevamientoId(56));
 
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
