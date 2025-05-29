@@ -170,8 +170,8 @@ export default function LocalesPorConstruccion() {
 
     const numeroConstruccion = activeIndex + 1;
 
-    console.log("Active index:", activeIndex);
-console.log("Número construcción:", numeroConstruccion);
+    /* console.log("Active index:", activeIndex);
+    console.log("Número construcción:", numeroConstruccion); */
 
     // 1. Crear construcción
     const construccion = await localesService.postConstrucciones({
@@ -227,7 +227,7 @@ console.log("Número construcción:", numeroConstruccion);
     <div className="mx-8 my-6 border rounded-2xl">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-black text-sm font-semibold">
+          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
             <p>3</p>
           </div>
           <p className="text-sm font-semibold text-gray-700">
@@ -243,7 +243,7 @@ console.log("Número construcción:", numeroConstruccion);
                   clsx(
                     "px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-300",
                     selected
-                      ? "bg-blue-600 text-white shadow font-semibold"
+                      ? "bg-custom text-white shadow font-semibold"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   )
                 }
@@ -386,7 +386,7 @@ console.log("Número construcción:", numeroConstruccion);
                     <div className="flex justify-end mb-4">
                       <button
                         onClick={() => handleAddLocal(idx)}
-                        className="text-sm bg-blue-600 text-white rounded-lg px-4 py-2"
+                        className="text-sm bg-custom hover:bg-custom/50 text-white rounded-lg px-4 py-2"
                       >
                         + Agregar local
                       </button>

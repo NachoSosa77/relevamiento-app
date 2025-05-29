@@ -28,7 +28,7 @@ export default function ObservacionesComponent({
   };
 
   return (
-    <div className="mx-8 my-6 border rounded-2xl">
+    <div className="mx-10 my-6 border rounded-2xl shadow-lg">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <div className="flex items-center gap-3">
           <p className="text-sm font-semibold text-gray-700">OBSERVACIONES</p>
@@ -41,7 +41,7 @@ export default function ObservacionesComponent({
         />
         <div className="flex justify-end mt-2">
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-400 disabled:opacity-50"
+            className="px-4 py-2 bg-custom text-white rounded-md hover:bg-custom/50 disabled:opacity-50"
             onClick={handleSave}
             disabled={!observations.trim()}
           >

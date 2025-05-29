@@ -34,7 +34,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   );
 
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
-  const [selectedConstruccionId, setSelectedConstruccionId] = useState<number | null>(null);
+  const [selectedConstruccionId, setSelectedConstruccionId] = useState<
+    number | null
+  >(null);
   const [numeroConstruccion, setNumeroConstruccion] = useState<number>(0);
 
   useEffect(() => {
@@ -67,7 +69,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       });
   }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
 
-  const handleConstruccionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleConstruccionChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const id = Number(e.target.value);
     setSelectedConstruccionId(id);
     setConstruccionId(id);
@@ -78,20 +82,22 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
     }
   };
 
-
   return (
-    <div className="mx-10">
+    <div className="mx-10 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       <p className="text-sm">{label}</p>
-
       <div className="mb-4">
-        <label className="block font-semibold mb-1">Construcciones existentes</label>
+        <label className="block font-semibold mb-1">
+          Construcciones existentes
+        </label>
         <select
           value={selectedConstruccionId ?? ""}
           onChange={handleConstruccionChange}
           disabled={isReadOnly || construcciones.length === 0}
           className="border border-gray-300 rounded p-2 w-full"
         >
-          {construcciones.length === 0 && <option value="">No hay construcciones</option>}
+          {construcciones.length === 0 && (
+            <option value="">No hay construcciones</option>
+          )}
           {construcciones.map((c) => (
             <option key={c.id} value={c.id}>
               Construcción Nº {c.numero_construccion}
@@ -100,11 +106,11 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
         </select>
       </div>
 
-      <div className="flex items-center justify-between gap-2 mt-2 p-2 border">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex items-center justify-between gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>A</p>
         </div>
-        <div className="h-6 flex items-center justify-center ">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">
             CUI (Código Único de Infraestructura)
           </p>
@@ -119,7 +125,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
           />
         </div>
         <div className="h-6 flex items-center justify-center ">
-          <p className="px-2 text-sm font-bold">N° DE CONSTRUCCIÓN</p>
+          <p className="px-2 text-sm font-bold">N° de construcción</p>
         </div>
         <div className="ml-auto flex items-center justify-center gap-2">
           <NumericInput
@@ -136,10 +142,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
             }}
           />
         </div>
-      </div>
-
-      <div className="flex p-1 bg-gray-100 border">
-        <p className="text-xs text-gray-400">{sublabel}</p>
+        <div className="flex p-1 bg-gray-100 border">
+          <p className="text-xs text-gray-400">{sublabel}</p>
+        </div>
       </div>
 
       {selectedInstitutions && isReadOnly && (
@@ -149,7 +154,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
               <p>B</p>
             </div>
             <div className="h-6 flex items-center justify-center">
-              <p className="px-2 text-sm font-bold">ESTABLECIMIENTOS EDUCATIVOS</p>
+              <p className="px-2 text-sm font-bold">
+                ESTABLECIMIENTOS EDUCATIVOS
+              </p>
             </div>
           </div>
           <div className="flex items-center p-1 border bg-slate-200 text-slate-400 text-xs">
@@ -160,7 +167,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
             </p>
           </div>
           <div>
-            <EstablecimientosEducativos selectedInstitutions={selectedInstitutions} />
+            <EstablecimientosEducativos
+              selectedInstitutions={selectedInstitutions}
+            />
           </div>
         </div>
       )}

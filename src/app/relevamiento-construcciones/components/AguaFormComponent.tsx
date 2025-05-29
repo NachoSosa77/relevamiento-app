@@ -92,7 +92,7 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
   
 
   return (
-    <div className="mx-10 text-sm">
+    <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       <ServicioBasicoComponent
         onChange={(data) => {
           setServicioBasico(data); // Actualiza el estado de servicioBasico
@@ -107,9 +107,9 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
       <div className="flex justify-end mt-4">
         <button
           onClick={handleSubmit}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-custom hover:bg-custom/50 text-white font-bold p-2 rounded-lg"
         >
-          Guardar Datos de Agua
+          Guardar información
         </button>
       </div>
     </div>

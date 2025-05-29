@@ -79,16 +79,15 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
 
 
   return (
-    <div className="p-4 mx-10">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="p-2 mx-10 mt-4 bg-white rounded-lg border shadow-lg">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-custom text-white text-center"> 
               {columnsConfig.map((column) => (
                 <th
                   key={column.key}
-                  className={`border p-2 text-left ${
-                    column.key === "id" ? "bg-black text-white" : ""
+                  className={`border p-2 text-center ${
+                    column.key === "id" ? "bg-custom text-white" : ""
                   }`}
                 >
                   {column.header}
@@ -102,7 +101,7 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
                 {columnsConfig.map((column) => (
                   <td
                     key={`${servicio.id}-${column.key}`}
-                    className="border p-2"
+                    className="border p-2 text-center"
                   >
                     {column.type === "select" && (
                       <select
@@ -149,13 +148,12 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
         <div className="flex justify-end mt-4">
           <button
             type="submit"
-            className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
+            className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
           >
             Cargar información
           </button>
         </div>
       </form>
-    </div>
   );
 };
 

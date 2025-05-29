@@ -36,7 +36,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
 
   
   //const relevamientoId = 12; 
-  console.log("relevamientoId", relevamientoId);
+  //console.log("relevamientoId", relevamientoId);
 
   useEffect(() => {
     const fetchLocales = async () => {
@@ -93,7 +93,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   if (error) return <p className="mx-10 text-red-500">{error}</p>;
 
   return (
-    <div className="mx-10">
+    <div className="mx-10 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       <p className="text-sm font-semibold">{label}</p>
       <p className="text-xs text-gray-500 mb-4">{sublabel}</p>
 

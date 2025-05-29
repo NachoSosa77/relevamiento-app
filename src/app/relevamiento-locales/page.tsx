@@ -40,8 +40,8 @@ export default function RelevamientoLocalesPage() {
 
   return (
     <div className="mt-36 bg-white text-black text-sm">
-      <div className="flex justify-end mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-end">
+      <div className="flex justify-center items-center mt-20 mb-8 mx-4">
+        <div className="flex flex-col items-center justify-center">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
           <h4 className="text-sm">
             FORMULARIO DE RELEVAMIENTO DE LOCALES PEDAGÓGICOS Y DE SERVICIOS

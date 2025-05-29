@@ -89,20 +89,20 @@ export default function ServicioBasicoComponent({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+    <div className="space-y-2 text-sm">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">AGUA</p>
         </div>
       </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-black font-bold">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3.1</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">TIPO DE PROVISIÓN DE AGUA</p>
         </div>
       </div>
@@ -138,11 +138,11 @@ export default function ServicioBasicoComponent({
             </div>
           )}
       </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-black font-bold">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3.2</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">TIPO DE ALMACENAMIENTO</p>
         </div>
       </div>
@@ -180,11 +180,11 @@ export default function ServicioBasicoComponent({
             </div>
           )}
       </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-black font-bold">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3.3</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">
             ALCANCE DE LA PROVISIÓN DE AGUA
           </p>
@@ -206,8 +206,8 @@ export default function ServicioBasicoComponent({
           <table className="min-w-full text-sm table-auto border-collapse">
             <thead>
               <tr>
-                <th className="p-2 text-center bg-slate-200">Alcance</th>
-                <th className="p-2 text-center bg-slate-200">Acción</th>
+                <th className="p-2 text-center">Alcance</th>
+                <th className="p-2 text-center">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -242,7 +242,7 @@ export default function ServicioBasicoComponent({
         <button
           type="button"
           onClick={handleAddAlcance}
-          className="ml-2 px-2 py-1 text-sm bg-blue-500 text-white rounded"
+          className="font-bold p-2 text-sm bg-custom hover:bg-custom/50 text-white rounded-lg"
         >
           Agregar
         </button>

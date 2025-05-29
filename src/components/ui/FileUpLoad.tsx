@@ -98,8 +98,8 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
           file:mr-4 file:py-2 file:px-4
           file:rounded-full file:border-0
           file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700
-          hover:file:bg-blue-100"
+          file:bg-blue-50 file:text-custom
+          hover:file:bg-custom/50"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -167,7 +167,7 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
       <button
         onClick={handleUpload}
         disabled={isUploading}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
+        className="px-4 py-2 bg-custom text-white rounded-lg hover:bg-custom/50 disabled:bg-blue-300"
       >
         {isUploading ? "Subiendo..." : "Confirmar subida"}
       </button>

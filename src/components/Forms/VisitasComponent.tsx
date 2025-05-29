@@ -207,7 +207,7 @@ export default function VisitasComponent() {
         <div className="flex justify-end gap-4">
           <button
             onClick={agregarVisitaModal}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
+            className="bg-custom hover:bg-custom/50 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
           >
             + Agregar Visita
           </button>

@@ -37,58 +37,61 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   // ...
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Validar si al menos un servicio tiene al menos un campo de tipo select/modificable completo
-  const alMenosUnServicioValido = servicios.some((servicio) =>
-    columnsConfig.some((column) => {
-      if (column.type === "text") return false; // ignorar campos de solo texto
-      const valor = servicio[column.key];
-      return valor !== undefined && valor !== null && valor !== "";
-    })
-  );
+    // Validar si al menos un servicio tiene al menos un campo de tipo select/modificable completo
+    const alMenosUnServicioValido = servicios.some((servicio) =>
+      columnsConfig.some((column) => {
+        if (column.type === "text") return false; // ignorar campos de solo texto
+        const valor = servicio[column.key];
+        return valor !== undefined && valor !== null && valor !== "";
+      })
+    );
 
-  if (!alMenosUnServicioValido) {
-    toast.warning("Por favor, completá al menos un campo antes de enviar.");
-    return;
-  }
-
-  const serviciosConRelevamiento = servicios.map((servicio) => ({
-    ...servicio,
-    relevamiento_id: relevamientoId,
-  }));
-
-  try {
-    const response = await fetch("/api/servicios_basicos_predio", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(serviciosConRelevamiento),
-    });
-
-    if (response.ok) {
-      dispatch(setServicios(serviciosConRelevamiento));
-      toast.success("Servicios cargados correctamente!");
-    } else {
-      toast.error("Error al cargar los servicios.");
+    if (!alMenosUnServicioValido) {
+      toast.warning("Por favor, completá al menos un campo antes de enviar.");
+      return;
     }
-  } catch (error) {
-    toast.error("Error inesperado al enviar los datos.");
-    console.error(error);
-  }
-};
+
+    const serviciosConRelevamiento = servicios.map((servicio) => ({
+      ...servicio,
+      relevamiento_id: relevamientoId,
+    }));
+
+    try {
+      const response = await fetch("/api/servicios_basicos_predio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(serviciosConRelevamiento),
+      });
+
+      if (response.ok) {
+        dispatch(setServicios(serviciosConRelevamiento));
+        toast.success("Servicios cargados correctamente!");
+      } else {
+        toast.error("Error al cargar los servicios.");
+      }
+    } catch (error) {
+      toast.error("Error inesperado al enviar los datos.");
+      console.error(error);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 mx-10">
+    <form
+      onSubmit={handleSubmit}
+      className="p-2 mx-10 mt-4 bg-white rounded-lg border shadow-lg"
+    >
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-200 text-center">
+          <tr className="bg-custom text-white text-center">
             {columnsConfig.map((column) => (
               <th
                 key={column.key}
                 className={`border p-2 text-center ${
-                  column.key === "id" ? "bg-black text-white" : ""
+                  column.key === "id" ? "bg-custom/50 text-white" : ""
                 }`}
               >
                 {column.header}
@@ -154,7 +157,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
       <div className="flex justify-end mt-4">
         <button
           type="submit"
-          className="text-sm font-bold bg-slate-200 p-4 rounded-md"
+          className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
         >
           Cargar Información
         </button>

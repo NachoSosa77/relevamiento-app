@@ -70,7 +70,9 @@ export default function RelevamientoCPage() {
   );
   const predioId = useAppSelector((state) => state.predio.predioId);
 
-  const predioObservaciones = useAppSelector((state) => state.predio.observaciones);
+  const predioObservaciones = useAppSelector(
+    (state) => state.predio.observaciones
+  );
 
   //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
   useEffect(() => {
@@ -184,15 +186,15 @@ export default function RelevamientoCPage() {
   };
 
   return (
-    <div className="h-full bg-white text-black text-sm mb-10">
+    <div className="h-full bg-white text-black text-sm mt-28">
       <Navbar />
       <div className="flex flex-col justify-center mt-20 mb-8">
-        <div className="flex justify-end mx-4">
-          <div className="flex flex-col items-end">
+        <div className="flex justify-center mx-4">
+          <div className="flex flex-col items-center justify-center">
             <h1 className="font-bold">GESTIÓN ESTATAL</h1>
             <h4 className="text-sm">FORMULARIO DE RELEVAMIENTO DEL PREDIO</h4>
           </div>
-          <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
+          <div className="w-10 h-10 rounded-full ml-4 flex justify-center items-center text-white bg-custom text-xl">
             <p>1</p>
           </div>
         </div>
@@ -202,7 +204,7 @@ export default function RelevamientoCPage() {
       <div className="mx-8 my-6 border rounded-2xl">
         <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-black text-sm font-semibold">
+            <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
               <p>1</p>
             </div>
             <p className="text-sm font-semibold text-gray-700">
@@ -212,12 +214,12 @@ export default function RelevamientoCPage() {
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 bg-white p-6 border border-gray-200 rounded-b-md shadow-sm"
+            className="space-y-4 bg-white p-6 border border-gray-200 rounded-2xl shadow-sm"
           >
             {/* Pregunta 1.1 */}
             <div className="space-y-2">
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm text-white bg-gray-700">
+                <div className="w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm text-white bg-custom">
                   <p>1.1</p>
                 </div>
                 <p className="ml-4 text-sm text-gray-800">
@@ -254,7 +256,7 @@ export default function RelevamientoCPage() {
             {/* Pregunta 1.2 */}
             <div className="space-y-2">
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm text-white bg-gray-700">
+                <div className="w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm text-white bg-custom">
                   <p>1.2</p>
                 </div>
                 <p className="ml-4 text-sm text-gray-800">
@@ -311,11 +313,11 @@ export default function RelevamientoCPage() {
         </div>
       </div>
 
-      <div className="flex flex-col mt-3 mx-10 bg-gray-700 border">
+      <div className="flex flex-col mt-3 mx-10 bg-custom rounded-2xl border">
         <div className="p-2 justify-center items-center text-white font-bold">
           <p>SERVICIOS</p>
         </div>
-        <div className="bg-white text-xs p-1">
+        <div className="bg-white text-xs p-2">
           <p>
             Pregunte si los servicios listados están disponibles en el predio.
             En caso de respuesta afirmativa, indique &quot;si&quot; y pase al
@@ -371,7 +373,7 @@ export default function RelevamientoCPage() {
       <div className="flex justify-center mt-4">
         <button
           onClick={enviarDatosEspacioEscolar}
-          className="px-4 py-2 w-80 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-400"
+          className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
         >
           Guardar Relevamiento del Predio
         </button>

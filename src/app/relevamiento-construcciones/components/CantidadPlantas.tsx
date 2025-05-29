@@ -101,16 +101,16 @@ export default function CantidadPlantas({
   };
 
   return (
-    <div className="mx-10">
+    <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       {/* encabezado */}
-      <div className="flex items-center gap-2 mt-2 p-2 border">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>1</p>
         </div>
         <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">CANTIDAD DE PLANTAS</p>
         </div>
-        <div className="flex items-center p-1 border bg-slate-200 text-slate-400 text-xs">
+        <div className="flex items-center p-1 border bg-gray-100 text-gray-400 text-xs">
           <p>
             Ingrese la cantidad de pisos de la construcción. El nivel de acceso
             se considerará como PLANTA BAJA.
@@ -119,10 +119,10 @@ export default function CantidadPlantas({
       </div>
 
       {/* tabla */}
-      <div className="overflow-x-auto">
+      <div className="mt-2 overflow-x-auto">
         <table className="w-full border-collapse min-w-[900px] text-sm text-center">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-custom text-white">
               {columnas.map((column) => (
                 <th key={column.key} className="border p-2 text-center">
                   {column.header}
@@ -161,7 +161,7 @@ export default function CantidadPlantas({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardarCambios}
-          className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
+          className="text-sm text-white font-bold bg-custom hover:bg-custom/50 p-2 rounded-lg flex-nowrap"
         >
           Guardar Información
         </button>

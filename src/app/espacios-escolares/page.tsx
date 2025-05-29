@@ -152,7 +152,7 @@ export default function EspaciosEscolaresPage() {
   }
 
   return (
-    <div className=" bg-white text-black text-sm mt-8">
+    <div className=" bg-white text-black text-sm mt-28 w-full">
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
           <h1 className="font-bold">PLANILLA GENERAL</h1>
