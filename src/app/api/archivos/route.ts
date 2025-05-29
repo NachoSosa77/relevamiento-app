@@ -1,8 +1,10 @@
 import { getConnection } from "@/app/lib/db";
-import { existsSync } from "fs";
-import { mkdir, writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
+
+// ✅ Esta función convierte File (de formData) a Buffer para poder usarlo correctamente
+function fileToBuffer(file: File): Promise<Buffer> {
+  return file.arrayBuffer().then((ab) => Buffer.from(ab));
+}
 
 export async function POST(req: Request) {
   const connection = await getConnection();
@@ -19,47 +21,55 @@ export async function POST(req: Request) {
   }
 
   const archivosSubidos = [];
-
-  // Ruta del sistema para guardar físicamente los archivos
-  const archivosPath =
-    process.env.ARCHIVOS_PATH || path.join(process.cwd(), "public", "archivos");
-
-  // Nos aseguramos que la carpeta exista
-  if (!existsSync(archivosPath)) {
-    await mkdir(archivosPath, { recursive: true });
-  }
-
-  const domain = process.env.DOMINIO_PUBLICO || "http://localhost:3000";
+  const uploadServerUrl =
+    process.env.EXTERNAL_UPLOAD_URL || "https://vps-4706926-x.dattaweb.com";
 
   for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name.replace(/\s+/g, "_"); // Reemplaza espacios por guiones bajos (opcional)
-    const absolutePath = path.join(archivosPath, fileName);
-
     try {
-      // Guardar el archivo físicamente
-      await writeFile(absolutePath, buffer);
+      const fileBuffer = await fileToBuffer(file);
 
-      // URL pública servida por nginx
-      const url = `${domain}/archivos/${fileName}`;
-      const tipo_archivo = file.type.includes("pdf") ? "pdf" : "imagen";
-
-      // Guardamos en la base de datos
-      await connection.execute(
-        `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
-         VALUES (?, ?, ?, NOW())`,
-        [relevamientoId, url, tipo_archivo]
+      const fileFormData = new FormData();
+      fileFormData.append(
+        "files",
+        new Blob([fileBuffer], { type: file.type }),
+        file.name
       );
+      fileFormData.append("relevamientoId", String(relevamientoId));
 
-      archivosSubidos.push({
-        archivo_url: url,
-        tipo_archivo,
-        relevamiento_id: relevamientoId,
+      const uploadResponse = await fetch(uploadServerUrl, {
+        method: "POST",
+        body: fileFormData,
       });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(
+          `Error al subir archivo al servidor externo: ${errorText}`
+        );
+      }
+
+      const responseJson = await uploadResponse.json();
+      const archivosInfo = Array.isArray(responseJson)
+        ? responseJson
+        : [responseJson];
+
+      for (const { url, tipo_archivo } of archivosInfo) {
+        await connection.execute(
+          `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
+           VALUES (?, ?, ?, NOW())`,
+          [relevamientoId, url, tipo_archivo]
+        );
+
+        archivosSubidos.push({
+          archivo_url: url,
+          tipo_archivo,
+          relevamiento_id: relevamientoId,
+        });
+      }
     } catch (err) {
-      console.error("Error al guardar archivo:", err);
+      console.error(err);
       return NextResponse.json(
-        { error: "Error al guardar uno de los archivos" },
+        { error: "Error al subir uno de los archivos" },
         { status: 500 }
       );
     }
