@@ -4,6 +4,7 @@ import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivados";
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
+import Spinner from "@/components/ui/Spinner";
 import { useUser } from "@/hooks/useUser";
 import { useAppSelector } from "@/redux/hooks";
 
@@ -11,7 +12,6 @@ export default function RelevamientoPredioPage() {
   const { user, loading, error } = useUser();
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -24,6 +24,12 @@ export default function RelevamientoPredioPage() {
           <p>1</p>
         </div>
       </div>
+            {
+        loading && (
+          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+        )
+      }
+
       <CuiComponent
         initialCui={selectedCui}
         onCuiInputChange={() => {}}

@@ -2,6 +2,7 @@
 "use client";
 
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
+import Spinner from "@/components/ui/Spinner";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
@@ -26,9 +27,7 @@ export default function RelevamientoLocalesPage() {
     }
   }, [selectedInstitutionsRedux]);
 
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  } /* 
+  /* 
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -51,6 +50,13 @@ export default function RelevamientoLocalesPage() {
           <p>3</p>
         </div>
       </div>
+
+            {
+        loading && (
+          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+        )
+      }
+
 
       <CuiLocalesComponent
         onLocalSelected={(local) => console.log(local)}

@@ -7,6 +7,7 @@ import EstablecimientosComponent from "@/components/Forms/EstablecimientosCompon
 import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
+import Spinner from "@/components/ui/Spinner";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -139,10 +140,6 @@ export default function EspaciosEscolaresPage() {
     }
   };
 
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
-
   if (error) {
     return <div>Error: {error}</div>;
   }
@@ -159,6 +156,13 @@ export default function EspaciosEscolaresPage() {
           <h4 className="text-sm">DE RELEVAMIENTO PEDAGÓGICO</h4>
         </div>
       </div>
+
+            {
+              loading && (
+                <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+              )
+            }
+      
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
