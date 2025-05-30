@@ -1,7 +1,8 @@
 import { getConnection } from "@/app/lib/db";
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
-// ✅ Esta función convierte File (de formData) a Buffer para poder usarlo correctamente
+// Convierte File a Buffer
 function fileToBuffer(file: File): Promise<Buffer> {
   return file.arrayBuffer().then((ab) => Buffer.from(ab));
 }
@@ -21,55 +22,36 @@ export async function POST(req: Request) {
   }
 
   const archivosSubidos = [];
-  const uploadServerUrl =
-    process.env.EXTERNAL_UPLOAD_URL || "https://vps-4706926-x.dattaweb.com";
 
   for (const file of files) {
     try {
       const fileBuffer = await fileToBuffer(file);
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, "-"); // formato seguro para nombres de archivo
+      const uniqueName = `Planos/${timestamp}_${file.name}`;
 
-      const fileFormData = new FormData();
-      fileFormData.append(
-        "files",
-        new Blob([fileBuffer], { type: file.type }),
-        file.name
-      );
-      fileFormData.append("relevamientoId", String(relevamientoId));
-
-      const uploadResponse = await fetch(uploadServerUrl, {
-        method: "POST",
-        body: fileFormData,
+      const blob = await put(uniqueName, fileBuffer, {
+        access: "public", // o "private" si quieres proteger el acceso
+        contentType: file.type,
       });
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(
-          `Error al subir archivo al servidor externo: ${errorText}`
-        );
-      }
+      const tipo_archivo = file.type.includes("pdf") ? "pdf" : "imagen";
 
-      const responseJson = await uploadResponse.json();
-      const archivosInfo = Array.isArray(responseJson)
-        ? responseJson
-        : [responseJson];
+      await connection.execute(
+        `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
+         VALUES (?, ?, ?, NOW())`,
+        [relevamientoId, blob.url, tipo_archivo]
+      );
 
-      for (const { url, tipo_archivo } of archivosInfo) {
-        await connection.execute(
-          `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
-           VALUES (?, ?, ?, NOW())`,
-          [relevamientoId, url, tipo_archivo]
-        );
-
-        archivosSubidos.push({
-          archivo_url: url,
-          tipo_archivo,
-          relevamiento_id: relevamientoId,
-        });
-      }
+      archivosSubidos.push({
+        archivo_url: blob.url,
+        tipo_archivo,
+        relevamiento_id: relevamientoId,
+      });
     } catch (err) {
       console.error(err);
       return NextResponse.json(
-        { error: "Error al subir uno de los archivos" },
+        { error: "Error al subir uno de los archivos a Blob" },
         { status: 500 }
       );
     }

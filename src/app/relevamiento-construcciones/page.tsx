@@ -103,7 +103,7 @@ export default function RelevamientoConstruccionesPage() {
   };
 
   return (
-    <div className="h-full bg-white text-black mt-28">
+    <div className="h-full bg-white text-black text-sm mt-28">
       <div className="flex justify-center mt-20 mb-8 mx-4">
         <div className="flex flex-col items-center justify-center">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>

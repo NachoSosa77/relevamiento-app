@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -89,10 +90,6 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
       setInputValue(undefined);
     }
   }, [initialCui]);
-
-  if (loading && !isReadOnly) {
-    return <div>Cargando instituciones...</div>;
-  }
 
   if (error && !isReadOnly) {
     return <div>Error: {error}</div>;

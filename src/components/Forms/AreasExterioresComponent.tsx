@@ -167,7 +167,7 @@ export default function AreasExterioresComponent() {
         <form onSubmit={handleSubmit}>
           <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
             <thead>
-              <tr className="bg-gray-100 text-gray-700">
+              <tr className="bg-custom text-white">
                 <th className="border p-2 rounded-tl-lg rounded-tr-lg">
                   Identificación en el plano
                 </th>
