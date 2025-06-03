@@ -7,7 +7,9 @@ import Spinner from "@/components/ui/Spinner";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { resetArchivos } from "@/redux/slices/archivoSlice";
 import {
+  resetEspacioEscolar,
   setCui,
   setInstitucionId,
   setRelevamientoId,
@@ -86,6 +88,8 @@ export default function HomePage() {
 
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
+      dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
+      dispatch(resetArchivos());
 
       toast.success("Relevamiento creado correctamente");
       dispatch(setRelevamientoId(nuevoRelevamientoId));
@@ -99,7 +103,6 @@ export default function HomePage() {
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
-
 
   const handleView = (relevamientoId: number) => {
     // Redirigir a la página de detalle con el id del relevamiento
@@ -118,11 +121,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {
-        loading && (
-          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
-        )
-      }
+      {loading && (
+        <div className="items-center justify-center">
+          <Spinner />
+          Cargando instituciones...
+        </div>
+      )}
 
       <CuiComponent
         label=""
@@ -172,7 +176,13 @@ export default function HomePage() {
                   </th>
                   <td className="px-4 py-2 border-b">{relevamiento.id}</td>
                   <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
-                  <td className={relevamiento.estado === "completo" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                  <td
+                    className={
+                      relevamiento.estado === "completo"
+                        ? "text-green-600 font-semibold"
+                        : "text-red-600 font-semibold"
+                    }
+                  >
                     {relevamiento.estado === "completo"
                       ? "Completo"
                       : "Incompleto"}
