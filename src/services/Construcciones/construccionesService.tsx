@@ -15,7 +15,6 @@ export const construccionService = {
   async getConstruccionesById(id: number) {
     const response = await axios.get(`/api/construcciones/${id}`, {
     });
-    console.log('construccion', response)
     return response;
   },
   async getByRelevamientoId(id: number) {

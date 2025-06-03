@@ -30,9 +30,12 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   const [relevamientoGuardado, setRelevamientoGuardado] = useState(false);
   const router = useRouter();
 
-  const relevamientoId = useAppSelector(
+   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
-  );
+  ); 
+
+  
+  //const relevamientoId = 12; 
 
   useEffect(() => {
     const fetchLocales = async () => {
@@ -40,7 +43,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
         const response = await localesService.getLocalesPorRelevamiento(
           relevamientoId
         );
-        console.log("response", response.locales);
         setLocales(response.locales || []);
       } catch (err) {
         setError("Error al obtener los locales");
@@ -66,25 +68,30 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   };
 
   const handleGuardarRelevamiento = async () => {
-    try {
-      await relevamientoService.updateEstadoRelevamiento(
-        relevamientoId,
-        "completo"
-      );
-      toast.success("Relevamiento marcado como completo");
-      setRelevamientoGuardado(true);
-      router.push("/home")
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al actualizar estado del relevamiento");
-    }
-  };
+  if (!relevamientoId) {
+    toast.error("No se encontró el ID del relevamiento");
+    return;
+  }
+
+  try {
+    await relevamientoService.updateEstadoRelevamiento(
+      relevamientoId,
+      "completo"
+    );
+    toast.success("Relevamiento marcado como completo");
+    setRelevamientoGuardado(true);
+    router.push("/home");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al actualizar estado del relevamiento");
+  }
+};
 
   if (loading) return <p className="mx-10">Cargando locales...</p>;
   if (error) return <p className="mx-10 text-red-500">{error}</p>;
 
   return (
-    <div className="mx-10">
+    <div className="mx-10 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       <p className="text-sm font-semibold">{label}</p>
       <p className="text-xs text-gray-500 mb-4">{sublabel}</p>
 
@@ -101,7 +108,9 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                 <th className="border px-2 py-1 text-center">
                   N° Construcción
                 </th>
-                <th className="border px-2 py-1 text-center">N° Identif. plano</th>
+                <th className="border px-2 py-1 text-center">
+                  N° Identif. plano
+                </th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
                 <th className="border px-2 py-1 text-center">Acción</th>
@@ -111,9 +120,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
               {localesIncompletos.map((local) => (
                 <tr
                   key={local.id}
-                  className={
-                    local.id === selectedLocalId ? "bg-custom/50" : ""
-                  }
+                  className={local.id === selectedLocalId ? "bg-custom/50" : ""}
                 >
                   <td className="border px-2 py-1 text-center">
                     {local.cui_number}
@@ -124,13 +131,17 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                   <td className="border px-2 py-1 text-center">
                     L {local.identificacion_plano}
                   </td>
-                  <td className="border px-2 py-1 text-center">{local.nombre_local}</td>
+                  <td className="border px-2 py-1 text-center">
+                    {local.nombre_local}
+                  </td>
                   <td className="border px-2 py-1 text-center text-red-600 font-bold">
                     Incompleto
                   </td>
                   <td className="border px-2 py-1 text-center">
                     <button
-                      onClick={() => {handleLocalSelect(local)}}
+                      onClick={() => {
+                        handleLocalSelect(local);
+                      }}
                       disabled={isReadOnly}
                       className={`px-3 py-1 rounded text-white ${
                         isReadOnly
@@ -161,7 +172,9 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                 <th className="border px-2 py-1 text-center">
                   N° Construcción
                 </th>
-                <th className="border px-2 py-1 text-center">N° Identif. plano</th>
+                <th className="border px-2 py-1 text-center">
+                  N° Identif. plano
+                </th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
                 <th className="border px-2 py-1 text-center">Acción</th>
@@ -184,7 +197,9 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                   <td className="border px-2 py-1 text-center">
                     L {local.identificacion_plano}
                   </td>
-                  <td className="border px-2 py-1 text-center">{local.nombre_local}</td>
+                  <td className="border px-2 py-1 text-center">
+                    {local.nombre_local}
+                  </td>
                   <td className="border px-2 py-1 text-center text-green-600 font-bold">
                     Completo ✔️
                   </td>
@@ -213,7 +228,9 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
         onClick={handleGuardarRelevamiento}
         className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
       >
-        {relevamientoGuardado ? "Relevamiento guardado ✔️" : "Guardar Relevamiento"}
+        {relevamientoGuardado
+          ? "Relevamiento guardado ✔️"
+          : "Guardar Relevamiento"}
       </button>
     </div>
   );

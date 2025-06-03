@@ -117,12 +117,10 @@ export default function AreasExterioresComponent() {
         relevamiento_id: relevamientoId,
       }));
 
-      console.log("Payload a enviar:", payload);
 
       await areasExterioresService.postAreasExteriores(payload);
 
       toast.success("Datos guardados correctamente");
-      console.log("Datos guardados correctamente:", payload);
     } catch (error) {
       console.error("Error al guardar los datos en la base:", error);
       toast.error("Error al guardar los datos. Intentá nuevamente.");
@@ -157,7 +155,7 @@ export default function AreasExterioresComponent() {
     <div className="mx-8 my-6 border rounded-2xl">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-black text-sm font-semibold">
+          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
             <p>4</p>
           </div>
           <p className="text-sm font-semibold text-gray-700">
@@ -167,7 +165,7 @@ export default function AreasExterioresComponent() {
         <form onSubmit={handleSubmit}>
           <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
             <thead>
-              <tr className="bg-gray-100 text-gray-700">
+              <tr className="bg-custom text-white">
                 <th className="border p-2 rounded-tl-lg rounded-tr-lg">
                   Identificación en el plano
                 </th>
@@ -214,7 +212,7 @@ export default function AreasExterioresComponent() {
                 <td className="border p-2 text-center">
                   <button
                     type="submit"
-                    className="text-sm bg-blue-600 text-white rounded-lg px-4 py-2"
+                    className="text-sm bg-custom hover:bg-custom/50 text-white rounded-lg px-4 py-2"
                   >
                     + Agregar Área
                   </button>

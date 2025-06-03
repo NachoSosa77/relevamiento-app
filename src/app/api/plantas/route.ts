@@ -8,12 +8,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { plantas, construccion_id, relevamiento_id } = body;
 
-    console.log("Datos recibidos en el backend:", {
-      plantas,
-      construccion_id,
-      relevamiento_id,
-    });
-
     // Verificar si plantas es un objeto válido
     if (typeof plantas !== "object" || plantas === null) {
       throw new Error("plantas no es un objeto válido");

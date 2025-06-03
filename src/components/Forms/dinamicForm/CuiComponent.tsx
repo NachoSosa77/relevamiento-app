@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -90,10 +91,6 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
     }
   }, [initialCui]);
 
-  if (loading && !isReadOnly) {
-    return <div>Cargando instituciones...</div>;
-  }
-
   if (error && !isReadOnly) {
     return <div>Error: {error}</div>;
   }
@@ -101,8 +98,8 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   return (
     <div className="mx-10">
       <p className="text-sm">{label}</p>
-      <div className="flex mt-2 p-2 border items-center rounded-lg bg-white text-black">
-        <div className="w-6 h-6 flex justify-center items-center bg-black rounded-full text-white">
+      <div className="flex mt-2 p-2 border items-center rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-6 h-6 flex justify-center items-center bg-custom rounded-full text-white">
           <p>A</p>
         </div>
         <div>

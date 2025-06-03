@@ -40,7 +40,6 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
     (state) => state.espacio_escolar.relevamientoId
   );
 
-  console.log("relevamientoId", relevamientoId);
 
   // 🚀 Cargar columnas configuradas
   useEffect(() => {
@@ -116,7 +115,6 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
         relevamiento_id: relevamientoId,
       };
 
-      console.log(datosAEnviar);
 
       await axios.post("/api/obras_en_predio", datosAEnviar);
 

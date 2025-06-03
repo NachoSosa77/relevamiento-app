@@ -116,23 +116,23 @@ export default function ElectricidadServicio({
   };
 
   return (
-    <div className="mx-10 text-sm">
+    <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       {id !== 0 && (
-        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-          <div className="w-6 h-6 flex justify-center text-white bg-black">
+        <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
             <p>{id}</p>
           </div>
-          <div className="h-6 flex items-center justify-center bg-slate-200">
+          <div className="h-6 flex items-center justify-center ">
             <p className="px-2 text-sm font-bold">{label}</p>
           </div>
         </div>
       )}
       {sub_id !== id && (
-        <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-          <div className="w-6 h-6 flex justify-center text-black font-bold">
+        <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
             <p>{sub_id}</p>
           </div>
-          <div className="h-6 flex items-center justify-center bg-slate-200">
+          <div className="h-6 flex items-center justify-center ">
             <p className="px-2 text-sm font-bold">{sublabel}</p>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function ElectricidadServicio({
 
       <table className="w-full border mt-2 text-xs">
         <thead>
-          <tr className="bg-slate-200">
+          <tr className="bg-custom text-white">
             <th className="border p-2"></th>
             <th className="border p-2"></th>
             <th className="border p-2">No</th>
@@ -190,7 +190,7 @@ export default function ElectricidadServicio({
               {sub_id !== 6.2 && (
                 <td
                   className={`border p-2 text-center ${
-                    !showCondition ? "bg-slate-200 text-slate-400" : ""
+                    !showCondition ? " text-slate-400" : ""
                   }`}
                 >
                   {!showCondition ? (
@@ -240,7 +240,7 @@ export default function ElectricidadServicio({
               {sub_id !== 6.2 && (
                 <td
                   className={`border p-2 text-center ${
-                    !showCondition ? "bg-slate-200 text-slate-400" : ""
+                    !showCondition ? " text-slate-400" : ""
                   }`}
                 >
                   {!showCondition ? (
@@ -323,7 +323,7 @@ export default function ElectricidadServicio({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
-          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+          className="text-white text-sm bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
           Guardar Información
         </button>

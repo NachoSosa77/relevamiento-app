@@ -62,19 +62,18 @@ export default function CalidadAguaComponent({
       cantidad_veces: updated.cantidad_veces,
     };
   
-    console.log(transformed); // Agregar log para verificar que los datos son correctos
   
     onChange(transformed);
   };
   
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-black font-bold">
+    <div className="space-y-2 text-sm">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3.1</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">
             CALIDAD DE AGUA PARA CONSUMO HUMANO
           </p>

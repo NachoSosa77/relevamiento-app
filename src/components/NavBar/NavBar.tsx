@@ -29,7 +29,6 @@ const Navbar = () => {
       try {
         const res = await fetch("/api/get-token", { credentials: "include" });
         const data = await res.json();
-        //console.log("Token obtenido desde backend:", data.token);
 
         if (data.token) {
           const decodedUser: UserData = jwtDecode(data.token);

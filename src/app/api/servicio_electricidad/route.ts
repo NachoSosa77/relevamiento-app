@@ -7,7 +7,6 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    console.log("BODY:", body);
 
     const { relevamiento_id, servicios } = body;
 

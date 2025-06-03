@@ -19,7 +19,6 @@ export const ServiciosBasicosTable = ({ relevamientoId }: Props) => {
         const data = await serviciosBasicosService.getServiciosBasicosByRelevamientoId(
           relevamientoId
         );
-        console.log(data);
         setServicios(data);
       } catch (error) {
         toast.error("Error al cargar servicios básicos");

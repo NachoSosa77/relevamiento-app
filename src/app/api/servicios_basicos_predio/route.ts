@@ -10,8 +10,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    console.log("✅ Datos recibidos en servicios básicos:", body);
-
     const serviciosBasicos = body; // No hay "serviciosBasicos" dentro del body, es directo
 
     if (!Array.isArray(serviciosBasicos)) {
@@ -52,12 +50,9 @@ export async function POST(req: NextRequest) {
       s.relevamiento_id,
     ]);
 
-    console.log("✅ Datos a insertar:", data); // Verificar que los datos son los esperados
-
     await connection.query<ResultSetHeader>(query, [data]);
 
     await connection.commit();
-    console.log("✅ Servicios básicos insertados correctamente");
     return NextResponse.json({ success: true });
   } catch (error) {
     await connection.rollback();
@@ -65,6 +60,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error });
   } finally {
     connection.release();
-    console.log("🔚 Conexión liberada");
   }
 }

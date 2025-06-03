@@ -124,7 +124,7 @@ export default function RespondientesDelCuiComponent() {
         <div className="flex justify-end gap-2 mt-2">
           <button
             onClick={agregarRespondente}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
+            className="bg-custom hover:bg-custom/50 text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200"
           >
             + Agregar Respondente
           </button>
