@@ -89,7 +89,6 @@ const getLocalesByConstruccionId = async (construccionId: number | undefined) =>
 };
 
 const updateConstruccionById = async (id: number, data: { destino_original: string }) => {
-  console.log("Enviando a API:", { id, data });
   const response = await fetch(`/api/locales_por_construccion/${id}`, {
     method: "PUT",
     headers: {
@@ -109,7 +108,6 @@ const updateConstruccionAntiRoboById = async (
   id: number,
   data: { proteccion_contra_robo: string }
 ) => {
-  console.log("Enviando a API:", { id, data });
   const response = await fetch(`/api/locales_por_construccion/${id}`, {
     method: "PUT",
     headers: {

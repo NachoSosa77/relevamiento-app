@@ -74,7 +74,6 @@ export default function RelevamientoCPage() {
     (state) => state.predio.observaciones
   );
 
-  //console.log('SELECTED INSTITUCIONS', selectedInstitutions );
   useEffect(() => {
     if (institucionesRedux.length > 0) {
       setSelectedInstitutions(institucionesRedux);
@@ -91,7 +90,6 @@ export default function RelevamientoCPage() {
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);
-    console.log(selectedType);
     setSelectSituacion(selectedType);
     // Buscar la descripción correspondiente al id seleccionado
     const selectedDescription = SituacionDominio.find(

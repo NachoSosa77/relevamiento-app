@@ -117,12 +117,10 @@ export default function AreasExterioresComponent() {
         relevamiento_id: relevamientoId,
       }));
 
-      console.log("Payload a enviar:", payload);
 
       await areasExterioresService.postAreasExteriores(payload);
 
       toast.success("Datos guardados correctamente");
-      console.log("Datos guardados correctamente:", payload);
     } catch (error) {
       console.error("Error al guardar los datos en la base:", error);
       toast.error("Error al guardar los datos. Intentá nuevamente.");

@@ -76,7 +76,6 @@ const AreasExterioresTable: React.FC = () => {
       if (relevamientoId) {
         try {
           const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
-          console.log("Datos de áreas exteriores:", response);
           
           setServicios(response.data.areasExteriores);
         } catch (error) {
@@ -103,14 +102,11 @@ const AreasExterioresTable: React.FC = () => {
 
   // 🚀 Guardar cambios en la base de datos
   const handleGuardarCambios = async (id?: number) => {
-    console.log("ID recibido:", id);
-    console.log("Servicios actuales:", servicios);
     if (id === undefined) {
       toast.warning("No se encontró el área exterior a actualizar.");
       return;
     }
     const servicioActualizado = servicios.find((s) => s.id === id);
-    console.log("Servicio encontrado:", servicioActualizado);
 
     if (!servicioActualizado) {
       toast.warning("No se encontró el área exterior a actualizar.");

@@ -36,7 +36,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
 
   
   //const relevamientoId = 12; 
-  //console.log("relevamientoId", relevamientoId);
 
   useEffect(() => {
     const fetchLocales = async () => {
@@ -44,7 +43,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
         const response = await localesService.getLocalesPorRelevamiento(
           relevamientoId
         );
-        console.log("response", response.locales);
         setLocales(response.locales || []);
       } catch (err) {
         setError("Error al obtener los locales");

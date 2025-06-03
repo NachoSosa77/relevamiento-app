@@ -62,7 +62,6 @@ export default function CalidadAguaComponent({
       cantidad_veces: updated.cantidad_veces,
     };
   
-    console.log(transformed); // Agregar log para verificar que los datos son correctos
   
     onChange(transformed);
   };

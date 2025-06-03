@@ -100,7 +100,6 @@ export default function HomePage() {
     (state) => state.institucion.institucionSeleccionada
   );
 
-  //console.log('relevamientos', relevamientos);
 
   const handleView = (relevamientoId: number) => {
     // Redirigir a la página de detalle con el id del relevamiento

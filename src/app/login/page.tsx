@@ -108,7 +108,6 @@ export default function LoginPage() {
       const returnTo = searchParams.get("returnTo") || "/home";
       setSuccess("¡Bienvenido!");
       router.push(returnTo);
-      //console.log("Redirigiendo a /home...", response.data);
     } catch (error: any) {
       setErrors({
         general:

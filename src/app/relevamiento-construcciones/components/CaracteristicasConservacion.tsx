@@ -92,7 +92,6 @@ export default function CaracteristicasConservacion({
     };
   });
 
-  console.log("Datos a enviar:", payload);
 
   try {
     const response = await fetch("/api/estado_conservacion", {
@@ -111,7 +110,6 @@ export default function CaracteristicasConservacion({
     toast.success(
       "Relevamiento características constructivas y estado de conservación guardado correctamente"
     );
-    console.log("Respuesta de la API:", result);
   } catch (error: any) {
     console.error("Error al enviar los datos:", error);
     toast.error(error.message || "Error al guardar los datos");

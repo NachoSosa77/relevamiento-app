@@ -71,7 +71,6 @@ export default function EnergiasAlternativas({
     return;
   }
 
-  console.log("Datos a enviar (filtrados):", payload);
 
   try {
     const response = await fetch("/api/estado_conservacion", {

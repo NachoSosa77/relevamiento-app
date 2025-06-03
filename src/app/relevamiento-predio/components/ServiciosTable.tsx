@@ -18,7 +18,6 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
     (state) => state.espacio_escolar.relevamientoId
   );
 
-  //console.log("relevamientoId", relevamientoId);
   const [servicios, setServiciosLocal] =
     useState<ServiciosBasicos[]>(serviciosData);
 

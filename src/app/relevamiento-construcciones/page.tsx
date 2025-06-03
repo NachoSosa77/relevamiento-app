@@ -52,7 +52,6 @@ export default function RelevamientoConstruccionesPage() {
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-  //console.log("CONSTRUCCION ID", construccionId);
 
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
@@ -62,10 +61,8 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log(relevamientoId);
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
-    /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */
   }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/api/visitas/route.ts
 
 import { getConnection } from "@/app/lib/db";
@@ -9,7 +10,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const visitas = await req.json();
-    console.log("✅ Datos recibidos en el endpoint:", visitas);
 
     if (!Array.isArray(visitas)) {
       console.error("❌ Formato inválido, no es un array.");
@@ -30,8 +30,6 @@ export async function POST(req: NextRequest) {
       );
     });
 
-    console.log("🔍 Visitas válidas para insertar:", visitasValidas);
-
     if (visitasValidas.length !== visitas.length) {
       console.warn("Algunas visitas tienen campos faltantes.");
       return NextResponse.json({
@@ -42,7 +40,6 @@ export async function POST(req: NextRequest) {
 
     // Usamos una transacción para insertar todas las visitas de manera segura
     await connection.beginTransaction();
-    console.log("🚀 Iniciando transacción de inserción de visitas...");
 
     const query = `
       INSERT INTO visitas_realizadas (numero_visita, fecha, hora_inicio, hora_finalizacion, observaciones, relevamiento_id)
@@ -58,16 +55,12 @@ export async function POST(req: NextRequest) {
       visita.relevamiento_id,
     ]);
 
-    console.log("📦 Datos preparados para insertar:", visitasData);
-
     const resultado = await connection.query<ResultSetHeader>(query, [
       visitasData,
     ]);
-    console.log("✅ Resultado de la inserción:", resultado);
 
     // Confirmamos la transacción
     await connection.commit();
-    console.log("✅ Transacción confirmada");
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -76,6 +69,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error });
   } finally {
     connection.release();
-    console.log("🔚 Conexión liberada");
   }
 }

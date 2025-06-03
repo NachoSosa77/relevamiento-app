@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useAppSelector } from "@/redux/hooks";
@@ -80,7 +81,6 @@ export default function ServiciosReu({
     })),
   };
 
-  console.log("Datos a enviar:", payload);
 
   try {
     const response = await fetch(endpoint, {
@@ -96,7 +96,6 @@ export default function ServiciosReu({
     }
 
     const result = await response.json();
-    console.log("Respuesta de la API:", result);
 
     toast.success("Servicios guardados exitosamente");
   } catch (error) {

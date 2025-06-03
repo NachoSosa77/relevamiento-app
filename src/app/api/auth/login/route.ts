@@ -7,23 +7,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   // Debe ser POST, no una función llamada login
-  console.log("📩 Recibiendo solicitud de login...");
   try {
     const { email, password } = await req.json();
-    console.log("📨 Datos recibidos:", { email });
-    console.log("📨 Datos recibidos:", { password });
 
     const connection = await getConnection();
-    console.log("🔗 Conexión establecida con la base de datos");
 
     const [users] = await connection.query<RowDataPacket[]>(
       "SELECT * FROM users WHERE email = ?",
       [email]
     );
-    console.log("🔎 Usuarios encontrados:", users);
 
     if (users.length === 0) {
-      console.log("No se encontró ningún usuario con ese email.");
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
@@ -32,7 +26,6 @@ export async function POST(req: NextRequest) {
 
     connection.release();
     if (users.length === 0) {
-      console.log("Credenciales inválidas");
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
@@ -40,10 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = users[0] as FormDataUser;
-    console.log("🔑 Usuario encontrado:", password);
-    console.log("🔑 Usuario encontrado:", user.password);
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log("🔑 Passwords coinciden:", passwordMatch);
 
     if (!passwordMatch) {
       return NextResponse.json(
@@ -62,8 +52,6 @@ export async function POST(req: NextRequest) {
       expiresIn: "1h",
     });
 
-    console.log("✅ Token generado:", token);
-
     // 🛠️ Crear la respuesta con la cookie
     const response = NextResponse.json({ message: "Login exitoso" });
     response.cookies.set("token", token, {
@@ -73,8 +61,6 @@ export async function POST(req: NextRequest) {
       maxAge: 120 * 120, // 2 horas
       path: "/",
     });
-
-    console.log("🍪 Cookie establecida con el token");
 
     return response;
   } catch (error) {

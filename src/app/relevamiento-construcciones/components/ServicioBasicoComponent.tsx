@@ -42,7 +42,6 @@ export default function ServicioBasicoComponent({
   // Dependencia añadida a `useCallback` para que siempre use la última versión de `processQuestions`
   const processQuestions = useCallback(
     (data: ServicioBasicoData) => {
-      console.log("Alcance original:", data.alcance); // Verifica los IDs originales
       return {
         tipo_provision: getQuestionById(data.tipo_provision, servicioAgua),
         tipo_provision_estado: data.tipo_provision_estado,
@@ -53,7 +52,6 @@ export default function ServicioBasicoComponent({
         tipo_almacenamiento_estado: data.tipo_almacenamiento_estado,
         alcance: data.alcance.map((id) => {
           const question = getQuestionById(id, provisionAgua);
-          console.log(`ID: ${id} -> Pregunta: ${question}`); // Verifica cada transformación
           return question;
         }),
       };

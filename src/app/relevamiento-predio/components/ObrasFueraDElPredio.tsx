@@ -38,7 +38,6 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
   ]);
   const router = useRouter();
 
-    console.log("ID de relevamiento:", relevamientoId);
 
 
   // 🚀 Cargar columnas configuradas
@@ -104,11 +103,9 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
       obraSinId.cue === null
     ) {
       toast.warning("Por favor, complete todos los campos.");
-      console.log("Enviando obra:", obraSinId);
       return;
     }
 
-    console.log("Obra que se enviará:", obraSinId);
 
     await axios.post("/api/obras_fuera_predio", obraSinId);
     toast.success("Datos guardados correctamente");

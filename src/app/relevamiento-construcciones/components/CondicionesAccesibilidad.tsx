@@ -96,7 +96,6 @@ export default function CondicionesAccesibilidad({
     })),
   };
 
-  console.log("Datos a enviar:", payload);
 
   try {
     const response = await fetch("/api/condiciones_accesibilidad", {
@@ -114,7 +113,6 @@ export default function CondicionesAccesibilidad({
 
     toast.success("Relevamiento condiciones accesibilidad guardados correctamente");
 
-    console.log("Respuesta de la API:", result);
   } catch (error: any) {
     console.error("Error al enviar los datos:", error);
     toast.error(error.message || "Error al guardar los datos");

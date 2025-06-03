@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/Construcciones/LocalDetalleModal.tsx
 
 "use client";
@@ -27,7 +28,6 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
     local.relevamiento_id
   );
 
-  console.log("Equipamientos", equipamientos);
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>

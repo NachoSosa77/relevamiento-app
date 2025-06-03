@@ -10,8 +10,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    console.log("✅ Datos recibidos en el endpoint:", body);
-
     const respondientes = body.respondientes;
 
     if (!Array.isArray(respondientes)) {
@@ -58,7 +56,6 @@ export async function POST(req: NextRequest) {
     await connection.query<ResultSetHeader>(query, [data]);
 
     await connection.commit();
-    console.log("✅ Respondientes insertados correctamente");
     return NextResponse.json({ success: true });
   } catch (error) {
     await connection.rollback();
@@ -66,6 +63,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error });
   } finally {
     connection.release();
-    console.log("🔚 Conexión liberada");
   }
 }

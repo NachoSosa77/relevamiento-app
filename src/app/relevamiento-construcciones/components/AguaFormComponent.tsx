@@ -82,7 +82,6 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
     }
 
     toast.success("Servicio de agua guardado correctamente");
-    console.log("Respuesta:", result);
   } catch (error: any) {
     console.error("Error al enviar datos:", error);
     toast.error(error.message || "Error al guardar los datos");
