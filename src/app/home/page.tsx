@@ -9,10 +9,9 @@ import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { resetArchivos } from "@/redux/slices/archivoSlice";
 import {
-  resetEspacioEscolar,
   setCui,
   setInstitucionId,
-  setRelevamientoId,
+  setRelevamientoId
 } from "@/redux/slices/espacioEscolarSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { relevamientoService } from "@/services/relevamientoService";
@@ -88,7 +87,6 @@ export default function HomePage() {
 
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
-      dispatch(resetEspacioEscolar()); // <-- resetea el estado de espacio_escolar
       dispatch(resetArchivos());
 
       toast.success("Relevamiento creado correctamente");
