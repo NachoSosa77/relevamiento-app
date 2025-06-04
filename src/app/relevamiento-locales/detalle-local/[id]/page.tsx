@@ -95,7 +95,6 @@ const DetalleLocalPage = () => {
 
   const handleGuardar = async () => {
     const valorAGuardar = obtenerDestinoOriginal();
-    console.log("Destino Original a guardar:", valorAGuardar);
 
     try {
       const response = await localesService.updateConstruccionById(local.id, {
@@ -129,7 +128,6 @@ const DetalleLocalPage = () => {
   const handleBack = () => {
     router.back();
   };
-  console.log("local", local);
   if (loading) return <p>Cargando...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (

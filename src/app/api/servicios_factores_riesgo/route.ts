@@ -11,8 +11,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    console.log("✅ Datos recibidos en factores de riesgo ambiental:", body);
-
     const factoresRiesgo = body; // Datos enviados
 
     if (!Array.isArray(factoresRiesgo)) {
@@ -59,7 +57,6 @@ export async function POST(req: NextRequest) {
     await connection.query<ResultSetHeader>(query, [data]);
 
     await connection.commit();
-    console.log("✅ Factores de riesgo ambiental insertados correctamente");
     return NextResponse.json({ success: true });
   } catch (error) {
     await connection.rollback();
@@ -67,6 +64,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error });
   } finally {
     connection.release();
-    console.log("🔚 Conexión liberada");
   }
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruccionComponent";
-import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
@@ -53,7 +52,6 @@ export default function RelevamientoConstruccionesPage() {
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-  //console.log("CONSTRUCCION ID", construccionId);
 
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
@@ -63,10 +61,8 @@ export default function RelevamientoConstruccionesPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  //console.log(relevamientoId);
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
-    /* console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) */
   }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
@@ -104,16 +100,15 @@ export default function RelevamientoConstruccionesPage() {
   };
 
   return (
-    <div className="h-full bg-white text-black text-sm">
-      <Navbar />
-      <div className="flex justify-end mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-end">
+    <div className="h-full bg-white text-black text-sm mt-28">
+      <div className="flex justify-center mt-20 mb-8 mx-4">
+        <div className="flex flex-col items-center justify-center">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
           <h4 className="text-sm">
             FORMULARIO DE RELEVAMIENTO DE LAS CONSTRUCCIONES
           </h4>
         </div>
-        <div className="w-10 h-10 ml-4 flex justify-center items-center text-black bg-slate-200 text-xl">
+        <div className="w-10 h-10 rounded-full ml-4 flex justify-center items-center text-white bg-custom text-xl">
           <p>2</p>
         </div>
       </div>
@@ -207,7 +202,7 @@ export default function RelevamientoConstruccionesPage() {
       <div className="flex justify-center mt-4">
         <button
           onClick={handleSaveConstruccion}
-          className="px-4 py-2 w-80 bg-blue-600 text-white rounded-md hover:bg-blue-400"
+          className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
         >
           Guardar construcción
         </button>

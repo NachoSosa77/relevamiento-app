@@ -77,7 +77,6 @@ export default function FormReutilizable({
       }),
     };
   
-      console.log("Datos a enviar:", payload);
   
       /* try {
         const response = await fetch("/api/instalaciones_seguridad_incendio", {
@@ -97,7 +96,6 @@ export default function FormReutilizable({
           "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
         );
   
-        console.log("Respuesta de la API:", result);
       } catch (error: any) {
         console.error("Error al enviar los datos:", error);
         toast.error(error.message || "Error al guardar los datos");

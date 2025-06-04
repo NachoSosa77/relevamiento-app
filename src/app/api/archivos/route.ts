@@ -1,8 +1,11 @@
 import { getConnection } from "@/app/lib/db";
-import { existsSync } from "fs";
-import { mkdir, writeFile } from "fs/promises";
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import path from "path";
+
+// Convierte File a Buffer
+function fileToBuffer(file: File): Promise<Buffer> {
+  return file.arrayBuffer().then((ab) => Buffer.from(ab));
+}
 
 export async function POST(req: Request) {
   const connection = await getConnection();
@@ -20,46 +23,35 @@ export async function POST(req: Request) {
 
   const archivosSubidos = [];
 
-  // Ruta del sistema para guardar físicamente los archivos
-  const archivosPath =
-    process.env.ARCHIVOS_PATH || path.join(process.cwd(), "public", "archivos");
-
-  // Nos aseguramos que la carpeta exista
-  if (!existsSync(archivosPath)) {
-    await mkdir(archivosPath, { recursive: true });
-  }
-
-  const domain = process.env.DOMINIO_PUBLICO || "http://localhost:3000";
-
   for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name.replace(/\s+/g, "_"); // Reemplaza espacios por guiones bajos (opcional)
-    const absolutePath = path.join(archivosPath, fileName);
-
     try {
-      // Guardar el archivo físicamente
-      await writeFile(absolutePath, buffer);
+      const fileBuffer = await fileToBuffer(file);
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, "-"); // formato seguro para nombres de archivo
+      const uniqueName = `Planos/${timestamp}_${file.name}`;
 
-      // URL pública servida por nginx
-      const url = `${domain}/archivos/${fileName}`;
+      const blob = await put(uniqueName, fileBuffer, {
+        access: "public", // o "private" si quieres proteger el acceso
+        contentType: file.type,
+      });
+
       const tipo_archivo = file.type.includes("pdf") ? "pdf" : "imagen";
 
-      // Guardamos en la base de datos
       await connection.execute(
         `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
          VALUES (?, ?, ?, NOW())`,
-        [relevamientoId, url, tipo_archivo]
+        [relevamientoId, blob.url, tipo_archivo]
       );
 
       archivosSubidos.push({
-        archivo_url: url,
+        archivo_url: blob.url,
         tipo_archivo,
         relevamiento_id: relevamientoId,
       });
     } catch (err) {
-      console.error("Error al guardar archivo:", err);
+      console.error(err);
       return NextResponse.json(
-        { error: "Error al guardar uno de los archivos" },
+        { error: "Error al subir uno de los archivos a Blob" },
         { status: 500 }
       );
     }

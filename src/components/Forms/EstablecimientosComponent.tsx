@@ -148,15 +148,15 @@ const EstablecimientosComponent: React.FC = () => {
   return (
     <div className="mx-10 mt-4 text-sm">
       <div className="flex mt-2 p-2 border items-center rounded-lg bg-white text-black">
-        <div className="w-6 h-6 flex justify-center items-center bg-black rounded-full text-white">
+        <div className="w-6 h-6 flex justify-center items-center bg-custom rounded-full text-white">
           <p>B</p>
         </div>
         <div>
           <p className="text-sm font-bold ml-4">ESTABLECIMIENTOS EDUCATIVOS</p>
         </div>
       </div>
-      <div className="flex p-3 bg-gray-100 border rounded-lg mt-4">
-        <p className="text-sm text-gray-600">
+      <div className="flex p-2 bg-gray-100 border rounded-lg">
+        <p className="text-xs text-gray-600">
           Transcriba de la hoja de ruta el domicilio postal del CUE-Anexos del o
           los directivos respondientes. Si es necesario utilice la columna
           Referencia para especificar el domicilio.
@@ -168,7 +168,7 @@ const EstablecimientosComponent: React.FC = () => {
       />
       <div className="flex justify-end mt-6">
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+          className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
           onClick={openModal}
         >
           Agregar establecimiento
@@ -190,7 +190,7 @@ const EstablecimientosComponent: React.FC = () => {
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
             onClick={handleSave}
           >
             Guardar

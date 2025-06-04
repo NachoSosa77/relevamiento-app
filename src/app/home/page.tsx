@@ -3,6 +3,7 @@
 "use client";
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
+import Spinner from "@/components/ui/Spinner";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -99,14 +100,12 @@ export default function HomePage() {
     (state) => state.institucion.institucionSeleccionada
   );
 
-  //console.log('relevamientos', relevamientos);
 
   const handleView = (relevamientoId: number) => {
     // Redirigir a la página de detalle con el id del relevamiento
     router.push(`/home/relevamiento/detalle/${relevamientoId}`);
   };
 
-  if (loading) return <div>Cargando instituciones...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -118,6 +117,12 @@ export default function HomePage() {
           </h1>
         </div>
       </div>
+
+      {
+        loading && (
+          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+        )
+      }
 
       <CuiComponent
         label=""

@@ -37,12 +37,7 @@ const persistConfig = {
   storage,
 };
 
-//console.log("Tipo de espacioEscolarReducer:", typeof espacioEscolarReducer);
-//console.log("Tipo de institucionReducer:", typeof institucionReducer);
-
 const persistedReducer = persistReducer(persistConfig, rootReducer);
-
-//console.log("Tipo de persistedReducer:", typeof persistedReducer);
 
 export const store = configureStore({
   reducer: persistedReducer, // Cambiado para usar persistedReducer directamente

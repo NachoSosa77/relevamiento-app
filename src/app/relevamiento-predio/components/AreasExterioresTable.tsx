@@ -76,7 +76,6 @@ const AreasExterioresTable: React.FC = () => {
       if (relevamientoId) {
         try {
           const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
-          console.log("Datos de áreas exteriores:", response);
           
           setServicios(response.data.areasExteriores);
         } catch (error) {
@@ -103,14 +102,11 @@ const AreasExterioresTable: React.FC = () => {
 
   // 🚀 Guardar cambios en la base de datos
   const handleGuardarCambios = async (id?: number) => {
-    console.log("ID recibido:", id);
-    console.log("Servicios actuales:", servicios);
     if (id === undefined) {
       toast.warning("No se encontró el área exterior a actualizar.");
       return;
     }
     const servicioActualizado = servicios.find((s) => s.id === id);
-    console.log("Servicio encontrado:", servicioActualizado);
 
     if (!servicioActualizado) {
       toast.warning("No se encontró el área exterior a actualizar.");
@@ -127,16 +123,16 @@ const AreasExterioresTable: React.FC = () => {
   };
 
   return (
-    <div className="p-4 mx-10">
+    <div className="p-2 mx-10 mt-4 bg-white rounded-lg border shadow-lg">
       {columnsConfig.length > 0 ? (
         <table className="w-full border-collapse mt-4">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-custom text-white text-center">
               {columnsConfig.map((column) => (
                 <th
                   key={column.key}
-                  className={`border p-2 text-left ${
-                    column.key === "id" ? "bg-black text-white" : ""
+                  className={`border p-2 text-center ${
+                    column.key === "id" ? "bg-custom text-white" : ""
                   }`}
                 >
                   {column.header}
@@ -200,7 +196,7 @@ const AreasExterioresTable: React.FC = () => {
                 <td className="border p-2 justify-center items-center">
                   <button
                     onClick={() => handleGuardarCambios(servicio.id)}
-                    className="text-sm font-bold bg-slate-200 p-4 rounded-md flex-nowrap"
+                    className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
                   >
                     Cargar Información
                   </button>

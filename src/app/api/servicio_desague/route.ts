@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/servicio_desague/route.ts
 import { getConnection } from "@/app/lib/db";
@@ -28,7 +29,6 @@ export async function POST(req: NextRequest) {
 
       // Si necesitas trabajar con el insertId, puedes hacerlo aquí
       const insertId = (result as any).insertId;
-      console.log(`Servicio Desagüe insertado con ID: ${insertId}`);
     }
 
     // Confirmar la transacción

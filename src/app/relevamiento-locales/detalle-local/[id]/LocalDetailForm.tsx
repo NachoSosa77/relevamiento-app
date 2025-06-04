@@ -9,7 +9,6 @@ export default function LocalDetailForm({ local }: { local: any }) {
   const [inputExtra, setInputExtra] = useState("");
 
   const handleSave = () => {
-    console.log("Guardar:", { respuesta, inputExtra });
     // Aquí iría la llamada al backend para guardar
   };
 

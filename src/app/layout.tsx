@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className="bg-white mb-8">
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <ToastContainer />
+            <ToastContainer autoClose={5000}/>
             {children}
           </PersistGate>
         </Provider>

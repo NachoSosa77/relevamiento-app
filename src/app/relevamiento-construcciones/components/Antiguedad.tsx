@@ -50,9 +50,9 @@ export default function AntiguedadComponent({ construccionId }: Props) {
   };
 
   return (
-    <div className="mx-10">
-      <div className="flex items-center gap-2 mt-2 p-2 border">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+    <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>2</p>
         </div>
         <div className="h-6 flex items-center justify-center">
@@ -64,8 +64,8 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
       <div className="overflow-x-auto">
         <form onSubmit={(e) => e.preventDefault()}>
-          <div className="flex justify-center items-center p-2 text-sm gap-2">
-            <div className="font-bold bg-slate-200 flex gap-2 p-2">
+          <div className="flex justify-center items-center p-2 mt-2 text-sm gap-2">
+            <div className="flex gap-2 p-2">
               <p>2.1</p>
               <p>¿De qué año data la mayor parte de la construcción?</p>
             </div>
@@ -79,7 +79,7 @@ export default function AntiguedadComponent({ construccionId }: Props) {
                 }
               />
             </div>
-            <div className="font-bold bg-slate-200 flex gap-2 p-2">
+            <div className="flex gap-2 p-2">
               <p>2.2</p>
               <p>
                 ¿Para qué destino fue construida originariamente? (Lea todas las
@@ -138,8 +138,8 @@ export default function AntiguedadComponent({ construccionId }: Props) {
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardarCambios}
-          className={`text-sm font-bold p-4 rounded-md flex-nowrap ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-custom hover:bg-custom/50"
+          className={`text-sm font-bold p-2 rounded-lg flex-nowrap ${
+            loading ? "bg-gray-400 cursor-not-allowed" : "text-white bg-custom hover:bg-custom/50"
           }`}
           disabled={loading}
         >

@@ -71,7 +71,6 @@ export default function EnergiasAlternativas({
     return;
   }
 
-  console.log("Datos a enviar (filtrados):", payload);
 
   try {
     const response = await fetch("/api/estado_conservacion", {
@@ -98,11 +97,11 @@ export default function EnergiasAlternativas({
 
 
   return (
-    <div className="mx-10 text-sm">
+    <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       <table className="w-full border mt-2 text-xs">
         <thead>
-          <tr className="bg-slate-200">
-            <th className="border p-2 bg-black text-white">{id}</th>
+          <tr className="bg-custom text-white">
+            <th className="border p-2  text-white">{id}</th>
             <th className="border p-2">{label}</th>
             {id !== 13 ? (
               <th className="border p-2">Descripción</th>
@@ -220,7 +219,7 @@ export default function EnergiasAlternativas({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
-          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+          className="bg-custom hover:bg-custom/50 text-sm text-white font-bold p-2 rounded-lg"
         >
           Guardar Información
         </button>

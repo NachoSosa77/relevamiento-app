@@ -7,6 +7,7 @@ import EstablecimientosComponent from "@/components/Forms/EstablecimientosCompon
 import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
+import Spinner from "@/components/ui/Spinner";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -27,7 +28,6 @@ export default function EspaciosEscolaresPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log("relevamientoId desde Redux:", relevamientoId);
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
@@ -37,7 +37,6 @@ export default function EspaciosEscolaresPage() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("selectedInstitutionId desde Redux:", selectedInstitutionId);
   }, [selectedInstitutionId]);
 
   useEffect(() => {
@@ -50,7 +49,6 @@ export default function EspaciosEscolaresPage() {
           throw new Error("No se pudo obtener la institución.");
         }
         const data = await response.json();
-        //console.log("Institución obtenida:", data);
         setSelectedInstitution(data); // Actualiza el estado con la respuesta de la API
         dispatch(setInstitucionId(data.id));
       } catch (error: any) {
@@ -67,10 +65,6 @@ export default function EspaciosEscolaresPage() {
   }, [dispatch, selectedInstitutionId]);
 
   useEffect(() => {
-    console.log(
-      "Estado de Redux (espacio_escolar) actualizado:",
-      selectedEspacioEscolar
-    );
   }, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
 
   const handleSaveObservacion = (observations: string) => {
@@ -127,7 +121,6 @@ export default function EspaciosEscolaresPage() {
       setTimeout(() => {
         router.push("/relevamiento-predio");
       }, 1000); // 1 segundo de espera
-      console.log("Datos del espacio escolar guardados con éxito.");
       // Podés resetear el estado o mostrar confirmación visual acá
     } catch (error: any) {
       console.error("Error al enviar datos del espacio escolar:", error);
@@ -139,10 +132,6 @@ export default function EspaciosEscolaresPage() {
     }
   };
 
-  if (loading) {
-    return <div>Cargando institución...</div>;
-  }
-
   if (error) {
     return <div>Error: {error}</div>;
   }
@@ -152,13 +141,20 @@ export default function EspaciosEscolaresPage() {
   }
 
   return (
-    <div className=" bg-white text-black text-sm mt-8">
+    <div className=" bg-white text-black text-sm mt-28 w-full">
       <div className="flex justify-end mt-20 mb-8 mx-4">
         <div className="flex flex-col items-end">
           <h1 className="font-bold">PLANILLA GENERAL</h1>
           <h4 className="text-sm">DE RELEVAMIENTO PEDAGÓGICO</h4>
         </div>
       </div>
+
+            {
+              loading && (
+                <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+              )
+            }
+      
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"

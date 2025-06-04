@@ -47,7 +47,7 @@ const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm })
   };
 
   return (
-    <div className="mx-8 my-6 border rounded-2xl">
+    <div className="mx-10 my-6 border rounded-2xl shadow-lg">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <form className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">

@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import logo from "@/../public/Ministerio Educación_HORIZONTAL_COLOR.png";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaArrowRight, FaEye, FaEyeSlash } from "react-icons/fa";
 import api from "../api/api";
 
 interface Errors {
@@ -41,8 +42,11 @@ export default function LoginPage() {
   };
 
   const validatePassword = (password: string) => {
-    return password.length >= 8;
-  };
+  const maxLength = password.length <= 10;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  return maxLength && hasUpperCase && hasNumber;
+};
 
   /* const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -86,7 +90,7 @@ export default function LoginPage() {
     setErrors((prev) => ({
       ...prev,
       password: !validatePassword(value)
-        ? "La contraseña debe tener al menos 8 caracteres"
+        ? "La contraseña debe tener hasta 10 caracteres, una mayúscula y un número"
         : "",
     }));
   };
@@ -101,12 +105,9 @@ export default function LoginPage() {
         email,
         password,
       });
-
       const returnTo = searchParams.get("returnTo") || "/home";
-      router.push(returnTo);
-
       setSuccess("¡Bienvenido!");
-      console.log("Redirigiendo a /home...", response.data);
+      router.push(returnTo);
     } catch (error: any) {
       setErrors({
         general:
@@ -121,7 +122,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-dark.background dark:to-dark.secondary.DEFAULT py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark.card.DEFAULT p-8 rounded-lg shadow-lg">
         <div className="flex justify-center">
-          <Image src={logo} alt="Logo" width={350} height={100} />
+          <Image
+            src="/img/logo-ministerio.png"
+            alt="Logo"
+            width={350}
+            height={100}
+            priority
+          />
         </div>
         <div className="text-center">
           <h2 className="text-heading font-heading text-custom dark:text-dark.foreground">
@@ -191,9 +198,9 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <FaEyeSlash className="text-accent dark:text-dark.accent.DEFAULT" />
+                    <FaEyeSlash className="text-custom dark:text-dark.accent.DEFAULT" />
                   ) : (
-                    <FaEye className="text-accent dark:text-dark.accent.DEFAULT" />
+                    <FaEye className="text-custom dark:text-dark.accent.DEFAULT" />
                   )}
                 </button>
               </div>
@@ -222,13 +229,19 @@ export default function LoginPage() {
                 Recordarme
               </label>
             </div>
+                      </div>
+
+            */}
 
             <div className="text-sm">
-              <button type="button" className="font-body text-primary hover:text-primary/80 dark:text-dark.primary.DEFAULT">
+              <button
+                type="button"
+                className="font-body text-custom hover:text-custom/50 dark:text-dark.primary.DEFAULT"
+                onClick={() => router.push("/forgot-password")}
+              >
                 ¿Olvidaste tu contraseña?
               </button>
             </div>
-          </div> */}
           </div>
 
           <div className="space-y-4">
@@ -241,6 +254,37 @@ export default function LoginPage() {
             {success && <p style={{ color: "green" }}>{success}</p>}
           </div>
         </form>
+        <div className="flex flex-col items-center mt-6">
+          <p className="text-sm text-muted-foreground">¿No tenés una cuenta?</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0.8 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+            }}
+            onClick={() => router.push("/signin")}
+            className="mt-2 flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-custom rounded-xl shadow hover:shadow-lg transition-all"
+          >
+            Registrate acá
+            <motion.span
+              animate={{
+                x: [0, 5, 0], // va hacia la derecha y vuelve
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.0,
+                ease: "easeInOut",
+              }}
+              className="inline-block"
+            >
+              <FaArrowRight />
+            </motion.span>
+          </motion.button>
+        </div>
       </div>
     </div>
   );

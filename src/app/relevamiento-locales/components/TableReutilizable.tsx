@@ -100,7 +100,6 @@ export default function TableReutilizable({
       return;
     }
 
-    console.log("Datos a enviar:", payload);
 
     try {
       const response = await fetch("/api/materiales_predominantes", {

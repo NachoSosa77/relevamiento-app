@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import DecimalNumericInput from "@/components/ui/DecimalNumericInput";
@@ -53,7 +54,6 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
 
   try {
     const result = await localesService.updateDimensionesById(id, dimension);
-    console.log("Resultado:", result);
     toast.success("Dimensiones actualizadas correctamente.");
     if (onUpdate) onUpdate(); // Notifica al padre que hubo cambio
   } catch (error) {

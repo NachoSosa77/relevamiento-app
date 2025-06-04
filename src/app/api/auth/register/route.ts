@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { nombre, apellido, email, password }: FormDataUser =
+    const { nombre, apellido, dni, email, password }: FormDataUser =
       await req.json();
     const connection = await getConnection();
 
@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await connection.query<ResultSetHeader>(
-      "INSERT INTO users (nombre, apellido, email, password) VALUES (?, ?, ?, ?)",
-      [nombre, apellido, email, hashedPassword]
+      "INSERT INTO users (nombre, apellido, dni, email, password) VALUES (?, ?, ?, ?, ?)",
+      [nombre, apellido, dni, email, hashedPassword]
     );
     connection.release();
 

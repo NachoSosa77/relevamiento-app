@@ -15,7 +15,6 @@ export default function ObservacionesComponent() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Observaciones:", observaciones);
     // Aquí puedes enviar las observaciones a donde necesites
     // (por ejemplo, a una API o a otro componente)
     setObservaciones(""); // Resetea el TextInput
