@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Select from "@/components/ui/SelectComponent";
+import TextInput from "@/components/ui/TextInput";
 import { useAppSelector } from "@/redux/hooks";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +13,7 @@ interface Opcion {
 }
 
 interface Locales {
-  id: string;  // Asegúrate de que este id sea siempre de tipo `string`
+  id: string; // Asegúrate de que este id sea siempre de tipo `string`
   question: string;
   showCondition: boolean;
   opciones: Opcion[];
@@ -20,7 +21,7 @@ interface Locales {
 }
 
 interface EstructuraReuProps {
-  id: string;  // Este id debe ser un string para que coincida con los ids de Locales
+  id: string; // Este id debe ser un string para que coincida con los ids de Locales
   sub_id: number;
   label: string;
   locales: Locales[];
@@ -39,7 +40,10 @@ export default function ServiciosBasicos({
   );
 
   const [responses, setResponses] = useState<
-    Record<string, { disponibilidad?: string; funciona?: string; motivo?: string }>
+    Record<
+      string,
+      { disponibilidad?: string; funciona?: string; motivo?: string; otroMotivo?: string }
+    >
   >({});
 
   const handleDisponibilidadChange = (servicioId: string, value: string) => {
@@ -49,7 +53,7 @@ export default function ServiciosBasicos({
         ...prev[servicioId],
         disponibilidad: value,
         funciona: undefined, // reset
-        motivo: undefined,    // reset
+        motivo: undefined, // reset
       },
     }));
   };
@@ -66,70 +70,81 @@ export default function ServiciosBasicos({
   };
 
   const handleMotivoChange = (servicioId: string, value: string) => {
-    setResponses((prev) => ({
-      ...prev,
-      [servicioId]: {
-        ...prev[servicioId],
-        motivo: value,
-      },
-    }));
-  };
-
-  const handleGuardar = async () => {
-  const payload = locales.map(({ id, question }) => {
-    const respuesta = responses[id];
-
-    return {
-      servicio: question,
-      tipo_instalacion: respuesta?.disponibilidad || "No",
-      funciona: respuesta?.funciona || "No",
-      motivo: respuesta?.funciona === "No" ? respuesta?.motivo || "No" : "",
-      relevamiento_id: relevamientoId,
-      local_id: localId,
-    };
-  });
-
-  const hayAlMenosUnDato = payload.some(
-    (item) =>
-      item.tipo_instalacion !== "No" || item.funciona !== "No" || (item.motivo && item.motivo.trim() !== "")
-  );
-
-  if (!hayAlMenosUnDato) {
-    toast.warning("Por favor, completá al menos un servicio antes de guardar.");
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/instalaciones_basicas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    toast.success("Información guardada correctamente");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al guardar los datos");
-  }
+    console.log("Motivo cambiado:", servicioId, value);
+  setResponses((prev) => ({
+    ...prev,
+    [servicioId]: {
+      ...prev[servicioId],
+      motivo: value,
+      otroMotivo: value === "Otro" ? prev[servicioId]?.otroMotivo || "" : undefined, // limpia si no es "Otro"
+    },
+  }));
 };
 
+
+  const handleGuardar = async () => {
+    const payload = locales.map(({ id, question }) => {
+      const respuesta = responses[id];
+
+      return {
+        servicio: question,
+        tipo_instalacion: respuesta?.disponibilidad || "No",
+        funciona: respuesta?.funciona || "No",
+        motivo:
+          respuesta?.funciona === "No"
+            ? respuesta?.motivo === "Otro"
+              ? respuesta?.otroMotivo || "Otro"
+              : respuesta?.motivo || "No"
+            : "",
+        relevamiento_id: relevamientoId,
+        local_id: localId,
+      };
+    });
+
+    const hayAlMenosUnDato = payload.some(
+      (item) =>
+        item.tipo_instalacion !== "No" ||
+        item.funciona !== "No" ||
+        (item.motivo && item.motivo.trim() !== "")
+    );
+
+    if (!hayAlMenosUnDato) {
+      toast.warning(
+        "Por favor, completá al menos un servicio antes de guardar."
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/instalaciones_basicas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      toast.success("Información guardada correctamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar los datos");
+    }
+  };
 
   // IDs de los servicios que no deben renderizar la columna "Motivo"
   const noRenderMotivoIds = ["8.1.5", "8.1.6", "8.1.7"];
 
   return (
     <div className="mx-10 text-sm">
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex items-center gap-2 mt-2 p-2 border bg-custom text-white">
+        <div className="w-6 h-6 rounded-full flex justify-center items-center text-custom bg-white">
           <p>{id}</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">{label}</p>
         </div>
       </div>
 
-      <table className="w-full border mt-2 text-xs">
+      <table className="w-full border text-xs">
         <thead>
-          <tr className="bg-slate-200">
+          <tr className="bg-custom text-white">
             <th className="border p-2">{sub_id}</th>
             <th className="border p-2">Ítem</th>
             <th className="border p-2">Descripción</th>
@@ -143,8 +158,13 @@ export default function ServiciosBasicos({
         <tbody>
           {locales.map(({ id, question, showCondition, opciones, motivos }) => {
             const respuesta = responses[id] || {};
-            const showFunciona = showCondition ? !!respuesta.disponibilidad : true;
-            const showMotivo = showFunciona && respuesta.funciona === "No" && !noRenderMotivoIds.includes(id);
+            const showFunciona = showCondition
+              ? !!respuesta.disponibilidad
+              : true;
+            const showMotivo =
+              showFunciona &&
+              respuesta.funciona === "No" &&
+              !noRenderMotivoIds.includes(id);
 
             return (
               <tr className="border" key={id}>
@@ -164,8 +184,10 @@ export default function ServiciosBasicos({
                         label: option.name,
                       }))}
                     />
-                  ):(
-                    <div className="bg-slate-200 w-full p-2 text-center"><p>No corresponde</p></div>
+                  ) : (
+                    <div className="bg-slate-200 w-full p-2 text-center">
+                      <p>No corresponde</p>
+                    </div>
                   )}
                 </td>
 
@@ -210,6 +232,23 @@ export default function ServiciosBasicos({
                         label: option.name,
                       }))}
                     />
+                    {respuesta.motivo === "6" && (
+                      <TextInput
+                      label="Otro motivo"
+                        sublabel="Especificar motivo"
+                        className="border px-2 py-1 text-sm"
+                        value={respuesta.otroMotivo || ""}
+                        onChange={(e) =>
+                          setResponses((prev) => ({
+                            ...prev,
+                            [id]: {
+                              ...prev[id],
+                              otroMotivo: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    )}
                   </td>
                 )}
               </tr>

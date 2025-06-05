@@ -28,7 +28,7 @@ export default function EspaciosEscolaresPage() {
   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   );
-  console.log("relevamientoId desde Redux:", relevamientoId);
+
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
@@ -170,6 +170,7 @@ export default function EspaciosEscolaresPage() {
         initialCui={selectedInstitution.cui}
         onCuiInputChange={() => {}}
         sublabel=""
+        institucionActualId={selectedInstitutionId}
       />
 
       <EstablecimientosComponent />

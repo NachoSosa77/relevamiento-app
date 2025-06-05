@@ -16,6 +16,7 @@ interface CuiComponentProps {
   isReadOnly: boolean;
   initialCui: number | undefined;
   onCuiInputChange: (cui: number | undefined) => void;
+  institucionActualId?: number; // 👈 nueva prop para ocultar institución seleccionada
 }
 
 const CuiComponent: React.FC<CuiComponentProps> = ({
@@ -24,10 +25,16 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   isReadOnly,
   initialCui,
   onCuiInputChange,
+  institucionActualId,
 }) => {
   const [inputValue, setInputValue] = useState<number | undefined>(undefined);
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<InstitucionesData[]>([]);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<
+    InstitucionesData[]
+  >([]);
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<
+    number | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,14 +81,19 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   };
 
   const handleInstitutionSelect = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedId = Number(event.target.value);
-    const selected = filteredInstitutions.find(
-      (inst) => inst.id === selectedId
-    );
-    dispatch(setInstitucionSeleccionada(selected?.id));
-  };
+  event: React.ChangeEvent<HTMLSelectElement>
+) => {
+  const id = Number(event.target.value);
+  setSelectedInstitutionId(id);
+  
+  const selected = filteredInstitutions.find((inst) => inst.id === id);
+  if (selected) {
+    dispatch(setInstitucionSeleccionada(selected.id));
+  }
+};
+
+
+
 
   useEffect(() => {
     if (initialCui !== null) {
@@ -103,7 +115,9 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
           <p>A</p>
         </div>
         <div>
-          <p className="text-sm font-bold ml-4">CUI (Código Único de Infraestructura)</p>
+          <p className="text-sm font-bold ml-4">
+            CUI (Código Único de Infraestructura)
+          </p>
         </div>
         <div className="ml-auto flex items-center">
           <p className="text-sm font-bold mr-4">Ingresa el número de CUI:</p>
@@ -120,17 +134,20 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
         <p className="text-xs text-gray-400">{sublabel}</p>
       </div>
       {!isReadOnly && filteredInstitutions.length > 0 && (
-        <select
-          className="mt-2 p-2 border rounded-lg"
-          onChange={handleInstitutionSelect}
-        >
-          <option value="">Selecciona una institución</option>
-          {filteredInstitutions.map((inst) => (
-            <option key={inst.id} value={inst.id}>
-              {inst.institucion} ({inst.modalidad_nivel})
-            </option>
-          ))}
-        </select>
+          <select
+            className="mt-2 p-2 border rounded-lg"
+            onChange={handleInstitutionSelect}
+            value={selectedInstitutionId ?? ""}
+          >
+            <option value="">Selecciona una institución</option>
+            {filteredInstitutions
+              .filter((inst) => inst.id !== institucionActualId) // 👈 oculta la ya seleccionada
+              .map((inst) => (
+                <option key={inst.id} value={inst.id}>
+                  {inst.institucion} ({inst.modalidad_nivel})
+                </option>
+              ))}
+          </select>
       )}
     </div>
   );

@@ -111,7 +111,7 @@ export default function TableCantidadReutilizable({
           <p className="px-2 text-sm font-bold">{label}</p>
         </div>
       </div>
-      <table className="w-full border mt-2 text-xs">
+      <table className="w-full border text-xs">
         <thead>
           <tr className="bg-custom text-white">
             <th className="border p-2"></th>

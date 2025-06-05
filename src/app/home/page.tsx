@@ -110,10 +110,10 @@ export default function HomePage() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="h-full mt-8 overflow-hidden bg-white text-black">
+    <div className="h-full mt-8 overflow-hidden bg-white text-black text-sm">
       <div className="flex justify-center mt-20 mb-8 mx-4">
         <div className="flex flex-col items-center">
-          <h1 className="font-bold">
+          <h1 className="font-bold text-custom">
             FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO
           </h1>
         </div>

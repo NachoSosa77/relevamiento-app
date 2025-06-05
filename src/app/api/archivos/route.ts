@@ -62,3 +62,31 @@ export async function POST(req: Request) {
     archivos: archivosSubidos,
   });
 }
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const relevamientoId = searchParams.get("relevamientoId");
+
+  if (!relevamientoId) {
+    return NextResponse.json(
+      { error: "Falta relevamientoId" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const connection = await getConnection();
+    const [rows] = await connection.execute(
+      `SELECT archivo_url, tipo_archivo FROM archivos WHERE relevamiento_id = ?`,
+      [relevamientoId]
+    );
+
+    return NextResponse.json({ archivos: rows });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { error: "Error al obtener archivos" },
+      { status: 500 }
+    );
+  }
+}

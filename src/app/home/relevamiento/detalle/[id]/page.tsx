@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { ArchivosDetalle } from "@/components/Detalles/ArchivosDetalle";
 import InstitucionesDetalle from "@/components/Detalles/InstitucionesDetalles";
 import { PredioDetalle } from "@/components/Detalles/PredioDetalle";
 import RespondientesDetalle from "@/components/Detalles/RespondientesDetalles";
@@ -82,6 +83,10 @@ const DetallePage = () => {
 
         <AccordionItem value="predio" title="Predio">
           <PredioDetalle relevamientoId={relevamientoId} />
+        </AccordionItem>
+
+        <AccordionItem value="archivos" title="Archivos subidos">
+          <ArchivosDetalle relevamientoId={relevamientoId} />
         </AccordionItem>
       </Accordion>
     </div>
