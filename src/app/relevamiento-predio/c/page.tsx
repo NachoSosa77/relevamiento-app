@@ -10,7 +10,7 @@ import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setObservaciones, setPredioId } from "@/redux/slices/predioSlice";
+import { setPredioId } from "@/redux/slices/predioSlice";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation"; // ✅
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -84,9 +84,28 @@ export default function RelevamientoCPage() {
     setShowFormFuera(true);
   };
 
-  const handleSaveObservacion = (observations: string) => {
-    dispatch(setObservaciones(observations));
-  };
+  console.log(predioId)
+
+  const handleSaveObservacion = async (obs: string) => {
+      if (!predioId || !obs.trim()) return;
+  
+      try {
+        const res = await fetch(`/api/predio/${predioId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ observaciones: obs }),
+        });
+  
+        if (res.ok) {
+          toast.success("Observaciones guardadas correctamente");
+        } else {
+          console.error("Error al guardar observaciones");
+          toast.error("Observaciones guardadas correctamente");
+        }
+      } catch (err) {
+        console.error("Error de red al guardar:", err);
+      }
+    };
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);

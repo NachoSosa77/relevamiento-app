@@ -44,10 +44,10 @@ WHERE relevamiento_id = ?`,
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   const connection = await getConnection();
-  const { id } = await params;
+  const { id } = await Promise.resolve(context.params); // ✅ solución segura
 
   try {
     const body = await req.json();
@@ -61,7 +61,7 @@ export async function PATCH(
     }
 
     const [result] = await connection.query(
-      `UPDATE espacios_escolares SET observaciones = ? WHERE id = ?`,
+      `UPDATE predio SET observaciones = ? WHERE id = ?`,
       [observaciones, id]
     );
 
