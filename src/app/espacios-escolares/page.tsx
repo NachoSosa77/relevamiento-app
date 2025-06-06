@@ -162,6 +162,7 @@ export default function EspaciosEscolaresPage() {
         initialCui={selectedInstitution.cui}
         onCuiInputChange={() => {}}
         sublabel=""
+        institucionActualId={selectedInstitutionId}
       />
 
       <EstablecimientosComponent />

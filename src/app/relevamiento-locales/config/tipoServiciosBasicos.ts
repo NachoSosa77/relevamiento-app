@@ -37,12 +37,12 @@ export const tipoServiciosBasicos = [
         name: "Servicio inhabilitado (contaminación)",
       },
       {
-        id: 4,
+        id: 5,
         prefijo: "E",
         name: "No sabe",
       },
       {
-        id: 4,
+        id: 6,
         prefijo: "F",
         name: "Otro",
       },
@@ -86,12 +86,12 @@ export const tipoServiciosBasicos = [
         name: "Servicio inhabilitado (contaminación)",
       },
       {
-        id: 4,
+        id: 5,
         prefijo: "E",
         name: "No sabe",
       },
       {
-        id: 4,
+        id: 6,
         prefijo: "F",
         name: "Otro",
       },
@@ -130,12 +130,12 @@ export const tipoServiciosBasicos = [
         name: "Servicio inhabilitado",
       },
       {
-        id: 4,
+        id: 5,
         prefijo: "D",
         name: "No sabe",
       },
       {
-        id: 5,
+        id: 6,
         prefijo: "E",
         name: "Otro",
       },

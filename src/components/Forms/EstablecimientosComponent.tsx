@@ -2,7 +2,10 @@
 
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setInstitucionesData } from "@/redux/slices/espacioEscolarSlice";
+import {
+  setCui,
+  setInstitucionesData,
+} from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { toast } from "react-toastify";
@@ -24,7 +27,11 @@ const EstablecimientosComponent: React.FC = () => {
     const stored = localStorage.getItem("institucionesSeleccionadas");
     if (stored) {
       try {
-        const { cui, instituciones }: { cui: number; instituciones: InstitucionesData[] } = JSON.parse(stored);
+        const {
+          cui,
+          instituciones,
+        }: { cui: number; instituciones: InstitucionesData[] } =
+          JSON.parse(stored);
         if (cui === selectedCui) {
           setInstituciones(instituciones);
           dispatch(setInstitucionesData(instituciones));
@@ -40,6 +47,9 @@ const EstablecimientosComponent: React.FC = () => {
     }
   }, [selectedCui, dispatch]);
 
+  console.log("Institucion seleccionada redux:", selectedInstitutionId);
+
+
   // Guardar instituciones en localStorage cuando cambien
   useEffect(() => {
     if (instituciones.length > 0 && selectedCui) {
@@ -47,13 +57,16 @@ const EstablecimientosComponent: React.FC = () => {
         cui: selectedCui,
         instituciones,
       };
-      localStorage.setItem("institucionesSeleccionadas", JSON.stringify(dataAGuardar));
+      localStorage.setItem(
+        "institucionesSeleccionadas",
+        JSON.stringify(dataAGuardar)
+      );
       dispatch(setInstitucionesData(instituciones));
     }
   }, [instituciones, selectedCui, dispatch]);
 
   // Obtener institución al seleccionar una nueva
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchInstitution = async () => {
       try {
         const response = await fetch(
@@ -78,12 +91,44 @@ const EstablecimientosComponent: React.FC = () => {
     if (selectedInstitutionId) {
       fetchInstitution();
     }
-  }, [selectedInstitutionId]);
+  }, [selectedInstitutionId]); */
 
-  const handleSave = () => {
-    if (selectedCui) {
-      toast.success("¡Institución agregada exitosamente!");
-      closeModal();
+  const handleSave = async () => {
+    console.log("Instituciones a guardar:", selectedInstitutionId);
+    if (selectedInstitutionId && selectedCui) {
+      const yaExiste = instituciones.some(
+        (inst) => inst.id === selectedInstitutionId
+      );
+      if (yaExiste) {
+        toast.info("La institución ya fue agregada.");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/instituciones/${selectedInstitutionId}`
+        );
+        if (!response.ok) throw new Error("No se pudo obtener la institución.");
+
+        const data: InstitucionesData = await response.json();
+
+        const nuevasInstituciones = [...instituciones, data];
+        setInstituciones(nuevasInstituciones);
+        dispatch(setInstitucionesData(nuevasInstituciones)); // <- 🔥 este es el paso que faltaba
+        localStorage.setItem(
+          "institucionesSeleccionadas",
+          JSON.stringify({
+            cui: selectedCui,
+            instituciones: nuevasInstituciones,
+          })
+        );
+
+        toast.success("¡Institución agregada exitosamente!");
+        closeModal();
+      } catch (error) {
+        console.error("Error al guardar la institución:", error);
+        toast.error("Ocurrió un error al guardar.");
+      }
     } else {
       toast.error("Por favor, selecciona una institución.");
     }
@@ -162,10 +207,7 @@ const EstablecimientosComponent: React.FC = () => {
           Referencia para especificar el domicilio.
         </p>
       </div>
-      <ReusableTable
-        data={instituciones}
-        columns={establecimientos_columns}
-      />
+      <ReusableTable data={instituciones} columns={establecimientos_columns} />
       <div className="flex justify-end mt-6">
         <button
           className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
@@ -184,9 +226,10 @@ const EstablecimientosComponent: React.FC = () => {
         <CuiComponent
           label={""}
           initialCui={selectedCui}
-          onCuiInputChange={() => {}}
+          onCuiInputChange={(nuevoCui) => dispatch(setCui(nuevoCui))}
           isReadOnly={false}
           sublabel=""
+          institucionActualId={selectedInstitutionId}
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button

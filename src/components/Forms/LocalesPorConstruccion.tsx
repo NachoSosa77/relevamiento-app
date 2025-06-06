@@ -27,9 +27,9 @@ export default function LocalesPorConstruccion() {
   const [localesPorConstruccion, setLocalesPorConstruccion] = useState<
     Record<number, LocalesConstruccion[]>
   >({});
-  const relevamientoId = useAppSelector(
+   const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
-  );
+  ); 
   const cuiNumber = useAppSelector((state) => state.espacio_escolar.cui);
 
   const [formValues, setFormValues] = useState<

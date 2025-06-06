@@ -51,12 +51,12 @@ export default function RelevamientoLocalesPage() {
         </div>
       </div>
 
-            {
-        loading && (
-          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
-        )
-      }
-
+      {loading && (
+        <div className="items-center justify-center">
+          <Spinner />
+          Cargando instituciones...
+        </div>
+      )}
 
       <CuiLocalesComponent
         onLocalSelected={() => {}}

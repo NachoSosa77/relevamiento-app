@@ -115,7 +115,7 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
                           <td className="px-3 py-2">
                             <button
                               onClick={() => openModal(local)}
-                              className="text-blue-600 hover:underline"
+                              className="text-custom hover:underline"
                             >
                               Ver detalle
                             </button>

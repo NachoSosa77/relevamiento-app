@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import Spinner from "@/components/ui/Spinner";
 import { LocalesConstruccion } from "@/interfaces/Locales";
 import { useAppSelector } from "@/redux/hooks";
 import { localesService } from "@/services/localesServices";
@@ -30,7 +31,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   const [relevamientoGuardado, setRelevamientoGuardado] = useState(false);
   const router = useRouter();
 
-   const relevamientoId = useAppSelector(
+  const relevamientoId = useAppSelector(
     (state) => state.espacio_escolar.relevamientoId
   ); 
 
@@ -38,6 +39,12 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   //const relevamientoId = 12; 
 
   useEffect(() => {
+    if (!relevamientoId) {
+      toast.error(
+        "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
+      );
+      return;
+    }
     const fetchLocales = async () => {
       try {
         const response = await localesService.getLocalesPorRelevamiento(
@@ -68,26 +75,31 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   };
 
   const handleGuardarRelevamiento = async () => {
-  if (!relevamientoId) {
-    toast.error("No se encontró el ID del relevamiento");
-    return;
-  }
+    if (!relevamientoId) {
+      toast.error("No se encontró el ID del relevamiento");
+      return;
+    }
 
-  try {
-    await relevamientoService.updateEstadoRelevamiento(
-      relevamientoId,
-      "completo"
+    try {
+      await relevamientoService.updateEstadoRelevamiento(
+        relevamientoId,
+        "completo"
+      );
+      toast.success("Relevamiento marcado como completo");
+      setRelevamientoGuardado(true);
+      router.push("/home");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al actualizar estado del relevamiento");
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="items-center justify-center">
+        <Spinner />
+      </div>
     );
-    toast.success("Relevamiento marcado como completo");
-    setRelevamientoGuardado(true);
-    router.push("/home");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al actualizar estado del relevamiento");
-  }
-};
-
-  if (loading) return <p className="mx-10">Cargando locales...</p>;
   if (error) return <p className="mx-10 text-red-500">{error}</p>;
 
   return (
