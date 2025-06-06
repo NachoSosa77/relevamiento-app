@@ -238,6 +238,7 @@ const DetalleLocalPage = () => {
         id={3}
         label="MATERIALES PREDOMINANTES"
         locales={tipoMateriales}
+        onUpdate={marcarComoModificado}
       />
       <TableCantidadReutilizable
         id={4}

@@ -42,7 +42,12 @@ export default function ServiciosBasicos({
   const [responses, setResponses] = useState<
     Record<
       string,
-      { disponibilidad?: string; funciona?: string; motivo?: string; otroMotivo?: string }
+      {
+        disponibilidad?: string;
+        funciona?: string;
+        motivo?: string;
+        otroMotivo?: string;
+      }
     >
   >({});
 
@@ -71,31 +76,38 @@ export default function ServiciosBasicos({
 
   const handleMotivoChange = (servicioId: string, value: string) => {
     console.log("Motivo cambiado:", servicioId, value);
-  setResponses((prev) => ({
-    ...prev,
-    [servicioId]: {
-      ...prev[servicioId],
-      motivo: value,
-      otroMotivo: value === "Otro" ? prev[servicioId]?.otroMotivo || "" : undefined, // limpia si no es "Otro"
-    },
-  }));
-};
-
+    setResponses((prev) => ({
+      ...prev,
+      [servicioId]: {
+        ...prev[servicioId],
+        motivo: value,
+        otroMotivo:
+          value === "Otro" ? prev[servicioId]?.otroMotivo || "" : undefined, // limpia si no es "Otro"
+      },
+    }));
+  };
 
   const handleGuardar = async () => {
-    const payload = locales.map(({ id, question }) => {
+    const payload = locales.map(({ id, question, motivos }) => {
       const respuesta = responses[id];
+
+      let motivoTexto = "";
+      if (respuesta?.funciona === "No") {
+        if (respuesta?.motivo === "6") {
+          motivoTexto = respuesta?.otroMotivo || "Otro";
+        } else {
+          const motivoEncontrado = motivos?.find(
+            (motivo) => String(motivo.id) === respuesta?.motivo
+          );
+          motivoTexto = motivoEncontrado?.name || "No";
+        }
+      }
 
       return {
         servicio: question,
         tipo_instalacion: respuesta?.disponibilidad || "No",
         funciona: respuesta?.funciona || "No",
-        motivo:
-          respuesta?.funciona === "No"
-            ? respuesta?.motivo === "Otro"
-              ? respuesta?.otroMotivo || "Otro"
-              : respuesta?.motivo || "No"
-            : "",
+        motivo: motivoTexto,
         relevamiento_id: relevamientoId,
         local_id: localId,
       };
@@ -234,7 +246,7 @@ export default function ServiciosBasicos({
                     />
                     {respuesta.motivo === "6" && (
                       <TextInput
-                      label="Otro motivo"
+                        label="Otro motivo"
                         sublabel="Especificar motivo"
                         className="border px-2 py-1 text-sm"
                         value={respuesta.otroMotivo || ""}

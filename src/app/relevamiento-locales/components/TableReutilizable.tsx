@@ -24,12 +24,15 @@ interface EstructuraReuProps {
   id: number;
   label: string;
   locales: Locales[];
+    onUpdate?: () => void; // Esta función se llama cuando hay cambios
+
 }
 
 export default function TableReutilizable({
   id,
   label,
   locales,
+  onUpdate
 }: EstructuraReuProps) {
   const params = useParams();
   const localId = Number(params.id);
@@ -100,8 +103,6 @@ export default function TableReutilizable({
       return;
     }
 
-    console.log("Datos a enviar:", payload);
-
     try {
       const response = await fetch("/api/materiales_predominantes", {
         method: "POST",
@@ -111,6 +112,8 @@ export default function TableReutilizable({
         body: JSON.stringify(payload),
       });
       toast.success("Información guardada correctamente");
+          if (onUpdate) onUpdate(); // Notifica al padre que hubo cambio
+
     } catch (error) {
       console.error(error);
       toast.error("Error al guardar los datos");

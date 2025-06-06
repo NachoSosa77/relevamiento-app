@@ -185,12 +185,6 @@ export default function HomePage() {
                     >
                       Ver
                     </button>
-                    <button
-                      className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-md px-4 py-1"
-                      disabled
-                    >
-                      Editar
-                    </button>
                   </td>
                 </tr>
               ))}
