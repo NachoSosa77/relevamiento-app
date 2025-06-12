@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       control_sanitario,
       cantidad_veces,
       relevamiento_id,
+      construccion_id,
     } = body;
 
     const [result] = await connection.query<ResultSetHeader>(
@@ -31,8 +32,9 @@ export async function POST(req: Request) {
       tipo_tratamiento,
       control_sanitario,
       cantidad_veces,
-        relevamiento_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        relevamiento_id,
+        construccion_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         tipo_provision,
         tipo_provision_estado,
@@ -44,6 +46,7 @@ export async function POST(req: Request) {
         control_sanitario,
         cantidad_veces,
         relevamiento_id,
+        construccion_id,
       ]
     );
 

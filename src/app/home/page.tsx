@@ -89,6 +89,7 @@ export default function HomePage() {
 
       toast.success("Relevamiento creado correctamente");
       dispatch(setRelevamientoId(nuevoRelevamientoId));
+      sessionStorage.setItem("relevamientoId", String(nuevoRelevamientoId));
       router.push("/espacios-escolares");
     } catch (error) {
       console.error("Error en la creación del relevamiento:", error);

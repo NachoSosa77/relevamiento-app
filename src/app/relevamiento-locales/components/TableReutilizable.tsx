@@ -2,7 +2,7 @@
 "use client";
 
 import Select from "@/components/ui/SelectComponent";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -36,9 +36,7 @@ export default function TableReutilizable({
 }: EstructuraReuProps) {
   const params = useParams();
   const localId = Number(params.id);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<
     Record<string, { material: string; estado: string }>
   >({});

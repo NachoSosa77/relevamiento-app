@@ -2,6 +2,8 @@
 
 import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruccionComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
+import Spinner from "@/components/ui/Spinner";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { selectServiciosAgua } from "@/redux/slices/servicioAguaSlice";
@@ -52,19 +54,21 @@ export default function RelevamientoConstruccionesPage() {
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-  //console.log("CONSTRUCCION ID", construccionId);
+  console.log("CONSTRUCCION ID", construccionId);
 
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
   const institucionesRedux = useSelector(
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
+
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => {
-     console.log("Estado de servicios de agua en Redux:", serviciosDeAguaEnRedux) 
+    console.log(
+      "Estado de servicios de agua en Redux:",
+      serviciosDeAguaEnRedux
+    );
   }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
@@ -123,92 +127,115 @@ export default function RelevamientoConstruccionesPage() {
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
         setConstruccionId={setConstruccionId}
       />
-      <CantidadPlantas construccionId={construccionId} />
-      <AntiguedadComponent construccionId={construccionId} />
-      <ServiciosBasicos data={serviciosBasicos} />
-      <AguaFormComponent relevamientoId={relevamientoId} />
-      <ServiciosReu
-        id={4}
-        label={"DESAGUES CLOACALES"}
-        sub_id={4}
-        sublabel={"DESAGUES CLOACALES"}
-        servicios={servicioDesague}
-        endpoint="/api/servicio_desague"
-      />
-      <ServiciosReu
-        id={5}
-        label={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
-        sub_id={5}
-        sublabel={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
-        servicios={servicioGas}
-        endpoint="/api/servicio_gas"
-      />
-      <ElectricidadServicio
-        id={6}
-        label="ELECTRICIDAD"
-        sub_id={6.1}
-        sublabel="TIPO DE PROVISIÓN"
-        servicios={servicioElectricidad}
-      />
-      <ElectricidadServicio
-        id={0}
-        label="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
-        sub_id={6.2}
-        sublabel="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
-        servicios={tablerosElectricidad}
-      />
-      <SeguridadIncendio
-        id={7}
-        label="INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIO"
-        sub_id={7}
-        sublabel=""
-        servicios={seguridadIncendio}
-      />
-      <CondicionesAccesibilidad
-        id={8}
-        label="CONDICIONES ACCESIBILIDAD"
-        sub_id={8}
-        sublabel=""
-        servicios={servicioAccesibilidad}
-      />
-      <Comedor
-        id={9}
-        label="USO DEL COMEDOR"
-        sub_id={9}
-        sublabel=""
-        servicios={usoComedor}
-      />
-      <SeparadorReutilizable data={caracteristicasConstruccion} />
-      <CaracteristicasConservacion
-        id={10}
-        label="ESTRUCTURA RESISTENTE"
-        estructuras={estructuraResistente}
-      />
-      <CaracteristicasConservacion
-        id={11}
-        label="TECHO"
-        estructuras={estructuraTecho}
-      />
-      <CaracteristicasConservacion
-        id={12}
-        label="PAREDES Y CERRAMIENTOS EXTERIORES"
-        estructuras={paredesCerramientos}
-      />
-      <EnergiasAlternativas
-        id={13}
-        label="ENERGÍAS ALTERNATIVAS"
-        estructuras={energiasAlternativas}
-      />
 
-      <ObservacionesComponent onSave={handleSaveObservaciones} />
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={handleSaveConstruccion}
-          className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
-        >
-          Guardar construcción
-        </button>
-      </div>
+      {!construccionId ? (
+        <div className="mt-10 flex flex-col items-center gap-4">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+          {" "}
+          <CantidadPlantas construccionId={construccionId} />
+          <AntiguedadComponent construccionId={construccionId} />
+          <ServiciosBasicos data={serviciosBasicos} />
+          <AguaFormComponent
+            relevamientoId={relevamientoId}
+            construccionId={construccionId}
+          />
+          <ServiciosReu
+            id={4}
+            label={"DESAGUES CLOACALES"}
+            sub_id={4}
+            sublabel={"DESAGUES CLOACALES"}
+            servicios={servicioDesague}
+            endpoint="/api/servicio_desague"
+            construccionId={construccionId}
+          />
+          <ServiciosReu
+            id={5}
+            label={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
+            sub_id={5}
+            sublabel={"INSTALACIÓN DE GAS U OTRO COMBUSTIBLE"}
+            servicios={servicioGas}
+            endpoint="/api/servicio_gas"
+            construccionId={construccionId}
+          />
+          <ElectricidadServicio
+            id={6}
+            label="ELECTRICIDAD"
+            sub_id={6.1}
+            sublabel="TIPO DE PROVISIÓN"
+            servicios={servicioElectricidad}
+            construccionId={construccionId}
+          />
+          <ElectricidadServicio
+            id={0}
+            label="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
+            sub_id={6.2}
+            sublabel="CARACTERÍSTICAS DE LOS TABLEROS DE ELECTRICIDAD"
+            servicios={tablerosElectricidad}
+            construccionId={construccionId}
+          />
+          <SeguridadIncendio
+            id={7}
+            label="INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIO"
+            sub_id={7}
+            sublabel=""
+            servicios={seguridadIncendio}
+            construccionId={construccionId}
+          />
+          <CondicionesAccesibilidad
+            id={8}
+            label="CONDICIONES ACCESIBILIDAD"
+            sub_id={8}
+            sublabel=""
+            servicios={servicioAccesibilidad}
+            construccionId={construccionId}
+          />
+          <Comedor
+            id={9}
+            label="USO DEL COMEDOR"
+            sub_id={9}
+            sublabel=""
+            servicios={usoComedor}
+            construccionId={construccionId}
+          />
+          <SeparadorReutilizable data={caracteristicasConstruccion} />
+          <CaracteristicasConservacion
+            id={10}
+            label="ESTRUCTURA RESISTENTE"
+            estructuras={estructuraResistente}
+            construccionId={construccionId}
+          />
+          <CaracteristicasConservacion
+            id={11}
+            label="TECHO"
+            estructuras={estructuraTecho}
+            construccionId={construccionId}
+          />
+          <CaracteristicasConservacion
+            id={12}
+            label="PAREDES Y CERRAMIENTOS EXTERIORES"
+            estructuras={paredesCerramientos}
+            construccionId={construccionId}
+          />
+          <EnergiasAlternativas
+            id={13}
+            label="ENERGÍAS ALTERNATIVAS"
+            estructuras={energiasAlternativas}
+            construccionId={construccionId}
+          />
+          <ObservacionesComponent onSave={handleSaveObservaciones} />
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={handleSaveConstruccion}
+              className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
+            >
+              Guardar construcción
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

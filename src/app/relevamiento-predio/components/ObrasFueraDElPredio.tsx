@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { Column, ObrasFueraPredio } from "@/interfaces/ObrasFueraPredio";
-import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -23,9 +23,7 @@ const ObrasFueraDelPredio: React.FC<ObrasFueraDelPredioProps> = ({
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [tipoOpciones, setTipoOpciones] = useState<Opcion[]>([]);
   const [destinoOpciones, setDestinoOpciones] = useState<string[]>([]);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
   const [obras, setObras] = useState<ObrasFueraPredio[]>([
     {
       id: undefined, // La obra aún no existe en la BD

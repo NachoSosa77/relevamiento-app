@@ -1,6 +1,6 @@
 "use client";
 
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -17,6 +17,7 @@ interface ServiciosReuProps {
   sublabel: string;
   servicios: Servicio[];
   endpoint: string; // <- NUEVO
+  construccionId: number|null;
 }
 
 export default function ServiciosReu({
@@ -26,13 +27,12 @@ export default function ServiciosReu({
   sublabel,
   servicios,
   endpoint,
+  construccionId
 }: ServiciosReuProps) {
   const [selectedServicios, setSelectedServicios] = useState<
     { servicio: string; estado?: string }[]
   >([]);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  ); // Asumo que 'espacio_escolar' contiene el relevamientoId
+  const relevamientoId = useRelevamientoId(); // Asumo que 'espacio_escolar' contiene el relevamientoId
 
 
   const handleServicioSelect = (servicioId: string) => {
@@ -74,6 +74,7 @@ export default function ServiciosReu({
   // Creamos el payload a enviar
   const payload = {
     relevamiento_id: relevamientoId,
+    construccion_id: construccionId,
     servicios: selectedServicios.map(({ servicio, estado }) => ({
       servicio,
       estado,

@@ -10,6 +10,7 @@ import {
   REHYDRATE,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { relevamientoStorageMiddleware } from "./middlewares/relevamientoStorageMiddleware";
 import archivoReducer from "./slices/archivoSlice";
 import construccionesReducer from "./slices/construccionesSlice";
 import espacioEscolarReducer from "./slices/espacioEscolarSlice";
@@ -51,7 +52,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).concat(relevamientoStorageMiddleware),
 });
 
 export const persistor = persistStore(store);

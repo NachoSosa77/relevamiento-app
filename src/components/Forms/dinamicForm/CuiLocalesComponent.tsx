@@ -85,6 +85,8 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
       );
       toast.success("Relevamiento marcado como completo");
       setRelevamientoGuardado(true);
+      sessionStorage.removeItem("relevamientoId");
+
       router.push("/home");
     } catch (error) {
       console.error(error);

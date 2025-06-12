@@ -4,7 +4,7 @@ import { getConnection } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { relevamiento_id, servicios } = await req.json();
+  const { relevamiento_id, servicios, construccion_id } = await req.json();
 
   if (!relevamiento_id || !Array.isArray(servicios) || servicios.length === 0) {
     return NextResponse.json({ message: "Datos inválidos" }, { status: 400 });
@@ -21,9 +21,9 @@ export async function POST(req: NextRequest) {
       const { servicio: nombreServicio, estado } = servicio;
 
       const [result] = await connection.execute(
-        `INSERT INTO servicio_desague (relevamiento_id, servicio, estado)
+        `INSERT INTO servicio_desague (relevamiento_id, construccion_id, servicio, estado)
         VALUES (?, ?, ?)`,
-        [relevamiento_id, nombreServicio, estado]
+        [relevamiento_id, nombreServicio, construccion_id, estado]
       );
 
       // Si necesitas trabajar con el insertId, puedes hacerlo aquí

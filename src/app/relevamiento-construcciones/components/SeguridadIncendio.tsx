@@ -4,7 +4,7 @@
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -20,6 +20,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
+  construccionId: number | null
 }
 
 interface EspecificacionesSeguridadIncendio {
@@ -37,6 +38,8 @@ export default function SeguridadIncendio({
   sub_id,
   sublabel,
   servicios,
+          construccionId,
+
 }: ServiciosReuProps) {
   const [responses, setResponses] = useState<
     Record<
@@ -50,9 +53,7 @@ export default function SeguridadIncendio({
     >
   >({});
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleResponseChange = (
     servicioId: string,
@@ -95,6 +96,7 @@ export default function SeguridadIncendio({
 
   const payload = {
     relevamiento_id: relevamientoId,
+    construccion_id:construccionId,
     servicios: serviciosValidos.map((key) => ({
       servicio:
         servicios.find((servicio) => servicio.id === key)?.question || "Unknown",

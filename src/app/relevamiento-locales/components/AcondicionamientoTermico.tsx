@@ -2,7 +2,7 @@
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -36,16 +36,13 @@ export default function AcondicionamientoTermico({
 }: EstructuraReuProps) {
   const params = useParams();
   const localId = Number(params.id);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<ResponseData>({});
 
   const tiposConDisponibilidad = [
     "Aire acondicionado central",
     "Calefacción central",
-    "Calefacción a gas"
-
+    "Calefacción a gas",
   ];
 
   const handleResponseChange = (
@@ -64,47 +61,48 @@ export default function AcondicionamientoTermico({
   };
 
   const handleGuardar = async () => {
-  const payload = locales.flatMap(({ id, question }) => {
-    const respuesta = responses[id];
-    if (!respuesta) return [];
+    const payload = locales.flatMap(({ id, question }) => {
+      const respuesta = responses[id];
+      if (!respuesta) return [];
 
-    return Object.entries(respuesta).map(([tipo, valores]) => ({
-      temperatura: question,
-      tipo,
-      cantidad: valores.cantidad,
-      disponibilidad: valores.disponibilidad ?? null,
-      relevamiento_id: relevamientoId,
-      local_id: localId,
-    }));
-  });
-
-  // Validación mínima: al menos una entrada con cantidad o disponibilidad
-  const hayDatos = payload.some(
-    (item) =>
-      (item.cantidad !== undefined && item.cantidad !== null) ||
-      (item.disponibilidad !== undefined && item.disponibilidad !== null && item.disponibilidad !== "")
-  );
-
-  if (!hayDatos) {
-    toast.warning("Por favor, completá al menos un dato antes de guardar.");
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/acondicionamiento_termico", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      return Object.entries(respuesta).map(([tipo, valores]) => ({
+        temperatura: question,
+        tipo,
+        cantidad: valores.cantidad,
+        disponibilidad: valores.disponibilidad ?? null,
+        relevamiento_id: relevamientoId,
+        local_id: localId,
+      }));
     });
-    toast.success("Información guardada correctamente");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al guardar los datos");
-  }
-};
 
+    // Validación mínima: al menos una entrada con cantidad o disponibilidad
+    const hayDatos = payload.some(
+      (item) =>
+        (item.cantidad !== undefined && item.cantidad !== null) ||
+        (item.disponibilidad !== undefined &&
+          item.disponibilidad !== null &&
+          item.disponibilidad !== "")
+    );
+
+    if (!hayDatos) {
+      toast.warning("Por favor, completá al menos un dato antes de guardar.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/acondicionamiento_termico", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      toast.success("Información guardada correctamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar los datos");
+    }
+  };
 
   return (
     <div className="mx-10 text-sm">
@@ -207,7 +205,6 @@ export default function AcondicionamientoTermico({
                       );
                     })
                   ) : (
-                    
                     <NumericInput
                       disabled={false}
                       label=""

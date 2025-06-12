@@ -47,7 +47,7 @@ const EstablecimientosComponent: React.FC = () => {
     }
   }, [selectedCui, dispatch]);
 
-  console.log("Institucion seleccionada redux:", selectedInstitutionId);
+  //console.log("Institucion seleccionada redux:", selectedInstitutionId);
 
 
   // Guardar instituciones en localStorage cuando cambien

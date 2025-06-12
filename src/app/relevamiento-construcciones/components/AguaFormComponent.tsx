@@ -8,7 +8,8 @@ import CalidadAguaComponent from "./CalidadAguaComponent";
 import ServicioBasicoComponent from "./ServicioBasicoComponent";
 
 interface AguaFormComponentProps {
-  relevamientoId: number;
+  relevamientoId?: number;
+  construccionId?: number | null;
 }
 
 interface ServicioBasicoData {
@@ -26,7 +27,7 @@ interface CalidadAguaData {
   cantidad_veces: string;
 }
 
-export default function AguaFormComponent({ relevamientoId }: AguaFormComponentProps) {
+export default function AguaFormComponent({ relevamientoId, construccionId }: AguaFormComponentProps) {
   const [servicioBasico, setServicioBasico] = useState<ServicioBasicoData>({
     tipo_provision: "",
     tipo_provision_estado: "",
@@ -64,6 +65,7 @@ export default function AguaFormComponent({ relevamientoId }: AguaFormComponentP
     ...servicioBasico,
     ...calidadAgua,
     relevamiento_id: relevamientoId,
+    construccion_id: construccionId
   };
 
   try {

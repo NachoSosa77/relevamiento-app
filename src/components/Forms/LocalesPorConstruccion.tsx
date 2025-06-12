@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { LocalesConstruccion, TipoLocales } from "@/interfaces/Locales";
 import { useAppSelector } from "@/redux/hooks";
 import { localesService } from "@/services/localesServices";
@@ -27,9 +28,7 @@ export default function LocalesPorConstruccion() {
   const [localesPorConstruccion, setLocalesPorConstruccion] = useState<
     Record<number, LocalesConstruccion[]>
   >({});
-   const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  ); 
+  const relevamientoId = useRelevamientoId();
   const cuiNumber = useAppSelector((state) => state.espacio_escolar.cui);
 
   const [formValues, setFormValues] = useState<

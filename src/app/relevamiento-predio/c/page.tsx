@@ -8,6 +8,7 @@ import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Check from "@/components/ui/Checkbox";
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setObservaciones, setPredioId } from "@/redux/slices/predioSlice";
@@ -65,9 +66,7 @@ export default function RelevamientoCPage() {
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
   const predioId = useAppSelector((state) => state.predio.predioId);
 
   const predioObservaciones = useAppSelector(

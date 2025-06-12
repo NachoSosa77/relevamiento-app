@@ -6,8 +6,8 @@ import LocalesPorConstruccionComponent from "./LocalesPorConstruccion";
 const ConstruccionComponent = () => {
   const construcciones = useAppSelector((state) => state.construcciones.construcciones);
   const cantidadConstrucciones = useAppSelector((state) => state.espacio_escolar.cantidadConstrucciones);
-  console.log('construcciones', construcciones)
-  console.log('cantidadConstrucciones', cantidadConstrucciones)
+  //console.log('construcciones', construcciones)
+  //console.log('cantidadConstrucciones', cantidadConstrucciones)
 
   const [mostrarTabs, setMostrarTabs] = useState(false);
 

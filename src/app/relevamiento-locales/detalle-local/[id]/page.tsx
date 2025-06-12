@@ -129,7 +129,6 @@ const DetalleLocalPage = () => {
   const handleBack = () => {
     router.back();
   };
-  console.log("local", local);
   if (loading) return <p>Cargando...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (

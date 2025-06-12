@@ -4,7 +4,7 @@
 
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 //import { toast } from "react-toastify";
@@ -26,23 +26,25 @@ interface EstructuraReuProps {
   id: number;
   label: string;
   estructuras: Estructura[];
+  construccionId: number | null;
 }
 
 export default function EnergiasAlternativas({
   id,
   label,
   estructuras,
+  construccionId
 }: EstructuraReuProps) {
   const [responses, setResponses] = useState<
     Record<
       string,
-      { disponibilidad: string; estado: string; estructura: string }
+      { disponibilidad: string; estado: string; tipo: string }
     >
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "estructura",
+    field: "disponibilidad" | "estado" | "tipo",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -51,17 +53,16 @@ export default function EnergiasAlternativas({
     }));
   };
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleGuardar = async () => {
   const payload = Object.keys(responses)
     .map((key) => ({
-      estructura: "Energías alternativas",
+      tipo: "Energías alternativas",
       disponibilidad: responses[key]?.disponibilidad?.trim() || "",
       estado: responses[key]?.estado?.trim() || "",
       relevamiento_id: relevamientoId,
+      construccion_id: construccionId,
     }))
     // Filtramos solo si ambos están vacíos, es decir, dejamos pasar si al menos uno tiene dato
     .filter((item) => item.disponibilidad !== "" || item.estado !== "");
@@ -74,7 +75,7 @@ export default function EnergiasAlternativas({
   console.log("Datos a enviar (filtrados):", payload);
 
   try {
-    const response = await fetch("/api/estado_conservacion", {
+    const response = await fetch("/api/energias_alternativas", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -126,9 +127,9 @@ export default function EnergiasAlternativas({
                 {id !== "13.1" ? (
                   <Select
                     label=""
-                    value={responses[id]?.estructura || ""}
+                    value={responses[id]?.tipo || ""}
                     onChange={(e) =>
-                      handleResponseChange(id, "estructura", e.target.value)
+                      handleResponseChange(id, "tipo", e.target.value)
                     }
                     options={opciones.map((option) => ({
                       value: option.name,

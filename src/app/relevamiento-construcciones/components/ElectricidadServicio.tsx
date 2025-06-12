@@ -2,7 +2,7 @@
 
 import NumericInput from "@/components/ui/NumericInput";
 import Select from "@/components/ui/SelectComponent";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { tipoCombustibleOpciones } from "../config/tipoCombustible";
@@ -19,6 +19,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
+  construccionId: number | null;
 }
 
 export default function ElectricidadServicio({
@@ -27,6 +28,7 @@ export default function ElectricidadServicio({
   sub_id,
   sublabel,
   servicios,
+  construccionId,
 }: ServiciosReuProps) {
   const [responses, setResponses] = useState<{
     [key: string]: {
@@ -37,9 +39,7 @@ export default function ElectricidadServicio({
     };
   }>({});
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   // Estado para almacenar el tipo de combustible de cada servicio
   const [combustibleOptions, setCombustibleOptions] = useState<{
@@ -85,6 +85,7 @@ export default function ElectricidadServicio({
 
     const payload = {
       relevamiento_id: relevamientoId,
+      construccion_id: construccionId,
       servicios: Object.keys(responses).map((key) => ({
         servicio:
           servicios.find((servicio) => servicio.id === key)?.question ||
