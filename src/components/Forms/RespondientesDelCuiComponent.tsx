@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { Respondiente } from "@/interfaces/Respondientes";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { agregarRespondiente, eliminarRespondiente } from "@/redux/slices/espacioEscolarSlice";
+import {
+  agregarRespondiente,
+  eliminarRespondiente,
+} from "@/redux/slices/espacioEscolarSlice";
 import axios from "axios";
 import { useState } from "react";
 import Modal from "react-modal";
@@ -9,14 +13,11 @@ import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
-
 export default function RespondientesDelCuiComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const respondientes = useAppSelector(
     (state) => state.espacio_escolar.respondientes
@@ -66,7 +67,9 @@ export default function RespondientesDelCuiComponent() {
       });
 
       if (response.status === 200 && response.data.success) {
-        toast.success("Respondientes enviados correctamente a la base de datos");
+        toast.success(
+          "Respondientes enviados correctamente a la base de datos"
+        );
       } else {
         toast.error("❌ Falló el envío de respondientes");
       }
@@ -117,10 +120,15 @@ export default function RespondientesDelCuiComponent() {
   return (
     <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
       <div className="bg-gray-100 border border-gray-300 rounded-xl shadow-sm px-6 py-3 mb-6">
-          <p className="text-gray-800 text-sm font-medium text-center">RESPONDIENTES DEL CUI</p>
-        </div>
+        <p className="text-gray-800 text-sm font-medium text-center">
+          RESPONDIENTES DEL CUI
+        </p>
+      </div>
       <div className="bg-white border border-gray-200 rounded-xl shadow-md p-2">
-        <ReusableTable columns={respondientesHeader} data={respondientes || []} />
+        <ReusableTable
+          columns={respondientesHeader}
+          data={respondientes || []}
+        />
         <div className="flex justify-end gap-2 mt-2">
           <button
             onClick={agregarRespondente}
@@ -132,7 +140,9 @@ export default function RespondientesDelCuiComponent() {
             onClick={enviarRespondientesABaseDeDatos}
             disabled={!respondientes.length}
             className={`${
-              !respondientes.length ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+              !respondientes.length
+                ? "bg-gray-400"
+                : "bg-green-600 hover:bg-green-700"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
           >
             Guardar información

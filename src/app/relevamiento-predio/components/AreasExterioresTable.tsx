@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { AreasExteriores, Column } from "@/interfaces/AreaExterior";
-import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -13,9 +13,7 @@ interface Opcion {
 }
 
 const AreasExterioresTable: React.FC = () => {
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  ); // Usamos el relevamientoId desde Redux
+  const relevamientoId = useRelevamientoId();
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [servicios, setServicios] = useState<AreasExteriores[]>([]);
   const [tipoOpciones, setTipoOpciones] = useState<Opcion[]>([]);

@@ -1,5 +1,5 @@
 import { Edificios } from "@/app/lib/Edificios";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { toast } from "react-toastify";
@@ -42,9 +42,7 @@ const FormReutilizable: React.FC = () => {
     null
   );
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const router = useRouter();
 
@@ -54,7 +52,7 @@ const FormReutilizable: React.FC = () => {
     setFormData((prev) => ({ ...prev, corresponde: value }));
 
     if (value === "No") {
-        router.push("/relevamiento-predio/c?redirected=true");;
+      router.push("/relevamiento-predio/c?redirected=true");
     }
   };
 

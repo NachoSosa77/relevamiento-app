@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { Column, ObrasEnPredio } from "@/interfaces/ObrasEnpredio";
-import { useAppSelector } from "@/redux/hooks";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -36,9 +36,7 @@ const ObrasDentroDelPredio: React.FC<ObrasDentroDelPredioProps> = ({
     },
   ]);
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
 
   // 🚀 Cargar columnas configuradas

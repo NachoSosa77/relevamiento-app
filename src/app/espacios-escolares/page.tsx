@@ -8,6 +8,7 @@ import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -25,9 +26,7 @@ export default function EspaciosEscolaresPage() {
   const selectedEspacioEscolar = useAppSelector(
     (state) => state.espacio_escolar
   ); // Obtén el estado de espacio_escolar
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
@@ -69,6 +68,7 @@ export default function EspaciosEscolaresPage() {
 
   const handleSaveObservacion = (observations: string) => {
     dispatch(setObservaciones(observations));
+    toast.success('Observaciones guardadas!')
   };
 
   const enviarDatosEspacioEscolar = async () => {
@@ -149,12 +149,12 @@ export default function EspaciosEscolaresPage() {
         </div>
       </div>
 
-            {
-              loading && (
-                <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
-              )
-            }
-      
+      {loading && (
+        <div className="items-center justify-center">
+          <Spinner />
+          Cargando instituciones...
+        </div>
+      )}
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"

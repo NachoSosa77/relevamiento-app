@@ -1,3 +1,4 @@
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   setCantidadConstrucciones,
@@ -20,9 +21,7 @@ export default function PlanoComponent() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleSiChange = (checked: boolean) => {
     if (checked) {

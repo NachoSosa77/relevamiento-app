@@ -1,8 +1,8 @@
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import {
   Column,
   FactoresRiesgoAmbiental,
 } from "@/interfaces/FactoresRiesgoAmbienta";
-import { useAppSelector } from "@/redux/hooks";
 import { setFactores } from "@/redux/slices/serviciosFactoresSlice";
 import React, { ChangeEvent, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -21,9 +21,7 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
     useState<FactoresRiesgoAmbiental[]>(serviciosData);
   const dispatch = useDispatch();
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleChange = (
     index: number,

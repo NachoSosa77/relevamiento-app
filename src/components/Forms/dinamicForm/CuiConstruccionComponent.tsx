@@ -1,7 +1,7 @@
 "use client";
 import NumericInput from "@/components/ui/NumericInput";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
-import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import EstablecimientosEducativos from "../EstablecimientosEducativos";
@@ -29,9 +29,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   initialCui,
   setConstruccionId,
 }) => {
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
   const [selectedConstruccionId, setSelectedConstruccionId] = useState<
@@ -89,6 +87,11 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
         <label className="block font-semibold mb-1">
           Construcciones existentes
         </label>
+        <p className="text-gray-600 mb-2">
+          Seleccione una de las construcciones disponibles para comenzar el
+          relevamiento. Si hay más de una, deberá completar un relevamiento para
+          cada una por separado.
+        </p>
         <select
           value={selectedConstruccionId ?? ""}
           onChange={handleConstruccionChange}

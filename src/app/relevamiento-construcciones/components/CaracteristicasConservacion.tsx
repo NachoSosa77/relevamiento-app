@@ -4,7 +4,7 @@
 
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 //import { toast } from "react-toastify";
@@ -26,15 +26,20 @@ interface EstructuraReuProps {
   id: number;
   label: string;
   estructuras: Estructura[];
+  construccionId: number | null;
 }
 
 export default function CaracteristicasConservacion({
   id,
   label,
   estructuras,
+  construccionId,
 }: EstructuraReuProps) {
   const [responses, setResponses] = useState<
-    Record<string, { disponibilidad: string; estado: string; estructura: string }>
+    Record<
+      string,
+      { disponibilidad: string; estado: string; estructura: string }
+    >
   >({});
 
   const handleResponseChange = (
@@ -48,74 +53,70 @@ export default function CaracteristicasConservacion({
     }));
   };
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleGuardar = async () => {
-  // Validación
-  const estructurasValidas = estructuras.every((estructura) => {
-    const respuesta = responses[estructura.id];
+    // Validación
+    const estructurasValidas = estructuras.every((estructura) => {
+      const respuesta = responses[estructura.id];
 
-    if (!respuesta) return false;
+      if (!respuesta) return false;
 
-    if (estructura.showCondition && estructura.id !== "13.1") {
-      return (
-        !!respuesta.estructura?.trim() &&
-        !!respuesta.estado?.trim()
-      );
-    }
+      if (estructura.showCondition && estructura.id !== "13.1") {
+        return !!respuesta.estructura?.trim() && !!respuesta.estado?.trim();
+      }
 
-    if (!estructura.showCondition && estructura.id === "13.1") {
-      return (
-        respuesta.disponibilidad === "Si" ||
-        respuesta.disponibilidad === "No"
-      );
-    }
+      if (!estructura.showCondition && estructura.id === "13.1") {
+        return (
+          respuesta.disponibilidad === "Si" || respuesta.disponibilidad === "No"
+        );
+      }
 
-    return true;
-  });
-
-  if (!estructurasValidas) {
-    toast.warning("Por favor, completa todas las respuestas antes de guardar.");
-    return;
-  }
-
-  // Construcción del payload
-  const payload = estructuras.map((estructura) => {
-    const respuesta = responses[estructura.id];
-    return {
-      estructura: respuesta.estructura || "",
-      disponibilidad: respuesta.disponibilidad || "",
-      estado: respuesta.estado || "",
-      relevamiento_id: relevamientoId,
-    };
-  });
-
-
-  try {
-    const response = await fetch("/api/estado_conservacion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      return true;
     });
-    const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "Error al guardar los datos");
+    if (!estructurasValidas) {
+      toast.warning(
+        "Por favor, completa todas las respuestas antes de guardar."
+      );
+      return;
     }
 
-    toast.success(
-      "Relevamiento características constructivas y estado de conservación guardado correctamente"
-    );
-  } catch (error: any) {
-    console.error("Error al enviar los datos:", error);
-    toast.error(error.message || "Error al guardar los datos");
-  }
-};
+    // Construcción del payload
+    const payload = estructuras.map((estructura) => {
+      const respuesta = responses[estructura.id];
+      return {
+        estructura: respuesta.estructura || "",
+        disponibilidad: respuesta.disponibilidad || "",
+        estado: respuesta.estado || "",
+        relevamiento_id: relevamientoId,
+        construcion_id: construccionId,
+      };
+    });
 
+    try {
+      const response = await fetch("/api/estado_conservacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+
+      toast.success(
+        "Relevamiento características constructivas y estado de conservación guardado correctamente"
+      );
+      console.log("Respuesta de la API:", result);
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }
+  };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">

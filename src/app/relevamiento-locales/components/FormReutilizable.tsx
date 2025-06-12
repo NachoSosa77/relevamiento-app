@@ -4,8 +4,9 @@
 
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
+
 //import { toast } from "react-toastify";
 
 interface Opcion {
@@ -40,9 +41,7 @@ export default function FormReutilizable({
   );
   const [radioSeleccion, setRadioSeleccion] = useState<string | null>(null);
 
-  const relevamientoId = useAppSelector(
-      (state) => state.espacio_escolar.relevamientoId
-    );
+  const relevamientoId = useRelevamientoId();
 
   const handleResponseChange = (
     localId: string,

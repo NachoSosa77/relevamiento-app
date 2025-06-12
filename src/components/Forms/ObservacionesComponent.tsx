@@ -15,8 +15,6 @@ export default function ObservacionesComponent() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // Aquí puedes enviar las observaciones a donde necesites
-    // (por ejemplo, a una API o a otro componente)
     setObservaciones(""); // Resetea el TextInput
     toast.success("Observaciones enviadas correctamente."); // Muestra el toast
     router.push("/relevamiento-predio"); // Redirige a la nueva página
@@ -35,7 +33,7 @@ export default function ObservacionesComponent() {
           <div className="flex mt-2 justify-end">
             <button
               type="submit"
-              className="bg-slate-200 hover:bg-slate-300 text-black font-bold py-2 px-4 rounded"
+              className="px-4 py-2 bg-custom text-white rounded-md hover:bg-custom/50 disabled:opacity-50"
             >
               Cargar información
             </button>

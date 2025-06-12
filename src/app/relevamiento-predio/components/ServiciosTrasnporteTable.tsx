@@ -1,8 +1,8 @@
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import {
   Column,
   ServiciosTransporteComunicaciones,
 } from "@/interfaces/ServiciosTransporteComunicaciones";
-import { useAppSelector } from "@/redux/hooks";
 import { setServicios } from "@/redux/slices/serviciosTransporteSlice";
 import React, { ChangeEvent, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -18,9 +18,7 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
   columnsConfig,
 }) => {
   const dispatch = useDispatch();
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosTransporteComunicaciones[]>(serviciosData);

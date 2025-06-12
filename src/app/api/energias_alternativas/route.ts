@@ -14,21 +14,16 @@ export async function POST(req: Request) {
     }
 
     const insertQuery = `
-      INSERT INTO estado_conservacion (estructura,  disponibilidad, estado, relevamiento_id, construccion_id)
+      INSERT INTO energias_alternativas (tipo,  disponibilidad, estado, relevamiento_id, construccion_id)
       VALUES (?, ?, ?, ?, ?)
     `;
 
     for (const item of data) {
-      const {
-        estructura,
-        disponibilidad,
-        estado,
-        relevamiento_id,
-        construccion_id,
-      } = item;
+      const { tipo, disponibilidad, estado, relevamiento_id, construccion_id } =
+        item;
 
       await connection.execute(insertQuery, [
-        estructura ?? null,
+        tipo ?? null,
         disponibilidad ?? null,
         estado ?? null,
         relevamiento_id ?? null,

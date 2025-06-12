@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Props {
-  relevamientoId: number;
+  relevamientoId?: number;
   onUploadSuccess?: (archivos: any[]) => void;
 }
 
@@ -36,6 +36,10 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   };
 
   const handleUpload = async () => {
+    if (!relevamientoId || relevamientoId <= 0) {
+      toast.error("ID de relevamiento inválido o no proporcionado");
+      return;
+    }
     if (!archivos.length) {
       toast.warning("No hay archivos para subir");
       return;

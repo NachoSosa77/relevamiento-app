@@ -1,3 +1,4 @@
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -27,9 +28,7 @@ export default function AreasExterioresComponent() {
     superficie: 0,
   });
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
   const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
   const areasExteriores = useAppSelector(
     (state) => state.espacio_escolar.areasExteriores

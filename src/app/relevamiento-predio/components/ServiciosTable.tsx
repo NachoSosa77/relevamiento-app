@@ -1,5 +1,6 @@
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { Column, ServiciosBasicos } from "@/interfaces/ServiciosBasicos";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useAppDispatch } from "@/redux/hooks";
 import { setServicios } from "@/redux/slices/serviciosSlice";
 import React, { ChangeEvent, useState } from "react";
 import { toast } from "react-toastify";
@@ -14,9 +15,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   columnsConfig,
 }) => {
   const dispatch = useAppDispatch();
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosBasicos[]>(serviciosData);

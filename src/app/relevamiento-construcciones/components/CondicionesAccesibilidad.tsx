@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -20,6 +20,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
+  construccionId: number | null;
 }
 
 interface EspecificacionesAccesibilidad {
@@ -34,6 +35,7 @@ export default function CondicionesAccesibilidad({
   sub_id,
   sublabel,
   servicios,
+  construccionId,
 }: ServiciosReuProps) {
   const [responses, setResponses] = useState<
     Record<
@@ -47,9 +49,7 @@ export default function CondicionesAccesibilidad({
     >
   >({});
 
-  const relevamientoId = useAppSelector(
-        (state) => state.espacio_escolar.relevamientoId
-      );
+  const relevamientoId = useRelevamientoId();
 
   const handleResponseChange = (
     servicioId: string,
@@ -66,52 +66,59 @@ export default function CondicionesAccesibilidad({
     [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
   }>({});
 
-   const handleGuardar = async () => {
-  // Filtrar solo servicios que tengan datos válidos
-  const serviciosValidos = Object.keys(responses).filter((key) => {
-    const r = responses[key];
-    const cantidad = cantidadOptions[key] ?? 0;
+  const handleGuardar = async () => {
+    // Filtrar solo servicios que tengan datos válidos
+    const serviciosValidos = Object.keys(responses).filter((key) => {
+      const r = responses[key];
+      const cantidad = cantidadOptions[key] ?? 0;
 
-    return (
-      (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
-      (r?.estado && r.estado.trim() !== "") ||
-      cantidad > 0 ||
-      (r?.mantenimiento && r.mantenimiento.trim() !== "")
-    );
-  });
-
-  if (serviciosValidos.length === 0) {
-    toast.warning("Debe completar al menos un servicio con datos antes de guardar");
-    return;
-  }
-
-  const payload = {
-    relevamiento_id: relevamientoId,
-    servicios: serviciosValidos.map((key) => ({
-      servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-      disponibilidad: responses[key]?.disponibilidad || "",
-      estado: responses[key]?.estado || "",
-      cantidad: cantidadOptions[key] || 0,
-      mantenimiento: responses[key]?.mantenimiento || "",
-    })),
-  };
-
-
-  try {
-    const response = await fetch("/api/condiciones_accesibilidad", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      return (
+        (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
+        (r?.estado && r.estado.trim() !== "") ||
+        cantidad > 0 ||
+        (r?.mantenimiento && r.mantenimiento.trim() !== "")
+      );
     });
-    const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "Error al guardar los datos");
+    if (serviciosValidos.length === 0) {
+      toast.warning(
+        "Debe completar al menos un servicio con datos antes de guardar"
+      );
+      return;
     }
 
-    toast.success("Relevamiento condiciones accesibilidad guardados correctamente");
+    const payload = {
+      relevamiento_id: relevamientoId,
+      construccion_id: construccionId,
+      servicios: serviciosValidos.map((key) => ({
+        servicio:
+          servicios.find((servicio) => servicio.id === key)?.question ||
+          "Unknown",
+        disponibilidad: responses[key]?.disponibilidad || "",
+        estado: responses[key]?.estado || "",
+        cantidad: cantidadOptions[key] || 0,
+        mantenimiento: responses[key]?.mantenimiento || "",
+      })),
+    };
+
+
+    try {
+      const response = await fetch("/api/condiciones_accesibilidad", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+
+      toast.success(
+        "Relevamiento condiciones accesibilidad guardados correctamente"
+      );
 
   } catch (error: any) {
     console.error("Error al enviar los datos:", error);
@@ -238,7 +245,7 @@ export default function CondicionesAccesibilidad({
                           label=""
                           subLabel=""
                           value={cantidadOptions[id] || 0}
-                          onChange={(value: number | undefined) =>{
+                          onChange={(value: number | undefined) => {
                             setCantidadOptions({
                               ...cantidadOptions,
                               [id]: value ?? 0,
@@ -250,7 +257,9 @@ export default function CondicionesAccesibilidad({
                     {/* TextInput para 8.1, 8.2, 8.3 */}
                     {(id === "8.1" || id === "8.2") && (
                       <div className="flex gap-2 items-center justify-center">
-                        <p className="text-xs font-bold">¿Se realiza mantenimiento?</p>
+                        <p className="text-xs font-bold">
+                          ¿Se realiza mantenimiento?
+                        </p>
                         <label>
                           <input
                             type="radio"
@@ -292,7 +301,6 @@ export default function CondicionesAccesibilidad({
           Guardar Información
         </button>
       </div>
-
     </div>
   );
 }

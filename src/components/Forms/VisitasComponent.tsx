@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { Visita } from "@/interfaces/Visitas";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -17,9 +18,8 @@ export default function VisitasComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisita, setEditingVisita] = useState<Visita | null>(null); // Guardamos la visita que estamos editando
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
+  
 
   const visitas = useAppSelector((state) => state.espacio_escolar.visitas);
 

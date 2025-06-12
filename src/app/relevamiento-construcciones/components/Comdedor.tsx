@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { tipoComedorOpciones } from "../config/tipoComerdor";
 //import { toast } from "react-toastify";
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { toast } from "react-toastify";
 
 interface Servicio {
@@ -20,6 +20,7 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
+  construccionId: number | null;
 }
 
 interface EspecificacionesComedor {
@@ -27,7 +28,12 @@ interface EspecificacionesComedor {
   tipos_comedor?: string[]; // Aquí guardamos los nombres o questions
 }
 
-export default function Comedor({ id, label, servicios }: ServiciosReuProps) {
+export default function Comedor({
+  id,
+  label,
+  servicios,
+  construccionId,
+}: ServiciosReuProps) {
   const [responses, setResponses] = useState<
     Record<string, EspecificacionesComedor>
   >({});
@@ -60,52 +66,51 @@ export default function Comedor({ id, label, servicios }: ServiciosReuProps) {
     });
   };
 
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  );
+  const relevamientoId = useRelevamientoId();
 
   const handleGuardar = async () => {
-  // Verificamos si hay al menos un servicio con algún dato (disponibilidad o tipos_comedor)
-  const hayAlgunDato = servicios.some((servicio) => {
-    const respuesta = responses[servicio.id];
-    return (
-      (respuesta?.disponibilidad && respuesta.disponibilidad.trim() !== "") ||
-      (respuesta?.tipos_comedor && respuesta.tipos_comedor.length > 0)
-    );
-  });
-
-  if (!hayAlgunDato) {
-    toast.warning("Por favor completa al menos un dato para continuar");
-    return;
-  }
-
-  // Construimos el payload con todos los servicios (aunque algunos tengan campos vacíos)
-  const payload = {
-    relevamiento_id: relevamientoId,
-    servicios: servicios.map((servicio) => {
-      const respuesta = responses[servicio.id] || {};
-      return {
-        servicio: servicio.question,
-        disponibilidad: respuesta.disponibilidad || "",
-        tipos_comedor: respuesta.tipos_comedor || [],
-      };
-    }),
-  };
-
-
-  try {
-    const response = await fetch("/api/uso_comedor", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+    // Verificamos si hay al menos un servicio con algún dato (disponibilidad o tipos_comedor)
+    const hayAlgunDato = servicios.some((servicio) => {
+      const respuesta = responses[servicio.id];
+      return (
+        (respuesta?.disponibilidad && respuesta.disponibilidad.trim() !== "") ||
+        (respuesta?.tipos_comedor && respuesta.tipos_comedor.length > 0)
+      );
     });
-    const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "Error al guardar los datos");
+    if (!hayAlgunDato) {
+      toast.warning("Por favor completa al menos un dato para continuar");
+      return;
     }
+
+    // Construimos el payload con todos los servicios (aunque algunos tengan campos vacíos)
+    const payload = {
+      relevamiento_id: relevamientoId,
+      costruccion_id: construccionId,
+      servicios: servicios.map((servicio) => {
+        const respuesta = responses[servicio.id] || {};
+        return {
+          servicio: servicio.question,
+          disponibilidad: respuesta.disponibilidad || "",
+          tipos_comedor: respuesta.tipos_comedor || [],
+        };
+      }),
+    };
+
+
+    try {
+      const response = await fetch("/api/uso_comedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
 
     toast.success("Relevamiento uso comedor guardado correctamente");
   } catch (error: any) {
