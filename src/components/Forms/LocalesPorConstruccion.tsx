@@ -439,7 +439,7 @@ export default function LocalesPorConstruccion() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSubmit}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg"
+            className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
           >
             Guardar locales por construcción
           </button>

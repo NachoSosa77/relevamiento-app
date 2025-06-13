@@ -225,7 +225,7 @@ export default function AreasExterioresComponent() {
           <div className="flex justify-center mt-4">
             <button
               type="button"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg"
+              className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
               onClick={handleGuardarDatos}
             >
               Guardar áreas exteriores

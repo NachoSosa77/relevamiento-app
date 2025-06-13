@@ -1,5 +1,6 @@
 "use client";
 
+import { useInstitucionesByCui } from "@/hooks/useInstitucionesByCui";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -15,39 +16,21 @@ import CuiComponent from "./dinamicForm/CuiComponent";
 
 const EstablecimientosComponent: React.FC = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
+
+  console.log('institucionesId', selectedInstitutionId);
+  console.log('cui', selectedCui);
   const dispatch = useAppDispatch();
-
+  
   // Cargar instituciones desde localStorage si el CUI coincide
-  useEffect(() => {
-    const stored = localStorage.getItem("institucionesSeleccionadas");
-    if (stored) {
-      try {
-        const {
-          cui,
-          instituciones,
-        }: { cui: number; instituciones: InstitucionesData[] } =
-          JSON.parse(stored);
-        if (cui === selectedCui) {
-          setInstituciones(instituciones);
-          dispatch(setInstitucionesData(instituciones));
-        } else {
-          // Limpiar si el CUI es distinto
-          localStorage.removeItem("institucionesSeleccionadas");
-          setInstituciones([]);
-          dispatch(setInstitucionesData([]));
-        }
-      } catch (error) {
-        console.error("Error al leer instituciones desde localStorage:", error);
-      }
-    }
-  }, [selectedCui, dispatch]);
-
-  //console.log("Institucion seleccionada redux:", selectedInstitutionId);
+  const {
+    instituciones,
+    setInstituciones,
+  } = useInstitucionesByCui();
+  console.log('instituciones', instituciones);
 
 
   // Guardar instituciones en localStorage cuando cambien

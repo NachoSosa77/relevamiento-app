@@ -52,6 +52,8 @@ const FormReutilizable: React.FC = () => {
     setFormData((prev) => ({ ...prev, corresponde: value }));
 
     if (value === "No") {
+      toast.info("Redirigiendo");
+
       router.push("/relevamiento-predio/c?redirected=true");
     }
   };
@@ -90,6 +92,8 @@ const FormReutilizable: React.FC = () => {
       if (!res.ok) throw new Error("Error al guardar en base de datos");
 
       toast.success("Registro guardado con éxito ✅");
+      router.push("/relevamiento-predio/c?redirected=true");
+
       setTableData((prev) => [...prev, formData]);
 
       // Reset formulario
@@ -200,11 +204,11 @@ const FormReutilizable: React.FC = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!tableData.length}
+            disabled={!respuestaB1 || !formData.tipo_institucion || !formData.nombre_institucion}
             className={`${
-              !tableData.length
+              !formData.nombre_institucion.length
                 ? "bg-gray-400"
-                : "bg-green-600 hover:bg-green-700"
+                : "bg-custom hover:bg-custom/50"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
           >
             Guardar información

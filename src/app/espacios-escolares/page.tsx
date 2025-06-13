@@ -137,7 +137,11 @@ export default function EspaciosEscolaresPage() {
   }
 
   if (!selectedInstitution) {
-    return <div>No se ha seleccionado ninguna institución.</div>;
+    return         <div className=" flex items-center justify-center">
+          <Spinner />
+          Cargando instituciones...
+        </div>
+;
   }
 
   return (
@@ -150,7 +154,7 @@ export default function EspaciosEscolaresPage() {
       </div>
 
       {loading && (
-        <div className="items-center justify-center">
+        <div className=" flex items-center justify-center">
           <Spinner />
           Cargando instituciones...
         </div>

@@ -121,10 +121,9 @@ export default function HomePage() {
       </div>
 
       {loading && (
-        <div className="items-center justify-center">
+        <div className="flex items-center justify-center">
           <Spinner />
-          Cargando instituciones...
-        </div>
+          Cargando institucione...     </div>
       )}
 
       <CuiComponent

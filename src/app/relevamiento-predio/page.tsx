@@ -26,7 +26,7 @@ export default function RelevamientoPredioPage() {
       </div>
             {
         loading && (
-          <div className="items-center justify-center"><Spinner />Cargando instituciones...</div>
+          <div className="flex items-center justify-center"><Spinner />Cargando instituciones...</div>
         )
       }
 
