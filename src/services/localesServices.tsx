@@ -55,7 +55,6 @@ const postConstrucciones = async (data: Construccion) => {
   return res.json();
 };
 
-
 // Obtener locales por relevamiento
 const getLocalesPorRelevamiento = async (relevamientoId: number) => {
   try {

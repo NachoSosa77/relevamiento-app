@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { relevamiento_id, servicios } = body;
+    const { relevamiento_id, servicios, construccion_id } = body;
 
     const connection = await getConnection();
 
@@ -17,13 +17,15 @@ export async function POST(req: NextRequest) {
           servicio,
           disponibilidad,
           tipos_comedor,
-          relevamiento_id
-        ) VALUES (?, ?, ?, ?)`,
+          relevamiento_id,
+          construccion_id
+        ) VALUES (?, ?, ?, ?, ?)`,
         [
           servicio,
           disponibilidad,
           JSON.stringify(tipos_comedor),
           relevamiento_id,
+          construccion_id,
         ]
       );
     }

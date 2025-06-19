@@ -61,7 +61,7 @@ export default function RelevamientoLocalesPage() {
       <CuiLocalesComponent
         onLocalSelected={() => {}}
         isReadOnly={false}
-        label="COMPLETE UN FORMULARIO EXCLUSIVAMENTE POR CADA LOCAL CON FUNCIONES PEDAGOGICAS (AULA COMUN, SALA DE NIVEL INICIAL AULA ESPECIAL, LABORATORIO, TALLER, GIMNASIO, PISCINA CUBIERTA, BIBLIOTECA/CENTRO DE RECURSOS, SALA DE ESTUDIO, SALON DE USOS MULTIPLES/PATIO CUBIERTO, OTRO LOCAL PEDAGOGICO) Y DE SERVICIOS (EXCLUSIVAMENTE COMEDOR, COCINA, OFFICE, SANITARIOS DE ALUMNOS, SANITARIOS DE DOCENTES/PERSONAL)."
+        label="COMPLETE UN FORMULARIO EXCLUSIVAMENTE POR CADA LOCAL."
         sublabel="Transcriba de la hoja de ruta el Número de CUI, transcriba del plano los números de construcción, planta y local."
       />
     </div>

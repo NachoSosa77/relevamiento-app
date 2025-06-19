@@ -37,6 +37,7 @@ export default function IluminacionVentilacion({
   const localId = Number(params.id);
   const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<ResponseData>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleResponseChange = (
     id: string,
@@ -53,42 +54,42 @@ export default function IluminacionVentilacion({
   };
 
   const handleGuardar = async () => {
-  const payload = locales.map(({ id, question }) => ({
-    condicion: question,
-    disponibilidad: responses[id]?.disponibilidad,
-    superficie_iluminacion: responses[id]?.superficieIluminacion,
-    superficie_ventilacion: responses[id]?.superficieVentilacion,
-    relevamiento_id: relevamientoId,
-    local_id: localId,
-  }));
+    const payload = locales.map(({ id, question }) => ({
+      condicion: question,
+      disponibilidad: responses[id]?.disponibilidad,
+      superficie_iluminacion: responses[id]?.superficieIluminacion,
+      superficie_ventilacion: responses[id]?.superficieVentilacion,
+      relevamiento_id: relevamientoId,
+      local_id: localId,
+    }));
 
-  // Validación mínima: al menos un campo con datos
-  const hayDatos = payload.some(
-    (item) =>
-      (item.disponibilidad && item.disponibilidad.trim() !== "") 
-  );
+    // Validación mínima: al menos un campo con datos
+    const hayDatos = payload.some(
+      (item) => item.disponibilidad && item.disponibilidad.trim() !== ""
+    );
 
-  if (!hayDatos) {
-    toast.warning("Por favor, completá al menos un dato antes de guardar.");
-    return;
-  }
+    if (!hayDatos) {
+      toast.warning("Por favor, completá al menos un dato antes de guardar.");
+      return;
+    }
+    if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
 
-
-  try {
-    const response = await fetch("/api/iluminacion_ventilacion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    toast.success("Información guardada correctamente");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al guardar los datos");
-  }
-};
-
+    try {
+      const response = await fetch("/api/iluminacion_ventilacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      toast.success("Información guardada correctamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar los datos");
+    }
+    setIsSubmitting(false); // Rehabilitar botón después de enviar
+  };
 
   return (
     <div className="mx-10 text-sm">
@@ -175,9 +176,10 @@ export default function IluminacionVentilacion({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

@@ -35,7 +35,6 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<
     number | null
   >(null);
-  console.log('home-institucionId', selectedInstitutionId)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

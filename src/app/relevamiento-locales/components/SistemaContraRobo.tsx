@@ -37,6 +37,8 @@ export default function SistemaContraRobo({
   const [opcionesSeleccionadas, setOpcionesSeleccionadas] = useState<
     Record<string, Opcion | null>
   >({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   const handleOpcionChange = (
     value: string,
@@ -68,6 +70,9 @@ export default function SistemaContraRobo({
     toast.warning("Por favor, seleccioná al menos una opción antes de guardar.");
     return;
   }
+      if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
+
 
   try {
     for (const dato of datosAGuardar) {
@@ -80,6 +85,8 @@ export default function SistemaContraRobo({
     console.error("Error al guardar:", error);
     toast.error("Error al guardar los datos");
   }
+          setIsSubmitting(false); // Rehabilitar botón después de enviar
+
 };
 
 
@@ -126,9 +133,10 @@ export default function SistemaContraRobo({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

@@ -25,6 +25,7 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
       altura_minima: 0,
     },
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (
     id: number,
@@ -37,30 +38,33 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
   };
 
   const handleGuardar = async () => {
-  const dimension = dimensiones[0];
+    const dimension = dimensiones[0];
 
-  // Validación mínima: verificar si al menos un campo tiene un valor
-  const hayDatos = Object.values(dimension).some(
-    (valor) =>
-      valor !== null &&
-      valor !== "" &&
-      !(typeof valor === "number" && valor === 0)
-  );
+    // Validación mínima: verificar si al menos un campo tiene un valor
+    const hayDatos = Object.values(dimension).some(
+      (valor) =>
+        valor !== null &&
+        valor !== "" &&
+        !(typeof valor === "number" && valor === 0)
+    );
 
-  if (!hayDatos) {
-    toast.warning("Por favor, completá al menos un dato antes de guardar.");
-    return;
-  }
+    if (!hayDatos) {
+      toast.warning("Por favor, completá al menos un dato antes de guardar.");
+      return;
+    }
+    if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
 
-  try {
-    const result = await localesService.updateDimensionesById(id, dimension);
-    toast.success("Dimensiones actualizadas correctamente.");
-    if (onUpdate) onUpdate(); // Notifica al padre que hubo cambio
-  } catch (error) {
-    console.error("Error al guardar dimensiones:", error);
-    toast.error("Ocurrió un error al guardar.");
-  }
-};
+    try {
+      const result = await localesService.updateDimensionesById(id, dimension);
+      toast.success("Dimensiones actualizadas correctamente.");
+      if (onUpdate) onUpdate(); // Notifica al padre que hubo cambio
+    } catch (error) {
+      console.error("Error al guardar dimensiones:", error);
+      toast.error("Ocurrió un error al guardar.");
+    }
+    setIsSubmitting(false); // Rehabilitar botón después de enviar
+  };
 
   return (
     <div className="mx-10 text-sm">
@@ -154,12 +158,12 @@ export default function Dimensiones({ onUpdate }: DimensionesProps) {
               </td>
               <td>
                 <div className="flex justify-center items-center h-full">
-
                   <button
                     onClick={handleGuardar}
+                    disabled={isSubmitting}
                     className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
                   >
-                    Guardar Información
+                    {isSubmitting ? "Guardando..." : "Guardar Información"}
                   </button>
                 </div>
               </td>

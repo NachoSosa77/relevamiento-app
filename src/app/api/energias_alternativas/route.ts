@@ -14,18 +14,16 @@ export async function POST(req: Request) {
     }
 
     const insertQuery = `
-      INSERT INTO energias_alternativas (tipo,  disponibilidad, estado, relevamiento_id, construccion_id)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO energias_alternativas (tipo,  disponibilidad, relevamiento_id, construccion_id)
+      VALUES (?, ?, ?, ?)
     `;
 
     for (const item of data) {
-      const { tipo, disponibilidad, estado, relevamiento_id, construccion_id } =
-        item;
+      const { tipo, disponibilidad, relevamiento_id, construccion_id } = item;
 
       await connection.execute(insertQuery, [
         tipo ?? null,
         disponibilidad ?? null,
-        estado ?? null,
         relevamiento_id ?? null,
         construccion_id ?? null,
       ]);

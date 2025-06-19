@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
       const [result] = await connection.execute(
         `INSERT INTO servicio_desague (relevamiento_id, construccion_id, servicio, estado)
-        VALUES (?, ?, ?)`,
+        VALUES (?, ?, ?, ?)`,
         [relevamiento_id, nombreServicio, construccion_id, estado]
       );
 

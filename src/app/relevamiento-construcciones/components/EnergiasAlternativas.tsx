@@ -38,13 +38,13 @@ export default function EnergiasAlternativas({
   const [responses, setResponses] = useState<
     Record<
       string,
-      { disponibilidad: string; estado: string; tipo: string }
+      { disponibilidad: string; tipo: string }
     >
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "tipo",
+    field: "disponibilidad" | "tipo",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -60,12 +60,11 @@ export default function EnergiasAlternativas({
     .map((key) => ({
       tipo: "Energías alternativas",
       disponibilidad: responses[key]?.disponibilidad?.trim() || "",
-      estado: responses[key]?.estado?.trim() || "",
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
     }))
     // Filtramos solo si ambos están vacíos, es decir, dejamos pasar si al menos uno tiene dato
-    .filter((item) => item.disponibilidad !== "" || item.estado !== "");
+    .filter((item) => item.disponibilidad !== "" || item.tipo !== "");
 
   if (payload.length === 0) {
     toast.warning("No se completó ningún dato para guardar.");
@@ -157,7 +156,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Bueno"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Bueno")
+                          handleResponseChange(id, "tipo", "Bueno")
                         }
                         className="mr-1"
                       />
@@ -169,7 +168,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Regular"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Regular")
+                          handleResponseChange(id, "tipo", "Regular")
                         }
                         className="mr-1"
                       />
@@ -181,7 +180,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Malo"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Malo")
+                          handleResponseChange(id, "tipo", "Malo")
                         }
                         className="mr-1"
                       />
@@ -206,9 +205,9 @@ export default function EnergiasAlternativas({
                   <TextInput
                     label="Indique cuál"
                     sublabel=""
-                    value={responses[id]?.estado || ""}
+                    value={responses[id]?.tipo || ""}
                     onChange={(e) =>
-                      handleResponseChange(id, "estado", e.target.value)
+                      handleResponseChange(id, "tipo", e.target.value)
                     }
                   />
                 </td>

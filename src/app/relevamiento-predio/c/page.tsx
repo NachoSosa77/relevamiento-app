@@ -83,7 +83,6 @@ export default function RelevamientoCPage() {
     setShowFormFuera(true);
   };
 
-  console.log(predioId)
 
   const handleSaveObservacion = async (obs: string) => {
       if (!predioId || !obs.trim()) return;

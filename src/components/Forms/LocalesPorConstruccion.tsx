@@ -190,6 +190,7 @@ export default function LocalesPorConstruccion() {
       cui_number: cuiNumber,
       local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
       relevamiento_id: relevamientoId,
+      numero_construccion: numeroConstruccion, // ✅ esto es lo que faltaba
     }));
 
     await localesService.postLocales(localesConConstruccionId);

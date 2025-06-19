@@ -41,8 +41,8 @@ export default function ObservacionesComponent({
         />
         <div className="flex justify-end mt-2">
           <button
-            className="px-4 py-2 bg-custom text-white rounded-md hover:bg-custom/50 disabled:opacity-50"
-            onClick={handleSave}
+            className="px-4 py-2 bg-custom text-sm text-white rounded-md hover:bg-custom/50 font-bold disabled:opacity-50"
+            onClick={handleSave}            
             disabled={!observations.trim()}
           >
             Guardar

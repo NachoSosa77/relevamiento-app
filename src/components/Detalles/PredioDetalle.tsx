@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { AreaExternaTable } from "./AreaExternaTable";
 import { ConstruccionDetalleAccordion } from "./ConstruccionDetalleAcordion";
+import ObservacionesDetailComponent from "./ObservacionesDetailComponent";
 import { ServiciosBasicosTable } from "./ServiciosBasicos";
 
 interface Props {
@@ -70,9 +71,7 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
           </p>
         )}
         {predio.observaciones && (
-          <p>
-            <strong>Observaciones:</strong> {predio.observaciones}
-          </p>
+          <ObservacionesDetailComponent observaciones={predio.observaciones} />
         )}
       </div>
       <div>

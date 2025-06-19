@@ -44,6 +44,8 @@ export default function TableReutilizable({
     Record<string, Opcion | null>
   >({});
   const [radioSeleccion, setRadioSeleccion] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleResponseChange = (
     servicioId: string,
@@ -100,7 +102,8 @@ export default function TableReutilizable({
       toast.warning("Por favor, completá al menos un dato antes de guardar.");
       return;
     }
-
+    if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
 
     try {
       const response = await fetch("/api/materiales_predominantes", {
@@ -117,6 +120,7 @@ export default function TableReutilizable({
       console.error(error);
       toast.error("Error al guardar los datos");
     }
+    setIsSubmitting(false); // Rehabilitar botón después de enviar
   };
 
   return (
@@ -206,9 +210,10 @@ export default function TableReutilizable({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

@@ -253,13 +253,11 @@ const DetalleLocalPage = () => {
         label="ACONDICIONAMIENTO TÉRMICO"
         locales={tipoAcondicionamiento}
       />
-      {local?.tipo === "Pedagógico" && (
         <SistemaContraRobo
           id={7}
           label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
           locales={tipo_Sistema_Contra_Robo}
         />
-      )}
 
       <ServiciosBasicos
         id="8"
@@ -267,17 +265,14 @@ const DetalleLocalPage = () => {
         label="INSTALACIONES BÁSICAS"
         locales={tipoServiciosBasicos}
       />
-      {(local?.nombre_local === "Cocina" ||
-        local?.nombre_local === "Office" || local?.nombre_local === "Otro local pedagógico" || local?.nombre_local === "Oficina" || local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidad
           id={9}
           label="EQUIPAMIENTO DE COCINA/OFFICES"
           locales={equipamientoCocina}
         />
-      )}
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Aula especial") && (
+        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Aula especial" ) && (
         <EquipamientoCantidadSanitarios
           id={10}
           label="EQUIPAMIENTO SANITARIO"

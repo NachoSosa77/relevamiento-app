@@ -15,6 +15,7 @@ import CocinaComponent from "./CocinaComponent";
 import IluVentilacionComponent from "./IluminacionVentilacionComponent";
 import InstalacionesBasicasComponent from "./InstalacionesBasicasComponent";
 import MaterialesComponent from "./MaterialesComponente";
+import ObservacionesDetailComponent from "./ObservacionesDetailComponent";
 import SanitariosComponent from "./SanitariosComponente";
 interface Props {
   local: LocalesConstruccion;
@@ -59,7 +60,7 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                   as="h3"
                   className="text-lg font-semibold leading-6 text-gray-900 mb-4 flex justify-between items-center"
                 >
-                  Detalle del Local
+                  Detalle del Local <p className="text-custom">{local.nombre_local}</p>
                   <button
                     type="button"
                     className="px-4 py-2 text-sm font-medium text-white bg-custom hover:bg-custom/50 rounded-md"
@@ -71,8 +72,10 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
 
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-800 border-t border-gray-200 pt-4">
                   <div className="flex justify-between border-b border-gray-200 pb-2">
-                    <span className="font-semibold">Tipo</span>
-                    <span>{local.tipo}</span>
+                    <span className="font-semibold">
+                      Número de construcción
+                    </span>
+                    <span>{local.numero_construccion}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">
@@ -109,10 +112,6 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                       Protección contra robo
                     </span>
                     <span>{local.proteccion_contra_robo || "N/a"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-200 pb-2">
-                    <span className="font-semibold">Observaciones</span>
-                    <span>{local.observaciones || "N/a"}</span>
                   </div>
                 </div>
 
@@ -161,8 +160,6 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                         relevamientoId={local.relevamiento_id}
                       />
                     </AccordionItem>
-                     {(local.tipo === "Cocina" ||
-                      local.tipo === "Oficina") && (
                       <AccordionItem
                         title="Equipamiento de cocinas/offices"
                         value="cocina"
@@ -172,7 +169,6 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                           relevamientoId={local.relevamiento_id}
                         />
                       </AccordionItem>
-                    )}
                     {(local.tipo === "Sanitarios Alumnos" ||
                       local.tipo === "Sanitarios Docentes/Personal") && (
                       <AccordionItem
@@ -185,6 +181,14 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                         />
                       </AccordionItem>
                     )}
+                    <AccordionItem
+                        title="Ovservaciones"
+                        value="observaciones"
+                      >
+                        <ObservacionesDetailComponent
+                          observaciones={local.observaciones ?? "Sin observaciones registradas."}
+                        />
+                      </AccordionItem>
                   </Accordion>
                 </div>
               </Dialog.Panel>

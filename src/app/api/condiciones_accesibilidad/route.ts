@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { relevamiento_id, servicios } = body;
+    const { relevamiento_id, servicios, construccion_id } = body;
 
     if (!Array.isArray(servicios) || servicios.length === 0) {
       return NextResponse.json(
@@ -28,8 +28,9 @@ export async function POST(req: Request) {
           estado,
           mantenimiento,
           cantidad,      
-          relevamiento_id
-        ) VALUES (?, ?, ?, ?, ?,?)`,
+          relevamiento_id,
+          construccion_id
+        ) VALUES (?, ?, ?, ?, ?,?,?)`,
         [
           servicio,
           disponibilidad,
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
           mantenimiento,
           cantidad,
           relevamiento_id,
+          construccion_id,
         ]
       );
     }

@@ -4,14 +4,26 @@ import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
 interface LocalPorConstruccion extends RowDataPacket {
-  id: number;
-  local_id: number;
-  relevamiento_id: number;
-  cui_number: number;
-  numero_construccion: number;
+  id?: number;
+  construccion_id?: number;
+  identificacion_plano: number;
   numero_planta: number;
   tipo: string;
-  nombre_local: string;
+  local_id: number;
+  local_sin_uso: string;
+  superficie?: number;
+  tipo_superficie: string;
+  cui_number?: number;
+  relevamiento_id?: number;
+  largo_predominante?: number;
+  ancho_predominante?: number;
+  altura_maxima?: number;
+  altura_minima?: number;
+  proteccion_contra_robo?: string;
+  observaciones?: string;
+  estado?: string;
+  numero_construccion?: number;
+  nombre_local?: string;
 }
 
 export async function GET(
@@ -31,26 +43,22 @@ export async function GET(
       );
     }
 
-    const [local] = await connection.query<LocalPorConstruccion[]>(
+    const [rows] = await connection.query<LocalPorConstruccion[]>(
       `
       SELECT 
-        lpc.id,
-        lpc.local_id,
-        lpc.relevamiento_id,
-        lpc.cui_number,
-        lpc.identificacion_plano,
-        lpc.numero_construccion,
-        lpc.numero_planta,
-        loc.tipo,
-        loc.name AS nombre_local
+        lpc.*,
+        loc.name AS nombre_local,
+        loc.tipo
       FROM locales_por_construccion lpc
       JOIN opciones_locales loc ON lpc.local_id = loc.id
       WHERE lpc.id = ?
-    `,
+      `,
       [idNumber]
     );
 
     connection.release();
+
+    const local = rows[0]; // ✅ Obtenemos el primer elemento
 
     // Verificar si se encontró el local
     if (local.length === 0) {
@@ -60,7 +68,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ local: local[0] });
+    return NextResponse.json({ local });
   } catch (err: any) {
     console.error("Error al obtener el local:", err);
     return NextResponse.json(

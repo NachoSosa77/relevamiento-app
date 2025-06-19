@@ -21,8 +21,6 @@ const EstablecimientosComponent: React.FC = () => {
   );
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
-  console.log('institucionesId', selectedInstitutionId);
-  console.log('cui', selectedCui);
   const dispatch = useAppDispatch();
   
   // Cargar instituciones desde localStorage si el CUI coincide
@@ -30,7 +28,6 @@ const EstablecimientosComponent: React.FC = () => {
     instituciones,
     setInstituciones,
   } = useInstitucionesByCui();
-  console.log('instituciones', instituciones);
 
 
   // Guardar instituciones en localStorage cuando cambien
@@ -77,7 +74,6 @@ const EstablecimientosComponent: React.FC = () => {
   }, [selectedInstitutionId]); */
 
   const handleSave = async () => {
-    console.log("Instituciones a guardar:", selectedInstitutionId);
     if (selectedInstitutionId && selectedCui) {
       const yaExiste = instituciones.some(
         (inst) => inst.id === selectedInstitutionId
