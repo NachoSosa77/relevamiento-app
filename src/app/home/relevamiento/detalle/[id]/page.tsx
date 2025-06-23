@@ -70,6 +70,7 @@ const DetallePage = () => {
           </p>
         )}
         <p className="text-sm text-gray-500">N° Cui: {relevamiento?.cui_id}</p>
+        <p className="text-sm text-gray-500">Usuario: {relevamiento?.created_by}</p>
       </div>
 
       <Accordion type="multiple" className="space-y-4">

@@ -16,6 +16,7 @@ import CuiComponent from "./dinamicForm/CuiComponent";
 
 const EstablecimientosComponent: React.FC = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
@@ -74,44 +75,48 @@ const EstablecimientosComponent: React.FC = () => {
   }, [selectedInstitutionId]); */
 
   const handleSave = async () => {
-    if (selectedInstitutionId && selectedCui) {
-      const yaExiste = instituciones.some(
-        (inst) => inst.id === selectedInstitutionId
-      );
-      if (yaExiste) {
-        toast.info("La institución ya fue agregada.");
-        return;
-      }
+  if (loading) return; // Evita clics múltiples
 
-      try {
-        const response = await fetch(
-          `/api/instituciones/${selectedInstitutionId}`
-        );
-        if (!response.ok) throw new Error("No se pudo obtener la institución.");
-
-        const data: InstitucionesData = await response.json();
-
-        const nuevasInstituciones = [...instituciones, data];
-        setInstituciones(nuevasInstituciones);
-        dispatch(setInstitucionesData(nuevasInstituciones)); // <- 🔥 este es el paso que faltaba
-        localStorage.setItem(
-          "institucionesSeleccionadas",
-          JSON.stringify({
-            cui: selectedCui,
-            instituciones: nuevasInstituciones,
-          })
-        );
-
-        toast.success("¡Institución agregada exitosamente!");
-        closeModal();
-      } catch (error) {
-        console.error("Error al guardar la institución:", error);
-        toast.error("Ocurrió un error al guardar.");
-      }
-    } else {
-      toast.error("Por favor, selecciona una institución.");
+  if (selectedInstitutionId && selectedCui) {
+    const yaExiste = instituciones.some(
+      (inst) => inst.id === selectedInstitutionId
+    );
+    if (yaExiste) {
+      toast.info("La institución ya fue agregada.");
+      return;
     }
-  };
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+      if (!response.ok) throw new Error("No se pudo obtener la institución.");
+
+      const data: InstitucionesData = await response.json();
+
+      const nuevasInstituciones = [...instituciones, data];
+      setInstituciones(nuevasInstituciones);
+      dispatch(setInstitucionesData(nuevasInstituciones));
+      localStorage.setItem(
+        "institucionesSeleccionadas",
+        JSON.stringify({
+          cui: selectedCui,
+          instituciones: nuevasInstituciones,
+        })
+      );
+
+      toast.success("¡Institución agregada exitosamente!");
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar la institución:", error);
+      toast.error("Ocurrió un error al guardar.");
+    } finally {
+      setLoading(false);
+    }
+  } else {
+    toast.error("Por favor, selecciona una institución.");
+  }
+};
+
 
   const openModal = () => setModalIsOpen(true);
   const closeModal = () => setModalIsOpen(false);
@@ -212,11 +217,16 @@ const EstablecimientosComponent: React.FC = () => {
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button
-            className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
-            onClick={handleSave}
-          >
-            Guardar
-          </button>
+  className={`font-bold py-2 px-4 rounded-full transition duration-300 ${
+    loading
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-custom hover:bg-custom/50 text-white"
+  }`}
+  onClick={handleSave}
+  disabled={loading}
+>
+  {loading ? "Guardando..." : "Guardar información"}
+</button>
           <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
             onClick={closeModal}

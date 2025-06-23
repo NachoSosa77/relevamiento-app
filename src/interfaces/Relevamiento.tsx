@@ -4,4 +4,5 @@ export interface Relevamiento {
     estado: string;
     created_at: Date;
     updated_at: Date;
+    created_by: string;
   }

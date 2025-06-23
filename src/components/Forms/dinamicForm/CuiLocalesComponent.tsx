@@ -25,6 +25,8 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
 }) => {
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingLocales, setLoadingLocales] = useState(true);
+  const [loadingGuardar, setLoadingGuardar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocalId, setSelectedLocalId] = useState<number | undefined>(
     undefined
@@ -35,33 +37,34 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
     useState<LocalesConstruccion | null>(null);
 
   const router = useRouter();
-
   const relevamientoId = useRelevamientoId();
 
   useEffect(() => {
-    if (!relevamientoId) {
-      toast.error(
-        "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
+    if (relevamientoId === undefined || relevamientoId === null) return;
+  if (!relevamientoId) {
+    toast.error(
+      "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
+    );
+    return;
+  }
+  const fetchLocales = async () => {
+    try {
+      const response = await localesService.getLocalesPorRelevamiento(
+        relevamientoId
       );
-      return;
+      setLocales(response.locales || []);
+    } catch (err) {
+      setError("Error al obtener los locales");
+    } finally {
+      setLoadingLocales(false);
     }
-    const fetchLocales = async () => {
-      try {
-        const response = await localesService.getLocalesPorRelevamiento(
-          relevamientoId
-        );
-        setLocales(response.locales || []);
-      } catch (err) {
-        setError("Error al obtener los locales");
-      } finally {
-        setLoading(false);
-      }
-    };
+  };
 
-    if (relevamientoId) {
-      fetchLocales();
-    }
-  }, [relevamientoId, router]);
+  if (relevamientoId) {
+    fetchLocales();
+  }
+}, [relevamientoId, router]);
+
 
   const handleVerDetalle = async (local: LocalesConstruccion) => {
     try {
@@ -87,28 +90,33 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   };
 
   const handleGuardarRelevamiento = async () => {
-    if (!relevamientoId) {
-      toast.error("No se encontró el ID del relevamiento");
-      return;
-    }
+  if (!relevamientoId) {
+    toast.error("No se encontró el ID del relevamiento");
+    return;
+  }
 
-    try {
-      await relevamientoService.updateEstadoRelevamiento(
-        relevamientoId,
-        "completo"
-      );
-      toast.success("Relevamiento marcado como completo");
-      setRelevamientoGuardado(true);
-      sessionStorage.removeItem("relevamientoId");
+  setLoadingGuardar(true);
 
-      router.push("/home");
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al actualizar estado del relevamiento");
-    }
-  };
+  try {
+    await relevamientoService.updateEstadoRelevamiento(
+      relevamientoId,
+      "completo"
+    );
+    toast.success("Relevamiento marcado como completo");
+    setRelevamientoGuardado(true);
+    sessionStorage.removeItem("relevamientoId");
 
-  if (loading)
+    router.push("/home");
+  } catch (error) {
+    console.error(error);
+    toast.error("Error al actualizar estado del relevamiento");
+  } finally {
+    setLoadingGuardar(false);
+  }
+};
+
+
+  if (loadingLocales)
     return (
       <div className="items-center justify-center">
         <Spinner />
@@ -260,14 +268,16 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
       </div>
 
       <button
-        disabled={!todosCompletos || relevamientoGuardado}
-        onClick={handleGuardarRelevamiento}
-        className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
-      >
-        {relevamientoGuardado
-          ? "Relevamiento guardado ✔️"
-          : "Guardar Relevamiento"}
-      </button>
+  disabled={!todosCompletos || relevamientoGuardado || loadingGuardar}
+  onClick={handleGuardarRelevamiento}
+  className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
+>
+  {loadingGuardar
+    ? "Guardando..."
+    : relevamientoGuardado
+    ? "Relevamiento guardado ✔️"
+    : "Guardar Relevamiento"}
+</button>
     </div>
   );
 };

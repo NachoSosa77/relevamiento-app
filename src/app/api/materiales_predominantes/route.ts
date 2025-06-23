@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
     const query = `
       INSERT INTO materiales_predominantes 
         (item, material, estado, relevamiento_id, local_id)
-      VALUES ?
+      VALUES ${values.map(() => "(?, ?, ?, ?, ?)").join(", ")}
     `;
 
-    await connection.query(query, [values]);
+    const flatValues = values.flat();
+
+    await connection.execute(query, flatValues);
 
     return NextResponse.json({ message: "Insertado correctamente" });
   } catch (error) {

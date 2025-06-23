@@ -8,6 +8,7 @@ interface Relevamiento {
   id: number;
   cui_id: number;
   created_at: string;
+  created_by: string;
 }
 
 export async function GET(

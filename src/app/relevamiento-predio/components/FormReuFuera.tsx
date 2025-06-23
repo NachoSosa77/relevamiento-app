@@ -1,6 +1,5 @@
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,8 +12,7 @@ interface FormValues {
 
 const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const router = useRouter();
-  const relevamientoId = useAppSelector((state) => state.espacio_escolar.relevamientoId);
+  const relevamientoId = useRelevamientoId();
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
 
@@ -39,7 +37,6 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
       toast.success("Datos enviados correctamente");
       setShowConfirmButton(false);
       onConfirm();
-      router.push("/relevamiento-construcciones");
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       toast.error("Hubo un error al enviar los datos");

@@ -7,9 +7,9 @@ export async function POST(req: NextRequest) {
     const connection = await getConnection();
     const body = await req.json();
 
-    const { cui } = body;
+    const { cui, created_by } = body;
 
-    if (!cui) {
+    if (!cui || !created_by) {
       return NextResponse.json(
         { message: "CUI y usuarioId son requeridos" },
         { status: 400 }
@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     }
 
     const [result] = await connection.query<ResultSetHeader>(
-      `INSERT INTO relevamientos (cui_id, estado) VALUES (?, ?)`,
-      [cui, "incompleto"]
+      `INSERT INTO relevamientos (cui_id, estado, created_by) VALUES (?, ?, ?)`,
+      [cui, "incompleto", created_by]
     );
 
     connection.release();
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
         id: result.insertId,
         cui,
         estado: "incompleto",
+        created_by,
       },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

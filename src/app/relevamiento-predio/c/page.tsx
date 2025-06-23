@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { SituacionDominio } from "@/app/lib/SituacionDominio";
@@ -69,10 +68,6 @@ export default function RelevamientoCPage() {
   const relevamientoId = useRelevamientoId();
   const predioId = useAppSelector((state) => state.predio.predioId);
 
-  const predioObservaciones = useAppSelector(
-    (state) => state.predio.observaciones
-  );
-
   useEffect(() => {
     if (institucionesRedux.length > 0) {
       setSelectedInstitutions(institucionesRedux);
@@ -83,27 +78,26 @@ export default function RelevamientoCPage() {
     setShowFormFuera(true);
   };
 
-
   const handleSaveObservacion = async (obs: string) => {
-      if (!predioId || !obs.trim()) return;
-  
-      try {
-        const res = await fetch(`/api/predio/${predioId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ observaciones: obs }),
-        });
-  
-        if (res.ok) {
-          toast.success("Observaciones guardadas correctamente");
-        } else {
-          console.error("Error al guardar observaciones");
-          toast.error("Observaciones guardadas correctamente");
-        }
-      } catch (err) {
-        console.error("Error de red al guardar:", err);
+    if (!predioId || !obs.trim()) return;
+
+    try {
+      const res = await fetch(`/api/predio/${predioId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observaciones: obs }),
+      });
+
+      if (res.ok) {
+        toast.success("Observaciones guardadas correctamente");
+      } else {
+        console.error("Error al guardar observaciones");
+        toast.error("Observaciones guardadas correctamente");
       }
-    };
+    } catch (err) {
+      console.error("Error de red al guardar:", err);
+    }
+  };
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);
@@ -164,40 +158,20 @@ export default function RelevamientoCPage() {
     setSelectSituacion(null);
   };
 
-  const enviarDatosEspacioEscolar = async () => {
-    try {
-      const payload = {
-        observaciones: predioObservaciones,
-      };
-
-      const response = await fetch(`/api/predio/${predioId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al guardar los datos del espacio escolar.");
-      }
-
-      toast.success("Relevamiento predio guardado correctamente 🎉", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setTimeout(() => {
-        router.push("/relevamiento-construcciones");
-      }, 1000); // 1 segundo de espera
-      // Podés resetear el estado o mostrar confirmación visual acá
-    } catch (error: any) {
-      console.error("Error al enviar datos del espacio escolar:", error);
-      toast.error("Hubo un error al guardar los datos.", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      error(error.message);
+  const enviarDatosEspacioEscolar = () => {
+    if (!predioId) {
+      toast.error("Primero debes completar y guardar los datos del predio.");
+      return;
     }
+
+    toast.success("Relevamiento predio guardado correctamente 🎉", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+    setTimeout(() => {
+      router.push("/relevamiento-construcciones");
+    }, 1000);
   };
 
   return (

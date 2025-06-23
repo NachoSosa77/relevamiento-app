@@ -3,8 +3,6 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { calidadPropAgua } from "../config/relevamientoAgua";
-import CalidadAguaComponent from "./CalidadAguaComponent";
 import ServicioBasicoComponent from "./ServicioBasicoComponent";
 
 interface AguaFormComponentProps {
@@ -13,104 +11,100 @@ interface AguaFormComponentProps {
 }
 
 interface ServicioBasicoData {
-  tipo_provision: string;
-  tipo_provision_estado: string;
-  tipo_almacenamiento: string;
-  tipo_almacenamiento_estado: string;
+  tipo_provision: string[];
+  tipo_provision_estado: string[];
+  tipo_almacenamiento: string[];
+  tipo_almacenamiento_estado: string[];
   alcance: string[];
-}
-
-interface CalidadAguaData {
-  tratamiento: string;
-  tipo_tratamiento: string;
-  control_sanitario: string;
-  cantidad_veces: string;
+  tratamiento?: string;
+  tipo_tratamiento?: string;
+  control_sanitario?: string;
+  cantidad_veces?: string;
 }
 
 export default function AguaFormComponent({ relevamientoId, construccionId }: AguaFormComponentProps) {
   const [servicioBasico, setServicioBasico] = useState<ServicioBasicoData>({
-    tipo_provision: "",
-    tipo_provision_estado: "",
-    tipo_almacenamiento: "",
-    tipo_almacenamiento_estado: "",
-    alcance: [],
-  });
-
-  const [calidadAgua, setCalidadAgua] = useState<CalidadAguaData>({
-    tratamiento: "",
-    tipo_tratamiento: "",
-    control_sanitario: "",
-    cantidad_veces: "",
-  });
+  tipo_provision: [],
+  tipo_provision_estado: [],
+  tipo_almacenamiento: [],
+  tipo_almacenamiento_estado: [],
+  alcance: [],
+  tratamiento: "",
+  tipo_tratamiento: "",
+  control_sanitario: "",
+  cantidad_veces: "",
+});
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-  // Verificamos si al menos uno de los campos está completo (no vacío o no nulo)
-  const hasSomeData =
-    servicioBasico.tipo_provision ||
-    servicioBasico.tipo_provision_estado ||
-    servicioBasico.tipo_almacenamiento ||
-    servicioBasico.tipo_almacenamiento_estado ||
-    (servicioBasico.alcance && servicioBasico.alcance.length > 0) ||
-    calidadAgua.tratamiento ||
-    calidadAgua.tipo_tratamiento ||
-    calidadAgua.control_sanitario ||
-    calidadAgua.cantidad_veces;
-
-  if (!hasSomeData) {
-    toast.warning("Por favor, completá al menos un campo antes de guardar.");
+    if (!relevamientoId) {
+    toast.error("Falta el ID del relevamiento.");
     return;
   }
+    const hasData =
+      servicioBasico.tipo_provision.length > 0 ||
+      servicioBasico.tipo_almacenamiento.length > 0 ||
+      servicioBasico.alcance.length > 0 
 
-  const data = {
-    ...servicioBasico,
-    ...calidadAgua,
-    relevamiento_id: relevamientoId,
-    construccion_id: construccionId
-  };
-
-  try {
-    const response = await fetch("/api/servicio_agua", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || "Error al guardar los datos");
+    if (!hasData) {
+      toast.warning("Por favor, completá al menos un campo antes de guardar.");
+      return;
     }
 
-    toast.success("Servicio de agua guardado correctamente");
-  } catch (error: any) {
-    console.error("Error al enviar datos:", error);
-    toast.error(error.message || "Error al guardar los datos");
-  }
-};
+    const data = {
+      ...servicioBasico,
+      relevamiento_id: relevamientoId,
+      construccion_id: construccionId,
+    };
+setLoading(true);
+    try {
+      const response = await fetch("/api/servicio_agua", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-  
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al guardar los datos");
+      }
+
+      toast.success("Servicio de agua guardado correctamente");
+    } catch (error: any) {
+      console.error("Error al enviar datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }finally {
+    setLoading(false);
+  }
+  };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+            <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
+          <p>3</p>
+        </div>
+        <div className="h-6 flex items-center justify-center">
+          <p className="px-2 text-sm font-bold">
+            AGUA
+          </p>
+        </div>
+      </div>
+
       <ServicioBasicoComponent
-        onChange={(data) => {
-          setServicioBasico(data); // Actualiza el estado de servicioBasico
-        }}
+        onChange={(data) => setServicioBasico(data)}
       />
-      <CalidadAguaComponent
-        onChange={(data) => {
-          setCalidadAgua(data); // Actualiza el estado de calidadAgua
-        }}
-        servicios={calidadPropAgua}
-      />
+
       <div className="flex justify-end mt-4">
         <button
+        disabled={loading}
           onClick={handleSubmit}
           className="bg-custom hover:bg-custom/50 text-white font-bold p-2 rounded-lg"
         >
-          Guardar información
+          {loading ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

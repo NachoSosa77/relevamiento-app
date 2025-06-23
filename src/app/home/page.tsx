@@ -4,6 +4,7 @@
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useUser } from "@/hooks/useUser";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -11,7 +12,7 @@ import { resetArchivos } from "@/redux/slices/archivoSlice";
 import {
   setCui,
   setInstitucionId,
-  setRelevamientoId
+  setRelevamientoId,
 } from "@/redux/slices/espacioEscolarSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { relevamientoService } from "@/services/relevamientoService";
@@ -29,6 +30,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchInstituciones = async () => {
@@ -80,10 +82,13 @@ export default function HomePage() {
   };
 
   const handleNuevoRelevamiento = async () => {
-    if (!cuiInputValue) return;
+    if (!cuiInputValue || !user?.email) return;
 
     try {
-      const data = await relevamientoService.createRelevamiento(cuiInputValue);
+      const data = await relevamientoService.createRelevamiento(
+        cuiInputValue,
+        user.email
+      );
 
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
@@ -123,7 +128,8 @@ export default function HomePage() {
       {loading && (
         <div className="flex items-center justify-center">
           <Spinner />
-          Cargando institucione...     </div>
+          Cargando Instituciones...{" "}
+        </div>
       )}
 
       <CuiComponent
@@ -160,6 +166,7 @@ export default function HomePage() {
                 <th className="px-4 py-2 border-b">Fecha</th>
                 <th className="px-4 py-2 border-b">ID Relevamiento</th>
                 <th className="px-4 py-2 border-b">Cui</th>
+                <th className="px-4 py-2 border-b">Usuario</th>
                 <th className="px-4 py-2 border-b">Estado</th>
                 <th className="px-4 py-2 border-b"></th>
               </tr>
@@ -174,6 +181,9 @@ export default function HomePage() {
                   </th>
                   <td className="px-4 py-2 border-b">{relevamiento.id}</td>
                   <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
+                  <td className="px-4 py-2 border-b">
+                    {relevamiento.created_by}
+                  </td>
                   <td
                     className={
                       relevamiento.estado === "completo"

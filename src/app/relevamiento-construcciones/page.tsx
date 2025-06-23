@@ -1,5 +1,6 @@
 "use client";
 
+import ConstruccionInstituciones from "@/components/ConstruccionInstituciones";
 import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruccionComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Spinner from "@/components/ui/Spinner";
@@ -54,17 +55,21 @@ export default function RelevamientoConstruccionesPage() {
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
 
-
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
   const institucionesRedux = useSelector(
     (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
   );
+
+  const [relevadas, setRelevadas] = useState<number[]>([]);
+  const todasRelevadas =
+    selectedInstitutions &&
+    relevadas.length === selectedInstitutions.length;
+
   const relevamientoId = useRelevamientoId();
 
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
-  useEffect(() => {
-  }, [serviciosDeAguaEnRedux]);
+  useEffect(() => { }, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
     if (institucionesRedux.length > 0) {
@@ -84,6 +89,8 @@ export default function RelevamientoConstruccionesPage() {
 
       if (res.ok) {
         toast.success("Observaciones guardadas correctamente");
+        // 🚀 Marcamos como relevada:
+        marcarComoRelevada(construccionId);
       } else {
         console.error("Error al guardar observaciones");
         toast.error("Observaciones guardadas correctamente");
@@ -93,11 +100,17 @@ export default function RelevamientoConstruccionesPage() {
     }
   };
   const handleSaveConstruccion = () => {
-    toast.success("Construcción guardada correctamente 🎉", {
+    toast.success("Construcciones guardadas correctamente", {
       position: "top-right",
       autoClose: 3000,
     });
     router.push("/relevamiento-locales");
+  };
+
+  const marcarComoRelevada = (id: number) => {
+    if (!relevadas.includes(id)) {
+      setRelevadas([...relevadas, id]);
+    }
   };
 
   return (
@@ -116,7 +129,7 @@ export default function RelevamientoConstruccionesPage() {
       <CuiConstruccionComponent
         selectedInstitutions={selectedInstitutions}
         initialCui={selectedCui}
-        onCuiInputChange={() => {}}
+        onCuiInputChange={() => { }}
         isReadOnly={false}
         label="COMPLETE UN FORMULARIO POR CADA CONSTRUCCIÓN DEL PREDIO"
         sublabel="Transcriba de la hoja de ruta el Número de CUI y del plano el número de construcción."
@@ -130,6 +143,11 @@ export default function RelevamientoConstruccionesPage() {
       ) : (
         <>
           {" "}
+          {/* Este debajo para gestionar las instituciones asociadas */}
+          <ConstruccionInstituciones
+            construccionId={construccionId}
+            relevamientoId={relevamientoId}
+          />
           <CantidadPlantas construccionId={construccionId} />
           <AntiguedadComponent construccionId={construccionId} />
           <ServiciosBasicos data={serviciosBasicos} />
@@ -224,7 +242,9 @@ export default function RelevamientoConstruccionesPage() {
           <div className="flex justify-center mt-4">
             <button
               onClick={handleSaveConstruccion}
-              className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
+              className={`px-4 py-2 w-80 text-white font-semibold rounded-md ${todasRelevadas ? "bg-custom hover:bg-custom/50" : "bg-gray-400 cursor-not-allowed"
+                }`}
+              disabled={!todasRelevadas}
             >
               Guardar construcción
             </button>

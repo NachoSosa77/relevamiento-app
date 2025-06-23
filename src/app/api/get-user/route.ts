@@ -20,7 +20,7 @@ export async function GET() {
 
     const connection = await getConnection();
     const [rows] = await connection.execute(
-      "SELECT id, nombre, apellido, dni FROM users WHERE id = ?",
+      "SELECT id, nombre, apellido, dni, email FROM users WHERE id = ?",
       [userId]
     );
 

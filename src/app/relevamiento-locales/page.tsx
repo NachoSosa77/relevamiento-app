@@ -54,7 +54,7 @@ export default function RelevamientoLocalesPage() {
       {loading && (
         <div className="items-center justify-center">
           <Spinner />
-          Cargando instituciones...
+          Cargando locales...
         </div>
       )}
 
