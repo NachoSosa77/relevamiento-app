@@ -54,6 +54,8 @@ export default function EnergiasAlternativas({
   };
 
   const relevamientoId = useRelevamientoId();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleGuardar = async () => {
   const payload = Object.keys(responses)
@@ -71,7 +73,7 @@ export default function EnergiasAlternativas({
     return;
   }
 
-
+  setIsSubmitting(true);
   try {
     const response = await fetch("/api/energias_alternativas", {
       method: "POST",
@@ -93,6 +95,7 @@ export default function EnergiasAlternativas({
     console.error("Error al enviar los datos:", error);
     toast.error(error.message || "Error al guardar los datos");
   }
+  setIsSubmitting(false);
 };
 
 
@@ -219,9 +222,11 @@ export default function EnergiasAlternativas({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-sm text-white font-bold p-2 rounded-lg"
         >
-          Guardar Información
+                    {isSubmitting ? "Guardando..." : "Guardar información"}
+
         </button>
       </div>
     </div>

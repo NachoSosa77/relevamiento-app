@@ -1,4 +1,4 @@
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -12,9 +12,8 @@ interface FormValues {
 
 const FormReu: React.FC<FormValues> = ({ setMostrarObras, question, onConfirm }) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  )
+  const relevamientoId = useRelevamientoId();
+  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
 

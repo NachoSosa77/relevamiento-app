@@ -10,12 +10,28 @@ export async function POST(req: NextRequest) {
       return new NextResponse("El cuerpo debe ser un array", { status: 400 });
     }
 
+    // Validación opcional: verificar campos requeridos
+    for (const [index, item] of data.entries()) {
+      if (
+        item.item === undefined ||
+        item.material === undefined ||
+        item.estado === undefined ||
+        item.relevamiento_id === undefined ||
+        item.local_id === undefined
+      ) {
+        return new NextResponse(`Faltan campos en la fila ${index + 1}`, {
+          status: 400,
+        });
+      }
+    }
+
+    // Reemplazar undefined por null antes de insertar
     const values = data.map((item) => [
-      item.item,
-      item.material,
-      item.estado,
-      item.relevamiento_id,
-      item.local_id,
+      item.item ?? null,
+      item.material ?? null,
+      item.estado ?? null,
+      item.relevamiento_id ?? null,
+      item.local_id ?? null,
     ]);
 
     const query = `

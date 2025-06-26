@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
-      expiresIn: "1h",
+      expiresIn: "4h",
     });
 
     // 🛠️ Crear la respuesta con la cookie
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 120 * 120, // 2 horas
+      maxAge: 60 * 60 * 4,
       path: "/",
     });
 

@@ -50,6 +50,7 @@ export default function CondicionesAccesibilidad({
   >({});
 
   const relevamientoId = useRelevamientoId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleResponseChange = (
     servicioId: string,
@@ -101,7 +102,7 @@ export default function CondicionesAccesibilidad({
       })),
     };
 
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/condiciones_accesibilidad", {
         method: "POST",
@@ -119,13 +120,12 @@ export default function CondicionesAccesibilidad({
       toast.success(
         "Relevamiento condiciones accesibilidad guardados correctamente"
       );
-
-  } catch (error: any) {
-    console.error("Error al enviar los datos:", error);
-    toast.error(error.message || "Error al guardar los datos");
-  }
-};
-
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
@@ -296,9 +296,10 @@ export default function CondicionesAccesibilidad({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

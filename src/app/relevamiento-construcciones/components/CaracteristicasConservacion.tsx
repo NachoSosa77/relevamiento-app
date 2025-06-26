@@ -54,6 +54,7 @@ export default function CaracteristicasConservacion({
   };
 
   const relevamientoId = useRelevamientoId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGuardar = async () => {
     // Validación
@@ -93,7 +94,7 @@ export default function CaracteristicasConservacion({
         construcion_id: construccionId,
       };
     });
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/estado_conservacion", {
         method: "POST",
@@ -115,6 +116,7 @@ export default function CaracteristicasConservacion({
       console.error("Error al enviar los datos:", error);
       toast.error(error.message || "Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -238,9 +240,10 @@ export default function CaracteristicasConservacion({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-sm text-white font-bold p-2 rounded-lg"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

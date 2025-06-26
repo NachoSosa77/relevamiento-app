@@ -39,6 +39,8 @@ const DetalleLocalPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hayCambios, setHayCambios] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const localId = id;
 
   const fetchLocal = useCallback(async () => {
@@ -57,7 +59,6 @@ const DetalleLocalPage = () => {
   useEffect(() => {
     fetchLocal();
   }, [fetchLocal]);
-  
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!localId) return;
@@ -96,6 +97,9 @@ const DetalleLocalPage = () => {
   const handleGuardar = async () => {
     const valorAGuardar = obtenerDestinoOriginal();
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const response = await localesService.updateConstruccionById(local.id, {
         destino_original: valorAGuardar,
@@ -106,20 +110,25 @@ const DetalleLocalPage = () => {
       console.error(error);
       toast.error("Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   const handleGuardarLocal = async () => {
-  try {
-    // Asumiendo que tenés el localId disponible
-    await localesService.updateEstadoLocal(local.id, "completo");
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    toast.success("Local guardado correctamente");
-    router.push("/relevamiento-locales");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al guardar el local");
-  }
-};
+    try {
+      // Asumiendo que tenés el localId disponible
+      await localesService.updateEstadoLocal(local.id, "completo");
+
+      toast.success("Local guardado correctamente");
+      router.push("/relevamiento-locales");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar el local");
+    }
+    setIsSubmitting(false);
+  };
 
   const marcarComoModificado = () => {
     setHayCambios(true);
@@ -222,9 +231,10 @@ const DetalleLocalPage = () => {
             <div className="flex justify-end">
               <button
                 onClick={handleGuardar}
+                disabled={isSubmitting}
                 className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
               >
-                Guardar Información
+                {isSubmitting ? "Guardando..." : "Guardar Información"}
               </button>
             </div>
           </div>
@@ -253,11 +263,11 @@ const DetalleLocalPage = () => {
         label="ACONDICIONAMIENTO TÉRMICO"
         locales={tipoAcondicionamiento}
       />
-        <SistemaContraRobo
-          id={7}
-          label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
-          locales={tipo_Sistema_Contra_Robo}
-        />
+      <SistemaContraRobo
+        id={7}
+        label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
+        locales={tipo_Sistema_Contra_Robo}
+      />
 
       <ServiciosBasicos
         id="8"
@@ -265,14 +275,15 @@ const DetalleLocalPage = () => {
         label="INSTALACIONES BÁSICAS"
         locales={tipoServiciosBasicos}
       />
-        <EquipamientoCantidad
-          id={9}
-          label="EQUIPAMIENTO DE COCINA/OFFICES"
-          locales={equipamientoCocina}
-        />
+      <EquipamientoCantidad
+        id={9}
+        label="EQUIPAMIENTO DE COCINA/OFFICES"
+        locales={equipamientoCocina}
+      />
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Aula especial" ) && (
+        local?.nombre_local === "Sanitarios docentes/personal" ||
+        local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidadSanitarios
           id={10}
           label="EQUIPAMIENTO SANITARIO"
@@ -296,7 +307,7 @@ const DetalleLocalPage = () => {
               : "bg-gray-300 text-gray-500"
           }`}
         >
-          Actualizar Local
+          {isSubmitting ? "Actualizando..." : "Actualizar Local"}
         </button>
       </div>
     </div>

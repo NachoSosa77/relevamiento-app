@@ -210,7 +210,10 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                   N° Construcción
                 </th>
                 <th className="border px-2 py-1 text-center">
-                  N° Identif. plano
+                  N° Planta
+                </th>
+                <th className="border px-2 py-1 text-center">
+                  N° Local
                 </th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
@@ -229,7 +232,10 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                     {local.cui_number}
                   </td>
                   <td className="border px-2 py-1 text-center">
-                    L {local.numero_construccion}
+                    C {local.numero_construccion}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    P {local.numero_planta}
                   </td>
                   <td className="border px-2 py-1 text-center">
                     L {local.identificacion_plano}

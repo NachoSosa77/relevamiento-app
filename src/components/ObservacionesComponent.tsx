@@ -13,6 +13,7 @@ export default function ObservacionesComponent({
   initialObservations = "",
 }: ObservacionesComponentProps) {
   const [observations, setObservations] = useState(initialObservations);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialObservations && initialObservations.trim() !== "") {
@@ -24,7 +25,10 @@ export default function ObservacionesComponent({
   }, [initialObservations]);
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     onSave(observations);
+    setIsSubmitting(false);
   };
 
   return (
@@ -42,7 +46,7 @@ export default function ObservacionesComponent({
         <div className="flex justify-end mt-2">
           <button
             className="px-4 py-2 bg-custom text-sm text-white rounded-md hover:bg-custom/50 font-bold disabled:opacity-50"
-            onClick={handleSave}            
+            onClick={handleSave}
             disabled={!observations.trim()}
           >
             Guardar

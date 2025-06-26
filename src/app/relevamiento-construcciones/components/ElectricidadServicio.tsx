@@ -38,6 +38,7 @@ export default function ElectricidadServicio({
       estado_bateria?: string;
     };
   }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const relevamientoId = useRelevamientoId();
 
@@ -97,7 +98,7 @@ export default function ElectricidadServicio({
         potencia: potenciaOptions[key] || 0,
       })),
     };
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/servicio_electricidad", {
         method: "POST",
@@ -114,6 +115,7 @@ export default function ElectricidadServicio({
     } catch (error: any) {
       toast.error(error.message || "Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -323,10 +325,11 @@ export default function ElectricidadServicio({
 
       <div className="mt-4 flex justify-end">
         <button
+          disabled={isSubmitting}
           onClick={handleGuardar}
           className="text-white text-sm bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

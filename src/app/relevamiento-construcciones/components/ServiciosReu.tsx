@@ -33,7 +33,8 @@ export default function ServiciosReu({
   const [selectedServicios, setSelectedServicios] = useState<
     { servicio: string; estado?: string }[]
   >([]);
-  const relevamientoId = useRelevamientoId(); // Asumo que 'espacio_escolar' contiene el relevamientoId
+  const relevamientoId = useRelevamientoId(); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   const handleServicioSelect = (servicioId: string) => {
@@ -82,7 +83,7 @@ export default function ServiciosReu({
     })),
   };
 
-
+  setIsSubmitting(true);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -103,6 +104,7 @@ export default function ServiciosReu({
     console.error("Error al enviar los datos:", error);
     toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
   }
+  setIsSubmitting(false);
 };
 
 
@@ -186,9 +188,10 @@ export default function ServiciosReu({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+                  disabled={isSubmitting}
           className="text-sm text-white bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
-          Guardar información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

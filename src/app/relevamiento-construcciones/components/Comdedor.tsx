@@ -37,7 +37,7 @@ export default function Comedor({
   const [responses, setResponses] = useState<
     Record<string, EspecificacionesComedor>
   >({});
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleResponseChange = (
     servicioId: string,
     field: "disponibilidad" | "ubicacion",
@@ -96,7 +96,7 @@ export default function Comedor({
         };
       }),
     };
-
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/uso_comedor", {
@@ -117,6 +117,7 @@ export default function Comedor({
     console.error("Error al enviar los datos:", error);
     toast.error(error.message || "Error al guardar los datos");
   }
+  setIsSubmitting(false);
 };
 
 
@@ -226,9 +227,12 @@ export default function Comedor({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+                            disabled={isSubmitting}
+
           className="bg-custom hover:bg-custom/50 text-sm text-white font-bold p-2 rounded-lg"
         >
-          Guardar Información
+                    {isSubmitting ? "Guardando..." : "Guardar información"}
+
         </button>
       </div>
     </div>
