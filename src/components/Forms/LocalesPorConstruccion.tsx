@@ -35,6 +35,8 @@ export default function LocalesPorConstruccion() {
     Record<number, LocalesConstruccion>
   >({});
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -157,51 +159,53 @@ export default function LocalesPorConstruccion() {
   };
 
   const handleSubmit = async () => {
-  try {
-    // Solo locales del tab activo
-    const locales = localesPorConstruccion[activeIndex] || [];
+    if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+    try {
+      // Solo locales del tab activo
+      const locales = localesPorConstruccion[activeIndex] || [];
 
-    // Validación: impedir enviar si no hay locales
-    if (locales.length === 0) {
-      toast.warning("Debe agregar al menos un local antes de guardar.");
-      return;
+      // Validación: impedir enviar si no hay locales
+      if (locales.length === 0) {
+        toast.warning("Debe agregar al menos un local antes de guardar.");
+        return;
+      }
+
+      const numeroConstruccion = activeIndex + 1;
+
+      // 1. Crear construcción
+      const construccion = await localesService.postConstrucciones({
+        numero_construccion: numeroConstruccion,
+        relevamiento_id: relevamientoId,
+        superficie_cubierta:
+          superficiesPorConstruccion[activeIndex]?.cubierta || 0,
+        superficie_semicubierta:
+          superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
+        superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
+      });
+
+      // 2. Prepara locales para enviar
+      const localesConConstruccionId = locales.map((local) => ({
+        ...local,
+        construccion_id: construccion.construccion_id,
+        local_id: local.local_id,
+        tipo_superficie: local.tipo_superficie,
+        cui_number: cuiNumber,
+        local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
+        relevamiento_id: relevamientoId,
+        numero_construccion: numeroConstruccion, // ✅ esto es lo que faltaba
+      }));
+
+      await localesService.postLocales(localesConConstruccionId);
+
+      toast.success("Construcción y locales guardados correctamente");
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      toast.error("Hubo un error al guardar los datos");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const numeroConstruccion = activeIndex + 1;
-
-
-    // 1. Crear construcción
-    const construccion = await localesService.postConstrucciones({
-      numero_construccion: numeroConstruccion,
-      relevamiento_id: relevamientoId,
-      superficie_cubierta:
-        superficiesPorConstruccion[activeIndex]?.cubierta || 0,
-      superficie_semicubierta:
-        superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
-      superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
-    });
-
-    // 2. Prepara locales para enviar
-    const localesConConstruccionId = locales.map((local) => ({
-      ...local,
-      construccion_id: construccion.construccion_id,
-      local_id: local.local_id,
-      tipo_superficie: local.tipo_superficie,
-      cui_number: cuiNumber,
-      local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
-      relevamiento_id: relevamientoId,
-      numero_construccion: numeroConstruccion, // ✅ esto es lo que faltaba
-    }));
-
-    await localesService.postLocales(localesConConstruccionId);
-
-    toast.success("Construcción y locales guardados correctamente");
-  } catch (error) {
-    console.error("Error al guardar:", error);
-    toast.error("Hubo un error al guardar los datos");
-  }
-};
-
+  };
 
   const handleEliminarLocal = (
     construccionIndex: number,
@@ -440,9 +444,14 @@ export default function LocalesPorConstruccion() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
+            disabled={isSubmitting}
+            className={`bg-green-600 text-white px-6 py-2 rounded-lg ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-green-800"
+            }`}
           >
-            Guardar locales por construcción
+            {isSubmitting ? "Guardando..." : "Guardar locales por construcción"}
           </button>
         </div>
       </div>

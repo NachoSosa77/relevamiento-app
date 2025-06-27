@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ServicioBasicoComponent from "./ServicioBasicoComponent";
 
@@ -16,35 +16,67 @@ interface ServicioBasicoData {
   tipo_almacenamiento: string[];
   tipo_almacenamiento_estado: string[];
   alcance: string[];
-  tratamiento?: string;
-  tipo_tratamiento?: string;
-  control_sanitario?: string;
-  cantidad_veces?: string;
+  tratamiento: string;
+  tipo_tratamiento: string;
+  control_sanitario: string;
+  cantidad_veces: string;
 }
 
 export default function AguaFormComponent({ relevamientoId, construccionId }: AguaFormComponentProps) {
   const [servicioBasico, setServicioBasico] = useState<ServicioBasicoData>({
-  tipo_provision: [],
-  tipo_provision_estado: [],
-  tipo_almacenamiento: [],
-  tipo_almacenamiento_estado: [],
-  alcance: [],
-  tratamiento: "",
-  tipo_tratamiento: "",
-  control_sanitario: "",
-  cantidad_veces: "",
-});
+    tipo_provision: [],
+    tipo_provision_estado: [],
+    tipo_almacenamiento: [],
+    tipo_almacenamiento_estado: [],
+    alcance: [],
+    tratamiento: "",
+    tipo_tratamiento: "",
+    control_sanitario: "",
+    cantidad_veces: "",
+  });
   const [loading, setLoading] = useState(false);
+  const [editando, setEditando] = useState(false);
+
+  const fetchServicioBasico = useCallback(async () => {
+    if (!relevamientoId || !construccionId) return;
+    try {
+      const res = await fetch(`/api/servicio_agua?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          setEditando(true);
+          setServicioBasico({
+            tipo_provision: JSON.parse(data.tipo_provision || "[]"),
+            tipo_provision_estado: JSON.parse(data.tipo_provision_estado || "[]"),
+            tipo_almacenamiento: JSON.parse(data.tipo_almacenamiento || "[]"),
+            tipo_almacenamiento_estado: JSON.parse(data.tipo_almacenamiento_estado || "[]"),
+            alcance: JSON.parse(data.alcance || "[]"),
+            tratamiento: data.tratamiento || "",
+            tipo_tratamiento: data.tipo_tratamiento || "",
+            control_sanitario: data.control_sanitario || "",
+            cantidad_veces: data.cantidad_veces || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar servicio de agua:", error);
+      toast.error("Error al cargar los datos de servicio de agua");
+    }
+  }, [relevamientoId, construccionId]);
+
+  useEffect(() => {
+    fetchServicioBasico();
+  }, [fetchServicioBasico]);
 
   const handleSubmit = async () => {
     if (!relevamientoId) {
-    toast.error("Falta el ID del relevamiento.");
-    return;
-  }
+      toast.error("Falta el ID del relevamiento.");
+      return;
+    }
     const hasData =
       servicioBasico.tipo_provision.length > 0 ||
       servicioBasico.tipo_almacenamiento.length > 0 ||
-      servicioBasico.alcance.length > 0 
+      servicioBasico.alcance.length > 0;
 
     if (!hasData) {
       toast.warning("Por favor, completá al menos un campo antes de guardar.");
@@ -56,10 +88,11 @@ export default function AguaFormComponent({ relevamientoId, construccionId }: Ag
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
     };
-setLoading(true);
+
+    setLoading(true);
     try {
       const response = await fetch("/api/servicio_agua", {
-        method: "POST",
+        method: editando ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -72,39 +105,44 @@ setLoading(true);
         throw new Error(result.error || "Error al guardar los datos");
       }
 
-      toast.success("Servicio de agua guardado correctamente");
+      toast.success(editando ? "Datos actualizados correctamente" : "Servicio de agua guardado correctamente");
     } catch (error: any) {
       console.error("Error al enviar datos:", error);
       toast.error(error.message || "Error al guardar los datos");
-    }finally {
-    setLoading(false);
-  }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
-            <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
+      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
         <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
           <p>3</p>
         </div>
         <div className="h-6 flex items-center justify-center">
-          <p className="px-2 text-sm font-bold">
-            AGUA
-          </p>
+          <p className="px-2 text-sm font-bold">AGUA</p>
         </div>
       </div>
 
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
+
       <ServicioBasicoComponent
-        onChange={(data) => setServicioBasico(data)}
-      />
+  value={servicioBasico}
+  onChange={(data) => setServicioBasico(data)}
+/>
 
       <div className="flex justify-end mt-4">
         <button
-        disabled={loading}
+          disabled={loading}
           onClick={handleSubmit}
           className="bg-custom hover:bg-custom/50 text-white font-bold p-2 rounded-lg"
         >
-          {loading ? "Guardando..." : "Guardar información"}
+          {loading ? "Guardando..." : editando ? "Actualizar información" : "Guardar información"}
         </button>
       </div>
     </div>

@@ -18,6 +18,7 @@ export default function VisitasComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisita, setEditingVisita] = useState<Visita | null>(null); // Guardamos la visita que estamos editando
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const relevamientoId = useRelevamientoId();
   
 
@@ -96,6 +97,9 @@ export default function VisitasComponent() {
 
   // Función para enviar todas las visitas a la base de datos
   const enviarVisitasABaseDeDatos = async () => {
+        if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+
     if (!visitas || visitas.length === 0 || !relevamientoId) {
       toast.error("❌ No hay visitas o relevamiento ID no disponible.");
       return;
@@ -139,6 +143,8 @@ export default function VisitasComponent() {
     } catch (error) {
       console.error("❌ Error al enviar visitas:", error);
       toast.error("❌ Error al enviar las visitas a la base de datos");
+    }finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -221,7 +227,7 @@ export default function VisitasComponent() {
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
             disabled={!visitas.length}
           >
-            Guardar Información
+              {isSubmitting ? "Guardando..." : "Guardar información"}
           </button>
         </div>
       </div>

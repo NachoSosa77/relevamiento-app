@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { antiguedadDestinoOpciones } from "../config/antiguedadDestinoOpciones";
 
@@ -13,10 +12,34 @@ interface Props {
 export default function AntiguedadComponent({ construccionId }: Props) {
   const [antiguedad, setAntiguedad] = useState({ ano: "", destino: "" });
   const [loading, setLoading] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [construccionEnviada, setConstruccionEnviada] = useState<{
     antiguedad: string;
     destino: string;
   } | null>(null);
+
+  // Precarga si hay datos guardados
+  useEffect(() => {
+    const fetchAntiguedad = async () => {
+      if (!construccionId) return;
+      try {
+        const res = await axios.get(`/api/construcciones/${construccionId}`);
+        const data = res.data;
+
+        if (data.antiguedad || data.destino) {
+          setAntiguedad({
+            ano: data.antiguedad || "",
+            destino: data.destino || "",
+          });
+          setEditando(true);
+        }
+      } catch (error) {
+        console.error("Error al cargar antigüedad:", error);
+      }
+    };
+
+    fetchAntiguedad();
+  }, [construccionId]);
 
   const handleGuardarCambios = async () => {
     if (!antiguedad.ano.trim() || !antiguedad.destino) {
@@ -34,9 +57,13 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
       await axios.patch(`/api/construcciones/${construccionId}`, payload);
 
-      toast.success("Datos de antigüedad y destino actualizados correctamente");
+      toast.success(
+        editando
+          ? "Datos actualizados correctamente"
+          : "Datos guardados correctamente"
+      );
       setConstruccionEnviada(payload);
-      setAntiguedad({ ano: "", destino: "" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error al guardar los datos:", error);
       toast.error(
@@ -57,10 +84,16 @@ export default function AntiguedadComponent({ construccionId }: Props) {
         </div>
         <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">
-            ANTIGUEDAD Y DESTINO ORIGINAL DE LA CONSTRUCCIÓN
+            ANTIGÜEDAD Y DESTINO ORIGINAL DE LA CONSTRUCCIÓN
           </p>
         </div>
       </div>
+
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <form onSubmit={(e) => e.preventDefault()}>
@@ -89,7 +122,9 @@ export default function AntiguedadComponent({ construccionId }: Props) {
             <div>
               <Select
                 label=""
-                value={antiguedad.destino}
+                value={antiguedadDestinoOpciones.find(
+                  (opt) => opt.name === antiguedad.destino
+                )?.id.toString() || ""}
                 options={antiguedadDestinoOpciones.map((option) => ({
                   value: option.id,
                   label: option.name,
@@ -139,11 +174,13 @@ export default function AntiguedadComponent({ construccionId }: Props) {
         <button
           onClick={handleGuardarCambios}
           className={`text-sm font-bold p-2 rounded-lg flex-nowrap ${
-            loading ? "bg-custom cursor-not-allowed" : "text-white bg-custom hover:bg-custom/50"
+            loading
+              ? "bg-custom cursor-not-allowed"
+              : "text-white bg-custom hover:bg-custom/50"
           }`}
           disabled={loading}
         >
-          {loading ? "Guardando..." : "Guardar Información"}
+          {loading ? "Guardando..." : editando ? "Actualizar Información" : "Guardar Información"}
         </button>
       </div>
     </div>

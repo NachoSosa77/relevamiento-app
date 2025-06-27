@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -26,9 +27,16 @@ export default function ObservacionesComponent({
 
   const handleSave = async () => {
     if (isSubmitting) return;
+
     setIsSubmitting(true);
-    onSave(observations);
-    setIsSubmitting(false);
+    try {
+      await onSave(observations); // ⬅️ ahora esperamos por si `onSave` devuelve una promesa
+      toast.success("Observaciones guardadas correctamente");
+    } catch (error) {
+      toast.error("Error al guardar observaciones");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,9 +55,9 @@ export default function ObservacionesComponent({
           <button
             className="px-4 py-2 bg-custom text-sm text-white rounded-md hover:bg-custom/50 font-bold disabled:opacity-50"
             onClick={handleSave}
-            disabled={!observations.trim()}
+            disabled={!observations.trim() || isSubmitting}
           >
-            Guardar
+            {isSubmitting ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>

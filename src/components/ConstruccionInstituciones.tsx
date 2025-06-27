@@ -55,8 +55,12 @@ const ConstruccionInstituciones: React.FC<ConstruccionInstitucionesProps> = ({
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleGuardar = async () => {
+        if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+
   if (!construccionId || !relevamientoId) return;
   setLoading(true);
   try {
@@ -76,8 +80,9 @@ const ConstruccionInstituciones: React.FC<ConstruccionInstitucionesProps> = ({
     }
   } catch (e) {
     toast.warn("Error de red guardando asociaciones");
-  }
-  setLoading(false);
+  }finally {
+      setIsSubmitting(false);
+    }
 };
 
   return (

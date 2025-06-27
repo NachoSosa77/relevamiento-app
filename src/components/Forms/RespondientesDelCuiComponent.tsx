@@ -16,6 +16,7 @@ import ReusableForm from "./ReusableForm";
 export default function RespondientesDelCuiComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const relevamientoId = useRelevamientoId();
 
@@ -51,6 +52,9 @@ export default function RespondientesDelCuiComponent() {
   };
 
   const enviarRespondientesABaseDeDatos = async () => {
+    if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+
     if (!respondientes.length || !relevamientoId) {
       toast.error("❌ No hay respondientes o Relevamiento ID no disponible.");
       return;
@@ -75,6 +79,8 @@ export default function RespondientesDelCuiComponent() {
       }
     } catch (error) {
       toast.error("❌ Error al enviar los respondientes a la base de datos");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -145,7 +151,7 @@ export default function RespondientesDelCuiComponent() {
                 : "bg-green-600 hover:bg-green-700"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
           >
-            Guardar información
+            {isSubmitting ? "Guardando..." : "Guardar información"}
           </button>
         </div>
       </div>

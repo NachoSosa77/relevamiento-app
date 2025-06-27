@@ -67,7 +67,7 @@ export default function RelevamientoConstruccionesPage() {
     relevadas.length === selectedInstitutions.length;
 
   const relevamientoId = useRelevamientoId();
-
+  
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
   useEffect(() => { }, [serviciosDeAguaEnRedux]);
 

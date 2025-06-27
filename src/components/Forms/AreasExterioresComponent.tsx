@@ -34,6 +34,7 @@ export default function AreasExterioresComponent() {
     (state) => state.espacio_escolar.areasExteriores
   ); // Datos desde Redux
   const dispatch = useAppDispatch();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -100,6 +101,9 @@ export default function AreasExterioresComponent() {
   };
 
   const handleGuardarDatos = async () => {
+    if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+
     if (!cui_number) {
       console.error("No hay CUI definido.");
       toast.error("No se puede guardar: CUI no definido");
@@ -116,13 +120,14 @@ export default function AreasExterioresComponent() {
         relevamiento_id: relevamientoId,
       }));
 
-
       await areasExterioresService.postAreasExteriores(payload);
 
       toast.success("Datos guardados correctamente");
     } catch (error) {
       console.error("Error al guardar los datos en la base:", error);
       toast.error("Error al guardar los datos. Intentá nuevamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -227,8 +232,10 @@ export default function AreasExterioresComponent() {
               type="button"
               className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
               onClick={handleGuardarDatos}
+                          disabled={isSubmitting}
+
             >
-              Guardar áreas exteriores
+              {isSubmitting ? "Guardando..." : "Guardar áreas exteriores"}
             </button>
           </div>
         )}

@@ -3,6 +3,41 @@
 import { getConnection } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const connection = await getConnection();
+
+    // Obtenemos la construcción por id
+    const [rows] = await connection.query(
+      "SELECT * FROM construcciones WHERE id = ? LIMIT 1",
+      [id]
+    );
+    connection.release();
+
+    const construccion =
+      Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+
+    if (!construccion) {
+      return NextResponse.json(
+        { message: "Construcción no encontrada" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(construccion, { status: 200 });
+  } catch (err: any) {
+    console.error("Error al obtener la construcción:", err);
+    return NextResponse.json(
+      { message: "Error en el servidor", error: err.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
