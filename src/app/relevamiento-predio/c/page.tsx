@@ -58,6 +58,7 @@ export default function RelevamientoCPage() {
   const [mostrarObras, setMostrarObras] = useState(false); // Estado elevado
   const [showFormFuera, setShowFormFuera] = useState(false);
   const [mostrarFuera, setMostrarFuera] = useState(false); // Nuevo estado para ObrasFueraDelPredio
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dispatch = useAppDispatch();
 
@@ -123,6 +124,7 @@ export default function RelevamientoCPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setIsSubmitting(true);
 
     const payload = {
       relevamiento_id: relevamientoId,
@@ -152,6 +154,8 @@ export default function RelevamientoCPage() {
     } catch (error) {
       console.error("Error al enviar:", error);
       toast.error("Error al enviar");
+    } finally {
+      setIsSubmitting(false);
     }
 
     setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" });
@@ -288,14 +292,14 @@ export default function RelevamientoCPage() {
             <div className="flex justify-end pt-4">
               <button
                 type="submit"
-                disabled={!selectedJuicio?.length}
+                disabled={!selectedJuicio?.length || isSubmitting}
                 className={`${
-                  !selectedJuicio?.length
+                  !selectedJuicio?.length || isSubmitting
                     ? "bg-gray-400"
                     : "bg-green-600 hover:bg-green-700"
                 } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
               >
-                Cargar Información
+                {isSubmitting ? "Guardando..." : "Cargar Información"}
               </button>
             </div>
           </form>
