@@ -23,7 +23,7 @@ const EstablecimientosComponent: React.FC = () => {
   const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
 
   const dispatch = useAppDispatch();
-  
+
   // Cargar instituciones desde localStorage si el CUI coincide
   const {
     instituciones,
@@ -75,47 +75,47 @@ const EstablecimientosComponent: React.FC = () => {
   }, [selectedInstitutionId]); */
 
   const handleSave = async () => {
-  if (loading) return; // Evita clics múltiples
+    if (loading) return; // Evita clics múltiples
 
-  if (selectedInstitutionId && selectedCui) {
-    const yaExiste = instituciones.some(
-      (inst) => inst.id === selectedInstitutionId
-    );
-    if (yaExiste) {
-      toast.info("La institución ya fue agregada.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
-      if (!response.ok) throw new Error("No se pudo obtener la institución.");
-
-      const data: InstitucionesData = await response.json();
-
-      const nuevasInstituciones = [...instituciones, data];
-      setInstituciones(nuevasInstituciones);
-      dispatch(setInstitucionesData(nuevasInstituciones));
-      localStorage.setItem(
-        "institucionesSeleccionadas",
-        JSON.stringify({
-          cui: selectedCui,
-          instituciones: nuevasInstituciones,
-        })
+    if (selectedInstitutionId && selectedCui) {
+      const yaExiste = instituciones.some(
+        (inst) => inst.id === selectedInstitutionId
       );
+      if (yaExiste) {
+        toast.info("La institución ya fue agregada.");
+        return;
+      }
 
-      toast.success("¡Institución agregada exitosamente!");
-      closeModal();
-    } catch (error) {
-      console.error("Error al guardar la institución:", error);
-      toast.error("Ocurrió un error al guardar.");
-    } finally {
-      setLoading(false);
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+        if (!response.ok) throw new Error("No se pudo obtener la institución.");
+
+        const data: InstitucionesData = await response.json();
+
+        const nuevasInstituciones = [...instituciones, data];
+        setInstituciones(nuevasInstituciones);
+        dispatch(setInstitucionesData(nuevasInstituciones));
+        localStorage.setItem(
+          "institucionesSeleccionadas",
+          JSON.stringify({
+            cui: selectedCui,
+            instituciones: nuevasInstituciones,
+          })
+        );
+
+        toast.success("¡Institución agregada exitosamente!");
+        closeModal();
+      } catch (error) {
+        console.error("Error al guardar la institución:", error);
+        toast.error("Ocurrió un error al guardar.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast.error("Por favor, selecciona una institución.");
     }
-  } else {
-    toast.error("Por favor, selecciona una institución.");
-  }
-};
+  };
 
 
   const openModal = () => setModalIsOpen(true);
@@ -217,16 +217,15 @@ const EstablecimientosComponent: React.FC = () => {
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button
-  className={`font-bold py-2 px-4 rounded-full transition duration-300 ${
-    loading
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-custom hover:bg-custom/50 text-white"
-  }`}
-  onClick={handleSave}
-  disabled={loading}
->
-  {loading ? "Guardando..." : "Guardar información"}
-</button>
+            className={`font-bold py-2 px-4 rounded-full transition duration-300 ${loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-custom hover:bg-custom/50 text-white"
+              }`}
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? "Guardando..." : "Guardar información"}
+          </button>
           <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
             onClick={closeModal}

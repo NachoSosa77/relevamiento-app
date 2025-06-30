@@ -18,36 +18,70 @@ export async function POST(req: NextRequest) {
     const insertResults = [];
 
     for (const local of body) {
-      const [result] = await connection.query<ResultSetHeader>(
-        `INSERT INTO locales_por_construccion (
-          construccion_id,
-          identificacion_plano,
-          numero_planta,
-          tipo,
-          tipo_superficie,
-          local_id,
-          local_sin_uso,
-          superficie,
-          relevamiento_id,
-          cui_number,
-          numero_construccion
-        ) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?)`,
-        [
-          local.construccion_id,
-          local.identificacion_plano,
-          local.numero_planta,
-          local.tipo,
-          local.tipo_superficie,
-          local.local_id,
-          local.local_sin_uso,
-          local.superficie,
-          local.relevamiento_id, // 👈 nuevo valor insertado
-          local.cui_number,
-          local.numero_construccion,
-        ]
-      );
+      if (local.id) {
+        // UPDATE existente
+        await connection.query<ResultSetHeader>(
+          `UPDATE locales_por_construccion SET 
+        construccion_id = ?, 
+        identificacion_plano = ?, 
+        numero_planta = ?, 
+        tipo = ?, 
+        tipo_superficie = ?, 
+        local_id = ?, 
+        local_sin_uso = ?, 
+        superficie = ?, 
+        relevamiento_id = ?, 
+        cui_number = ?, 
+        numero_construccion = ?
+      WHERE id = ?`,
+          [
+            local.construccion_id,
+            local.identificacion_plano,
+            local.numero_planta,
+            local.tipo,
+            local.tipo_superficie,
+            local.local_id,
+            local.local_sin_uso,
+            local.superficie,
+            local.relevamiento_id,
+            local.cui_number,
+            local.numero_construccion,
+            local.id, // <- WHERE id = ?
+          ]
+        );
+      } else {
+        // INSERT nuevo
+        const [result] = await connection.query<ResultSetHeader>(
+          `INSERT INTO locales_por_construccion (
+        construccion_id,
+        identificacion_plano,
+        numero_planta,
+        tipo,
+        tipo_superficie,
+        local_id,
+        local_sin_uso,
+        superficie,
+        relevamiento_id,
+        cui_number,
+        numero_construccion
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            local.construccion_id,
+            local.identificacion_plano,
+            local.numero_planta,
+            local.tipo,
+            local.tipo_superficie,
+            local.local_id,
+            local.local_sin_uso,
+            local.superficie,
+            local.relevamiento_id,
+            local.cui_number,
+            local.numero_construccion,
+          ]
+        );
 
-      insertResults.push({ id: result.insertId, ...local });
+        insertResults.push({ id: result.insertId, ...local });
+      }
 
       connection.release();
     }

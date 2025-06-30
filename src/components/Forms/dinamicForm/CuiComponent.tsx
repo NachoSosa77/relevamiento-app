@@ -117,7 +117,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
           </p>
         </div>
         <div className="ml-auto flex items-center">
-          <p className="text-sm font-bold mr-4">Ingresa el número de CUI:</p>
+          <p className="text-sm font-bold mr-4">Número de CUI:</p>
           <NumericInput
             subLabel=""
             label=""

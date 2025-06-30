@@ -3,6 +3,7 @@
 
 import { Construccion } from "@/interfaces/Locales";
 import { predioService } from "@/services/Predio/predioService";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { AreaExternaTable } from "./AreaExternaTable";
@@ -22,8 +23,14 @@ interface Predio {
 }
 
 export const PredioDetalle = ({ relevamientoId }: Props) => {
+  const router = useRouter();
   const [predio, setPredio] = useState<Predio | null>(null);
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
+
+  const handleEditar = (relevamientoId: number) => {
+    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    router.push("/relevamiento-predio"); // o la ruta que uses
+  };
 
   useEffect(() => {
     const fetchPredioYConstrucciones = async () => {
@@ -55,9 +62,17 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
   return (
     <div className="space-y-4">
       <div className="border rounded p-4 bg-gray-50">
-        <h3 className="text-lg font-semibold mb-2">
-          Información general del predio
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold mb-2">
+            Información general del predio
+          </h3>
+          <button
+            onClick={() => handleEditar(relevamientoId)}
+            className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+          >
+            Editar
+          </button>
+        </div>
         <p>
           <strong>Cantidad de construcciones:</strong>{" "}
           {predio.cantidad_construcciones}

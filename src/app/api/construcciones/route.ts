@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         superficie_total,
       ]
     );
-
+    console.log("Construcción creada con id:", result.insertId);
     connection.release();
 
     return NextResponse.json(

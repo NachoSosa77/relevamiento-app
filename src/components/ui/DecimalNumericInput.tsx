@@ -6,6 +6,7 @@ interface InputProps {
   value: number | undefined;
   onChange: (value: number | undefined) => void;
   disabled?: boolean;
+  onBlur?: () => void; // ✅ Agregá esta línea
 }
 
 const DecimalNumericInput: React.FC<InputProps> = ({
@@ -14,6 +15,7 @@ const DecimalNumericInput: React.FC<InputProps> = ({
   value,
   onChange,
   disabled = false,
+  
 }) => {
   const [inputValue, setInputValue] = useState("");
 

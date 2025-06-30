@@ -3,6 +3,7 @@
 "use client";
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
+import TablaRelevamientos from "@/components/Table/TablaRelevamientos";
 import Spinner from "@/components/ui/Spinner";
 import { useUser } from "@/hooks/useUser";
 import { InstitucionesData } from "@/interfaces/Instituciones";
@@ -140,13 +141,6 @@ export default function HomePage() {
         sublabel=""
       />
 
-      <button
-        className="bg-custom hover:bg-custom/75 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-        disabled={!selectedInstitutionId}
-        onClick={fetchRelevamientos} // Función para buscar los relevamientos
-      >
-        Buscar Relevamientos
-      </button>
 
       <button
         className="bg-green-600 hover:bg-green-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
@@ -156,59 +150,9 @@ export default function HomePage() {
         Nuevo Relevamiento
       </button>
 
-      {/* Mostrar los relevamientos encontrados en una tabla */}
-      {relevamientos.length > 0 && (
-        <div className="mt-6 mx-10">
-          <h3 className="font-bold">Relevamientos existentes</h3>
-          <table className="min-w-full bg-white border border-rounded-lg border-gray-300 mt-4 text-sm text-center">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="px-4 py-2 border-b">Fecha</th>
-                <th className="px-4 py-2 border-b">ID Relevamiento</th>
-                <th className="px-4 py-2 border-b">Cui</th>
-                <th className="px-4 py-2 border-b">Usuario</th>
-                <th className="px-4 py-2 border-b">Estado</th>
-                <th className="px-4 py-2 border-b"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {relevamientos.map((relevamiento) => (
-                <tr key={relevamiento.id}>
-                  <th className="px-4 py-2 border-b">
-                    {new Date(relevamiento.created_at).toLocaleDateString(
-                      "es-ES"
-                    )}
-                  </th>
-                  <td className="px-4 py-2 border-b">{relevamiento.id}</td>
-                  <td className="px-4 py-2 border-b">{relevamiento.cui_id}</td>
-                  <td className="px-4 py-2 border-b">
-                    {relevamiento.created_by}
-                  </td>
-                  <td
-                    className={
-                      relevamiento.estado === "completo"
-                        ? "text-green-600 font-semibold"
-                        : "text-red-600 font-semibold"
-                    }
-                  >
-                    {relevamiento.estado === "completo"
-                      ? "Completo"
-                      : "Incompleto"}
-                  </td>
-                  <td className="px-4 py-2 border-b">
-                    <button
-                      className="bg-custom hover:bg-custom/75 text-white rounded-md px-4 py-1 mr-2"
-                      onClick={() => handleView(relevamiento.id)}
-                    >
-                      Ver
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div>
+        <TablaRelevamientos/>
+      </div>
     </div>
   );
 }

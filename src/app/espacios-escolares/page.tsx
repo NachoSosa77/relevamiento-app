@@ -146,8 +146,12 @@ export default function EspaciosEscolaresPage() {
 
   return (
     <div className=" bg-white text-black text-sm mt-28 w-full">
-      <div className="flex justify-end mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-end">
+      <div className="flex justify-between mt-20 mb-8 mx-8">
+        <div className="flex items-center">
+          <h1 className="font-bold">Relevamiento N° {relevamientoId}</h1>
+        </div>
+
+        <div className="flex flex-col items-center">
           <h1 className="font-bold">PLANILLA GENERAL</h1>
           <h4 className="text-sm">DE RELEVAMIENTO PEDAGÓGICO</h4>
         </div>
