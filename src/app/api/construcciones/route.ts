@@ -30,6 +30,23 @@ export async function POST(req: Request) {
 
     const connection = await getConnection();
 
+    // 🔒 Verificación de duplicado
+    const [existing] = await connection.query(
+      `SELECT id FROM construcciones WHERE relevamiento_id = ? AND numero_construccion = ?`,
+      [relevamiento_id, numero_construccion]
+    );
+
+    if ((existing as any[]).length > 0) {
+      connection.release();
+      return NextResponse.json(
+        {
+          message:
+            "Ya existe una construcción con ese número para este relevamiento",
+        },
+        { status: 409 }
+      );
+    }
+
     const [result] = await connection.query<ResultSetHeader>(
       `INSERT INTO construcciones (
         relevamiento_id,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
 import type { ResultSetHeader } from "mysql2";
 import { NextResponse } from "next/server";

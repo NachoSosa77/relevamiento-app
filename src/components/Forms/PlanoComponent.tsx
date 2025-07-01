@@ -10,12 +10,14 @@ import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
 import FileUpload from "../ui/FileUpLoad";
 import NumericInput from "../ui/NumericInput";
+import Spinner from "../ui/Spinner";
 
 export default function PlanoComponent() {
   const [showComponents, setShowComponents] = useState<boolean | null>(null);
   const [siChecked, setSiChecked] = useState(false);
   const [noChecked, setNoChecked] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // 👈 nuevo
 
   const dispatch = useAppDispatch();
   const superficieTotalPredio = useAppSelector(
@@ -73,15 +75,21 @@ export default function PlanoComponent() {
         }
       } catch (error) {
         console.error("Error al cargar datos del plano:", error);
+        setIsLoading(false);
       }
     };
 
     fetchDatosPlano();
+    setIsLoading(false);
   }, [relevamientoId]);
+
+  // 👉 Spinner antes del return principal
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="mx-8 my-6 space-y-6">
       {/* Intro */}
+
       <div className="bg-gray-50 p-2 rounded-2xl border shadow-sm">
         <p className="text-xs text-gray-600">
           En esta planilla se registran datos de todas las construcciones, los
@@ -132,33 +140,57 @@ export default function PlanoComponent() {
       </div>
 
       {/* Paso 2 y 3 */}
-      {showComponents === true ||  editando && (
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
-                2
+      {showComponents === true ||
+        (editando && (
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
+                  2
+                </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  Superficie total del predio
+                </p>
               </div>
-              <p className="text-sm font-semibold text-gray-700">
-                Superficie total del predio
-              </p>
+              <DecimalNumericInput
+                label=""
+                value={superficieTotalPredio}
+                subLabel="m2 O-NS"
+                onChange={handleSuperficieTotalPredioChange}
+                disabled={false}
+              />
             </div>
-            <DecimalNumericInput
-              label=""
-              value={superficieTotalPredio}
-              subLabel="m2 O-NS"
-              onChange={handleSuperficieTotalPredioChange}
-              disabled={false}
-            />
-          </div>
 
-          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+            <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
+                  3
+                </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  Construcciones en el predio
+                </p>
+              </div>
+              <NumericInput
+                label=""
+                value={cantidadConstrucciones}
+                subLabel=""
+                onChange={handleCantidadConstruccionesChange}
+                disabled={false}
+              />
+            </div>
+          </div>
+        ))}
+
+      {/* Solo paso 3 si eligió "NO" */}
+      {showComponents === false ||
+        (editando && (
+          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
                 3
               </div>
               <p className="text-sm font-semibold text-gray-700">
-                Construcciones en el predio
+                Cantidad de construcciones en el predio
               </p>
             </div>
             <NumericInput
@@ -169,29 +201,7 @@ export default function PlanoComponent() {
               disabled={false}
             />
           </div>
-        </div>
-      )}
-
-      {/* Solo paso 3 si eligió "NO" */}
-      {showComponents === false || editando  && (
-        <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
-              3
-            </div>
-            <p className="text-sm font-semibold text-gray-700">
-              Cantidad de construcciones en el predio
-            </p>
-          </div>
-          <NumericInput
-            label=""
-            value={cantidadConstrucciones}
-            subLabel=""
-            onChange={handleCantidadConstruccionesChange}
-            disabled={false}
-          />
-        </div>
-      )}
+        ))}
     </div>
   );
 }

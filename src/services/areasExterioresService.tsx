@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AreasExteriores } from '@/interfaces/AreaExterior';
 import axios from 'axios';
 
@@ -13,29 +14,44 @@ import axios from 'axios';
 }; 
 
 // Obtener un área exterior por relevamientoID
- const getAreasExterioresByRelevamientoId = async (relevamientoId: number) => {
+const getAreasExterioresByRelevamientoId = async (relevamientoId: number) => {
+  if (!relevamientoId || isNaN(relevamientoId)) {
+    console.warn("ID de relevamiento inválido");
+    return [];
+  }
+
   try {
     const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
     return response.data;
   } catch (error) {
-    console.error('Error al obtener el área exterior:', error);
+    console.error("Error al obtener el área exterior:", error);
     throw error;
   }
-}; 
+};
 
 // Crear una nueva área exterior
 const postAreasExteriores = async (data: (AreasExteriores & { cui_number: number })[]) => {
-    const res = await fetch("/api/areas_exteriores", {
+  const res = await fetch("/api/areas_exteriores", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    console.error("Respuesta del servidor:", errorData);
-    throw new Error("Error al guardar las áreas exteriores");
+    // Intento leer el body del error para extraer mensaje y status
+    let errorData;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = { message: "Error desconocido" };
+    }
+
+    const error = new Error(errorData.message || "Error al guardar las áreas exteriores");
+    // Agrego custom property para el status
+    (error as any).status = res.status;
+    throw error;
   }
+
   return res.json();
 };
 
@@ -60,6 +76,10 @@ const getAreasExterioresById = async (relevamientoId: number) => {
   }
 };
 
+async function updateAreaExterior(id: number, data: any) {
+  return axios.patch(`/api/areas_exteriores/${id}`, data).then((res) => res.data);
+}
+
 // Actualizar un área exterior por ID
 /* const updateAreasExteriores = async (id: number, formData: AreasExteriores) => {
   try {
@@ -77,5 +97,6 @@ export const areasExterioresService = {
   getOpcionesAreasExteriores,
   getAreasExteriores,
   getAreasExterioresById,
-  getAreasExterioresByRelevamientoId
+  getAreasExterioresByRelevamientoId,
+  updateAreaExterior
 };

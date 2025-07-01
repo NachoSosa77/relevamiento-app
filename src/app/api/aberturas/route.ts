@@ -22,13 +22,27 @@ export async function POST(req: Request) {
       const { abertura, tipo, estado, cantidad, relevamiento_id, local_id } =
         item;
 
+      if (
+        abertura === undefined ||
+        tipo === undefined ||
+        estado === undefined ||
+        cantidad === undefined ||
+        relevamiento_id === undefined ||
+        local_id === undefined
+      ) {
+        return NextResponse.json(
+          { error: "Faltan campos obligatorios en uno de los elementos" },
+          { status: 400 }
+        );
+      }
+
       await connection.execute(insertQuery, [
-        abertura,
-        tipo,
-        estado,
-        cantidad,
-        relevamiento_id,
-        local_id,
+        abertura ?? null,
+        tipo ?? null,
+        estado ?? null,
+        cantidad ?? null,
+        relevamiento_id ?? null,
+        local_id ?? null,
       ]);
     }
 
@@ -39,7 +53,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error al insertar aberturas:", error);
     return NextResponse.json(
-      { error: "Error al insertar los datos" },
+      { error: "Error al insertar los datos en aberturas" },
       { status: 500 }
     );
   }

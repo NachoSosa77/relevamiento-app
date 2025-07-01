@@ -8,11 +8,7 @@ export async function POST(req: NextRequest) {
 
   const { relevamiento_id, instituciones } = body;
 
-  if (
-    !relevamiento_id ||
-    !Array.isArray(instituciones) ||
-    instituciones.length === 0
-  ) {
+  if (!relevamiento_id || !Array.isArray(instituciones)) {
     return NextResponse.json(
       { message: "Datos faltantes o incorrectos" },
       { status: 400 }
@@ -20,24 +16,51 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    for (const institucion_id of instituciones) {
+    await connection.beginTransaction();
+
+    // Obtener instituciones actuales en BD para el relevamiento
+    const [rows]: any = await connection.query(
+      `SELECT institucion_id FROM instituciones_por_relevamiento WHERE relevamiento_id = ?`,
+      [relevamiento_id]
+    );
+    const actuales = rows.map((r: any) => r.institucion_id);
+
+    // Instituciones a insertar (las nuevas)
+    const aInsertar = instituciones.filter(
+      (id: number) => !actuales.includes(id)
+    );
+
+    // Instituciones a eliminar (ya no están en el array enviado)
+    const aEliminar = actuales.filter(
+      (id: number) => !instituciones.includes(id)
+    );
+
+    // Insertar nuevas relaciones
+    for (const institucion_id of aInsertar) {
       await connection.query(
-        `INSERT INTO instituciones_por_relevamiento (
-          relevamiento_id,
-          institucion_id
-        ) VALUES (?, ?)`,
+        `INSERT INTO instituciones_por_relevamiento (relevamiento_id, institucion_id) VALUES (?, ?)`,
         [relevamiento_id, institucion_id]
       );
     }
 
+    // Eliminar relaciones removidas
+    if (aEliminar.length > 0) {
+      await connection.query(
+        `DELETE FROM instituciones_por_relevamiento WHERE relevamiento_id = ? AND institucion_id IN (?)`,
+        [relevamiento_id, aEliminar]
+      );
+    }
+
+    await connection.commit();
     connection.release();
 
     return NextResponse.json({
-      message: "Instituciones relacionadas correctamente con el relevamiento",
+      message: "Relaciones actualizadas correctamente",
     });
   } catch (error: any) {
-    console.error("Error al relacionar instituciones:", error);
+    await connection.rollback();
     connection.release();
+    console.error("Error al actualizar relaciones:", error);
     return NextResponse.json(
       { message: "Error interno", error: error.message },
       { status: 500 }

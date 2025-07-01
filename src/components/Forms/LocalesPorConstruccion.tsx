@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -10,6 +9,7 @@ import { Tab } from "@headlessui/react";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import EditLocalModal from "../Modals/EditLocalModal";
 import ReusableTable from "../Table/TableReutilizable";
 import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
@@ -17,6 +17,10 @@ import NumericInput from "../ui/NumericInput";
 import Select from "../ui/SelectComponent";
 
 export default function LocalesPorConstruccion() {
+  const [construccionIdEnProceso, setConstruccionIdEnProceso] = useState<
+    Record<number, number | null>
+  >({});
+  
   const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
   const [superficiesPorConstruccion, setSuperficiesPorConstruccion] = useState<
     Record<number, { cubierta: number; semicubierta: number; total: number }>
@@ -41,6 +45,10 @@ export default function LocalesPorConstruccion() {
   >({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [localEnEdicion, setLocalEnEdicion] =
+    useState<LocalesConstruccion | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     localesService.getOpcionesLocales().then(setOpcionesLocales);
@@ -118,32 +126,6 @@ export default function LocalesPorConstruccion() {
     if (relevamientoId) fetchLocalesExistentes();
   }, [relevamientoId]);
 
-  const recalcularSuperficies = (
-    locales: (typeof localesPorConstruccion)[0]
-  ) => {
-    let cubierta = 0;
-    let semicubierta = 0;
-
-    locales.forEach((local) => {
-      if (local.tipo_superficie === "Cubierta") {
-        cubierta += Number(local.superficie) || 0;
-      } else if (local.tipo_superficie === "Semicubierta") {
-        semicubierta += Number(local.superficie) || 0;
-      }
-    });
-
-    const total = cubierta + semicubierta;
-
-    setSuperficiesPorConstruccion(prev => ({
-  ...prev,
-  [activeIndex]: {
-    cubierta,
-    semicubierta,
-    total,
-  },
-}));
-  };
-
   const handleFormChange = (
     construccionIndex: number,
     field: keyof LocalesConstruccion,
@@ -199,29 +181,28 @@ export default function LocalesPorConstruccion() {
   };
 
   const handleSubmit = async () => {
-    console.log("editando:", editando);
-    console.log("construccionesExistentes:", construccionesExistentes);
-    console.log(
-      "construccionesExistentes[activeIndex]:",
-      construccionesExistentes[activeIndex]
-    );
-    console.log("activeIndex:", activeIndex);
-    if (isSubmitting) return;
+    if (isSubmitting || construccionIdEnProceso[activeIndex]) {
+      console.warn("Ya hay un submit en proceso para este tab.");
+      return;
+    }
+
     setIsSubmitting(true);
+    setConstruccionIdEnProceso((prev) => ({
+      ...prev,
+      [activeIndex]: -1, // 👉 lo seteamos apenas empieza el proceso
+    }));
+
     try {
       const locales = localesPorConstruccion[activeIndex] || [];
       if (locales.length === 0) {
         toast.warning("Debe agregar al menos un local.");
-        setIsSubmitting(false);
         return;
       }
 
       const numeroConstruccion = activeIndex + 1;
-
       let construccionId: number | undefined;
 
       if (editando && construccionesExistentes[activeIndex]) {
-        // Actualizo construcción existente
         await localesService.putConstruccion(
           construccionesExistentes[activeIndex],
           {
@@ -237,41 +218,59 @@ export default function LocalesPorConstruccion() {
         );
         construccionId = construccionesExistentes[activeIndex];
       } else {
-        // Creo nueva construcción
-        const construccion = await localesService.postConstrucciones({
-          numero_construccion: numeroConstruccion,
-          relevamiento_id: relevamientoId,
-          superficie_cubierta:
-            superficiesPorConstruccion[activeIndex]?.cubierta || 0,
-          superficie_semicubierta:
-            superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
-          superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
-        });
-        console.log("Construcción creada (frontend):", construccion);
+        try {
+          const construccion = await localesService.postConstrucciones({
+            numero_construccion: numeroConstruccion,
+            relevamiento_id: relevamientoId,
+            superficie_cubierta:
+              superficiesPorConstruccion[activeIndex]?.cubierta || 0,
+            superficie_semicubierta:
+              superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
+            superficie_total:
+              superficiesPorConstruccion[activeIndex]?.total || 0,
+          });
 
-        construccionId = construccion.construccion_id;
+          construccionId = construccion.construccion_id;
 
-        // Actualizo estado local con el nuevo id y marco como editando
-        setConstruccionesExistentes((prev) => ({
-          ...prev,
-          [activeIndex]: construccionId,
-        }));
-        setEditando(true);
+          setConstruccionesExistentes((prev) => ({
+            ...prev,
+            [activeIndex]: construccionId,
+          }));
+          setEditando(true);
+        } catch (err: any) {
+          if (err?.response?.status === 409) {
+            toast.error(
+              "Ya existe una construcción con ese número para este relevamiento."
+            );
+          } else {
+            toast.error("Error al crear la construcción.");
+            console.error("Error inesperado:", err);
+          }
+
+          setIsSubmitting(false);
+          setConstruccionIdEnProceso((prev) => ({
+            ...prev,
+            [activeIndex]: null,
+          }));
+          return; // 👈 cortamos ejecución si falló
+        }
       }
 
       if (!construccionId || !relevamientoId || !cuiNumber) {
         toast.error("Faltan datos obligatorios para guardar los locales.");
-        setIsSubmitting(false);
         return;
       }
 
-      const localesConDatos: (LocalesConstruccion & {
-        construccion_id: number;
-      })[] = locales.map((local) => ({
+      setConstruccionIdEnProceso((prev) => ({
+        ...prev,
+        [activeIndex]: construccionId, // ✅ reemplazamos el -1 con el ID real
+      }));
+
+      const localesConDatos = locales.map((local) => ({
         ...local,
-        construccion_id: construccionId,
+        construccion_id: construccionId!,
         cui_number: cuiNumber,
-        relevamiento_id: relevamientoId,
+        relevamiento_id: relevamientoId!,
         numero_construccion: numeroConstruccion,
         local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
       }));
@@ -287,6 +286,10 @@ export default function LocalesPorConstruccion() {
       console.error("Error al guardar:", error);
       toast.error("Hubo un error al guardar los datos");
     } finally {
+      setConstruccionIdEnProceso((prev) => ({
+        ...prev,
+        [activeIndex]: null,
+      }));
       setIsSubmitting(false);
     }
   };
@@ -306,6 +309,10 @@ export default function LocalesPorConstruccion() {
       };
     });
   };
+
+  const algunaOtraTabEnProceso = Object.entries(construccionIdEnProceso).some(
+    ([idx, val]) => parseInt(idx) !== activeIndex && val === -1
+  );
 
   if (!cantidadConstrucciones) return null;
 
@@ -327,21 +334,27 @@ export default function LocalesPorConstruccion() {
         </div>
         <Tab.Group selectedIndex={activeIndex} onChange={setActiveIndex}>
           <Tab.List className="flex space-x-2 border-b">
-            {Array.from({ length: cantidadConstrucciones }).map((_, idx) => (
-              <Tab
-                key={idx}
-                className={({ selected }) =>
-                  clsx(
-                    "px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-300",
-                    selected
-                      ? "bg-custom text-white shadow font-semibold"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  )
-                }
-              >
-                Construcción {idx + 1}
-              </Tab>
-            ))}
+            {Array.from({ length: cantidadConstrucciones }).map((_, idx) => {
+              const enProceso = construccionIdEnProceso[idx] === -1;
+              return (
+                <Tab
+                  key={idx}
+                  className={({ selected }) =>
+                    clsx(
+                      "relative px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-300",
+                      selected
+                        ? "bg-custom text-white shadow font-semibold"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    )
+                  }
+                >
+                  Construcción {idx + 1}
+                  {enProceso && (
+                    <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                  )}
+                </Tab>
+              );
+            })}
           </Tab.List>
           <Tab.Panels className="bg-white border rounded-b-lg p-4 shadow">
             {Array.from({ length: cantidadConstrucciones }).map((_, idx) => (
@@ -485,232 +498,66 @@ export default function LocalesPorConstruccion() {
 
                     {/* Mostrar tabla de locales */}
                     <ReusableTable
-                      data={localesPorConstruccion[activeIndex] || []}
+                      data={localesPorConstruccion[idx] || []}
                       columns={[
                         {
                           Header: "ID Plano",
                           accessor: "identificacion_plano",
-                          Cell: ({ row }) => (
-                            <input
-                              type="number"
-                              value={
-                                localesPorConstruccion[activeIndex][row.index]
-                                  .identificacion_plano
-                              }
-                              onChange={(e) => {
-                                const newValue =
-                                  parseInt(e.target.value, 10) || 0;
-                                const updatedLocales = [
-                                  ...localesPorConstruccion[activeIndex],
-                                ];
-                                updatedLocales[row.index] = {
-                                  ...updatedLocales[row.index],
-                                  identificacion_plano: newValue,
-                                };
-                                setLocalesPorConstruccion((prev) => ({
-                                  ...prev,
-                                  [activeIndex]: updatedLocales,
-                                }));
-                              }}
-                              className="border p-1 rounded w-full"
-                            />
-                          ),
                         },
-                        {
-                          Header: "N° Planta",
-                          accessor: "numero_planta",
-                          Cell: ({ row }) => (
-                            <input
-                              type="number"
-                              value={
-                                localesPorConstruccion[activeIndex][row.index]
-                                  .numero_planta
-                              }
-                              onChange={(e) => {
-                                const newValue =
-                                  parseInt(e.target.value, 10) || 0;
-                                const updatedLocales = [
-                                  ...localesPorConstruccion[activeIndex],
-                                ];
-                                updatedLocales[row.index] = {
-                                  ...updatedLocales[row.index],
-                                  numero_planta: newValue,
-                                };
-                                setLocalesPorConstruccion((prev) => ({
-                                  ...prev,
-                                  [activeIndex]: updatedLocales,
-                                }));
-                              }}
-                              className="border p-1 rounded w-full"
-                            />
-                          ),
-                        },
+                        { Header: "N° Planta", accessor: "numero_planta" },
                         {
                           Header: "Tipo",
-                          accessor: "local_id",
-                          Cell: ({ row }: { row: any }) => {
-                            const localActual =
-                              localesPorConstruccion[activeIndex][row.index];
-
-                            return (
-                              <Select
-                                label=""
-                                value={
-                                  localActual.local_id
-                                    ? localActual.local_id.toString()
-                                    : ""
-                                }
-                                options={opcionesLocales.map((local) => ({
-                                  value: local.id.toString(),
-                                  label: `${local.id} - ${local.name}`,
-                                }))}
-                                onChange={(e) => {
-                                  const selectedId = parseInt(
-                                    e.target.value,
-                                    10
-                                  );
-                                  const selected = opcionesLocales.find(
-                                    (l) => l.id === selectedId
-                                  );
-                                  if (selected) {
-                                    const updatedLocales = [
-                                      ...localesPorConstruccion[activeIndex],
-                                    ];
-                                    updatedLocales[row.index] = {
-                                      ...updatedLocales[row.index],
-                                      local_id: selected.id,
-                                      tipo: selected.name,
-                                      nombre_local: selected.name,
-                                    };
-                                    setLocalesPorConstruccion((prev) => ({
-                                      ...prev,
-                                      [activeIndex]: updatedLocales,
-                                    }));
-                                  }
-                                }}
-                              />
-                            );
-                          },
-                        },
-
-                        {
-                          Header: "Sin uso",
-                          accessor: "local_sin_uso",
+                          accessor: "tipo",
                           Cell: ({ row }) => {
                             const local =
                               localesPorConstruccion[activeIndex][row.index];
                             return (
-                              <input
-                                type="checkbox"
-                                checked={local.local_sin_uso === "Si"}
-                                onChange={(e) => {
-                                  const updatedLocales = [
-                                    ...localesPorConstruccion[activeIndex],
-                                  ];
-                                  updatedLocales[row.index] = {
-                                    ...updatedLocales[row.index],
-                                    local_sin_uso: e.target.checked
-                                      ? "Si"
-                                      : "No",
-                                  };
-                                  setLocalesPorConstruccion((prev) => ({
-                                    ...prev,
-                                    [activeIndex]: updatedLocales,
-                                  }));
-                                }}
-                              />
+                              <span>{local.nombre_local ?? local.tipo}</span>
                             );
                           },
                         },
                         {
-                          Header: "Superficie",
-                          accessor: "superficie",
-                          Cell: ({ row }: { row: any }) => {
-                            const [tempValue, setTempValue] = useState<
-                              number | undefined
-                            >(
-                              localesPorConstruccion[activeIndex][row.index]
-                                ?.superficie
-                            );
-
-                            useEffect(() => {
-                              setTempValue(
-                                localesPorConstruccion[activeIndex][row.index]
-                                  ?.superficie
-                              );
-                            }, [
-                              localesPorConstruccion,
-                              activeIndex,
-                              row.index,
-                            ]);
-
-                            return (
-                              <DecimalNumericInput
-                                value={tempValue}
-                                onChange={(newValue) => {
-                                  setTempValue(newValue); // Solo se actualiza el input local
-                                }}
-                                onBlur={() => {
-                                  const updatedLocales = [
-                                    ...localesPorConstruccion[activeIndex],
-                                  ];
-                                  updatedLocales[row.index] = {
-                                    ...updatedLocales[row.index],
-                                    superficie: tempValue ?? 0,
-                                  };
-                                  setLocalesPorConstruccion((prev) => ({
-                                    ...prev,
-                                    [activeIndex]: updatedLocales,
-                                  }));
-
-                                  recalcularSuperficies(updatedLocales);
-                                }}
-                              />
-                            );
-                          },
+                          Header: "Sin uso",
+                          accessor: "local_sin_uso",
+                          Cell: ({ value }) => (
+                            <span>
+                              {value === true || value === "Si" ? "Sí" : "No"}
+                            </span>
+                          ),
                         },
+                        { Header: "Superficie", accessor: "superficie" },
                         {
                           Header: "Tipo superficie",
                           accessor: "tipo_superficie",
-                          Cell: ({ row }) => (
-                            <select
-                              value={
-                                localesPorConstruccion[activeIndex][row.index]
-                                  .tipo_superficie
-                              }
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                const updatedLocales = [
-                                  ...localesPorConstruccion[activeIndex],
-                                ];
-                                updatedLocales[row.index] = {
-                                  ...updatedLocales[row.index],
-                                  tipo_superficie: newValue,
-                                };
-                                setLocalesPorConstruccion((prev) => ({
-                                  ...prev,
-                                  [activeIndex]: updatedLocales,
-                                }));
-                              }}
-                              className="border p-1 rounded w-full"
-                            >
-                              <option value="Cubierta">Cubierta</option>
-                              <option value="Semicubierta">Semicubierta</option>
-                            </select>
-                          ),
                         },
                         {
                           Header: "Acciones",
                           accessor: "acciones",
-                          Cell: ({ row }) => (
-                            <button
-                              onClick={() =>
-                                handleEliminarLocal(activeIndex, row.index)
-                              }
-                              className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition duration-300"
-                            >
-                              Eliminar
-                            </button>
+                          Cell: ({ row }: { row: any }) => (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  handleEliminarLocal(activeIndex, row.index)
+                                }
+                                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                              >
+                                Eliminar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const local =
+                                    localesPorConstruccion[activeIndex][
+                                      row.index
+                                    ];
+                                  setLocalEnEdicion(local);
+                                  setEditingIndex(row.index);
+                                  setModalOpen(true);
+                                }}
+                                className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                              >
+                                Editar
+                              </button>
+                            </div>
                           ),
                         },
                       ]}
@@ -722,20 +569,40 @@ export default function LocalesPorConstruccion() {
           </Tab.Panels>
         </Tab.Group>
 
+        {localEnEdicion && (
+          <EditLocalModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            local={localEnEdicion}
+            opcionesLocales={opcionesLocales}
+            onSave={(updated) => {
+              const nuevos = [...localesPorConstruccion[activeIndex]];
+              if (editingIndex !== null) {
+                nuevos[editingIndex] = updated;
+                setLocalesPorConstruccion((prev) => ({
+                  ...prev,
+                  [activeIndex]: nuevos,
+                }));
+              }
+            }}
+          />
+        )}
+
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting}
-            className={`bg-green-600 text-white px-6 py-2 rounded-lg ${
-              isSubmitting
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-green-800"
-            }`}
+            disabled={isSubmitting || algunaOtraTabEnProceso}
+            className={clsx(
+              "px-6 py-2 rounded-lg text-white",
+              isSubmitting || algunaOtraTabEnProceso
+                ? "bg-green-400 cursor-not-allowed opacity-60"
+                : "bg-green-600 hover:bg-green-800"
+            )}
           >
             {isSubmitting
-              ? editando
-                ? "Actualizando..."
-                : "Guardando..."
+              ? "Guardando..."
+              : algunaOtraTabEnProceso
+              ? "Espere, hay otra pestaña guardando..."
               : editando
               ? "Actualizar locales por construcción"
               : "Guardar locales por construcción"}

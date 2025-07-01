@@ -29,6 +29,23 @@ export async function POST(req: NextRequest) {
     const insertResults = [];
 
     for (const area of body) {
+      // Validar duplicado
+      const [existingAreas] = await connection.query<AreaExterior[]>(
+        `SELECT * FROM areas_exteriores WHERE relevamiento_id = ? AND identificacion_plano = ?`,
+        [area.relevamiento_id, area.identificacion_plano]
+      );
+
+      if (existingAreas.length > 0) {
+        connection.release();
+        return NextResponse.json(
+          {
+            message: `Ya existe un área con identificación "${area.identificacion_plano}" para este relevamiento.`,
+          },
+          { status: 409 }
+        );
+      }
+
+      // Si no existe, insertar
       const [result] = await connection.query<ResultSetHeader>(
         `INSERT INTO areas_exteriores (cui_number, relevamiento_id, identificacion_plano, tipo, superficie) VALUES (?, ?, ?, ?, ?)`,
         [

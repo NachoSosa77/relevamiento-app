@@ -137,11 +137,10 @@ export default function EspaciosEscolaresPage() {
   }
 
   if (!selectedInstitution) {
-    return         <div className=" flex items-center justify-center">
-          <Spinner />
-          Cargando instituciones...
-        </div>
-;
+    return <div className="flex items-center justify-center">
+      <Spinner />
+    </div>
+      ;
   }
 
   return (
@@ -168,7 +167,7 @@ export default function EspaciosEscolaresPage() {
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
         isReadOnly={true}
         initialCui={selectedInstitution.cui}
-        onCuiInputChange={() => {}}
+        onCuiInputChange={() => { }}
         sublabel=""
         institucionActualId={selectedInstitutionId}
       />
