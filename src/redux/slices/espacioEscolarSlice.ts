@@ -110,12 +110,14 @@ const espacioEscolarSlice = createSlice({
         state.visitas[index] = action.payload; // Actualizamos la visita en el estado
       }
     },
-
     // Acción para eliminar una visita
     eliminarVisita(state, action: PayloadAction<number>) {
       state.visitas = state.visitas.filter(
         (visita) => visita.numero_visita !== action.payload
       );
+    },
+    setVisitas(state, action: PayloadAction<Visita[]>) {
+      state.visitas = action.payload;
     },
     agregarRespondiente(state, action: PayloadAction<Respondiente>) {
       state.respondientes = [...state.respondientes, action.payload]; // Utilizando el spread operator
@@ -124,6 +126,9 @@ const espacioEscolarSlice = createSlice({
       state.respondientes = state.respondientes.filter(
         (_, index) => index !== action.payload
       ); // Filtramos el respondiente a eliminar
+    },
+    setRespondientes(state, action: PayloadAction<Respondiente[]>) {
+      state.respondientes = action.payload;
     },
   },
 });
@@ -146,9 +151,11 @@ export const {
   agregarVisita,
   actualizarVisita,
   eliminarVisita,
+  setVisitas,
   agregarRespondiente,
   eliminarRespondiente,
   resetInstituciones,
+  setRespondientes,
 } = espacioEscolarSlice.actions;
 
 export default espacioEscolarSlice.reducer;

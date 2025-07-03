@@ -14,7 +14,7 @@ export default function InstalacionesBasicasComponent({
 );
 
   if (loading)
-    return <div className="text-sm text-gray-500">Cargando acondicionamiento térmico...</div>;
+    return <div className="text-sm text-gray-500">Cargando instalaciones básicas...</div>;
 
   if (condiciones.length === 0) return <div>No hay información cargada.</div>;
 

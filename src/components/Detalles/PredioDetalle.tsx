@@ -6,6 +6,7 @@ import { predioService } from "@/services/Predio/predioService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Spinner from "../ui/Spinner";
 import { AreaExternaTable } from "./AreaExternaTable";
 import { ConstruccionDetalleAccordion } from "./ConstruccionDetalleAcordion";
 import ObservacionesDetailComponent from "./ObservacionesDetailComponent";
@@ -24,12 +25,13 @@ interface Predio {
 
 export const PredioDetalle = ({ relevamientoId }: Props) => {
   const router = useRouter();
-  const [predio, setPredio] = useState<Predio | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [predio, setPredio] = useState<Predio>();
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
 
-  const handleEditar = (relevamientoId: number) => {
+  const handleEditar = () => {
     sessionStorage.setItem("relevamientoId", String(relevamientoId));
-    router.push("/relevamiento-predio"); // o la ruta que uses
+    router.push("/espacios-escolares"); // o la ruta que uses
   };
 
   useEffect(() => {
@@ -51,13 +53,21 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
         setConstrucciones(construccionesData || []);
       } catch (err) {
         toast.error("Error al cargar los datos del predio o construcciones");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPredioYConstrucciones();
   }, [relevamientoId]);
 
-  if (!predio) return <div>No se encontró información del predio.</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -67,7 +77,7 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
             Información general del predio
           </h3>
           <button
-            onClick={() => handleEditar(relevamientoId)}
+            onClick={handleEditar}
             className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
           >
             Editar
@@ -75,17 +85,13 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
         </div>
         <p>
           <strong>Cantidad de construcciones:</strong>{" "}
-          {predio.cantidad_construcciones}
+          {predio?.cantidad_construcciones}
         </p>
         <p>
-          <strong>Superficie total:</strong> {predio.superficie_total_predio} m²
+          <strong>Superficie total:</strong> {predio?.superficie_total_predio}{" "}
+          m²
         </p>
-        {predio.plano && (
-          <p>
-            <strong>Plano:</strong> {predio.plano}
-          </p>
-        )}
-        {predio.observaciones && (
+        {predio?.observaciones && (
           <ObservacionesDetailComponent observaciones={predio.observaciones} />
         )}
       </div>
@@ -93,7 +99,7 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
         <AreaExternaTable relevamientoId={relevamientoId} />
       </div>
 
-      {predio.cantidad_construcciones > 0 && (
+      {(predio?.cantidad_construcciones ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-md font-semibold">Construcciones relevadas</h3>
           {construcciones.length > 0 && (
@@ -101,14 +107,13 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
               {construcciones.map((construccion, index) => (
                 <ConstruccionDetalleAccordion
                   key={construccion.id}
-                  construccion={construccion} // Podés pasarle la construcción entera si querés: construccion={construccion}
+                  construccion={construccion}
                 />
               ))}
             </div>
           )}
         </div>
       )}
-
       <ServiciosBasicosTable relevamientoId={relevamientoId} />
     </div>
   );

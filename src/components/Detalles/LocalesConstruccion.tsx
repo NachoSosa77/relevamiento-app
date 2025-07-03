@@ -4,11 +4,15 @@
 "use client";
 
 import { useEquipamientoSanitario } from "@/app/home/relevamiento/config/useData";
-import { LocalesConstruccion } from "@/interfaces/Locales";
+import { LocalesConstruccion, TipoLocales } from "@/interfaces/Locales";
+import { localesService } from "@/services/localesServices";
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import EditLocalModal from "../Modals/EditLocalModal";
 import { Accordion } from "../ui/Acordion";
 import { AccordionItem } from "../ui/AcordionItem";
+import Spinner from "../ui/Spinner";
 import AberturasComponent from "./AberturasComponent";
 import AcondicionamientoTermicoComponent from "./AcondicionamientoTermicoComponent";
 import CocinaComponent from "./CocinaComponent";
@@ -28,6 +32,68 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
     local.id,
     local.relevamiento_id
   );
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
+  const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
+  const [localDetalle, setLocalDetalle] = useState<LocalesConstruccion>(local);
+
+  useEffect(() => {
+    setLocalDetalle(local);
+  }, [local]);
+
+  useEffect(() => {
+    if (!local.relevamiento_id) return;
+
+    const fetchLocales = async () => {
+      try {
+        const data = await localesService.getLocalesPorRelevamiento(
+          local.relevamiento_id!
+        );
+        setLocales(data.areasExteriores);
+
+        const opciones = await localesService.getOpcionesLocales();
+        setOpcionesLocales(opciones);
+      } catch (error) {
+        toast.error("Error al cargar áreas exteriores");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLocales();
+  }, [local.relevamiento_id]);
+
+  const onSaveArea = async (localActualizado: LocalesConstruccion) => {
+    try {
+      if (localActualizado.id === undefined) {
+        throw new Error(
+          "El id del local es indefinido, no se puede actualizar"
+        );
+      }
+
+      await localesService.updateLocalCompleto(
+        localActualizado.id,
+        localActualizado
+      );
+
+      setLocalDetalle(localActualizado);
+
+      setEditModalOpen(false);
+    } catch (error) {
+      toast.error("Error al actualizar el local");
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -60,10 +126,21 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                   as="h3"
                   className="text-lg font-semibold leading-6 text-gray-900 mb-4 flex justify-between items-center"
                 >
-                  Detalle del Local <p className="text-custom">{local.nombre_local}</p>
+                  <div className="flex items-center gap-2">
+                    <span>Detalle del Local</span>
+                    <span className="text-custom">
+                      {localDetalle.nombre_local}
+                    </span>
+                    <button
+                      onClick={() => setEditModalOpen(true)}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 text-sm rounded-md"
+                    >
+                      Editar
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-custom hover:bg-custom/50 rounded-md"
+                    className="px-4 py-2 text-sm  text-white bg-custom hover:bg-custom/50 rounded-md"
                     onClick={onClose}
                   >
                     Cerrar
@@ -75,43 +152,55 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                     <span className="font-semibold">
                       Número de construcción
                     </span>
-                    <span>{local.numero_construccion}</span>
+                    <span>{localDetalle.numero_construccion}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">
                       Identificación en el plano
                     </span>
-                    <span>{local.identificacion_plano}</span>
+                    <span>{localDetalle.identificacion_plano}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Tipo superficie</span>
-                    <span>{local.tipo_superficie}</span>
+                    <span>{localDetalle.tipo_superficie}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Superficie</span>
-                    <span>{local.superficie} m²</span>
+                    <span>{localDetalle.superficie} m²</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Largo predominante</span>
-                    <span>{local.largo_predominante}m</span>
+                    <span>{localDetalle.largo_predominante}m</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Ancho predominante</span>
-                    <span>{local.ancho_predominante}m</span>
+                    <span>{localDetalle.ancho_predominante}m</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Altura máxima</span>
-                    <span>{local.altura_maxima}m</span>
+                    <span>{localDetalle.altura_maxima}m</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">Altura mínima</span>
-                    <span>{local.altura_minima}m</span>
+                    <span>{localDetalle.altura_minima}m</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="font-semibold">
                       Protección contra robo
                     </span>
-                    <span>{local.proteccion_contra_robo || "N/a"}</span>
+                    <span>{localDetalle.proteccion_contra_robo || "N/a"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
+                    <span className="font-semibold">Estado</span>
+                    <span
+                      className={`font-semibold ${
+                        localDetalle.estado === "completo"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {localDetalle.estado}
+                    </span>
                   </div>
                 </div>
 
@@ -160,15 +249,15 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                         relevamientoId={local.relevamiento_id}
                       />
                     </AccordionItem>
-                      <AccordionItem
-                        title="Equipamiento de cocinas/offices"
-                        value="cocina"
-                      >
-                        <CocinaComponent
-                          localId={local.id}
-                          relevamientoId={local.relevamiento_id}
-                        />
-                      </AccordionItem>
+                    <AccordionItem
+                      title="Equipamiento de cocinas/offices"
+                      value="cocina"
+                    >
+                      <CocinaComponent
+                        localId={local.id}
+                        relevamientoId={local.relevamiento_id}
+                      />
+                    </AccordionItem>
                     {(local.tipo === "Sanitarios Alumnos" ||
                       local.tipo === "Sanitarios Docentes/Personal") && (
                       <AccordionItem
@@ -181,14 +270,14 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                         />
                       </AccordionItem>
                     )}
-                    <AccordionItem
-                        title="Ovservaciones"
-                        value="observaciones"
-                      >
-                        <ObservacionesDetailComponent
-                          observaciones={local.observaciones ?? "Sin observaciones registradas."}
-                        />
-                      </AccordionItem>
+                    <AccordionItem title="Ovservaciones" value="observaciones">
+                      <ObservacionesDetailComponent
+                        observaciones={
+                          local.observaciones ??
+                          "Sin observaciones registradas."
+                        }
+                      />
+                    </AccordionItem>
                   </Accordion>
                 </div>
               </Dialog.Panel>
@@ -196,6 +285,18 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
           </div>
         </div>
       </Dialog>
+      {editModalOpen && (
+        <EditLocalModal
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          local={local}
+          modoCompleto={true}
+          onSave={onSaveArea}
+          opcionesLocales={opcionesLocales}
+
+          // Podés agregar un callback onSave para refrescar datos si lo necesitás
+        />
+      )}
     </Transition>
   );
 };

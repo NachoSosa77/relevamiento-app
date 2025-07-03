@@ -4,6 +4,7 @@ import { ServiciosBasicos } from "@/interfaces/ServiciosBasicos";
 import { serviciosBasicosService } from "@/services/serviciosBasicosService";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Spinner from "../ui/Spinner";
 
 interface Props {
   relevamientoId: number;
@@ -11,6 +12,8 @@ interface Props {
 
 export const ServiciosBasicosTable = ({ relevamientoId }: Props) => {
   const [servicios, setServicios] = useState<ServiciosBasicos[]>([]);
+    const [loading, setLoading] = useState(true);
+
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -22,12 +25,20 @@ export const ServiciosBasicosTable = ({ relevamientoId }: Props) => {
         setServicios(data);
       } catch (error) {
         toast.error("Error al cargar servicios básicos");
+      }finally {
+        setLoading(false);
       }
     };
     fetchServicios();
   }, [relevamientoId]);
 
-  if (servicios.length === 0) return <p>No hay servicios básicos registrados.</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-md p-2 shadow-sm">

@@ -2,7 +2,8 @@
 // app/api/visitas/route.ts
 
 import { getConnection } from "@/app/lib/db";
-import { ResultSetHeader } from "mysql2";
+import { Visita } from "@/interfaces/Visitas";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -69,5 +70,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error });
   } finally {
     connection.release();
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const relevamientoId = searchParams.get("relevamientoId");
+
+    if (!relevamientoId) {
+      return NextResponse.json(
+        { error: "Falta relevamientoId" },
+        { status: 400 }
+      );
+    }
+
+    const connection = await getConnection();
+
+    const [rows] = await connection.query<RowDataPacket[]>(
+      "SELECT * FROM visitas_realizadas WHERE relevamiento_id = ?",
+      [relevamientoId]
+    );
+
+    const visitas = rows as Visita[];
+
+    return NextResponse.json(visitas);
+  } catch (error) {
+    console.error("Error al obtener visitas:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
   }
 }

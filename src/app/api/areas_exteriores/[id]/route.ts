@@ -117,7 +117,8 @@ export async function PATCH(
       "identificacion_plano",
       "superficie",
       "tipo",
-      // agregá otros campos que quieras permitir patch
+      "terminacion_piso", // <-- agregá este
+      "estado_conservacion", // <-- y este
     ];
 
     for (const key of allowedFields) {

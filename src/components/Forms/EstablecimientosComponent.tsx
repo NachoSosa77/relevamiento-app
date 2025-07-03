@@ -279,8 +279,10 @@ const EstablecimientosComponent: React.FC = () => {
           label={""}
           initialCui={cuiFromDB}
           onCuiInputChange={(nuevoCui) => {
-            if (cuiFromDB !== undefined) dispatch(setCui(nuevoCui));
-          }}
+  if (cuiFromDB !== undefined && nuevoCui !== cuiFromDB) {
+    dispatch(setCui(nuevoCui));
+  }
+}}
           isReadOnly={false}
           sublabel=""
           institucionActualId={selectedInstitutionId}

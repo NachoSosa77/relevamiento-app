@@ -28,6 +28,7 @@ export interface LocalesConstruccion {
   tipo: string;
   local_id: number;
   local_sin_uso: string;
+  destino_original?: string;
   superficie?: number;
   tipo_superficie: string;
   cui_number?: number;
@@ -36,6 +37,7 @@ export interface LocalesConstruccion {
   ancho_predominante?: number,
   altura_maxima?: number,
   altura_minima?: number,
+  diametro?: number,
   proteccion_contra_robo?: string,
   observaciones?: string,
   servicios?: Servicios;  // <-- Lo agregamos acá

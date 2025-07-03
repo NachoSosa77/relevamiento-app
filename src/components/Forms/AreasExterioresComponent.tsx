@@ -1,4 +1,3 @@
- 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
@@ -141,8 +140,7 @@ export default function AreasExterioresComponent() {
             }
           : area
       );
-      // Limpiamos y agregamos todos actualizados (podés crear una acción Redux para esto)
-      dispatch(resetAreasExteriores()); // O una acción para limpiar todo
+      dispatch(resetAreasExteriores()); // limpiar estado
       updatedAreas.forEach((area) => dispatch(addAreasExteriores(area)));
       setEditando(false);
       setEditId(null);
@@ -153,54 +151,54 @@ export default function AreasExterioresComponent() {
   };
 
   const handleGuardarDatos = async () => {
-  if (isSubmitting) return;
-  setIsSubmitting(true);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-  if (!cui_number) {
-    toast.error("No se puede guardar: CUI no definido");
-    setIsSubmitting(false);
-    return;
-  }
-
-  if (!areasExteriores.length) {
-    toast.warning("No hay áreas exteriores para guardar");
-    setIsSubmitting(false);
-    return;
-  }
-
-  try {
-    const payload = areasExteriores.map((area) => ({
-      ...area,
-      cui_number,
-      relevamiento_id: relevamientoId,
-    }));
-
-    const nuevas = payload.filter((area) => !area.id);
-    const existentes = payload.filter((area) => area.id);
-
-    // Crear nuevas
-    if (nuevas.length > 0) {
-      await areasExterioresService.postAreasExteriores(nuevas);
+    if (!cui_number) {
+      toast.error("No se puede guardar: CUI no definido");
+      setIsSubmitting(false);
+      return;
     }
 
-    // Actualizar existentes
-    for (const area of existentes) {
-      await areasExterioresService.updateAreaExterior(area.id!, area);
+    if (!areasExteriores.length) {
+      toast.warning("No hay áreas exteriores para guardar");
+      setIsSubmitting(false);
+      return;
     }
 
-    toast.success("Datos guardados correctamente");
-  } catch (error: any) {
-    if (error.status === 409) {
-      toast.error(error.message || "Ya existe un área duplicada.");
-    } else {
-      toast.error("Error al guardar los datos. Intentá nuevamente.");
-      console.error("Error al guardar los datos en la base:", error);
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      const payload = areasExteriores.map((area) => ({
+        ...area,
+        cui_number,
+        relevamiento_id: relevamientoId,
+      }));
 
+      const nuevas = payload.filter((area) => !area.id);
+      const existentes = payload.filter((area) => area.id);
+
+      // Crear nuevas
+      if (nuevas.length > 0) {
+        await areasExterioresService.postAreasExteriores(nuevas);
+      }
+
+      // Actualizar existentes (solo si tienen id)
+      for (const area of existentes) {
+        if (!area.id) continue; // <-- aquí el guard para evitar error
+        await areasExterioresService.updateAreaExterior(area.id, area);
+      }
+
+      toast.success("Datos guardados correctamente");
+    } catch (error: any) {
+      if (error.status === 409) {
+        toast.error(error.message || "Ya existe un área duplicada.");
+      } else {
+        toast.error("Error al guardar los datos. Intentá nuevamente.");
+        console.error("Error al guardar los datos en la base:", error);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleEliminar = (identificacion_plano: number) => {
     dispatch(deleteAreasExteriores(identificacion_plano));
@@ -215,7 +213,7 @@ export default function AreasExterioresComponent() {
       accessor: "acciones",
       Cell: ({ row }: { row: { original: AreasExteriores } }) => (
         <div className="flex space-x-2 justify-center">
-           <button
+          <button
             onClick={() => handleEliminar(row.original.identificacion_plano)}
             className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition duration-300"
           >
@@ -227,7 +225,6 @@ export default function AreasExterioresComponent() {
           >
             Editar
           </button>
-         
         </div>
       ),
     },
@@ -317,13 +314,13 @@ export default function AreasExterioresComponent() {
               onClick={handleGuardarDatos}
               disabled={isSubmitting}
             >
-             {isSubmitting
-              ? "Guardando..."
-              : modoEdicion
-              ? "Espere, editando información..."
-              : editando
-              ? "Actualizar áreas exteriores"
-              : "Guardar áreas exteriores"}
+              {isSubmitting
+                ? "Guardando..."
+                : modoEdicion
+                ? "Espere, editando información..."
+                : editando
+                ? "Actualizar áreas exteriores"
+                : "Guardar áreas exteriores"}
             </button>
           </div>
         )}

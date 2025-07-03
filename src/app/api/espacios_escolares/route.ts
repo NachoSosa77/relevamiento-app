@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     cui,
     cantidadConstrucciones,
     superficieTotalPredio,
-    plano,
     observaciones,
     areasExteriores,
     // localesPorConstruccion,
@@ -25,15 +24,13 @@ export async function POST(req: NextRequest) {
       `INSERT INTO espacios_escolares (
         cantidad_construcciones, 
         superficie_total_predio, 
-        plano, 
         observaciones, 
         cui, 
         relevamiento_id
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?)`,
       [
         cantidadConstrucciones,
         superficieTotalPredio,
-        plano,
         observaciones,
         cui,
         relevamiento_id,

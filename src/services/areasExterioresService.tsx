@@ -65,6 +65,16 @@ const getOpcionesAreasExteriores = async () => {
     throw error;
   }
 };
+// Obtener opciones de tipos de áreas exteriores
+const getOpcionesTerminacionPiso = async () => {
+  try {
+    const response = await axios.get(`/api/terminacion_piso/opciones`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener opciones de áreas exteriores:', error);
+    throw error;
+  }
+};
 
 const getAreasExterioresById = async (relevamientoId: number) => {
   try {
@@ -79,6 +89,8 @@ const getAreasExterioresById = async (relevamientoId: number) => {
 async function updateAreaExterior(id: number, data: any) {
   return axios.patch(`/api/areas_exteriores/${id}`, data).then((res) => res.data);
 }
+
+
 
 // Actualizar un área exterior por ID
 /* const updateAreasExteriores = async (id: number, formData: AreasExteriores) => {
@@ -95,6 +107,7 @@ async function updateAreaExterior(id: number, data: any) {
 export const areasExterioresService = {
   postAreasExteriores,
   getOpcionesAreasExteriores,
+  getOpcionesTerminacionPiso,
   getAreasExteriores,
   getAreasExterioresById,
   getAreasExterioresByRelevamientoId,
