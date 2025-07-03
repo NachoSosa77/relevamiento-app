@@ -35,15 +35,12 @@ const EstablecimientosComponent: React.FC = () => {
     if (!relevamientoId) return; // ⛔ Evita ejecutar hasta que exista
     const fetchCui = async () => {
       const res = await fetch(`/api/relevamientos/id/${relevamientoId}`); // endpoint que devuelve relevamiento por ID
-      console.log("Respuesta de la API:", res);
       const data = await res.json();
       setCuiFromDB(data?.cui_id ?? null);
     };
     fetchCui();
   }, [relevamientoId]);
 
-  console.log("relevamientoId:", relevamientoId);
-  console.log("CUI desde DB:", cuiFromDB);
 
   useEffect(() => {
     const fetchSelectedInstitution = async () => {
@@ -83,7 +80,6 @@ const EstablecimientosComponent: React.FC = () => {
           throw new Error("Error al obtener instituciones guardadas");
 
         const data = await res.json();
-        console.log("Instituciones guardadas:", data);
         if (data.length > 0) {
           setEditando(true); // 🟡 está en modo edición
           setInstituciones(data); // carga como estado inicial

@@ -24,7 +24,6 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   isReadOnly,
 }) => {
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingLocales, setLoadingLocales] = useState(true);
   const [loadingGuardar, setLoadingGuardar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,33 +37,31 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
 
   const router = useRouter();
   const relevamientoId = useRelevamientoId();
-
   useEffect(() => {
     if (relevamientoId === undefined || relevamientoId === null) return;
-  if (!relevamientoId) {
-    toast.error(
-      "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
-    );
-    return;
-  }
-  const fetchLocales = async () => {
-    try {
-      const response = await localesService.getLocalesPorRelevamiento(
-        relevamientoId
+    if (!relevamientoId) {
+      toast.error(
+        "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
       );
-      setLocales(response.locales || []);
-    } catch (err) {
-      setError("Error al obtener los locales");
-    } finally {
-      setLoadingLocales(false);
+      return;
     }
-  };
+    const fetchLocales = async () => {
+      try {
+        const localesData = await localesService.getLocalesPorRelevamiento(
+          relevamientoId
+        );
+        setLocales(localesData); // ya es el array directamente
+      } catch (err) {
+        setError("Error al obtener los locales");
+      } finally {
+        setLoadingLocales(false);
+      }
+    };
 
-  if (relevamientoId) {
-    fetchLocales();
-  }
-}, [relevamientoId, router]);
-
+    if (relevamientoId) {
+      fetchLocales();
+    }
+  }, [relevamientoId, router]);
 
   const handleVerDetalle = async (local: LocalesConstruccion) => {
     try {
@@ -90,31 +87,30 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   };
 
   const handleGuardarRelevamiento = async () => {
-  if (!relevamientoId) {
-    toast.error("No se encontró el ID del relevamiento");
-    return;
-  }
+    if (!relevamientoId) {
+      toast.error("No se encontró el ID del relevamiento");
+      return;
+    }
 
-  setLoadingGuardar(true);
+    setLoadingGuardar(true);
 
-  try {
-    await relevamientoService.updateEstadoRelevamiento(
-      relevamientoId,
-      "completo"
-    );
-    toast.success("Relevamiento marcado como completo");
-    setRelevamientoGuardado(true);
-    sessionStorage.removeItem("relevamientoId");
+    try {
+      await relevamientoService.updateEstadoRelevamiento(
+        relevamientoId,
+        "completo"
+      );
+      toast.success("Relevamiento marcado como completo");
+      setRelevamientoGuardado(true);
+      sessionStorage.removeItem("relevamientoId");
 
-    router.push("/home");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al actualizar estado del relevamiento");
-  } finally {
-    setLoadingGuardar(false);
-  }
-};
-
+      router.push("/home");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al actualizar estado del relevamiento");
+    } finally {
+      setLoadingGuardar(false);
+    }
+  };
 
   if (loadingLocales)
     return (
@@ -209,12 +205,8 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                 <th className="border px-2 py-1 text-center">
                   N° Construcción
                 </th>
-                <th className="border px-2 py-1 text-center">
-                  N° Planta
-                </th>
-                <th className="border px-2 py-1 text-center">
-                  N° Local
-                </th>
+                <th className="border px-2 py-1 text-center">N° Planta</th>
+                <th className="border px-2 py-1 text-center">N° Local</th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
                 <th className="border px-2 py-1 text-center">Acción</th>
@@ -274,16 +266,16 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
       </div>
 
       <button
-  disabled={!todosCompletos || relevamientoGuardado || loadingGuardar}
-  onClick={handleGuardarRelevamiento}
-  className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
->
-  {loadingGuardar
-    ? "Guardando..."
-    : relevamientoGuardado
-    ? "Relevamiento guardado ✔️"
-    : "Guardar Relevamiento"}
-</button>
+        disabled={!todosCompletos || relevamientoGuardado || loadingGuardar}
+        onClick={handleGuardarRelevamiento}
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
+      >
+        {loadingGuardar
+          ? "Guardando..."
+          : relevamientoGuardado
+          ? "Relevamiento guardado ✔️"
+          : "Guardar Relevamiento"}
+      </button>
     </div>
   );
 };

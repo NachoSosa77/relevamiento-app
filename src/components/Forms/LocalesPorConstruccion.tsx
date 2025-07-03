@@ -101,7 +101,6 @@ export default function LocalesPorConstruccion() {
           relevamientoId
         );
         if (respuesta && respuesta.length > 0) {
-          console.log("Locales existentes:", respuesta);
           const agrupados = respuesta.reduce((acc: any, local: any) => {
             const idx = (local.numero_construccion || 1) - 1;
             if (!acc[idx]) acc[idx] = [];
