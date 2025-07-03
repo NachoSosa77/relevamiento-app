@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import Lightbox from "react-image-lightbox";
-import "react-image-lightbox/style.css";
 import { toast } from "react-toastify";
+import Lightbox from "yet-another-react-lightbox";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
+import "yet-another-react-lightbox/styles.css";
 import Spinner from "../ui/Spinner";
 
 interface Archivo {
@@ -14,8 +16,8 @@ interface Archivo {
 export const ArchivosDetalle = ({ relevamientoId }: { relevamientoId: number }) => {
   const [archivos, setArchivos] = useState<Archivo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [isLoadingLightbox, setIsLoadingLightbox] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     const fetchArchivos = async () => {
@@ -36,10 +38,9 @@ export const ArchivosDetalle = ({ relevamientoId }: { relevamientoId: number }) 
 
   const imagenes = archivos.filter((a) => a.tipo_archivo === "imagen");
 
-  const handleImageClick = (url: string) => {
-    const index = imagenes.findIndex((i) => i.archivo_url === url);
-    setIsLoadingLightbox(true);
+  const handleImageClick = (index: number) => {
     setLightboxIndex(index);
+    setLightboxOpen(true);
   };
 
   if (loading) {
@@ -67,7 +68,8 @@ export const ArchivosDetalle = ({ relevamientoId }: { relevamientoId: number }) 
             className="break-inside-avoid rounded-xl overflow-hidden bg-white shadow hover:shadow-md transition border cursor-pointer"
             onClick={() => {
               if (archivo.tipo_archivo === "imagen") {
-                handleImageClick(archivo.archivo_url);
+                const index = imagenes.findIndex((i) => i.archivo_url === archivo.archivo_url);
+                handleImageClick(index);
               }
             }}
           >
@@ -105,29 +107,15 @@ export const ArchivosDetalle = ({ relevamientoId }: { relevamientoId: number }) 
         ))}
       </div>
 
-      {/* Spinner de carga superpuesto */}
-      {lightboxIndex !== null && isLoadingLightbox && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <Spinner />
-        </div>
-      )}
-
-      {/* Lightbox */}
-      {lightboxIndex !== null && (
+      {lightboxOpen && (
         <Lightbox
-          mainSrc={imagenes[lightboxIndex].archivo_url}
-          nextSrc={imagenes[(lightboxIndex + 1) % imagenes.length]?.archivo_url}
-          prevSrc={imagenes[(lightboxIndex + imagenes.length - 1) % imagenes.length]?.archivo_url}
-          onCloseRequest={() => setLightboxIndex(null)}
-          onImageLoad={() => setIsLoadingLightbox(false)}
-          onMovePrevRequest={() => {
-            setIsLoadingLightbox(true);
-            setLightboxIndex((lightboxIndex + imagenes.length - 1) % imagenes.length);
-          }}
-          onMoveNextRequest={() => {
-            setIsLoadingLightbox(true);
-            setLightboxIndex((lightboxIndex + 1) % imagenes.length);
-          }}
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          index={lightboxIndex}
+          slides={imagenes.map((img) => ({
+            src: img.archivo_url,
+          }))}
+          plugins={[Thumbnails]}
         />
       )}
     </>
