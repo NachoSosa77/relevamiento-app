@@ -5,6 +5,7 @@
 
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
+import Spinner from "@/components/ui/Spinner";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -74,7 +75,6 @@ const DetalleLocalPage = () => {
       });
 
       if (res.ok) {
-        toast.success("Observaciones guardadas correctamente");
       } else {
         toast.error("Error al guardar observaciones");
       }
@@ -137,7 +137,10 @@ const DetalleLocalPage = () => {
   const handleBack = () => {
     router.back();
   };
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return <div className="items-center justify-center">
+          <Spinner />
+          Cargando locales...
+        </div>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (
     <div className="h-full bg-white text-black text-sm mt-32">

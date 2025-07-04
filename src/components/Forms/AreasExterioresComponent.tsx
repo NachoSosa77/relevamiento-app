@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
+import { useCuiFromRelevamientoId } from "@/hooks/useCuiByRelevamientoId";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
@@ -33,7 +34,7 @@ export default function AreasExterioresComponent() {
   });
   const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
   const relevamientoId = useRelevamientoId();
-  const cui_number = useAppSelector((state) => state.espacio_escolar.cui);
+  const cuiNumber = useCuiFromRelevamientoId(relevamientoId);
   const areasExteriores = useAppSelector(
     (state) => state.espacio_escolar.areasExteriores
   ); // Datos desde Redux
@@ -154,7 +155,7 @@ export default function AreasExterioresComponent() {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
-    if (!cui_number) {
+    if (!cuiNumber) {
       toast.error("No se puede guardar: CUI no definido");
       setIsSubmitting(false);
       return;
@@ -169,7 +170,7 @@ export default function AreasExterioresComponent() {
     try {
       const payload = areasExteriores.map((area) => ({
         ...area,
-        cui_number,
+        cui_number: cuiNumber,    
         relevamiento_id: relevamientoId,
       }));
 

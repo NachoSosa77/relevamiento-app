@@ -30,7 +30,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   setConstruccionId,
 }) => {
   const relevamientoId = useRelevamientoId();
-
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
   const [selectedConstruccionId, setSelectedConstruccionId] = useState<
     number | null
@@ -65,6 +64,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
         toast.error("Error al cargar construcciones");
       });
   }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
+
 
   // Cuando cambie la construcción seleccionada vía tab
   const handleTabClick = (id: number, numero: number) => {

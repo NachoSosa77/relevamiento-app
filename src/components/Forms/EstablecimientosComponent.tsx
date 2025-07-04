@@ -6,7 +6,6 @@ import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-  setCui,
   setInstitucionesData,
 } from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
@@ -192,9 +191,9 @@ const EstablecimientosComponent: React.FC = () => {
   const handleGuardarRelaciones = async () => {
     if (!relevamientoId || instituciones.length === 0) {
       toast.error("No hay instituciones para guardar.");
+      setGuardandoRelaciones(true); // 🟢 iniciar bloqueo
       return;
 
-      setGuardandoRelaciones(true); // 🟢 iniciar bloqueo
     }
 
     try {
@@ -274,11 +273,7 @@ const EstablecimientosComponent: React.FC = () => {
         <CuiComponent
           label={""}
           initialCui={cuiFromDB}
-          onCuiInputChange={(nuevoCui) => {
-  if (cuiFromDB !== undefined && nuevoCui !== cuiFromDB) {
-    dispatch(setCui(nuevoCui));
-  }
-}}
+          onCuiInputChange={()=> {}}
           isReadOnly={false}
           sublabel=""
           institucionActualId={selectedInstitutionId}

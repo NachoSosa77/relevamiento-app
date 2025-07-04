@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -8,6 +9,7 @@ import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useCuiFromRelevamientoId } from "@/hooks/useCuiByRelevamientoId";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -27,6 +29,7 @@ export default function EspaciosEscolaresPage() {
     (state) => state.espacio_escolar
   ); // Obtén el estado de espacio_escolar
   const relevamientoId = useRelevamientoId();
+  const selectedCui = useCuiFromRelevamientoId(relevamientoId);
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
@@ -68,7 +71,6 @@ export default function EspaciosEscolaresPage() {
 
   const handleSaveObservacion = (observations: string) => {
     dispatch(setObservaciones(observations));
-    toast.success("Observaciones guardadas!");
   };
 
   const enviarDatosEspacioEscolar = async () => {
@@ -76,7 +78,7 @@ export default function EspaciosEscolaresPage() {
     try {
       const payload = {
         relevamiento_id: relevamientoId, // <-- este es clave
-        cui: selectedEspacioEscolar.cui,
+        cui: selectedCui,
         cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
         superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
         observaciones: selectedEspacioEscolar.observaciones,
@@ -118,14 +120,6 @@ export default function EspaciosEscolaresPage() {
     return <div>Error: {error}</div>;
   }
 
-  if (!selectedInstitution) {
-    return (
-      <div className="flex items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
   return (
     <div className=" bg-white text-black text-sm mt-28 w-full">
       <div className="flex justify-between mt-20 mb-8 mx-8">
@@ -142,14 +136,13 @@ export default function EspaciosEscolaresPage() {
       {loading && (
         <div className=" flex items-center justify-center">
           <Spinner />
-          Cargando instituciones...
         </div>
       )}
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
         isReadOnly={true}
-        initialCui={selectedInstitution.cui}
+        initialCui={selectedCui}
         onCuiInputChange={() => {}}
         sublabel=""
         institucionActualId={selectedInstitutionId}

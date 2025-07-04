@@ -12,7 +12,11 @@ interface Opcion {
   label: string;
 }
 
-const AreasExterioresTable: React.FC = () => {
+interface AreasExterioresTableProps {
+  predioId: number | null;
+}
+
+const AreasExterioresTable: React.FC<AreasExterioresTableProps> = ({ predioId }) => {
   const relevamientoId = useRelevamientoId();
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [servicios, setServicios] = useState<AreasExteriores[]>([]);
@@ -115,9 +119,13 @@ const AreasExterioresTable: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
-      await axios.put(`/api/areas_exteriores/${id}`, servicioActualizado);
-      toast.success("Datos actualizados correctamente");
-    } catch (error) {
+    await axios.put(`/api/areas_exteriores/${id}`, {
+      ...servicioActualizado,
+      predio_id: predioId, // ⬅️ Se incluye aquí
+    });
+
+    toast.success("Datos actualizados correctamente");
+  }  catch (error) {
       console.error("Error al actualizar los datos:", error);
       toast.error("Hubo un error al actualizar los datos.");
     }

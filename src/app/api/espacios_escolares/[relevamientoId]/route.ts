@@ -35,3 +35,43 @@ export async function GET(
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ relevamientoId: string }> }
+) {
+  const { relevamientoId } = await params;
+  const body = await req.json();
+  const { predio_id } = body;
+
+  if (!predio_id) {
+    return NextResponse.json(
+      { message: "Falta el predio_id" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const connection = await getConnection();
+
+    const [result]: any = await connection.query(
+      `UPDATE espacios_escolares
+       SET predio_id = ?
+       WHERE relevamiento_id = ?`,
+      [predio_id, relevamientoId]
+    );
+
+    connection.release();
+
+    return NextResponse.json({
+      success: true,
+      affectedRows: result.affectedRows,
+    });
+  } catch (err: any) {
+    console.error("Error al actualizar espacios_escolares:", err);
+    return NextResponse.json(
+      { message: "Error interno", error: err.message },
+      { status: 500 }
+    );
+  }
+}

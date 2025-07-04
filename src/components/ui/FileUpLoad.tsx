@@ -24,10 +24,10 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [modalIndex, setModalIndex] = useState<number | null>(null);
   const closeModal = () => setModalIndex(null);
-const nextImage = () =>
-  setModalIndex((prev) => (prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev));
-const prevImage = () =>
-  setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+  const nextImage = () =>
+    setModalIndex((prev) => (prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev));
+  const prevImage = () =>
+    setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -88,24 +88,24 @@ const prevImage = () =>
   }, [previews]);
 
   useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (modalIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (modalIndex === null) return;
 
-    if (e.key === "ArrowRight") {
-      nextImage();
-    } else if (e.key === "ArrowLeft") {
-      prevImage();
-    } else if (e.key === "Escape") {
-      closeModal();
-    }
-  };
+      if (e.key === "ArrowRight") {
+        nextImage();
+      } else if (e.key === "ArrowLeft") {
+        prevImage();
+      } else if (e.key === "Escape") {
+        closeModal();
+      }
+    };
 
-  window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-  return () => {
-    window.removeEventListener("keydown", handleKeyDown);
-  };
-}, [modalIndex, archivosSubidosRedux.length]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [modalIndex, archivosSubidosRedux.length]);
 
 
 
@@ -130,37 +130,72 @@ const prevImage = () =>
       />
 
       <div className="flex flex-wrap gap-4 max-h-[300px] overflow-y-auto">
-  {archivosSubidosRedux.map((archivo, index) => (
-    <div
-      key={index}
-      className="relative w-48 h-48 rounded overflow-hidden shadow-sm border flex-shrink-0 cursor-pointer"
-      onClick={() => setModalIndex(index)}
-    >
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // evita que se dispare el modal
-          handleEliminarArchivoSubido(index);
-        }}
-        className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-        title="Eliminar archivo"
-        type="button"
-      >
-        ×
-      </button>
+        {archivosSubidosRedux.map((archivo, index) => (
+          <div
+            key={index}
+            className="relative w-48 h-48 rounded overflow-hidden shadow-sm border flex-shrink-0 cursor-pointer"
+            onClick={() => setModalIndex(index)}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // evita que se dispare el modal
+                handleEliminarArchivoSubido(index);
+              }}
+              className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              title="Eliminar archivo"
+              type="button"
+            >
+              ×
+            </button>
 
-      {archivo.tipo_archivo === "pdf" ? (
-        <iframe src={archivo.archivo_url} className="w-full h-full" />
-      ) : (
-        <Image
-          src={archivo.archivo_url}
-          alt={`archivo-${index}`}
-          fill
-          style={{ objectFit: "cover" }}
-        />
-      )}
-    </div>
-  ))}
-</div>
+            {archivo.tipo_archivo === "pdf" ? (
+              <iframe src={archivo.archivo_url} className="w-full h-full" />
+            ) : (
+              <Image
+                src={archivo.archivo_url}
+                alt={`archivo-${index}`}
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            )}
+          </div>
+        ))}
+        {/* Archivos recién seleccionados (previews) */}
+        {previews.map((preview, index) => (
+          <div
+            key={"nuevo-" + index}
+            className="relative w-48 h-48 rounded overflow-hidden shadow-sm border flex-shrink-0 cursor-pointer"
+          >
+            <button
+              onClick={() => {
+                // Eliminar archivo local seleccionado
+                setArchivos((prev) => prev.filter((_, i) => i !== index));
+                setPreviews((prev) => prev.filter((_, i) => i !== index));
+              }}
+              className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              title="Eliminar archivo seleccionado"
+              type="button"
+            >
+              ×
+            </button>
+
+            {/* Mostrar imagen si es imagen, o ícono para pdf */}
+            {archivos[index]?.type === "application/pdf" ? (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-600 font-semibold text-center">
+                PDF
+              </div>
+            ) : (
+              <Image
+                src={preview}
+                alt={`archivo-nuevo-${index}`}
+                fill
+                style={{ objectFit: "cover" }}
+
+              />
+            )}
+          </div>
+        ))}
+      </div>
 
       <button
         onClick={handleUpload}
@@ -170,47 +205,47 @@ const prevImage = () =>
         {isUploading ? "Subiendo..." : "Confirmar subida"}
       </button>
       {modalIndex !== null && (
-  <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
-    <button
-      onClick={closeModal}
-      className="absolute top-4 right-4 text-white text-3xl font-bold hover:text-red-400"
-    >
-      ×
-    </button>
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+          <button
+            onClick={closeModal}
+            className="absolute top-4 right-4 text-white text-3xl font-bold hover:text-red-400"
+          >
+            ×
+          </button>
 
-    <div className="relative w-[90%] max-w-4xl h-[80%]">
-      {archivosSubidosRedux[modalIndex].tipo_archivo === "pdf" ? (
-        <iframe
-          src={archivosSubidosRedux[modalIndex].archivo_url}
-          className="w-full h-full rounded"
-        />
-      ) : (
-        <Image
-          src={archivosSubidosRedux[modalIndex].archivo_url}
-          alt={`modal-${modalIndex}`}
-          fill
-          style={{ objectFit: "contain" }}
-        />
+          <div className="relative w-[90%] max-w-4xl h-[80%]">
+            {archivosSubidosRedux[modalIndex].tipo_archivo === "pdf" ? (
+              <iframe
+                src={archivosSubidosRedux[modalIndex].archivo_url}
+                className="w-full h-full rounded"
+              />
+            ) : (
+              <Image
+                src={archivosSubidosRedux[modalIndex].archivo_url}
+                alt={`modal-${modalIndex}`}
+                fill
+                style={{ objectFit: "contain" }}
+              />
+            )}
+
+            {/* Botones para navegar */}
+            <button
+              onClick={prevImage}
+              disabled={modalIndex === 0}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
+            >
+              ‹
+            </button>
+            <button
+              onClick={nextImage}
+              disabled={modalIndex === archivosSubidosRedux.length - 1}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
+            >
+              ›
+            </button>
+          </div>
+        </div>
       )}
-
-      {/* Botones para navegar */}
-      <button
-        onClick={prevImage}
-        disabled={modalIndex === 0}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
-      >
-        ‹
-      </button>
-      <button
-        onClick={nextImage}
-        disabled={modalIndex === archivosSubidosRedux.length - 1}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
-      >
-        ›
-      </button>
-    </div>
-  </div>
-)}
     </div>
   );
 };
