@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { LocalesConstruccion, TipoLocales } from "@/interfaces/Locales";
 import { Dialog } from "@headlessui/react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
 import NumericInput from "../ui/NumericInput";
@@ -13,6 +15,7 @@ interface Props {
   local: LocalesConstruccion;
   onSave: (updated: LocalesConstruccion) => void;
   opcionesLocales: TipoLocales[];
+  modoCompleto?: boolean; // Si es necesario para el modo completo
 }
 
 export default function EditLocalModal({
@@ -21,8 +24,10 @@ export default function EditLocalModal({
   local,
   onSave,
   opcionesLocales,
+  modoCompleto = false,
 }: Props) {
   const [editData, setEditData] = useState<LocalesConstruccion>(local);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setEditData(local);
@@ -36,12 +41,12 @@ export default function EditLocalModal({
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+        <Dialog.Panel className="bg-white rounded-xl p-8 w-full max-w-3xl shadow-lg">
           <Dialog.Title className="text-lg font-semibold mb-4">
             Editar Local
           </Dialog.Title>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
             <NumericInput
               label="Identificación en el plano"
               value={editData.identificacion_plano}
@@ -72,9 +77,7 @@ export default function EditLocalModal({
             <Select
               label="Tipo de superficie"
               value={editData.tipo_superficie}
-              onChange={(e) =>
-                handleChange("tipo_superficie", e.target.value)
-              }
+              onChange={(e) => handleChange("tipo_superficie", e.target.value)}
               options={[
                 { value: "Cubierta", label: "Cubierta" },
                 { value: "Semicubierta", label: "Semicubierta" },
@@ -90,6 +93,80 @@ export default function EditLocalModal({
               value={editData.superficie ?? 0}
               onChange={(v) => handleChange("superficie", v)}
             />
+            {modoCompleto && (
+              <>
+                <DecimalNumericInput
+                  label="Largo predominante (m)"
+                  value={editData.largo_predominante ?? 0}
+                  onChange={(v) => handleChange("largo_predominante", v)}
+                />
+                <DecimalNumericInput
+                  label="Ancho predominante (m)"
+                  value={editData.ancho_predominante ?? 0}
+                  onChange={(v) => handleChange("ancho_predominante", v)}
+                />
+                <DecimalNumericInput
+                  label="Diámetro (m)"
+                  value={editData.diametro ?? 0}
+                  onChange={(v) => handleChange("diametro", v)}
+                />
+                <DecimalNumericInput
+                  label="Altura máxima (m)"
+                  value={editData.altura_maxima ?? 0}
+                  onChange={(v) => handleChange("altura_maxima", v)}
+                />
+                <DecimalNumericInput
+                  label="Altura mínima (m)"
+                  value={editData.altura_minima ?? 0}
+                  onChange={(v) => handleChange("altura_minima", v)}
+                />
+                <Select
+                  label="Protección contra robo"
+                  value={editData.proteccion_contra_robo || ""}
+                  onChange={(e) =>
+                    handleChange("proteccion_contra_robo", e.target.value)
+                  }
+                  options={[
+                    { value: "Rejas", label: "Rejas" },
+                    { value: "Metal desplegado", label: "Metal desplegado" },
+                    { value: "Postigones", label: "Postigones" },
+                    { value: "Alarma", label: "Alarma" },
+                    { value: "Otro", label: "Alarma" },
+                    { value: "Ninguno", label: "Ninguno" },
+                  ]}
+                />
+                <Select
+                  label="Destino original"
+                  value={editData.destino_original || ""}
+                  onChange={(e) =>
+                    handleChange("destino_original", e.target.value)
+                  }
+                  options={[
+                    { value: "Escuela", label: "Escuela" },
+                    { value: "Vivienda", label: "Vivienda" },
+                    { value: "Fábrica", label: "Fábrica" },
+                    {
+                      value: "Estación ferroviaria",
+                      label: "Estación ferroviaria",
+                    },
+                    { value: "Hospital", label: "Hospital" },
+                    { value: "Otro", label: "Otro" },
+                  ]}
+                />
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">
+                    Observaciones
+                  </label>
+                  <textarea
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    value={editData.observaciones || ""}
+                    onChange={(e) =>
+                      handleChange("observaciones", e.target.value)
+                    }
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-6 flex justify-end gap-2">
@@ -100,14 +177,25 @@ export default function EditLocalModal({
               Cancelar
             </button>
             <button
-              onClick={() => {
-                onSave(editData);
-                onClose();
-              }}
-              className="bg-custom text-white px-4 py-2 rounded"
-            >
-              Guardar
-            </button>
+  onClick={async () => {
+    setLoading(true);
+    try {
+      await onSave(editData); // espera que se guarde
+      toast.success("Actualizado correctamente"); // feedback opcional
+      setTimeout(() => {
+        onClose(); // cerramos con pequeña demora para que el usuario lo vea
+      }, 600); // podés ajustar este delay
+    } catch (err) {
+      toast.error("Error al guardar");
+    } finally {
+      setLoading(false);
+    }
+  }}
+  className="bg-custom text-white px-4 py-2 rounded"
+  disabled={loading}
+>
+  {loading ? "Guardando..." : "Guardar"}
+</button>
           </div>
         </Dialog.Panel>
       </div>

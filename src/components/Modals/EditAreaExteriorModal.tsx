@@ -2,6 +2,7 @@
 import { AreasExteriores } from "@/interfaces/AreaExterior";
 import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
 import { Dialog } from "@headlessui/react";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import AlphanumericInput from "../ui/AlphanumericInput";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
@@ -13,6 +14,7 @@ interface Props {
   area: AreasExteriores;
   onSave: (updated: AreasExteriores) => void;
   opcionesAreas: TipoAreasExteriores[];
+  modoCompleto?: boolean; // default false
 }
 
 export default function EditAreaExteriorModal({
@@ -21,12 +23,33 @@ export default function EditAreaExteriorModal({
   area,
   onSave,
   opcionesAreas,
+  modoCompleto = false,
 }: Props) {
   const [editData, setEditData] = useState<AreasExteriores>(area);
+
+  // Opciones que se cargan solo si modoCompleto=true
+  const [opcionesTerminacionPiso, setOpcionesTerminacionPiso] = useState<string[]>([]);
+  const opcionesEstadoConservacion = ["Bueno", "Malo", "Regular"];
 
   useEffect(() => {
     setEditData(area);
   }, [area]);
+
+  useEffect(() => {
+    if (modoCompleto) {
+      // Cargar opciones de terminacion piso solo en modo completo
+      const fetchTerminacionPiso = async () => {
+        try {
+          const res = await axios.get<string[]>("/api/terminacion_piso/opciones");
+          setOpcionesTerminacionPiso(res.data || []);
+        } catch (error) {
+          console.error("Error al cargar terminación de piso", error);
+          setOpcionesTerminacionPiso([]);
+        }
+      };
+      fetchTerminacionPiso();
+    }
+  }, [modoCompleto]);
 
   const handleChange = (field: keyof AreasExteriores, value: any) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
@@ -42,14 +65,13 @@ export default function EditAreaExteriorModal({
           </Dialog.Title>
 
           <div className="grid grid-cols-1 gap-4">
+            {/* Campos siempre visibles */}
             <AlphanumericInput
               disabled={false}
               label="Identificación en el plano"
               subLabel="E"
               value={editData.identificacion_plano}
-              onChange={(val) =>
-                handleChange("identificacion_plano", Number(val))
-              }
+              onChange={(val) => handleChange("identificacion_plano", Number(val))}
             />
 
             <Select
@@ -76,6 +98,31 @@ export default function EditAreaExteriorModal({
               value={editData.superficie}
               onChange={(val) => handleChange("superficie", Number(val))}
             />
+
+            {/* Campos solo en modo completo */}
+            {modoCompleto && (
+              <>
+                <Select
+                  label="Terminación del piso"
+                  value={editData.terminacion_piso || ""}
+                  options={opcionesTerminacionPiso.map((opt) => ({
+                    value: opt,
+                    label: opt,
+                  }))}
+                  onChange={(e) => handleChange("terminacion_piso", e.target.value)}
+                />
+
+                <Select
+                  label="Estado de conservación"
+                  value={editData.estado_conservacion || ""}
+                  options={opcionesEstadoConservacion.map((opt) => ({
+                    value: opt,
+                    label: opt,
+                  }))}
+                  onChange={(e) => handleChange("estado_conservacion", e.target.value)}
+                />
+              </>
+            )}
           </div>
 
           <div className="mt-6 flex justify-end gap-2">

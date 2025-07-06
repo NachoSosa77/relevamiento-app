@@ -60,14 +60,15 @@ export async function PUT(
     // ✅ Actualizar la base de datos
     const [result] = await connection.query<ResultSetHeader>(
       `UPDATE areas_exteriores 
-       SET identificacion_plano = ?, superficie = ?, terminacion_piso = ?, estado_conservacion = ?, tipo = ?
-       WHERE id = ?`,
+   SET identificacion_plano = ?, superficie = ?, terminacion_piso = ?, estado_conservacion = ?, tipo = ?, predio_id = ?
+   WHERE id = ?`,
       [
         body.identificacion_plano,
         body.superficie,
         body.terminacion_piso,
         body.estado_conservacion,
         body.tipo,
+        body.predio_id, // <-- este lo sumás
         id,
       ]
     );
@@ -117,7 +118,8 @@ export async function PATCH(
       "identificacion_plano",
       "superficie",
       "tipo",
-      // agregá otros campos que quieras permitir patch
+      "terminacion_piso", // <-- agregá este
+      "estado_conservacion", // <-- y este
     ];
 
     for (const key of allowedFields) {

@@ -136,39 +136,69 @@ export async function PATCH(
   const { id } = await params;
   const body = await request.json();
 
-  const {
-    largo_predominante,
-    ancho_predominante,
-    diametro,
-    altura_maxima,
-    altura_minima,
-  } = body;
+  if (!id || isNaN(id)) {
+    return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+  }
+
+  // Campos que pueden ser actualizados
+  const allowedFields = [
+    "construccion_id",
+    "identificacion_plano",
+    "numero_planta",
+    "tipo",
+    "local_id",
+    "local_sin_uso",
+    "superficie",
+    "tipo_superficie",
+    "cui_number",
+    "relevamiento_id",
+    "largo_predominante",
+    "ancho_predominante",
+    "diametro",
+    "altura_maxima",
+    "altura_minima",
+    "destino_original",
+    "proteccion_contra_robo",
+    "observaciones",
+    "estado",
+    "numero_construccion",
+  ];
+
+  const fields = [];
+  const values = [];
+
+  for (const key of allowedFields) {
+    if (key in body) {
+      fields.push(`${key} = ?`);
+      values.push(body[key]);
+    }
+  }
+
+  if (fields.length === 0) {
+    return NextResponse.json(
+      { message: "No hay campos válidos para actualizar" },
+      { status: 400 }
+    );
+  }
+
+  values.push(id);
 
   try {
     const connection = await getConnection();
-    const [result] = await connection.execute(
-      `UPDATE locales_por_construccion 
-       SET largo_predominante = ?, 
-           ancho_predominante = ?, 
-           diametro = ?, 
-           altura_maxima = ?, 
-           altura_minima = ?
-       WHERE id = ?`,
-      [
-        largo_predominante,
-        ancho_predominante,
-        diametro,
-        altura_maxima,
-        altura_minima,
-        id,
-      ]
+
+    const [result] = await connection.query(
+      `UPDATE locales_por_construccion SET ${fields.join(", ")} WHERE id = ?`,
+      values
     );
 
     connection.release();
 
-    return NextResponse.json({ success: true, updated: result });
+    return NextResponse.json({
+      message: "Local actualizado correctamente",
+      updated: result,
+    });
   } catch (error) {
-    console.error("Error al actualizar dimensiones:", error);
+    console.error("Error al hacer PATCH del local:", error);
     return new NextResponse("Error al actualizar", { status: 500 });
   }
 }

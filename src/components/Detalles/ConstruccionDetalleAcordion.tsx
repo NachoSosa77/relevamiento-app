@@ -101,6 +101,7 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
                         <th className="px-3 py-2">Tipo</th>
                         <th className="px-3 py-2">Identificación</th>
                         <th className="px-3 py-2">Superficie (m²)</th>
+                        <th className="px-3 py-2">Estado</th>
                         <th className="px-3 py-2">Acciones</th>
                       </tr>
                     </thead>
@@ -112,6 +113,11 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
                             {local.identificacion_plano}
                           </td>
                           <td className="px-3 py-2">{local.superficie}</td>
+                          <td className={`font-semibold px-3 py-2 ${
+                        local.estado === "completo"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}>{local.estado}</td>
                           <td className="px-3 py-2">
                             <button
                               onClick={() => openModal(local)}

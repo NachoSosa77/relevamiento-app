@@ -7,6 +7,7 @@ import { PredioDetalle } from "@/components/Detalles/PredioDetalle";
 import RespondientesDetalle from "@/components/Detalles/RespondientesDetalles";
 import { Accordion } from "@/components/ui/Acordion";
 import { AccordionItem } from "@/components/ui/AcordionItem";
+import Spinner from "@/components/ui/Spinner";
 import { Relevamiento } from "@/interfaces/Relevamiento";
 import { relevamientoService } from "@/services/relevamientoService";
 import { useParams, useRouter } from "next/navigation";
@@ -41,7 +42,14 @@ const DetallePage = () => {
     fetchRelevamiento();
   }, [relevamientoId]);
 
-  if (loading) return <div>Cargando relevamiento...</div>;
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
   if (error) return <div>Error: {error}</div>;
 
   return (

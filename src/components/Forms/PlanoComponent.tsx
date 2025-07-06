@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setArchivosSubidos } from "@/redux/slices/archivoSlice";
 import {
   setCantidadConstrucciones,
   setSuperficieTotalPredio,
@@ -59,29 +60,55 @@ export default function PlanoComponent() {
   };
 
   useEffect(() => {
-    const fetchDatosPlano = async () => {
-      if (!relevamientoId) return;
+  const fetchDatosPlano = async () => {
+    if (!relevamientoId) return;
 
-      try {
-        const res = await fetch(`/api/espacios_escolares/${relevamientoId}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
+    try {
+      // Obtener datos del plano
+      const res = await fetch(`/api/espacios_escolares/${relevamientoId}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
 
-        if (data) {
-          dispatch(setCantidadConstrucciones(data.cantidad_construcciones));
-          dispatch(setSuperficieTotalPredio(data.superficie_total_predio));
-          setEditando(true);
+      if (data) {
+        dispatch(setCantidadConstrucciones(data.cantidad_construcciones));
+        dispatch(setSuperficieTotalPredio(data.superficie_total_predio));
+        setEditando(true);
+
+        // Inferir estado visual de los checkboxes
+        if (
+          data.superficie_total_predio !== null &&
+          data.superficie_total_predio !== undefined
+        ) {
+          setSiChecked(true);
+          setNoChecked(false);
+          setShowComponents(true);
+        } else {
+          setNoChecked(true);
+          setSiChecked(false);
+          setShowComponents(false);
         }
-      } catch (error) {
-        console.error("Error al cargar datos del plano:", error);
-        setIsLoading(false);
       }
-    };
 
-    fetchDatosPlano();
-    setIsLoading(false);
-  }, [relevamientoId]);
+      // Obtener archivos del relevamiento
+      const resArchivos = await fetch(
+        `/api/archivos?relevamientoId=${relevamientoId}`
+      );
+      const dataArchivos = await resArchivos.json();
+
+      if (dataArchivos?.archivos) {
+        dispatch(setArchivosSubidos(dataArchivos.archivos));
+      }
+    } catch (error) {
+      console.error("Error al cargar datos del plano o archivos:", error);
+    } finally {
+      setIsLoading(false); // ✅ Solo después de todo
+    }
+  };
+
+  fetchDatosPlano();
+}, [relevamientoId]);
+
 
   // 👉 Spinner antes del return principal
   if (isLoading) return <Spinner />;
@@ -140,57 +167,33 @@ export default function PlanoComponent() {
       </div>
 
       {/* Paso 2 y 3 */}
-      {showComponents === true ||
-        (editando && (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
-                  2
-                </div>
-                <p className="text-sm font-semibold text-gray-700">
-                  Superficie total del predio
-                </p>
+      {(showComponents === true || editando) && (
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
+                2
               </div>
-              <DecimalNumericInput
-                label=""
-                value={superficieTotalPredio}
-                subLabel="m2 O-NS"
-                onChange={handleSuperficieTotalPredioChange}
-                disabled={false}
-              />
+              <p className="text-sm font-semibold text-gray-700">
+                Superficie total del predio
+              </p>
             </div>
-
-            <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
-                  3
-                </div>
-                <p className="text-sm font-semibold text-gray-700">
-                  Construcciones en el predio
-                </p>
-              </div>
-              <NumericInput
-                label=""
-                value={cantidadConstrucciones}
-                subLabel=""
-                onChange={handleCantidadConstruccionesChange}
-                disabled={false}
-              />
-            </div>
+            <DecimalNumericInput
+              label=""
+              value={superficieTotalPredio}
+              subLabel="m2 O-NS"
+              onChange={handleSuperficieTotalPredioChange}
+              disabled={false}
+            />
           </div>
-        ))}
 
-      {/* Solo paso 3 si eligió "NO" */}
-      {showComponents === false ||
-        (editando && (
-          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4">
+          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
                 3
               </div>
               <p className="text-sm font-semibold text-gray-700">
-                Cantidad de construcciones en el predio
+                Construcciones en el predio
               </p>
             </div>
             <NumericInput
@@ -201,7 +204,29 @@ export default function PlanoComponent() {
               disabled={false}
             />
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* Solo paso 3 si eligió "NO" */}
+      {(showComponents === false || editando) && (
+        <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-custom text-white flex items-center justify-center text-sm font-semibold">
+              3
+            </div>
+            <p className="text-sm font-semibold text-gray-700">
+              Cantidad de construcciones en el predio
+            </p>
+          </div>
+          <NumericInput
+            label=""
+            value={cantidadConstrucciones}
+            subLabel=""
+            onChange={handleCantidadConstruccionesChange}
+            disabled={false}
+          />
+        </div>
+      )}
     </div>
   );
 }

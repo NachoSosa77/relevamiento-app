@@ -6,7 +6,6 @@ import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-  setCui,
   setInstitucionesData,
 } from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
@@ -35,15 +34,12 @@ const EstablecimientosComponent: React.FC = () => {
     if (!relevamientoId) return; // ⛔ Evita ejecutar hasta que exista
     const fetchCui = async () => {
       const res = await fetch(`/api/relevamientos/id/${relevamientoId}`); // endpoint que devuelve relevamiento por ID
-      console.log("Respuesta de la API:", res);
       const data = await res.json();
       setCuiFromDB(data?.cui_id ?? null);
     };
     fetchCui();
   }, [relevamientoId]);
 
-  console.log("relevamientoId:", relevamientoId);
-  console.log("CUI desde DB:", cuiFromDB);
 
   useEffect(() => {
     const fetchSelectedInstitution = async () => {
@@ -83,7 +79,6 @@ const EstablecimientosComponent: React.FC = () => {
           throw new Error("Error al obtener instituciones guardadas");
 
         const data = await res.json();
-        console.log("Instituciones guardadas:", data);
         if (data.length > 0) {
           setEditando(true); // 🟡 está en modo edición
           setInstituciones(data); // carga como estado inicial
@@ -196,9 +191,9 @@ const EstablecimientosComponent: React.FC = () => {
   const handleGuardarRelaciones = async () => {
     if (!relevamientoId || instituciones.length === 0) {
       toast.error("No hay instituciones para guardar.");
+      setGuardandoRelaciones(true); // 🟢 iniciar bloqueo
       return;
 
-      setGuardandoRelaciones(true); // 🟢 iniciar bloqueo
     }
 
     try {
@@ -278,9 +273,7 @@ const EstablecimientosComponent: React.FC = () => {
         <CuiComponent
           label={""}
           initialCui={cuiFromDB}
-          onCuiInputChange={(nuevoCui) => {
-            if (cuiFromDB !== undefined) dispatch(setCui(nuevoCui));
-          }}
+          onCuiInputChange={()=> {}}
           isReadOnly={false}
           sublabel=""
           institucionActualId={selectedInstitutionId}

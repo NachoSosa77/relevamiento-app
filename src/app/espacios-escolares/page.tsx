@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -8,6 +9,7 @@ import LocalesPorConstruccion from "@/components/Forms/LocalesPorConstruccion";
 import PlanoComponent from "@/components/Forms/PlanoComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useCuiFromRelevamientoId } from "@/hooks/useCuiByRelevamientoId";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -27,16 +29,18 @@ export default function EspaciosEscolaresPage() {
     (state) => state.espacio_escolar
   ); // Obtén el estado de espacio_escolar
   const relevamientoId = useRelevamientoId();
+  const selectedCui = useCuiFromRelevamientoId(relevamientoId);
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<InstitucionesData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  useEffect(() => {
-  }, [selectedInstitutionId]);
+  useEffect(() => {}, [selectedInstitutionId]);
 
   useEffect(() => {
     const fetchInstitution = async () => {
@@ -63,22 +67,20 @@ export default function EspaciosEscolaresPage() {
     }
   }, [dispatch, selectedInstitutionId]);
 
-  useEffect(() => {
-  }, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
+  useEffect(() => {}, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
 
   const handleSaveObservacion = (observations: string) => {
     dispatch(setObservaciones(observations));
-    toast.success('Observaciones guardadas!')
   };
 
   const enviarDatosEspacioEscolar = async () => {
+    setIsSubmitting(true); // ⬅️ Activa el spinner al iniciar
     try {
       const payload = {
         relevamiento_id: relevamientoId, // <-- este es clave
-        cui: selectedEspacioEscolar.cui,
+        cui: selectedCui,
         cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
         superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
-        plano: selectedEspacioEscolar.plano,
         observaciones: selectedEspacioEscolar.observaciones,
       };
 
@@ -92,26 +94,6 @@ export default function EspaciosEscolaresPage() {
 
       if (!response.ok) {
         throw new Error("Error al guardar los datos del espacio escolar.");
-      }
-
-      // 👉 Enviar instituciones relacionadas
-      const responseInstituciones = await fetch(
-        "/api/instituciones_por_relevamiento",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            relevamiento_id: relevamientoId,
-            instituciones:
-              selectedEspacioEscolar.institucionesSeleccionadas.map(
-                (i) => i.id
-              ),
-          }),
-        }
-      );
-
-      if (!responseInstituciones.ok) {
-        throw new Error("Error al guardar instituciones por relevamiento.");
       }
 
       toast.success("Espacio escolar guardado correctamente 🎉", {
@@ -129,18 +111,13 @@ export default function EspaciosEscolaresPage() {
         autoClose: 3000,
       });
       setError(error.message);
+    } finally {
+      setIsSubmitting(false); // ⬅️ Siempre se ejecuta, haya éxito o error
     }
   };
 
   if (error) {
     return <div>Error: {error}</div>;
-  }
-
-  if (!selectedInstitution) {
-    return <div className="flex items-center justify-center">
-      <Spinner />
-    </div>
-      ;
   }
 
   return (
@@ -159,15 +136,14 @@ export default function EspaciosEscolaresPage() {
       {loading && (
         <div className=" flex items-center justify-center">
           <Spinner />
-          Cargando instituciones...
         </div>
       )}
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
         isReadOnly={true}
-        initialCui={selectedInstitution.cui}
-        onCuiInputChange={() => { }}
+        initialCui={selectedCui}
+        onCuiInputChange={() => {}}
         sublabel=""
         institucionActualId={selectedInstitutionId}
       />
@@ -186,9 +162,36 @@ export default function EspaciosEscolaresPage() {
           {/* Contenedor flex con justify-center */}
           <button
             onClick={enviarDatosEspacioEscolar}
-            className="px-4 py-2 w-80 bg-custom text-white rounded-md hover:bg-custom/50"
+            className="px-4 py-2 w-80 bg-custom text-white rounded-md hover:bg-custom/50 flex items-center justify-center gap-2 disabled:opacity-60"
+            disabled={isSubmitting}
           >
-            Guardar Espacio Escolar
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="w-5 h-5 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                Guardando...
+              </>
+            ) : (
+              "Guardar Espacio Escolar"
+            )}
           </button>
         </div>
       )}

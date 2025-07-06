@@ -1,25 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+
+import { AreasExteriores } from "@/interfaces/AreaExterior";
+import { TipoAreasExteriores } from "@/interfaces/TipoAreasExteriores";
 import { areasExterioresService } from "@/services/areasExterioresService";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import EditAreaExteriorModal from "../Modals/EditAreaExteriorModal";
+import Spinner from "../ui/Spinner";
 
 interface Props {
   relevamientoId: number;
 }
 
-interface AreaExterior {
-  id: number;
-  identificacion_plano: string;
-  tipo: string;
-  superficie: string;
-  estado_conservacion?: string;
-  terminacion_piso?: string;
-}
+
 
 export const AreaExternaTable = ({ relevamientoId }: Props) => {
-  const [areas, setAreas] = useState<AreaExterior[]>([]);
+  const [areas, setAreas] = useState<AreasExteriores[]>([]);
+  const [opcionesAreas, setOpcionesAreas] = useState<TipoAreasExteriores[]>([]);
+  const [opcionesTerminacionPiso, setOpcionesTerminacionPiso] = useState<string>();
+  const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Estado para edición en modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [areaEditando, setAreaEditando] = useState<AreasExteriores | null>(null);
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -28,14 +33,60 @@ export const AreaExternaTable = ({ relevamientoId }: Props) => {
           relevamientoId
         );
         setAreas(data.areasExteriores);
+        const [areas, pisos] =
+          await Promise.all([
+          areasExterioresService.getOpcionesAreasExteriores(),
+          areasExterioresService.getOpcionesTerminacionPiso(), // suponiendo que este método existe
+        ]);
+        setOpcionesAreas(areas);
+        setOpcionesTerminacionPiso(pisos);
       } catch (error) {
         toast.error("Error al cargar áreas exteriores");
+      } finally {
+        setLoading(false);
       }
     };
     fetchAreas();
   }, [relevamientoId]);
 
-  if (areas.length === 0) return <p>No hay áreas exteriores registradas.</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const abrirModalEditar = (area: AreasExteriores) => {
+    setAreaEditando(area);
+    setModalVisible(true);
+  };
+
+  const cerrarModal = () => {
+    setModalVisible(false);
+    setAreaEditando(null);
+  };
+
+  const onSaveArea = async (areaActualizada: AreasExteriores) => {
+  try {
+    if (areaActualizada.id === undefined) {
+      throw new Error("El id del área es indefinido, no se puede actualizar");
+    }
+
+    await areasExterioresService.updateAreaExterior(areaActualizada.id, areaActualizada);
+
+    setAreas((prev) =>
+      prev.map((a) => (a.id === areaActualizada.id ? areaActualizada : a))
+    );
+
+    toast.success("Área actualizada correctamente");
+    cerrarModal();
+  } catch (error) {
+    toast.error("Error al actualizar el área exterior");
+    console.error(error);
+  }
+};
+
 
   return (
     <div className="border rounded-md p-2 shadow-sm">
@@ -68,6 +119,7 @@ export const AreaExternaTable = ({ relevamientoId }: Props) => {
                 <th className="border border-gray-300 p-2">Superficie (m²)</th>
                 <th className="border border-gray-300 p-2">Terminación Piso</th>
                 <th className="border border-gray-300 p-2">Estado Conservación</th>
+                <th className="border border-gray-300 p-2">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -78,11 +130,31 @@ export const AreaExternaTable = ({ relevamientoId }: Props) => {
                   <td className="border border-gray-300 p-2">{area.superficie}</td>
                   <td className="border border-gray-300 p-2">{area.terminacion_piso || "-"}</td>
                   <td className="border border-gray-300 p-2">{area.estado_conservacion || "-"}</td>
+                  <td className="border border-gray-300 p-2">
+                    <button
+                      className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+                      onClick={() => abrirModalEditar(area)}
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {modalVisible && areaEditando && (
+        <EditAreaExteriorModal
+          open={modalVisible}
+          onClose={cerrarModal}
+          area={areaEditando}
+          onSave={onSaveArea}
+          opcionesAreas={opcionesAreas}
+          modoCompleto={true}
+          // si necesitás opciones o props adicionales, agregalas acá
+        />
       )}
     </div>
   );

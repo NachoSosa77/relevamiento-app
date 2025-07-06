@@ -173,7 +173,13 @@ const putConstruccion = async (id: number, data: any) => {
   return response.data;
 };
 
-
+export const updateLocalCompleto = async (
+  id: number,
+  local: Partial<LocalesConstruccion>
+) => {
+  const response = await axios.patch(`/api/locales_por_construccion/${id}`, local);
+  return response.data;
+};
 
 
 // Exportar las funciones como un servicio
@@ -188,5 +194,6 @@ export const localesService = {
   updateConstruccionAntiRoboById,
   getLocalesByConstruccionId,
   updateEstadoLocal,
-  putConstruccion
+  putConstruccion,
+  updateLocalCompleto,
 };
