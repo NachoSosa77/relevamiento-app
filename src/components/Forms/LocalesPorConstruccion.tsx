@@ -21,7 +21,7 @@ export default function LocalesPorConstruccion() {
   const [construccionIdEnProceso, setConstruccionIdEnProceso] = useState<
     Record<number, number | null>
   >({});
-  
+
   const [opcionesLocales, setOpcionesLocales] = useState<TipoLocales[]>([]);
   const [superficiesPorConstruccion, setSuperficiesPorConstruccion] = useState<
     Record<number, { cubierta: number; semicubierta: number; total: number }>
@@ -38,6 +38,10 @@ export default function LocalesPorConstruccion() {
   const [localesPorConstruccion, setLocalesPorConstruccion] = useState<
     Record<number, LocalesConstruccion[]>
   >({});
+  const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
+  const [conflictoConstruccionNum, setConflictoConstruccionNum] = useState<
+    number | null
+  >(null);
   const relevamientoId = useRelevamientoId();
   const cuiNumber = useCuiFromRelevamientoId(relevamientoId);
   const [formValues, setFormValues] = useState<
@@ -125,6 +129,37 @@ export default function LocalesPorConstruccion() {
     if (relevamientoId) fetchLocalesExistentes();
   }, [relevamientoId]);
 
+  const verificarConstruccionExistente = async (numeroConstruccion: number) => {
+    if (!relevamientoId) return false;
+    try {
+      const res = await fetch(
+        `/api/construcciones/buscar?relevamiento_id=${relevamientoId}&numero_construccion=${numeroConstruccion}`
+      );
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data.existe;
+    } catch {
+      return false;
+    }
+  };
+
+  const obtenerConstruccionExistente = async (
+    relevamientoId: number,
+    numeroConstruccion: number
+  ): Promise<number | null> => {
+    try {
+      const res = await fetch(
+        `/api/construcciones/buscar?relevamiento_id=${relevamientoId}&numero_construccion=${numeroConstruccion}`
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.construccion_id ?? null;
+    } catch (err) {
+      console.error("Error al obtener construcción existente:", err);
+      return null;
+    }
+  };
+
   const handleFormChange = (
     construccionIndex: number,
     field: keyof LocalesConstruccion,
@@ -188,13 +223,18 @@ export default function LocalesPorConstruccion() {
     setIsSubmitting(true);
     setConstruccionIdEnProceso((prev) => ({
       ...prev,
-      [activeIndex]: -1, // 👉 lo seteamos apenas empieza el proceso
+      [activeIndex]: -1,
     }));
 
     try {
       const locales = localesPorConstruccion[activeIndex] || [];
       if (locales.length === 0) {
         toast.warning("Debe agregar al menos un local.");
+        setIsSubmitting(false);
+        setConstruccionIdEnProceso((prev) => ({
+          ...prev,
+          [activeIndex]: null,
+        }));
         return;
       }
 
@@ -202,6 +242,7 @@ export default function LocalesPorConstruccion() {
       let construccionId: number | undefined;
 
       if (editando && construccionesExistentes[activeIndex]) {
+        // Actualizar directamente
         await localesService.putConstruccion(
           construccionesExistentes[activeIndex],
           {
@@ -217,6 +258,7 @@ export default function LocalesPorConstruccion() {
         );
         construccionId = construccionesExistentes[activeIndex];
       } else {
+        // Intentar crear construcción
         try {
           const construccion = await localesService.postConstrucciones({
             numero_construccion: numeroConstruccion,
@@ -237,32 +279,62 @@ export default function LocalesPorConstruccion() {
           }));
           setEditando(true);
         } catch (err: any) {
-          if (err?.response?.status === 409) {
-            toast.error(
-              "Ya existe una construcción con ese número para este relevamiento."
+          if (err?.status === 409) {
+            const existe = await verificarConstruccionExistente(
+              numeroConstruccion
             );
+            if (existe) {
+              if (typeof relevamientoId !== "number") {
+                toast.error("No se puede obtener el ID del relevamiento.");
+                return;
+              }
+              const idExistente = await obtenerConstruccionExistente(
+                relevamientoId,
+                numeroConstruccion
+              );
+              if (idExistente) {
+                setConstruccionesExistentes((prev) => ({
+                  ...prev,
+                  [activeIndex]: idExistente,
+                }));
+                setConflictoConstruccionNum(numeroConstruccion);
+                setModalConfirmOpen(true);
+              } else {
+                toast.error(
+                  "No se pudo obtener el ID de la construcción existente."
+                );
+              }
+            } else {
+              toast.error(
+                "Ya existe una construcción con ese número para este relevamiento."
+              );
+            }
           } else {
             toast.error("Error al crear la construcción.");
             console.error("Error inesperado:", err);
           }
-
           setIsSubmitting(false);
           setConstruccionIdEnProceso((prev) => ({
             ...prev,
             [activeIndex]: null,
           }));
-          return; // 👈 cortamos ejecución si falló
+          return;
         }
       }
 
       if (!construccionId || !relevamientoId || !cuiNumber) {
         toast.error("Faltan datos obligatorios para guardar los locales.");
+        setIsSubmitting(false);
+        setConstruccionIdEnProceso((prev) => ({
+          ...prev,
+          [activeIndex]: null,
+        }));
         return;
       }
 
       setConstruccionIdEnProceso((prev) => ({
         ...prev,
-        [activeIndex]: construccionId, // ✅ reemplazamos el -1 con el ID real
+        [activeIndex]: construccionId,
       }));
 
       const localesConDatos = locales.map((local) => ({
@@ -285,11 +357,70 @@ export default function LocalesPorConstruccion() {
       console.error("Error al guardar:", error);
       toast.error("Hubo un error al guardar los datos");
     } finally {
+      setIsSubmitting(false);
       setConstruccionIdEnProceso((prev) => ({
         ...prev,
         [activeIndex]: null,
       }));
+    }
+  };
+
+  const confirmarActualizarConstruccion = async () => {
+    if (!conflictoConstruccionNum) return;
+
+    setModalConfirmOpen(false);
+    setIsSubmitting(true);
+    setConstruccionIdEnProceso((prev) => ({
+      ...prev,
+      [activeIndex]: -1,
+    }));
+
+    try {
+      const numeroConstruccion = conflictoConstruccionNum;
+
+      // Buscar el id de la construcción existente
+      const existingId = construccionesExistentes[activeIndex];
+      if (!existingId) {
+        // Aquí podrías hacer una llamada para obtener el id real,
+        // pero si lo tenés guardado, lo usás directamente
+        toast.error("No se encontró el ID de la construcción existente");
+        return;
+      }
+
+      await localesService.putConstruccion(existingId, {
+        numero_construccion: numeroConstruccion,
+        relevamiento_id: relevamientoId,
+        superficie_cubierta:
+          superficiesPorConstruccion[activeIndex]?.cubierta || 0,
+        superficie_semicubierta:
+          superficiesPorConstruccion[activeIndex]?.semicubierta || 0,
+        superficie_total: superficiesPorConstruccion[activeIndex]?.total || 0,
+      });
+
+      // Luego envias los locales
+      const locales = localesPorConstruccion[activeIndex] || [];
+      const localesConDatos = locales.map((local) => ({
+        ...local,
+        construccion_id: existingId,
+        cui_number: cuiNumber,
+        relevamiento_id: relevamientoId!,
+        numero_construccion: numeroConstruccion,
+        local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
+      }));
+
+      await localesService.postLocales(localesConDatos);
+
+      toast.success("Construcción y locales actualizados correctamente");
+    } catch (error) {
+      console.error("Error al actualizar construcción:", error);
+      toast.error("Error al actualizar la construcción");
+    } finally {
       setIsSubmitting(false);
+      setConstruccionIdEnProceso((prev) => ({
+        ...prev,
+        [activeIndex]: null,
+      }));
+      setConflictoConstruccionNum(null);
     }
   };
 
@@ -508,8 +639,10 @@ export default function LocalesPorConstruccion() {
                           Header: "Tipo",
                           accessor: "tipo",
                           Cell: ({ row }) => {
-                            const local =
-                              localesPorConstruccion[activeIndex][row.index];
+                            const locales = localesPorConstruccion[activeIndex];
+                            const local = locales?.[row.index];
+                            if (!local)
+                              return <span className="text-gray-400">-</span>;
                             return (
                               <span>{local.nombre_local ?? local.tipo}</span>
                             );
@@ -608,6 +741,33 @@ export default function LocalesPorConstruccion() {
           </button>
         </div>
       </div>
+      {modalConfirmOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">
+              Confirmar actualización
+            </h2>
+            <p className="mb-6">
+              Ya existe una construcción con este número. ¿Querés actualizarla
+              con los nuevos datos?
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setModalConfirmOpen(false)}
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarActualizarConstruccion}
+                className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+              >
+                Sí, actualizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

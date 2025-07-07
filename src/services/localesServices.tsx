@@ -50,11 +50,17 @@ const postConstrucciones = async (data: Construccion) => {
       : await res.text();
 
     console.error("Error del servidor:", errorData);
-    throw new Error("Error al guardar la construcción");
+
+    // Lanzamos un error con status para poder diferenciarlo en el componente
+    const customError = new Error("Error al guardar la construcción") as any;
+    customError.status = res.status;
+    customError.data = errorData;
+    throw customError;
   }
 
   return res.json();
 };
+
 
 // Obtener locales por relevamiento
 const getLocalesPorRelevamiento = async (relevamientoId: number) => {
