@@ -160,7 +160,7 @@ export const useIluminacionVentilacion = (
         });
         setData(res.data);
       } catch (error) {
-        console.error("Error al cargar equipamiento sanitario", error);
+        console.error("Error al cargar los registros", error);
       } finally {
         setLoading(false);
       }

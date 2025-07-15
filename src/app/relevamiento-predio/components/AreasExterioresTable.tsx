@@ -12,7 +12,11 @@ interface Opcion {
   label: string;
 }
 
-const AreasExterioresTable: React.FC = () => {
+interface AreasExterioresTableProps {
+  predioId: number | null;
+}
+
+const AreasExterioresTable: React.FC<AreasExterioresTableProps> = ({ predioId }) => {
   const relevamientoId = useRelevamientoId();
   const [columnsConfig, setColumnsConfig] = useState<Column[]>([]);
   const [servicios, setServicios] = useState<AreasExteriores[]>([]);
@@ -21,6 +25,7 @@ const AreasExterioresTable: React.FC = () => {
     string[]
   >([]);
   const estadoConservacionOpciones = ["Bueno", "Malo", "Regular"]; // Opciones fijas
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 🚀 Cargar columnas configuradas
   useEffect(() => {
@@ -73,15 +78,17 @@ const AreasExterioresTable: React.FC = () => {
     const fetchAreasExteriores = async () => {
       if (relevamientoId) {
         try {
-          const response = await axios.get(`/api/areas_exteriores/by_relevamiento/${relevamientoId}`);
-          
+          const response = await axios.get(
+            `/api/areas_exteriores/by_relevamiento/${relevamientoId}`
+          );
+
           setServicios(response.data.areasExteriores);
         } catch (error) {
           console.error("Error al obtener áreas exteriores:", error);
         }
       }
     };
-  
+
     fetchAreasExteriores();
   }, [relevamientoId]);
 
@@ -110,14 +117,19 @@ const AreasExterioresTable: React.FC = () => {
       toast.warning("No se encontró el área exterior a actualizar.");
       return;
     }
-
+    setIsSubmitting(true);
     try {
-      await axios.put(`/api/areas_exteriores/${id}`, servicioActualizado);
-      toast.success("Datos actualizados correctamente");
-    } catch (error) {
+    await axios.put(`/api/areas_exteriores/${id}`, {
+      ...servicioActualizado,
+      predio_id: predioId, // ⬅️ Se incluye aquí
+    });
+
+    toast.success("Datos actualizados correctamente");
+  }  catch (error) {
       console.error("Error al actualizar los datos:", error);
       toast.error("Hubo un error al actualizar los datos.");
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -195,8 +207,9 @@ const AreasExterioresTable: React.FC = () => {
                   <button
                     onClick={() => handleGuardarCambios(servicio.id)}
                     className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
+                    disabled={isSubmitting}
                   >
-                    Cargar Información
+                    {isSubmitting ? "Guardando..." : "Guardar información"}
                   </button>
                 </td>
               </tr>

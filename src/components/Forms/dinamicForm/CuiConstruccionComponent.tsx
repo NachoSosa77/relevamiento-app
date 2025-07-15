@@ -1,5 +1,6 @@
 "use client";
 import NumericInput from "@/components/ui/NumericInput";
+import Spinner from "@/components/ui/Spinner";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   setConstruccionId,
 }) => {
   const relevamientoId = useRelevamientoId();
-
+  const [isLoading, setIsLoading] = useState(true);
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
   const [selectedConstruccionId, setSelectedConstruccionId] = useState<
     number | null
@@ -43,6 +44,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       setSelectedConstruccionId(null);
       setNumeroConstruccion(0);
       setConstruccionId(null);
+      setIsLoading(false);
       return;
     }
 
@@ -51,7 +53,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       .then((data: Construccion[]) => {
         setConstrucciones(data);
 
-        // Asignar sólo si no hay ninguna construcción seleccionada
         if (data.length > 0 && selectedConstruccionId === null) {
           setSelectedConstruccionId(data[0].id);
           setNumeroConstruccion(data[0].numero_construccion);
@@ -64,20 +65,16 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       })
       .catch(() => {
         toast.error("Error al cargar construcciones");
+         setIsLoading(false);
       });
   }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
 
-  const handleConstruccionChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const id = Number(e.target.value);
+
+  // Cuando cambie la construcción seleccionada vía tab
+  const handleTabClick = (id: number, numero: number) => {
     setSelectedConstruccionId(id);
     setConstruccionId(id);
-
-    const construccion = construcciones.find((c) => c.id === id);
-    if (construccion) {
-      setNumeroConstruccion(construccion.numero_construccion);
-    }
+    setNumeroConstruccion(numero);
   };
 
   return (
@@ -92,21 +89,35 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
           relevamiento. Si hay más de una, deberá completar un relevamiento para
           cada una por separado.
         </p>
-        <select
-          value={selectedConstruccionId ?? ""}
-          onChange={handleConstruccionChange}
-          disabled={isReadOnly || construcciones.length === 0}
-          className="border border-gray-300 rounded p-2 w-full"
+
+ {isLoading ? (
+  <div className="flex justify-center items-center py-4">
+    <Spinner />
+  </div>
+) : construcciones.length === 0 ? (
+  <p className="text-black">No hay construcciones</p>
+) : (
+  <div className="border-b border-gray-300 mb-4">
+    <nav className="-mb-px flex space-x-4 overflow-x-auto">
+      {construcciones.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => handleTabClick(c.id, c.numero_construccion)}
+          disabled={isReadOnly}
+          className={
+            "whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm " +
+            (selectedConstruccionId === c.id
+              ? "border-custom text-custom"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+          }
         >
-          {construcciones.length === 0 && (
-            <option value="">No hay construcciones</option>
-          )}
-          {construcciones.map((c) => (
-            <option key={c.id} value={c.id}>
-              Construcción Nº {c.numero_construccion}
-            </option>
-          ))}
-        </select>
+          Construcción Nº {c.numero_construccion}
+        </button>
+      ))}
+    </nav>
+  </div>
+)}
+
       </div>
 
       <div className="flex items-center justify-between gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">

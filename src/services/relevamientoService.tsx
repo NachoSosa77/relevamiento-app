@@ -2,14 +2,15 @@
 import axios from "axios";
 
 export const relevamientoService = {
-  createRelevamiento: async (cui: number) => {
-    try {
-      const response = await axios.post("/api/relevamientos", { cui });
-      return response.data;
-    } catch (error: any) {
-      throw new Error("Error al crear el relevamiento: " + error.message);
-    }
-  },
+  createRelevamiento: async (data: { cui: number; created_by: string; usuario_id: number; email: string }) => {
+  try {
+    const response = await axios.post("/api/relevamientos", data);
+    return response.data;
+  } catch (error: any) {
+    throw new Error("Error al crear el relevamiento: " + error.message);
+  }
+},
+
   getRelevamientoByCui: async (cui: number) => {
     try {
       const response = await axios.get(`/api/relevamientos/${cui}`);

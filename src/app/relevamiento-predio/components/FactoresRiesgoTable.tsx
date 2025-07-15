@@ -22,6 +22,8 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
   const dispatch = useDispatch();
 
   const relevamientoId = useRelevamientoId();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleChange = (
     index: number,
@@ -52,7 +54,7 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
     toast.warning("Por favor, completá al menos un campo antes de continuar.");
     return; // Bloquea el envío
   }
-
+  setIsSubmitting(true);
   const serviciosConRelevamiento = servicios.map((servicio) => ({
     ...servicio,
     relevamiento_id: relevamientoId,
@@ -72,6 +74,7 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
   } else {
     toast.error("Error al cargar los servicios.");
   }
+  setIsSubmitting(false);
 };
 
 
@@ -147,8 +150,10 @@ const FactoresRiesgoTable: React.FC<FactoresRiesgoFormProps> = ({
           <button
             type="submit"
             className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
+            disabled={isSubmitting}
           >
-            Cargar información
+                      {isSubmitting ? "Guardando..." : "Guardar información"}
+
           </button>
         </div>
       </form>

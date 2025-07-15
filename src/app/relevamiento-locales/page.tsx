@@ -3,6 +3,7 @@
 
 import CuiLocalesComponent from "@/components/Forms/dinamicForm/CuiLocalesComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect, useState } from "react";
@@ -11,6 +12,7 @@ export default function RelevamientoLocalesPage() {
   const selectedInstitutionsRedux = useAppSelector(
     (state) => state.espacio_escolar.institucionesSeleccionadas
   );
+  const relevamientoId = useRelevamientoId();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,11 @@ export default function RelevamientoLocalesPage() {
 
   return (
     <div className="mt-36 bg-white text-black text-sm">
-      <div className="flex justify-center items-center mt-20 mb-8 mx-4">
+      <div className="flex justify-between items-center mt-20 mb-8 mx-8">
+        <div className="flex items-center">
+          <h1 className="font-bold">Relevamiento N° {relevamientoId}</h1>
+        </div>
+
         <div className="flex flex-col items-center justify-center">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
           <h4 className="text-sm">
@@ -54,14 +60,14 @@ export default function RelevamientoLocalesPage() {
       {loading && (
         <div className="items-center justify-center">
           <Spinner />
-          Cargando instituciones...
+          Cargando locales...
         </div>
       )}
 
       <CuiLocalesComponent
         onLocalSelected={() => {}}
         isReadOnly={false}
-        label="COMPLETE UN FORMULARIO EXCLUSIVAMENTE POR CADA LOCAL CON FUNCIONES PEDAGOGICAS (AULA COMUN, SALA DE NIVEL INICIAL AULA ESPECIAL, LABORATORIO, TALLER, GIMNASIO, PISCINA CUBIERTA, BIBLIOTECA/CENTRO DE RECURSOS, SALA DE ESTUDIO, SALON DE USOS MULTIPLES/PATIO CUBIERTO, OTRO LOCAL PEDAGOGICO) Y DE SERVICIOS (EXCLUSIVAMENTE COMEDOR, COCINA, OFFICE, SANITARIOS DE ALUMNOS, SANITARIOS DE DOCENTES/PERSONAL)."
+        label="COMPLETE UN FORMULARIO EXCLUSIVAMENTE POR CADA LOCAL."
         sublabel="Transcriba de la hoja de ruta el Número de CUI, transcriba del plano los números de construcción, planta y local."
       />
     </div>

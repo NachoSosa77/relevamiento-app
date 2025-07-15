@@ -44,7 +44,7 @@ export const almacenamientoAgua = [
   { id: "3.2.2", question: "Cisterna", showCondition: true },
   { id: "3.2.3", question: "Tanque elevado", showCondition: true },
   { id: "3.2.4", question: "Torre Tanque", showCondition: true },
-  { id: "3.2.5", question: "Bidones, botellas baldes", showCondition: false },
+  { id: "3.2.5", question: "Bidones, botellas, baldes", showCondition: false },
   { id: "3.2.6", question: "Otro sistema", showCondition: false },
 ];
 

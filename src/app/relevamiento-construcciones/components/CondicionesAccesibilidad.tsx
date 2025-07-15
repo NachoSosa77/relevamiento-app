@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Servicio {
@@ -23,10 +22,12 @@ interface ServiciosReuProps {
   construccionId: number | null;
 }
 
-interface EspecificacionesAccesibilidad {
+interface RespuestaAccesibilidad {
   id?: number;
+  disponibilidad: string;
   estado: string;
-  cantidad_bocas: string;
+  cantidad: number;
+  mantenimiento: string;
 }
 
 export default function CondicionesAccesibilidad({
@@ -37,24 +38,57 @@ export default function CondicionesAccesibilidad({
   servicios,
   construccionId,
 }: ServiciosReuProps) {
-  const [responses, setResponses] = useState<
-    Record<
-      string,
-      {
-        disponibilidad: string;
-        estado: string;
-        cantidad: string;
-        mantenimiento: string;
-      }
-    >
-  >({});
-
   const relevamientoId = useRelevamientoId();
+
+  const [responses, setResponses] = useState<Record<string, RespuestaAccesibilidad>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editando, setEditando] = useState(false);
+
+  // Cargar datos existentes para editar
+  useEffect(() => {
+  if (!relevamientoId || !construccionId) return;
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch(
+        `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const initialResponses: Record<string, RespuestaAccesibilidad> = {};
+          data.forEach((item: any) => {
+            const servicioId = item.servicio_id || item.servicio || item.id?.toString() || "";
+            initialResponses[servicioId] = {
+              id: item.id,
+              disponibilidad: item.disponibilidad || "",
+              estado: item.estado || "",
+              cantidad: item.cantidad || 0,
+              mantenimiento: item.mantenimiento || "",
+            };
+          });
+          setResponses(initialResponses);
+          setEditando(true);
+        } else {
+          // 👇 FIX ACÁ
+          setResponses({});
+          setEditando(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar condiciones accesibilidad:", error);
+    }
+  };
+
+  fetchData();
+}, [relevamientoId, construccionId]);
+
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "cantidad" | "mantenimiento",
-    value: string
+    field: keyof RespuestaAccesibilidad,
+    value: string | number
   ) => {
     setResponses((prev) => ({
       ...prev,
@@ -62,52 +96,42 @@ export default function CondicionesAccesibilidad({
     }));
   };
 
-  const [cantidadOptions, setCantidadOptions] = useState<{
-    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
-  }>({});
-
   const handleGuardar = async () => {
-    // Filtrar solo servicios que tengan datos válidos
+    // Validar que haya al menos un servicio con datos válidos
     const serviciosValidos = Object.keys(responses).filter((key) => {
       const r = responses[key];
-      const cantidad = cantidadOptions[key] ?? 0;
-
       return (
-        (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
-        (r?.estado && r.estado.trim() !== "") ||
-        cantidad > 0 ||
-        (r?.mantenimiento && r.mantenimiento.trim() !== "")
+        r?.disponibilidad.trim() !== "" ||
+        r?.estado.trim() !== "" ||
+        r?.cantidad > 0 ||
+        r?.mantenimiento.trim() !== ""
       );
     });
 
     if (serviciosValidos.length === 0) {
-      toast.warning(
-        "Debe completar al menos un servicio con datos antes de guardar"
-      );
+      toast.warning("Debe completar al menos un servicio con datos antes de guardar");
       return;
     }
 
+    // Armar payload con id si editando para PATCH
     const payload = {
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
       servicios: serviciosValidos.map((key) => ({
-        servicio:
-          servicios.find((servicio) => servicio.id === key)?.question ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        estado: responses[key]?.estado || "",
-        cantidad: cantidadOptions[key] || 0,
-        mantenimiento: responses[key]?.mantenimiento || "",
+        id: responses[key].id, // puede ser undefined para POST
+        servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
+        disponibilidad: responses[key].disponibilidad,
+        estado: responses[key].estado,
+        cantidad: responses[key].cantidad,
+        mantenimiento: responses[key].mantenimiento,
       })),
     };
 
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/condiciones_accesibilidad", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: editando ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const result = await response.json();
@@ -117,18 +141,27 @@ export default function CondicionesAccesibilidad({
       }
 
       toast.success(
-        "Relevamiento condiciones accesibilidad guardados correctamente"
+        editando
+          ? "Datos de condiciones accesibilidad actualizados correctamente"
+          : "Datos de condiciones accesibilidad guardados correctamente"
       );
 
-  } catch (error: any) {
-    console.error("Error al enviar los datos:", error);
-    toast.error(error.message || "Error al guardar los datos");
-  }
-};
-
+      // Si se guardó nuevo, ahora estamos editando
+      if (!editando) setEditando(true);
+    } catch (error: any) {
+      console.error("Error al enviar los datos:", error);
+      toast.error(error.message || "Error al guardar los datos");
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -161,144 +194,142 @@ export default function CondicionesAccesibilidad({
           </tr>
         </thead>
         <tbody>
-          {servicios.map(({ id, question, showCondition }) => (
-            <tr key={id} className="border text-sm">
-              <td className="border p-2 text-center">{id}</td>
-              <td className="border p-2">{question}</td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="No"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "No")
-                  }
-                />
-              </td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="Si"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "Si")
-                  }
-                />
-              </td>
+          {servicios.map(({ id, question, showCondition }) => {
+            const r = responses[id] || {
+              disponibilidad: "",
+              estado: "",
+              cantidad: 0,
+              mantenimiento: "",
+            };
+            return (
+              <tr key={id} className="border text-sm">
+                <td className="border p-2 text-center">{id}</td>
+                <td className="border p-2">{question}</td>
+                <td className="border p-2 text-center">
+                  <input
+                    type="radio"
+                    name={`disponibilidad-${id}`}
+                    value="No"
+                    checked={r.disponibilidad === "No"}
+                    onChange={() => handleResponseChange(id, "disponibilidad", "No")}
+                  />
+                </td>
+                <td className="border p-2 text-center">
+                  <input
+                    type="radio"
+                    name={`disponibilidad-${id}`}
+                    value="Si"
+                    checked={r.disponibilidad === "Si"}
+                    onChange={() => handleResponseChange(id, "disponibilidad", "Si")}
+                  />
+                </td>
 
-              {/* Especificaciones */}
-              <td
-                className={`border p-2 text-center ${
-                  !showCondition ? "bg-slate-200 text-slate-400" : ""
-                }`}
-              >
-                {!showCondition ? (
-                  "No corresponde"
-                ) : (
-                  <div className="flex gap-2 items-center justify-center">
-                    {/* Radios B, R, M */}
+                <td
+                  className={`border p-2 text-center ${
+                    !showCondition ? "bg-slate-200 text-slate-400" : ""
+                  }`}
+                >
+                  {!showCondition ? (
+                    "No corresponde"
+                  ) : (
                     <div className="flex gap-2 items-center justify-center">
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Bueno"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Bueno")
-                          }
-                          className="mr-1"
-                        />
-                        B
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Regular"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Regular")
-                          }
-                          className="mr-1"
-                        />
-                        R
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Malo"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Malo")
-                          }
-                          className="mr-1"
-                        />
-                        M
-                      </label>
-                    </div>
-
-                    {/* TextInput para 8.1, 8.2, 8.3 */}
-                    {(id === "8.1" || id === "8.2" || id === "8.3") && (
+                      {/* Radios B, R, M */}
                       <div className="flex gap-2 items-center justify-center">
-                        <p className="text-xs font-bold">Cantidad</p>
-                        <NumericInput
-                          disabled={false}
-                          label=""
-                          subLabel=""
-                          value={cantidadOptions[id] || 0}
-                          onChange={(value: number | undefined) => {
-                            setCantidadOptions({
-                              ...cantidadOptions,
-                              [id]: value ?? 0,
-                            });
-                          }}
-                        />
-                      </div>
-                    )}
-                    {/* TextInput para 8.1, 8.2, 8.3 */}
-                    {(id === "8.1" || id === "8.2") && (
-                      <div className="flex gap-2 items-center justify-center">
-                        <p className="text-xs font-bold">
-                          ¿Se realiza mantenimiento?
-                        </p>
                         <label>
                           <input
                             type="radio"
-                            name={`mantenimiento-${id}-8.3`}
-                            value="No"
-                            onChange={() =>
-                              handleResponseChange(id, "mantenimiento", "No")
-                            }
+                            name={`estado-${id}`}
+                            value="Bueno"
+                            checked={r.estado === "Bueno"}
+                            onChange={() => handleResponseChange(id, "estado", "Bueno")}
                             className="mr-1"
                           />
-                          No
+                          B
                         </label>
                         <label>
                           <input
                             type="radio"
-                            name={`mantenimiento-${id}`}
+                            name={`estado-${id}`}
+                            value="Regular"
+                            checked={r.estado === "Regular"}
+                            onChange={() => handleResponseChange(id, "estado", "Regular")}
+                            className="mr-1"
+                          />
+                          R
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${id}`}
                             value="Malo"
-                            onChange={() =>
-                              handleResponseChange(id, "mantenimiento", "Si")
-                            }
+                            checked={r.estado === "Malo"}
+                            onChange={() => handleResponseChange(id, "estado", "Malo")}
                             className="mr-1"
                           />
-                          Si
+                          M
                         </label>
                       </div>
-                    )}
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
+
+                      {/* NumericInput para cantidades */}
+                      {(id === "8.1" || id === "8.2" || id === "8.3") && (
+                        <div className="flex gap-2 items-center justify-center">
+                          <p className="text-xs font-bold">Cantidad</p>
+                          <NumericInput
+                            disabled={false}
+                            label=""
+                            subLabel=""
+                            value={r.cantidad}
+                            onChange={(value: number | undefined) =>
+                              handleResponseChange(id, "cantidad", value ?? 0)
+                            }
+                          />
+                        </div>
+                      )}
+
+                      {/* Mantenimiento */}
+                      {(id === "8.1" || id === "8.2") && (
+                        <div className="flex gap-2 items-center justify-center">
+                          <p className="text-xs font-bold">¿Se realiza mantenimiento?</p>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`mantenimiento-${id}`}
+                              value="No"
+                              checked={r.mantenimiento === "No"}
+                              onChange={() => handleResponseChange(id, "mantenimiento", "No")}
+                              className="mr-1"
+                            />
+                            No
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`mantenimiento-${id}`}
+                              value="Si"
+                              checked={r.mantenimiento === "Si"}
+                              onChange={() => handleResponseChange(id, "mantenimiento", "Si")}
+                              className="mr-1"
+                            />
+                            Sí
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

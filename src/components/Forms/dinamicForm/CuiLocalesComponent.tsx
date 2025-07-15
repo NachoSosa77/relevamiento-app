@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import { LocalDetalleModal } from "@/components/Detalles/LocalesConstruccion";
 import Spinner from "@/components/ui/Spinner";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { LocalesConstruccion } from "@/interfaces/Locales";
-import { useAppSelector } from "@/redux/hooks";
 import { localesService } from "@/services/localesServices";
 import { relevamientoService } from "@/services/relevamientoService";
 import { useRouter } from "next/navigation";
@@ -23,22 +24,21 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   isReadOnly,
 }) => {
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingLocales, setLoadingLocales] = useState(true);
+  const [loadingGuardar, setLoadingGuardar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocalId, setSelectedLocalId] = useState<number | undefined>(
     undefined
   );
   const [relevamientoGuardado, setRelevamientoGuardado] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [localSeleccionado, setLocalSeleccionado] =
+    useState<LocalesConstruccion | null>(null);
+
   const router = useRouter();
-
-  const relevamientoId = useAppSelector(
-    (state) => state.espacio_escolar.relevamientoId
-  ); 
-
-  
-  //const relevamientoId = 12; 
-
+  const relevamientoId = useRelevamientoId();
   useEffect(() => {
+    if (relevamientoId === undefined || relevamientoId === null) return;
     if (!relevamientoId) {
       toast.error(
         "No se encontró el ID del relevamiento. Por favor, regrese al inicio."
@@ -47,14 +47,14 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
     }
     const fetchLocales = async () => {
       try {
-        const response = await localesService.getLocalesPorRelevamiento(
+        const localesData = await localesService.getLocalesPorRelevamiento(
           relevamientoId
         );
-        setLocales(response.locales || []);
+        setLocales(localesData); // ya es el array directamente
       } catch (err) {
         setError("Error al obtener los locales");
       } finally {
-        setLoading(false);
+        setLoadingLocales(false);
       }
     };
 
@@ -62,6 +62,18 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
       fetchLocales();
     }
   }, [relevamientoId, router]);
+
+  const handleVerDetalle = async (local: LocalesConstruccion) => {
+    try {
+      const response = await fetch(`/api/locales_por_construccion/${local.id}`);
+      const data = await response.json();
+      setLocalSeleccionado(data.local);
+      setShowModal(true);
+    } catch (error) {
+      console.error("Error al obtener detalle del local:", error);
+      toast.error("Error al cargar la información del local");
+    }
+  };
 
   // Separar locales en completos e incompletos para mostrar en dos tablas
   const localesCompletos = locales.filter((l) => l.estado === "completo");
@@ -80,6 +92,8 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
       return;
     }
 
+    setLoadingGuardar(true);
+
     try {
       await relevamientoService.updateEstadoRelevamiento(
         relevamientoId,
@@ -93,10 +107,12 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
     } catch (error) {
       console.error(error);
       toast.error("Error al actualizar estado del relevamiento");
+    } finally {
+      setLoadingGuardar(false);
     }
   };
 
-  if (loading)
+  if (loadingLocales)
     return (
       <div className="items-center justify-center">
         <Spinner />
@@ -105,7 +121,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
   if (error) return <p className="mx-10 text-red-500">{error}</p>;
 
   return (
-    <div className="mx-10 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+    <div className="mx-10 p-4 border rounded-2xl shadow-lg bg-white text-sm">
       <p className="text-sm font-semibold">{label}</p>
       <p className="text-xs text-gray-500 mb-4">{sublabel}</p>
 
@@ -122,9 +138,9 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                 <th className="border px-2 py-1 text-center">
                   N° Construcción
                 </th>
-                <th className="border px-2 py-1 text-center">
-                  N° Identif. plano
-                </th>
+                <th className="border px-2 py-1 text-center">N° Planta</th>
+
+                <th className="border px-2 py-1 text-center">N° Local</th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
                 <th className="border px-2 py-1 text-center">Acción</th>
@@ -140,7 +156,10 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                     {local.cui_number}
                   </td>
                   <td className="border px-2 py-1 text-center">
-                    L {local.numero_construccion}
+                    C {local.numero_construccion}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    P {local.numero_planta}
                   </td>
                   <td className="border px-2 py-1 text-center">
                     L {local.identificacion_plano}
@@ -186,9 +205,8 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                 <th className="border px-2 py-1 text-center">
                   N° Construcción
                 </th>
-                <th className="border px-2 py-1 text-center">
-                  N° Identif. plano
-                </th>
+                <th className="border px-2 py-1 text-center">N° Planta</th>
+                <th className="border px-2 py-1 text-center">N° Local</th>
                 <th className="border px-2 py-1 text-center">Tipo local</th>
                 <th className="border px-2 py-1 text-center">Estado</th>
                 <th className="border px-2 py-1 text-center">Acción</th>
@@ -206,7 +224,10 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                     {local.cui_number}
                   </td>
                   <td className="border px-2 py-1 text-center">
-                    L {local.numero_construccion}
+                    C {local.numero_construccion}
+                  </td>
+                  <td className="border px-2 py-1 text-center">
+                    P {local.numero_planta}
                   </td>
                   <td className="border px-2 py-1 text-center">
                     L {local.identificacion_plano}
@@ -219,8 +240,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                   </td>
                   <td className="border px-2 py-1 text-center">
                     <button
-                      onClick={() => {}}
-                      disabled={isReadOnly}
+                      onClick={() => handleVerDetalle(local)}
                       className={`px-3 py-1 rounded text-white ${
                         isReadOnly
                           ? "bg-gray-400"
@@ -235,14 +255,24 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
             </tbody>
           </table>
         )}
+
+        {showModal && localSeleccionado && (
+          <LocalDetalleModal
+            local={localSeleccionado}
+            onClose={() => setShowModal(false)}
+            isOpen={showModal}
+          />
+        )}
       </div>
 
       <button
-        disabled={!todosCompletos || relevamientoGuardado}
+        disabled={!todosCompletos || relevamientoGuardado || loadingGuardar}
         onClick={handleGuardarRelevamiento}
         className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:bg-gray-400"
       >
-        {relevamientoGuardado
+        {loadingGuardar
+          ? "Guardando..."
+          : relevamientoGuardado
           ? "Relevamiento guardado ✔️"
           : "Guardar Relevamiento"}
       </button>

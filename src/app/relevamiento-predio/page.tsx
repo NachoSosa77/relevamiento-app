@@ -1,39 +1,42 @@
 "use client";
 
-import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
 import EstablecimientosPrivados from "@/components/Forms/EstablecimientosPrivados";
+import CuiDisplayComponent from "@/components/Forms/estaticForm/CuiDisplayComponent";
 import RespondientesDelCuiComponent from "@/components/Forms/RespondientesDelCuiComponent";
 import VisitasComponent from "@/components/Forms/VisitasComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useCuiFromRelevamientoId } from "@/hooks/useCuiByRelevamientoId";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useUser } from "@/hooks/useUser";
-import { useAppSelector } from "@/redux/hooks";
 
 export default function RelevamientoPredioPage() {
   const { user, loading, error } = useUser();
-  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
+  const relevamientoId = useRelevamientoId();
+  const selectedCui = useCuiFromRelevamientoId(relevamientoId);
 
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="h-full bg-white text-black mt-28">
-      <div className="flex justify-center mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="font-bold">FORMULARIO DE RELEVAMIENTO DEL PREDIO</h1>
+    <div className="bg-white text-black text-sm mt-28 w-full">
+      <div className="flex justify-between mt-20 mb-8 mx-8">
+        <div className="flex items-center">
+          <h1 className="font-bold">Relevamiento N° {relevamientoId}</h1>
         </div>
-        <div className="w-10 h-10 rounded-full ml-4 flex justify-center items-center text-white bg-custom text-xl">
-          <p>1</p>
+        <div className="flex items-center justify-center">
+          <h1 className="font-bold">FORMULARIO DE RELEVAMIENTO DEL PREDIO</h1>
+          <div className="w-10 h-10 rounded-full ml-4 flex justify-center items-center text-white bg-custom text-xl">
+            <p>1</p>
+          </div>
         </div>
       </div>
-            {
-        loading && (
-          <div className="flex items-center justify-center"><Spinner />Cargando instituciones...</div>
-        )
-      }
+      {loading && (
+        <div className="flex items-center justify-center">
+          <Spinner />
+        </div>
+      )}
 
-      <CuiComponent
-        initialCui={selectedCui}
-        onCuiInputChange={() => {}}
-        isReadOnly={true}
+      <CuiDisplayComponent
+        cui={selectedCui}
         label="COMPLETE UN ÚNICO FORMULARIO N°1 CORRESPONDIENTE AL PREDIO QUE ESTÁ RELEVANDO"
         sublabel=""
       />

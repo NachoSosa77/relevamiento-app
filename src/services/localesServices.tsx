@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Construccion, LocalesConstruccion } from '@/interfaces/Locales';
 import axios from 'axios';
 
@@ -49,7 +50,12 @@ const postConstrucciones = async (data: Construccion) => {
       : await res.text();
 
     console.error("Error del servidor:", errorData);
-    throw new Error("Error al guardar la construcción");
+
+    // Lanzamos un error con status para poder diferenciarlo en el componente
+    const customError = new Error("Error al guardar la construcción") as any;
+    customError.status = res.status;
+    customError.data = errorData;
+    throw customError;
   }
 
   return res.json();
@@ -60,7 +66,7 @@ const postConstrucciones = async (data: Construccion) => {
 const getLocalesPorRelevamiento = async (relevamientoId: number) => {
   try {
     const response = await axios.get(`/api/locales_por_construccion/by_relevamiento/${relevamientoId}`);
-    return response.data;
+    return response.data.locales;
   } catch (error) {
     console.error("Error al obtener locales por relevamiento:", error);
     throw error;
@@ -168,7 +174,18 @@ export const updateEstadoLocal = async (
   return await response.json();
 };
 
+const putConstruccion = async (id: number, data: any) => {
+  const response = await axios.patch(`/api/construcciones/${id}`, data);
+  return response.data;
+};
 
+export const updateLocalCompleto = async (
+  id: number,
+  local: Partial<LocalesConstruccion>
+) => {
+  const response = await axios.patch(`/api/locales_por_construccion/${id}`, local);
+  return response.data;
+};
 
 
 // Exportar las funciones como un servicio
@@ -182,5 +199,7 @@ export const localesService = {
   updateDimensionesById,
   updateConstruccionAntiRoboById,
   getLocalesByConstruccionId,
-  updateEstadoLocal
+  updateEstadoLocal,
+  putConstruccion,
+  updateLocalCompleto,
 };

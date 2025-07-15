@@ -19,6 +19,8 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
 }) => {
   const dispatch = useDispatch();
   const relevamientoId = useRelevamientoId();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosTransporteComunicaciones[]>(serviciosData);
@@ -55,7 +57,7 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
     ...servicio,
     relevamiento_id: relevamientoId,
   }));
-
+  setIsSubmitting(true);
   try {
     const response = await fetch("/api/servicios_transporte_comunicaciones", {
       method: "POST",
@@ -75,6 +77,7 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
     toast.error("Error de red o del servidor.");
     console.error(error);
   }
+  setIsSubmitting(false);
 };
 
 
@@ -152,8 +155,9 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
         <button
           type="submit"
           className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
+          disabled={isSubmitting}
         >
-          Cargar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </form>

@@ -48,6 +48,7 @@ export default function ServiciosBasicos({
       }
     >
   >({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDisponibilidadChange = (servicioId: string, value: string) => {
     setResponses((prev) => ({
@@ -73,7 +74,6 @@ export default function ServiciosBasicos({
   };
 
   const handleMotivoChange = (servicioId: string, value: string) => {
-    console.log("Motivo cambiado:", servicioId, value);
     setResponses((prev) => ({
       ...prev,
       [servicioId]: {
@@ -124,6 +124,8 @@ export default function ServiciosBasicos({
       );
       return;
     }
+    if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
 
     try {
       const response = await fetch("/api/instalaciones_basicas", {
@@ -136,6 +138,7 @@ export default function ServiciosBasicos({
       console.error(error);
       toast.error("Error al guardar los datos");
     }
+    setIsSubmitting(false); // Rehabilitar botón después de enviar
   };
 
   // IDs de los servicios que no deben renderizar la columna "Motivo"
@@ -269,9 +272,10 @@ export default function ServiciosBasicos({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

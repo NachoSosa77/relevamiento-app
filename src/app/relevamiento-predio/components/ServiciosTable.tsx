@@ -16,6 +16,8 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const relevamientoId = useRelevamientoId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosBasicos[]>(serviciosData);
@@ -55,7 +57,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
       ...servicio,
       relevamiento_id: relevamientoId,
     }));
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/servicios_basicos_predio", {
         method: "POST",
@@ -75,6 +77,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
       toast.error("Error inesperado al enviar los datos.");
       console.error(error);
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -156,8 +159,9 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
         <button
           type="submit"
           className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
+          disabled={isSubmitting}
         >
-          Cargar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </form>

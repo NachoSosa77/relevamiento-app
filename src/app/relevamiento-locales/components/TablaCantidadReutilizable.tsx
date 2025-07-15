@@ -39,6 +39,8 @@ export default function TableCantidadReutilizable({
     const localId = Number(params.id);
     const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<ResponseData>({});
+        const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleResponseChange = (
     id: string,
@@ -81,7 +83,8 @@ export default function TableCantidadReutilizable({
     toast.warning("Por favor, completá al menos un dato antes de guardar.");
     return;
   }
-
+      if (isSubmitting) return; // prevenir doble clic
+    setIsSubmitting(true); // Deshabilitar botón mientras se envía
 
   try {
     const response = await fetch("/api/aberturas", {
@@ -96,6 +99,8 @@ export default function TableCantidadReutilizable({
     console.error(error);
     toast.error("Error al guardar los datos");
   }
+          setIsSubmitting(false); // Rehabilitar botón después de enviar
+
 };
 
 
@@ -222,9 +227,10 @@ export default function TableCantidadReutilizable({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

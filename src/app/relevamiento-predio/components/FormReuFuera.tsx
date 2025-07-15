@@ -1,6 +1,5 @@
-import { useAppSelector } from "@/redux/hooks";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,10 +10,14 @@ interface FormValues {
   onConfirm: () => void;
 }
 
-const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfirm }) => {
+const FormReuFuera: React.FC<FormValues> = ({
+  setMostrarFuera,
+  question,
+  onConfirm,
+}) => {
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const router = useRouter();
-  const relevamientoId = useAppSelector((state) => state.espacio_escolar.relevamientoId);
+  const [isSubmitting, setIsSubmitting] = useState(false); // nuevo estado
+  const relevamientoId = useRelevamientoId();
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
 
@@ -28,6 +31,7 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
   };
 
   const handleConfirmNo = async () => {
+    setIsSubmitting(true);
     try {
       await axios.post("/api/obras_fuera_predio", {
         tipo_obra: "Sin obras fuera del predio",
@@ -39,10 +43,11 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
       toast.success("Datos enviados correctamente");
       setShowConfirmButton(false);
       onConfirm();
-      router.push("/relevamiento-construcciones");
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       toast.error("Hubo un error al enviar los datos");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,9 +88,16 @@ const FormReuFuera: React.FC<FormValues> = ({ setMostrarFuera, question, onConfi
               <button
                 type="button"
                 onClick={handleConfirmNo}
-                className="text-sm font-bold bg-red-600 hover:bg-red-700 transition-colors text-white px-5 py-3 rounded-lg"
+                disabled={isSubmitting}
+                className={`text-sm font-bold px-5 py-3 rounded-lg transition-colors ${
+                  isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                }`}
               >
-                ¿Confirma que no existen obras fuera del predio?
+                {isSubmitting
+                  ? "Enviando..."
+                  : "¿Confirma que no existen obras fuera del predio?"}
               </button>
             </div>
           )}

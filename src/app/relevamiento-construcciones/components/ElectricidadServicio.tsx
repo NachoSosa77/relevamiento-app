@@ -3,7 +3,7 @@
 import NumericInput from "@/components/ui/NumericInput";
 import Select from "@/components/ui/SelectComponent";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { tipoCombustibleOpciones } from "../config/tipoCombustible";
 
@@ -38,6 +38,8 @@ export default function ElectricidadServicio({
       estado_bateria?: string;
     };
   }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editando, setEditando] = useState(false);
 
   const relevamientoId = useRelevamientoId();
 
@@ -50,6 +52,49 @@ export default function ElectricidadServicio({
   const [potenciaOptions, setPotenciaOptions] = useState<{
     [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
   }>({});
+
+  useEffect(() => {
+  if (!relevamientoId || !construccionId) return;
+
+  async function fetchDatos() {
+    try {
+      const res = await fetch(
+        `/api/servicio_electricidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
+      if (!res.ok) throw new Error("Error al cargar datos");
+
+      const data = await res.json();
+      setEditando(data.length > 0);
+      // Transformamos los datos para llenar los estados
+      const newResponses: typeof responses = {};
+      const newCombustibleOptions: typeof combustibleOptions = {};
+      const newPotenciaOptions: typeof potenciaOptions = {};
+
+      data.forEach((item: any) => {
+        const servicioId = servicios.find(s => s.question === item.servicio)?.id;
+        if (!servicioId) return; // saltar si no coincide
+
+        newResponses[servicioId] = {
+          disponibilidad: item.disponibilidad || "",
+          estado: item.estado || "",
+          especificaciones: item.especificaciones || "",
+          estado_bateria: item.estado_bateria || "",
+        };
+
+        newCombustibleOptions[servicioId] = item.tipo_combustible || "";
+        newPotenciaOptions[servicioId] = Number(item.potencia) || 0;
+      });
+
+      setResponses(newResponses);
+      setCombustibleOptions(newCombustibleOptions);
+      setPotenciaOptions(newPotenciaOptions);
+    } catch (error) {
+      console.error("Error cargando datos electricidad:", error);
+    }
+  }
+
+  fetchDatos();
+}, [relevamientoId, construccionId, servicios]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -97,7 +142,7 @@ export default function ElectricidadServicio({
         potencia: potenciaOptions[key] || 0,
       })),
     };
-
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/servicio_electricidad", {
         method: "POST",
@@ -114,10 +159,16 @@ export default function ElectricidadServicio({
     } catch (error: any) {
       toast.error(error.message || "Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+      {editando && (
+  <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+    Estás editando un registro ya existente.
+  </div>
+)}
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -323,10 +374,11 @@ export default function ElectricidadServicio({
 
       <div className="mt-4 flex justify-end">
         <button
+          disabled={isSubmitting}
           onClick={handleGuardar}
           className="text-white text-sm bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

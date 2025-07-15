@@ -11,3 +11,12 @@ export interface InstitucionesData {
     numero: number;
     referencia: string;
 }
+
+export interface Institucion {
+    id?: number;
+    nombre: string;
+    localidad: string;
+    modalidad_nivel: string;
+    cue: number;
+    cui: number;
+}

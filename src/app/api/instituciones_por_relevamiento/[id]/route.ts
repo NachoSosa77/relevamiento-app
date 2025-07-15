@@ -19,11 +19,15 @@ export async function GET(
   try {
     const [rows] = await connection.query(
       `SELECT i.id,
-  i.institucion AS nombre,
+  i.institucion,
   i.cui,
   i.cue,
   i.modalidad_nivel,
-  i.localidad
+  i.localidad,
+  i.provincia,
+  i.calle,
+  i.departamento,
+  i.matricula  
    FROM instituciones i
    JOIN instituciones_por_relevamiento ipr ON i.id = ipr.institucion_id
    WHERE ipr.relevamiento_id = ?`,

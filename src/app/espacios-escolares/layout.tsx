@@ -6,7 +6,6 @@ export default function EspaciosEscolaresLayout({ children }: { children: ReactN
   return (
     <div className="mb-10">
             <Navbar />
-
       {children}
     </div>
   );

@@ -1,7 +1,7 @@
 import { getConnection } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const connection = await getConnection();
     const data = await req.json();
@@ -13,30 +13,31 @@ export async function POST(req: Request) {
       );
     }
 
-    const insertQuery = `
-      INSERT INTO equipamiento_sanitarios (equipamiento, cantidad, cantidad_funcionamiento, estado, relevamiento_id, local_id)
-      VALUES (?, ?, ?, ?, ?, ?)
+    if (data.length === 0) {
+      return NextResponse.json(
+        { message: "No hay datos para insertar" },
+        { status: 200 }
+      );
+    }
+
+    const values = data.map((item) => [
+      item.equipamiento ?? null,
+      item.cantidad ?? null,
+      item.cantidad_funcionamiento ?? null,
+      item.estado ?? null,
+      item.relevamiento_id ?? null,
+      item.local_id ?? null,
+    ]);
+
+    const query = `
+      INSERT INTO equipamiento_sanitarios 
+      (equipamiento, cantidad, cantidad_funcionamiento, estado, relevamiento_id, local_id)
+      VALUES ${values.map(() => "(?, ?, ?, ?, ?, ?)").join(", ")}
     `;
 
-    for (const item of data) {
-      const {
-        equipamiento,
-        cantidad,
-        cantidad_funcionamiento,
-        estado,
-        relevamiento_id,
-        local_id,
-      } = item;
+    const flatValues = values.flat();
 
-      await connection.execute(insertQuery, [
-        equipamiento ?? null,
-        cantidad ?? null,
-        cantidad_funcionamiento ?? null,
-        estado ?? null,
-        relevamiento_id ?? null,
-        local_id ?? null,
-      ]);
-    }
+    await connection.execute(query, flatValues);
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Plantas {
@@ -31,7 +32,7 @@ export default function CantidadPlantas({
   construccionId,
 }: CantidadPlantasProps) {
   const relevamientoId = useRelevamientoId();
-
+  const [isSaving, setIsSaving] = useState(false);
   const [plantas, setPlantas] = useState<Plantas>({
     subsuelo: undefined,
     pb: undefined,
@@ -45,6 +46,55 @@ export default function CantidadPlantas({
   const [onConfirmCallback, setOnConfirmCallback] = useState<() => void>(
     () => {}
   );
+
+ useEffect(() => {
+  const fetchPlantas = async () => {
+    if (!relevamientoId || !construccionId) return;
+
+    try {
+      const res = await fetch("/api/plantas/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          relevamiento_id: relevamientoId,
+          construccion_id: construccionId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.exists && data.planta_id) {
+        setPlantaIdExistente(data.planta_id);
+        setPlantas({
+          subsuelo: data.subsuelo ?? 0,
+          pb: data.pb ?? 0,
+          pisos_superiores: data.pisos_superiores ?? 0,
+          total_plantas:
+            Math.abs(data.subsuelo ?? 0) +
+            Math.abs(data.pb ?? 0) +
+            Math.abs(data.pisos_superiores ?? 0),
+        });
+      } else {
+        setPlantaIdExistente(null);  // muy importante resetear si no existe registro
+        setPlantas({
+          subsuelo: undefined,
+          pb: undefined,
+          pisos_superiores: undefined,
+          total_plantas: undefined,
+        });
+      }
+    } catch (error) {
+      console.error("Error al verificar existencia de plantas", error);
+      setPlantaIdExistente(null);
+    }
+  };
+
+  fetchPlantas();
+}, [relevamientoId, construccionId]);
+
+
   const calcularTotal = (datos: Plantas) =>
     Math.abs(datos.subsuelo || 0) +
     Math.abs(datos.pb || 0) +
@@ -69,6 +119,9 @@ export default function CantidadPlantas({
   };
 
   const handleGuardarCambios = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     try {
       if (
         plantas.subsuelo === undefined ||
@@ -81,9 +134,7 @@ export default function CantidadPlantas({
 
       const response = await fetch("/api/plantas", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           relevamiento_id: relevamientoId,
           construccion_id: construccionId,
@@ -96,7 +147,6 @@ export default function CantidadPlantas({
       if (data.exists && data.planta_id) {
         setPlantaIdExistente(data.planta_id);
 
-        // Guardamos el callback en línea
         setOnConfirmCallback(() => async () => {
           try {
             const plantasActualizadas = {
@@ -106,6 +156,7 @@ export default function CantidadPlantas({
                 (plantas.pb ?? 0) +
                 (plantas.pisos_superiores ?? 0),
             };
+
             const patchRes = await fetch("/api/plantas", {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
@@ -118,8 +169,6 @@ export default function CantidadPlantas({
             if (!patchRes.ok) throw new Error("Error al actualizar los datos");
 
             toast.success("Datos actualizados correctamente");
-
-            // Limpiamos el estado
             setPlantas({
               subsuelo: undefined,
               pb: undefined,
@@ -128,24 +177,25 @@ export default function CantidadPlantas({
             });
           } catch (error) {
             toast.error("Hubo un error al actualizar los datos.");
-            console.error(error);
+          } finally {
+            setIsSaving(false);
           }
         });
 
-        setShowConfirm(true); // Mostramos el modal
+        setShowConfirm(true);
       } else {
         toast.success("Datos guardados correctamente");
-
         setPlantas({
           subsuelo: undefined,
           pb: undefined,
           pisos_superiores: undefined,
           total_plantas: undefined,
         });
+        setIsSaving(false);
       }
     } catch (error) {
-      console.error("Error al guardar los datos:", error);
       toast.error("Hubo un error al guardar los datos.");
+      setIsSaving(false);
     }
   };
 
@@ -166,6 +216,12 @@ export default function CantidadPlantas({
           </p>
         </div>
       </div>
+
+      {plantaIdExistente && (
+  <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+    Estás editando un registro ya existente.
+  </div>
+)}
 
       {/* tabla */}
       <div className="mt-2 overflow-x-auto">
@@ -210,9 +266,21 @@ export default function CantidadPlantas({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardarCambios}
-          className="text-sm text-white font-bold bg-custom hover:bg-custom/50 p-2 rounded-lg flex-nowrap"
+          disabled={isSaving}
+          className={`text-sm font-bold p-2 rounded-lg flex items-center gap-2 ${
+            isSaving
+              ? "bg-gray-400 cursor-wait"
+              : "bg-custom hover:bg-custom/50 text-white"
+          }`}
         >
-          {plantaIdExistente ? "Actualizar Información" : "Guardar Información"}
+          {isSaving && (
+            <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          )}
+          {plantaIdExistente
+            ? "Actualizar Información"
+            : isSaving
+            ? "Guardando..."
+            : "Guardar Información"}
         </button>
       </div>
       <ConfirmModal

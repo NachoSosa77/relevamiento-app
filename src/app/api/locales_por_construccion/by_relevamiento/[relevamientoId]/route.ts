@@ -10,10 +10,17 @@ interface LocalPorConstruccion extends RowDataPacket {
   cui_number: number;
   numero_construccion: number;
   numero_planta: number;
-  identificacion_plano: number;
+  identificacion_plano: string;
   tipo: string;
   nombre_local: string;
   estado: string;
+  largo_predominante?: number | null;
+  ancho_predominante?: number | null;
+  diametro?: number | null;
+  altura_maxima?: number | null;
+  altura_minima?: number | null;
+  superficie?: number | null;
+  tipo_superficie?: string | null; // "Cubierta", "Semicubierta", etc.
 }
 
 export async function GET(
@@ -45,6 +52,13 @@ export async function GET(
           loc.tipo,
           identificacion_plano,
           estado,
+          superficie,
+          tipo_superficie,
+          lpc.largo_predominante,
+          lpc.ancho_predominante,
+          lpc.diametro,
+          lpc.altura_maxima,
+          lpc.altura_minima,
           loc.name AS nombre_local
         FROM locales_por_construccion lpc
         JOIN opciones_locales loc ON lpc.local_id = loc.id

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -5,6 +6,7 @@
 
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
+import Spinner from "@/components/ui/Spinner";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -39,6 +41,8 @@ const DetalleLocalPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hayCambios, setHayCambios] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const localId = id;
 
   const fetchLocal = useCallback(async () => {
@@ -55,9 +59,13 @@ const DetalleLocalPage = () => {
   }, [id]); // ✅ id es la única dependencia real
 
   useEffect(() => {
-    fetchLocal();
-  }, [fetchLocal]);
-  
+  if (!id) {
+    console.error("No hay ID en la ruta");
+    return;
+  }
+
+  fetchLocal();
+}, [fetchLocal]);
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!localId) return;
@@ -73,7 +81,6 @@ const DetalleLocalPage = () => {
       });
 
       if (res.ok) {
-        toast.success("Observaciones guardadas correctamente");
       } else {
         toast.error("Error al guardar observaciones");
       }
@@ -96,6 +103,9 @@ const DetalleLocalPage = () => {
   const handleGuardar = async () => {
     const valorAGuardar = obtenerDestinoOriginal();
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const response = await localesService.updateConstruccionById(local.id, {
         destino_original: valorAGuardar,
@@ -106,20 +116,25 @@ const DetalleLocalPage = () => {
       console.error(error);
       toast.error("Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   const handleGuardarLocal = async () => {
-  try {
-    // Asumiendo que tenés el localId disponible
-    await localesService.updateEstadoLocal(local.id, "completo");
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    toast.success("Local guardado correctamente");
-    router.push("/relevamiento-locales");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error al guardar el local");
-  }
-};
+    try {
+      // Asumiendo que tenés el localId disponible
+      await localesService.updateEstadoLocal(local.id, "completo");
+
+      toast.success("Local guardado correctamente");
+      router.push("/relevamiento-locales");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar el local");
+    }
+    setIsSubmitting(false);
+  };
 
   const marcarComoModificado = () => {
     setHayCambios(true);
@@ -128,7 +143,10 @@ const DetalleLocalPage = () => {
   const handleBack = () => {
     router.back();
   };
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return <div className="items-center justify-center">
+          <Spinner />
+          Cargando locales...
+        </div>;
   if (error) return <p className="text-red-500">{error}</p>;
   return (
     <div className="h-full bg-white text-black text-sm mt-32">
@@ -222,9 +240,10 @@ const DetalleLocalPage = () => {
             <div className="flex justify-end">
               <button
                 onClick={handleGuardar}
+                disabled={isSubmitting}
                 className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
               >
-                Guardar Información
+                {isSubmitting ? "Guardando..." : "Guardar Información"}
               </button>
             </div>
           </div>
@@ -253,13 +272,11 @@ const DetalleLocalPage = () => {
         label="ACONDICIONAMIENTO TÉRMICO"
         locales={tipoAcondicionamiento}
       />
-      {local?.tipo === "Pedagógico" && (
-        <SistemaContraRobo
-          id={7}
-          label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
-          locales={tipo_Sistema_Contra_Robo}
-        />
-      )}
+      <SistemaContraRobo
+        id={7}
+        label="SISTEMA DE PROTECCIÓN CONTRA ROBO"
+        locales={tipo_Sistema_Contra_Robo}
+      />
 
       <ServiciosBasicos
         id="8"
@@ -267,17 +284,15 @@ const DetalleLocalPage = () => {
         label="INSTALACIONES BÁSICAS"
         locales={tipoServiciosBasicos}
       />
-      {(local?.nombre_local === "Cocina" ||
-        local?.nombre_local === "Office" || local?.nombre_local === "Otro local pedagógico" || local?.nombre_local === "Oficina" || local?.nombre_local === "Aula especial") && (
-        <EquipamientoCantidad
-          id={9}
-          label="EQUIPAMIENTO DE COCINA/OFFICES"
-          locales={equipamientoCocina}
-        />
-      )}
+      <EquipamientoCantidad
+        id={9}
+        label="EQUIPAMIENTO DE COCINA/OFFICES"
+        locales={equipamientoCocina}
+      />
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Aula especial") && (
+        local?.nombre_local === "Sanitarios docentes/personal" ||
+        local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidadSanitarios
           id={10}
           label="EQUIPAMIENTO SANITARIO"
@@ -301,7 +316,7 @@ const DetalleLocalPage = () => {
               : "bg-gray-300 text-gray-500"
           }`}
         >
-          Actualizar Local
+          {isSubmitting ? "Actualizando..." : "Actualizar Local"}
         </button>
       </div>
     </div>

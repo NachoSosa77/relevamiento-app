@@ -2,8 +2,10 @@
 "use client";
 
 import { respondientesService } from "@/services/Respondientes/respondientesService";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Spinner from "../ui/Spinner";
 
 interface Respondiente {
   id: number;
@@ -18,8 +20,14 @@ interface Props {
 }
 
 const RespondientesDetalle = ({ relevamientoId }: Props) => {
+  const router = useRouter();
   const [respondientes, setRespondientes] = useState<Respondiente[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleEditar = () => {
+  sessionStorage.setItem("relevamientoId", String(relevamientoId));
+  router.push("/relevamiento-predio");
+};;
 
   useEffect(() => {
     const fetchRespondientes = async () => {
@@ -36,10 +44,24 @@ const RespondientesDetalle = ({ relevamientoId }: Props) => {
     fetchRespondientes();
   }, [relevamientoId]);
 
-  if (loading) return <p>Cargando respondientes...</p>;
+   if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
+          <div className="flex justify-end items-center mb-4">
+        <button
+          onClick={handleEditar}
+          className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+        >
+          Editar
+        </button>
+      </div>
       {respondientes.map((inst) => (
         <div
           key={inst.id}

@@ -6,9 +6,10 @@ import {
   actualizarVisita,
   agregarVisita,
   eliminarVisita,
+  setVisitas,
 } from "@/redux/slices/espacioEscolarSlice";
 import axios from "axios"; // Importamos axios para enviar la solicitud
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable";
@@ -18,10 +19,38 @@ export default function VisitasComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisita, setEditingVisita] = useState<Visita | null>(null); // Guardamos la visita que estamos editando
-  const relevamientoId = useRelevamientoId();
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editando, setEditando] = useState(false);
 
+  const relevamientoId = useRelevamientoId();
   const visitas = useAppSelector((state) => state.espacio_escolar.visitas);
+
+  useEffect(() => {
+    const cargarVisitasDesdeDB = async () => {
+      if (!relevamientoId) return;
+
+      try {
+        const response = await fetch(
+          `/api/visitas?relevamientoId=${relevamientoId}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Error al obtener visitas");
+        }
+
+        const data = await response.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          dispatch(setVisitas(data)); // <-- guardás en Redux
+          setEditando(true); // <-- mostrás el cartel amarillo
+        }
+      } catch (error) {
+        console.error("Error al cargar visitas desde la base de datos:", error);
+      }
+    };
+
+    cargarVisitasDesdeDB();
+  }, [relevamientoId, dispatch]);
 
   const agregarVisitaModal = () => {
     setEditingVisita(null); // Limpiar cualquier visita previa al agregar una nueva
@@ -96,6 +125,9 @@ export default function VisitasComponent() {
 
   // Función para enviar todas las visitas a la base de datos
   const enviarVisitasABaseDeDatos = async () => {
+    if (isSubmitting) return; // previene doble click
+    setIsSubmitting(true);
+
     if (!visitas || visitas.length === 0 || !relevamientoId) {
       toast.error("❌ No hay visitas o relevamiento ID no disponible.");
       return;
@@ -139,6 +171,8 @@ export default function VisitasComponent() {
     } catch (error) {
       console.error("❌ Error al enviar visitas:", error);
       toast.error("❌ Error al enviar las visitas a la base de datos");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -191,6 +225,11 @@ export default function VisitasComponent() {
 
   return (
     <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
       <div className="bg-gray-100 border border-gray-300 rounded-xl shadow-sm px-6 py-3 mb-6">
         <p className="text-gray-800 text-sm font-medium text-center">
           VISITAS REALIZADAS PARA COMPLETAR EL CENSO
@@ -221,7 +260,7 @@ export default function VisitasComponent() {
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
             disabled={!visitas.length}
           >
-            Guardar Información
+            {isSubmitting ? "Guardando..." : "Guardar información"}
           </button>
         </div>
       </div>

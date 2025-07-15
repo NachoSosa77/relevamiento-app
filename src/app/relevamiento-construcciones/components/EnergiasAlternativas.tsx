@@ -38,13 +38,13 @@ export default function EnergiasAlternativas({
   const [responses, setResponses] = useState<
     Record<
       string,
-      { disponibilidad: string; estado: string; tipo: string }
+      { disponibilidad: string; tipo: string }
     >
   >({});
 
   const handleResponseChange = (
     servicioId: string,
-    field: "disponibilidad" | "estado" | "tipo",
+    field: "disponibilidad" | "tipo",
     value: string
   ) => {
     setResponses((prev) => ({
@@ -54,25 +54,26 @@ export default function EnergiasAlternativas({
   };
 
   const relevamientoId = useRelevamientoId();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleGuardar = async () => {
   const payload = Object.keys(responses)
     .map((key) => ({
       tipo: "Energías alternativas",
       disponibilidad: responses[key]?.disponibilidad?.trim() || "",
-      estado: responses[key]?.estado?.trim() || "",
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
     }))
     // Filtramos solo si ambos están vacíos, es decir, dejamos pasar si al menos uno tiene dato
-    .filter((item) => item.disponibilidad !== "" || item.estado !== "");
+    .filter((item) => item.disponibilidad !== "" || item.tipo !== "");
 
   if (payload.length === 0) {
     toast.warning("No se completó ningún dato para guardar.");
     return;
   }
 
-
+  setIsSubmitting(true);
   try {
     const response = await fetch("/api/energias_alternativas", {
       method: "POST",
@@ -94,6 +95,7 @@ export default function EnergiasAlternativas({
     console.error("Error al enviar los datos:", error);
     toast.error(error.message || "Error al guardar los datos");
   }
+  setIsSubmitting(false);
 };
 
 
@@ -157,7 +159,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Bueno"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Bueno")
+                          handleResponseChange(id, "tipo", "Bueno")
                         }
                         className="mr-1"
                       />
@@ -169,7 +171,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Regular"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Regular")
+                          handleResponseChange(id, "tipo", "Regular")
                         }
                         className="mr-1"
                       />
@@ -181,7 +183,7 @@ export default function EnergiasAlternativas({
                         name={`estado-${id}`}
                         value="Malo"
                         onChange={() =>
-                          handleResponseChange(id, "estado", "Malo")
+                          handleResponseChange(id, "tipo", "Malo")
                         }
                         className="mr-1"
                       />
@@ -206,9 +208,9 @@ export default function EnergiasAlternativas({
                   <TextInput
                     label="Indique cuál"
                     sublabel=""
-                    value={responses[id]?.estado || ""}
+                    value={responses[id]?.tipo || ""}
                     onChange={(e) =>
-                      handleResponseChange(id, "estado", e.target.value)
+                      handleResponseChange(id, "tipo", e.target.value)
                     }
                   />
                 </td>
@@ -220,9 +222,11 @@ export default function EnergiasAlternativas({
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-sm text-white font-bold p-2 rounded-lg"
         >
-          Guardar Información
+                    {isSubmitting ? "Guardando..." : "Guardar información"}
+
         </button>
       </div>
     </div>

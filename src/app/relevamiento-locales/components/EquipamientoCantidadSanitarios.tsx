@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
@@ -39,6 +38,8 @@ export default function EquipamientoCantidadSanitarios({
   const relevamientoId = useRelevamientoId();
 
   const [responses, setResponses] = useState<ResponseData>({});
+  const [otroInput, setOtroInput] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleResponseChange = (
     id: string,
@@ -57,9 +58,11 @@ export default function EquipamientoCantidadSanitarios({
   const handleGuardar = async () => {
     const payload = locales.map(({ id, question }) => {
       const respuesta = responses[id];
+      const equipamiento =
+        question === "Otro" ? otroInput.trim() || "Otro" : question;
 
       return {
-        equipamiento: question,
+        equipamiento,
         cantidad: respuesta?.cantidad,
         cantidad_funcionamiento: respuesta?.cantidad_funcionamiento,
         estado: respuesta?.estado,
@@ -68,7 +71,6 @@ export default function EquipamientoCantidadSanitarios({
       };
     });
 
-    // Filtrar solo los que tengan cantidad > 0
     const datosFiltrados = payload.filter(
       (item) => typeof item.cantidad === "number" && item.cantidad > 0
     );
@@ -77,6 +79,10 @@ export default function EquipamientoCantidadSanitarios({
       toast.warning("Debe completar al menos un dato para guardar.");
       return;
     }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const response = await fetch("/api/equipamiento_sanitarios", {
         method: "POST",
@@ -88,21 +94,22 @@ export default function EquipamientoCantidadSanitarios({
       console.error(error);
       toast.error("Error al guardar los datos");
     }
+    setIsSubmitting(false);
   };
 
   return (
     <div className="mx-10 text-sm">
-      <div className="flex items-center gap-2 mt-2 p-2 border bg-slate-200">
-        <div className="w-6 h-6 flex justify-center text-white bg-black">
+      <div className="flex items-center gap-2 mt-2 p-2 border bg-custom text-white">
+        <div className="w-6 h-6 rounded-full flex justify-center items-center text-custom bg-white">
           <p>{id}</p>
         </div>
-        <div className="h-6 flex items-center justify-center bg-slate-200">
+        <div className="h-6 flex items-center justify-center">
           <p className="px-2 text-sm font-bold">{label}</p>
         </div>
       </div>
-      <table className="w-full border mt-2 text-xs">
+      <table className="w-full border text-xs">
         <thead>
-          <tr className="bg-slate-200">
+          <tr className="bg-custom text-white">
             <th className="border p-2"></th>
             <th className="border p-2">Ítem</th>
             <th className="border p-2">Cantidad</th>
@@ -114,7 +121,19 @@ export default function EquipamientoCantidadSanitarios({
           {locales.map(({ id, question, showCondition }) => (
             <tr key={id} className="border">
               <td className="border p-2 text-center">{id}</td>
-              <td className="border p-2 text-center">{question}</td>
+              <td className="border p-2 text-center">
+                {question === "Otro" ? (
+                  <input
+                    type="text"
+                    placeholder="Especifique otro"
+                    className="border p-1 text-sm w-full"
+                    value={otroInput}
+                    onChange={(e) => setOtroInput(e.target.value)}
+                  />
+                ) : (
+                  question
+                )}
+              </td>
               <td className="border p-2 text-center">
                 <NumericInput
                   disabled={false}
@@ -165,9 +184,10 @@ export default function EquipamientoCantidadSanitarios({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
-          className="bg-slate-200 text-sm font-bold px-4 py-2 rounded-md"
+          disabled={isSubmitting}
+          className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          Guardar Información
+          {isSubmitting ? "Guardando..." : "Guardar Información"}
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Select from "@/components/ui/SelectComponent";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import {
   almacenamientoAgua,
   provisionAgua,
@@ -9,241 +9,210 @@ import {
 } from "../config/relevamientoAgua";
 
 interface ServicioBasicoData {
-  tipo_provision: string;
-  tipo_provision_estado: string;
-  tipo_almacenamiento: string;
-  tipo_almacenamiento_estado: string;
+  tipo_provision: string[];
+  tipo_provision_estado: string[];
+  tipo_almacenamiento: string[];
+  tipo_almacenamiento_estado: string[];
   alcance: string[];
+  tratamiento: string;
+  tipo_tratamiento: string;
+  control_sanitario: string;
+  cantidad_veces: string;
 }
-
 interface ServicioBasicoProps {
+  value: ServicioBasicoData;
   onChange: (data: ServicioBasicoData) => void;
 }
 
-export default function ServicioBasicoComponent({
-  onChange,
-}: ServicioBasicoProps) {
-  const [data, setData] = useState<ServicioBasicoData>({
-    tipo_provision: "",
-    tipo_provision_estado: "",
-    tipo_almacenamiento: "",
-    tipo_almacenamiento_estado: "",
-    alcance: [],
-  });
+export default function ServicioBasicoComponent({ value, onChange }: ServicioBasicoProps) {
+  const [provisionSeleccionada, setProvisionSeleccionada] = useState<{ id: string; estado: string }>({ id: "", estado: "" });
+  const [almacenamientoSeleccionado, setAlmacenamientoSeleccionado] = useState<{ id: string; estado: string }>({ id: "", estado: "" });
   const [alcanceSeleccionado, setAlcanceSeleccionado] = useState<string>("");
 
-  const getQuestionById = useCallback(
-    (id: string, options: { id: string; question: string }[]): string => {
-      return options.find((opt) => opt.id === id)?.question || "";
-    },
-    []
-  );
+  const getLabel = (id: string, opciones: { id: string; question: string }[]) =>
+    opciones.find((opt) => opt.id === id)?.question || id;
 
-  // Dependencia añadida a `useCallback` para que siempre use la última versión de `processQuestions`
-  const processQuestions = useCallback(
-    (data: ServicioBasicoData) => {
-      return {
-        tipo_provision: getQuestionById(data.tipo_provision, servicioAgua),
-        tipo_provision_estado: data.tipo_provision_estado,
-        tipo_almacenamiento: getQuestionById(
-          data.tipo_almacenamiento,
-          almacenamientoAgua
-        ),
-        tipo_almacenamiento_estado: data.tipo_almacenamiento_estado,
-        alcance: data.alcance.map((id) => {
-          const question = getQuestionById(id, provisionAgua);
-          return question;
-        }),
-      };
-    },
-    [getQuestionById]
-  );
+  const agregarProvision = () => {
+    const label = getLabel(provisionSeleccionada.id, servicioAgua);
+    if (!label || value.tipo_provision.includes(label)) return;
 
-  const handleAlcanceChange = (newAlcance: string[]) => {
-    const updatedData = { ...data, alcance: newAlcance };
-    setData(updatedData);
-
-    const transformed = processQuestions(updatedData);
-    onChange(transformed);
+    onChange({
+      ...value,
+      tipo_provision: [...value.tipo_provision, label],
+      tipo_provision_estado: [...value.tipo_provision_estado, provisionSeleccionada.estado || ""],
+    });
+    setProvisionSeleccionada({ id: "", estado: "" });
   };
 
-  const handleChange = useCallback(
-    (field: keyof ServicioBasicoData, value: string) => {
-      const updatedData = { ...data, [field]: value };
-      setData(updatedData);
+  const quitarProvision = (index: number) => {
+    const nuevaProvision = [...value.tipo_provision];
+    const nuevaEstado = [...value.tipo_provision_estado];
+    nuevaProvision.splice(index, 1);
+    nuevaEstado.splice(index, 1);
+    onChange({ ...value, tipo_provision: nuevaProvision, tipo_provision_estado: nuevaEstado });
+  };
 
-      // Solo pasa los datos procesados al padre
-      const transformed = processQuestions(updatedData);
-      onChange(transformed);
-    },
-    [data, onChange, processQuestions] // Incluimos `processQuestions` en las dependencias
-  );
+  const agregarAlmacenamiento = () => {
+    const label = getLabel(almacenamientoSeleccionado.id, almacenamientoAgua);
+    if (!label || value.tipo_almacenamiento.includes(label)) return;
 
-  const handleAddAlcance = () => {
-    if (alcanceSeleccionado && !data.alcance.includes(alcanceSeleccionado)) {
-      const updatedAlcance = [...data.alcance, alcanceSeleccionado];
-      handleAlcanceChange(updatedAlcance); // ✅ ahora sí se procesa correctamente
-    }
+    onChange({
+      ...value,
+      tipo_almacenamiento: [...value.tipo_almacenamiento, label],
+      tipo_almacenamiento_estado: [...value.tipo_almacenamiento_estado, almacenamientoSeleccionado.estado || ""],
+    });
+    setAlmacenamientoSeleccionado({ id: "", estado: "" });
+  };
+
+  const quitarAlmacenamiento = (index: number) => {
+    const nuevo = [...value.tipo_almacenamiento];
+    const nuevoEstado = [...value.tipo_almacenamiento_estado];
+    nuevo.splice(index, 1);
+    nuevoEstado.splice(index, 1);
+    onChange({ ...value, tipo_almacenamiento: nuevo, tipo_almacenamiento_estado: nuevoEstado });
+  };
+
+  const agregarAlcance = () => {
+    const label = getLabel(alcanceSeleccionado, provisionAgua);
+    if (!label || value.alcance.includes(label)) return;
+
+    onChange({ ...value, alcance: [...value.alcance, label] });
+    setAlcanceSeleccionado("");
+  };
+
+  const quitarAlcance = (index: number) => {
+    const nuevo = [...value.alcance];
+    nuevo.splice(index, 1);
+    onChange({ ...value, alcance: nuevo });
   };
 
   return (
-    <div className="space-y-2 text-sm">
-      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
-        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
-          <p>3</p>
-        </div>
-        <div className="h-6 flex items-center justify-center">
-          <p className="px-2 text-sm font-bold">AGUA</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
-        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
-          <p>3.1</p>
-        </div>
-        <div className="h-6 flex items-center justify-center">
-          <p className="px-2 text-sm font-bold">TIPO DE PROVISIÓN DE AGUA</p>
-        </div>
-      </div>
-      <div className="w-full mt-2 text-xs flex gap-4">
-        <div className="w-1/2">
+    <div className="space-y-4">
+      {/* Provisión */}
+      <div className="border rounded-xl p-4">
+        <p className="font-bold mb-2">Tipo de provisión de agua</p>
+        <div className="flex gap-2">
           <Select
             label=""
-            value={data.tipo_provision}
-            onChange={(e) => handleChange("tipo_provision", e.target.value)}
-            options={servicioAgua.map((opt) => ({
-              value: opt.id,
-              label: opt.question,
-            }))}
+            value={provisionSeleccionada.id}
+            onChange={(e) => setProvisionSeleccionada({ ...provisionSeleccionada, id: e.target.value })}
+            options={servicioAgua.map(opt => ({ value: opt.id, label: opt.question }))}
           />
-        </div>
-        {data.tipo_provision &&
-          servicioAgua.some(
-            (opt) => opt.id === data.tipo_provision && opt.showCondition
-          ) && (
-            <div className="w-1/2">
-              <Select
-                label=""
-                value={data.tipo_provision_estado}
-                onChange={(e) =>
-                  handleChange("tipo_provision_estado", e.target.value)
-                }
-                options={[
-                  { value: "Regular", label: "Regular" },
-                  { value: "Bueno", label: "Bueno" },
-                  { value: "Malo", label: "Malo" },
-                ]}
-              />
-            </div>
+          {servicioAgua.find(opt => opt.id === provisionSeleccionada.id)?.showCondition && (
+            <Select
+              label="Estado"
+              value={provisionSeleccionada.estado}
+              onChange={(e) => setProvisionSeleccionada({ ...provisionSeleccionada, estado: e.target.value })}
+              options={["Bueno", "Regular", "Malo"].map(e => ({ value: e, label: e }))}
+              direction="row" // 👈 cambia el layout a horizontal
+            />
           )}
-      </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
-        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
-          <p>3.2</p>
+          <button className="bg-custom text-white px-2 rounded" onClick={agregarProvision}>Agregar</button>
         </div>
-        <div className="h-6 flex items-center justify-center">
-          <p className="px-2 text-sm font-bold">TIPO DE ALMACENAMIENTO</p>
-        </div>
+        {value.tipo_provision.map((item, index) => (
+          <div key={index} className="flex justify-between mt-1">
+            <p>{item}{value.tipo_provision_estado[index] && ` - Estado: ${value.tipo_provision_estado[index]}`}</p>
+            <button onClick={() => quitarProvision(index)} className="text-red-500">Quitar</button>
+          </div>
+        ))}
       </div>
-      <div className="w-full mt-2 text-xs flex gap-4">
-        <div className="w-1/2">
+
+      {/* Almacenamiento */}
+      <div className="border rounded-xl p-4">
+        <p className="font-bold mb-2">Tipo de almacenamiento</p>
+        <div className="flex gap-2">
           <Select
             label=""
-            value={data.tipo_almacenamiento}
-            onChange={(e) =>
-              handleChange("tipo_almacenamiento", e.target.value)
-            }
-            options={almacenamientoAgua.map((opt) => ({
-              value: opt.id,
-              label: opt.question,
-            }))}
+            value={almacenamientoSeleccionado.id}
+            onChange={(e) => setAlmacenamientoSeleccionado({ ...almacenamientoSeleccionado, id: e.target.value })}
+            options={almacenamientoAgua.map(opt => ({ value: opt.id, label: opt.question }))}
           />
-        </div>
-        {data.tipo_almacenamiento &&
-          almacenamientoAgua.some(
-            (opt) => opt.id === data.tipo_almacenamiento && opt.showCondition
-          ) && (
-            <div className="w-1/2">
-              <Select
-                label=""
-                value={data.tipo_almacenamiento_estado}
-                onChange={(e) =>
-                  handleChange("tipo_almacenamiento_estado", e.target.value)
-                }
-                options={[
-                  { value: "Regular", label: "Regular" },
-                  { value: "Bueno", label: "Bueno" },
-                  { value: "Malo", label: "Malo" },
-                ]}
-              />
-            </div>
+          {almacenamientoAgua.find(opt => opt.id === almacenamientoSeleccionado.id)?.showCondition && (
+            <Select
+              label="Estado"
+              value={almacenamientoSeleccionado.estado}
+              onChange={(e) => setAlmacenamientoSeleccionado({ ...almacenamientoSeleccionado, estado: e.target.value })}
+              options={["Bueno", "Regular", "Malo"].map(e => ({ value: e, label: e }))}
+            />
           )}
-      </div>
-      <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl">
-        <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
-          <p>3.3</p>
+          <button className="bg-custom text-white px-2 rounded" onClick={agregarAlmacenamiento}>Agregar</button>
         </div>
-        <div className="h-6 flex items-center justify-center">
-          <p className="px-2 text-sm font-bold">
-            ALCANCE DE LA PROVISIÓN DE AGUA
-          </p>
-        </div>
+        {value.tipo_almacenamiento.map((item, index) => (
+          <div key={index} className="flex justify-between mt-1">
+            <p>{item}{value.tipo_almacenamiento_estado[index] && ` - Estado: ${value.tipo_almacenamiento_estado[index]}`}</p>
+            <button onClick={() => quitarAlmacenamiento(index)} className="text-red-500">Quitar</button>
+          </div>
+        ))}
       </div>
-      <div className="w-full flex mt-2 text-xs gap-4">
-        <div className="w-1/2">
+
+      {/* Alcance */}
+      <div className="border rounded-xl p-4">
+        <p className="font-bold mb-2">Alcance de la provisión</p>
+        <div className="flex gap-2">
           <Select
             label=""
             value={alcanceSeleccionado}
             onChange={(e) => setAlcanceSeleccionado(e.target.value)}
-            options={provisionAgua.map((opt) => ({
-              value: opt.id,
-              label: opt.question,
-            }))}
+            options={provisionAgua.map(opt => ({ value: opt.id, label: opt.question }))}
           />
+          <button className="bg-custom text-white px-2 rounded" onClick={agregarAlcance}>Agregar</button>
         </div>
-        <div className="w-1/2">
-          <table className="min-w-full text-sm table-auto border-collapse">
-            <thead>
-              <tr>
-                <th className="p-2 text-center">Alcance</th>
-                <th className="p-2 text-center">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.alcance.map((alc, i) => {
-                const label =
-                  provisionAgua.find((opt) => opt.id === alc)?.question || alc;
-                return (
-                  <tr key={i} className="border-b hover:bg-slate-100">
-                    <td className="p-2">{label}</td>
-                    <td className="p-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updatedAlcance = data.alcance.filter(
-                            (a) => a !== alc
-                          );
-                          handleAlcanceChange(updatedAlcance);
-                        }}
-                        className="text-red-500 text-sm"
-                      >
-                        Quitar
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        {value.alcance.map((item, index) => (
+          <div key={index} className="flex justify-between mt-1">
+            <p>{item}</p>
+            <button onClick={() => quitarAlcance(index)} className="text-red-500">Quitar</button>
+          </div>
+        ))}
       </div>
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={handleAddAlcance}
-          className="font-bold p-2 text-sm bg-custom hover:bg-custom/50 text-white rounded-lg"
-        >
-          Agregar
-        </button>
+
+      {/* Tratamiento, control, etc. */}
+      <div className="border rounded-xl p-4 space-y-2">
+        <p className="font-bold mb-2">Calidad del agua</p>
+
+        <Select
+          label="Tratamiento del agua"
+          value={value.tratamiento || ""}
+          onChange={(e) => onChange({ ...value, tratamiento: e.target.value })}
+          options={[
+            { value: "", label: "Seleccione" },
+            { value: "Se realiza tratamiento potabilizador del agua", label: "Se realiza tratamiento potabilizador del agua" },
+            { value: "No se realiza tratamiento potabilizador del agua", label: "No se realiza tratamiento potabilizador del agua" },
+          ]}
+        />
+
+        {value.tratamiento === "Se realiza tratamiento potabilizador del agua" && (
+          <Select
+            label="Tipo de tratamiento"
+            value={value.tipo_tratamiento || ""}
+            onChange={(e) => onChange({ ...value, tipo_tratamiento: e.target.value })}
+            options={[
+              { value: "Filtrado", label: "Filtrado" },
+              { value: "Decantación", label: "Decantación" },
+              { value: "Cloración", label: "Cloración" },
+            ]}
+          />
+        )}
+
+        <Select
+          label="Control sanitario"
+          value={value.control_sanitario || ""}
+          onChange={(e) => onChange({ ...value, control_sanitario: e.target.value })}
+          options={[
+            { value: "", label: "Seleccione" },
+            { value: "Se realiza control sanitario de la calidad del agua", label: "Se realiza control sanitario de la calidad del agua" },
+            { value: "No se realiza control sanitario de la calidad del agua", label: "No se realiza control sanitario de la calidad del agua" },
+          ]}
+        />
+
+        {value.control_sanitario === "Se realiza control sanitario de la calidad del agua" && (
+          <input
+            type="number"
+            min="1"
+            className="border px-2 py-1 rounded"
+            value={value.cantidad_veces || ""}
+            onChange={(e) => onChange({ ...value, cantidad_veces: e.target.value })}
+          />
+        )}
       </div>
     </div>
   );

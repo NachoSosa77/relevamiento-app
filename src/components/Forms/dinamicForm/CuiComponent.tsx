@@ -5,7 +5,6 @@
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch } from "@/redux/hooks";
-import { setCui } from "@/redux/slices/espacioEscolarSlice";
 import { setInstitucionSeleccionada } from "@/redux/slices/institucionSlice";
 import { establecimientosService } from "@/services/Establecimientos/establecimientosService";
 import { useEffect, useState } from "react";
@@ -35,7 +34,6 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<
     number | null
   >(null);
-  console.log('home-institucionId', selectedInstitutionId)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +76,6 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const handleChange = (newValue: number | undefined) => {
     setInputValue(newValue);
     onCuiInputChange(newValue);
-    dispatch(setCui(newValue));
   };
 
   const handleInstitutionSelect = (
@@ -118,7 +115,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
           </p>
         </div>
         <div className="ml-auto flex items-center">
-          <p className="text-sm font-bold mr-4">Ingresa el número de CUI:</p>
+          <p className="text-sm font-bold mr-4">Número de CUI:</p>
           <NumericInput
             subLabel=""
             label=""

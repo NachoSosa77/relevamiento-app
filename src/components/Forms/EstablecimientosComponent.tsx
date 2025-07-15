@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 "use client";
 
-import { useInstitucionesByCui } from "@/hooks/useInstitucionesByCui";
+import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-  setCui,
   setInstitucionesData,
 } from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
@@ -12,81 +13,110 @@ import Modal from "react-modal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReusableTable from "../Table/TableReutilizable";
+import Spinner from "../ui/Spinner";
 import CuiComponent from "./dinamicForm/CuiComponent";
 
 const EstablecimientosComponent: React.FC = () => {
+  const [cuiFromDB, setCuiFromDB] = useState<number>();
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
+  const [editando, setEditando] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [guardandoRelaciones, setGuardandoRelaciones] = useState(false);
   const selectedInstitutionId = useAppSelector(
     (state) => state.institucion.institucionSeleccionada
   );
-  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
-
-  console.log('institucionesId', selectedInstitutionId);
-  console.log('cui', selectedCui);
   const dispatch = useAppDispatch();
-  
-  // Cargar instituciones desde localStorage si el CUI coincide
-  const {
-    instituciones,
-    setInstituciones,
-  } = useInstitucionesByCui();
-  console.log('instituciones', instituciones);
+  const relevamientoId = useRelevamientoId();
 
-
-  // Guardar instituciones en localStorage cuando cambien
   useEffect(() => {
-    if (instituciones.length > 0 && selectedCui) {
-      const dataAGuardar = {
-        cui: selectedCui,
-        instituciones,
-      };
-      localStorage.setItem(
-        "institucionesSeleccionadas",
-        JSON.stringify(dataAGuardar)
-      );
-      dispatch(setInstitucionesData(instituciones));
-    }
-  }, [instituciones, selectedCui, dispatch]);
+    if (!relevamientoId) return; // ⛔ Evita ejecutar hasta que exista
+    const fetchCui = async () => {
+      const res = await fetch(`/api/relevamientos/id/${relevamientoId}`); // endpoint que devuelve relevamiento por ID
+      const data = await res.json();
+      setCuiFromDB(data?.cui_id ?? null);
+    };
+    fetchCui();
+  }, [relevamientoId]);
 
-  // Obtener institución al seleccionar una nueva
-  /* useEffect(() => {
-    const fetchInstitution = async () => {
+
+  useEffect(() => {
+    const fetchSelectedInstitution = async () => {
+      if (!selectedInstitutionId || editando) return; // 👈 importante
+
       try {
-        const response = await fetch(
-          `/api/instituciones/${selectedInstitutionId}`
-        );
-        if (!response.ok) {
-          throw new Error("No se pudo obtener la institución.");
-        }
-        const data: InstitucionesData = await response.json();
+        const res = await fetch(`/api/instituciones/${selectedInstitutionId}`);
+        if (!res.ok)
+          throw new Error("No se pudo obtener la institución seleccionada");
+
+        const data = await res.json();
 
         setInstituciones((prev) => {
-          if (!prev.some((inst) => inst.id === data.id)) {
-            return [...prev, data];
-          }
-          return prev;
+          const existe = prev.some((inst) => inst.id === data.id);
+          if (existe) return prev;
+          const actualizadas = [...prev, data];
+          dispatch(setInstitucionesData(actualizadas));
+          return actualizadas;
         });
-      } catch (error) {
-        console.error("Error fetching institution:", error);
+      } catch (err) {
+        console.error("Error al cargar institución inicial", err);
       }
     };
 
-    if (selectedInstitutionId) {
-      fetchInstitution();
-    }
-  }, [selectedInstitutionId]); */
+    fetchSelectedInstitution();
+  }, [selectedInstitutionId]);
+
+  useEffect(() => {
+    const fetchInstitucionesGuardadas = async () => {
+      if (!relevamientoId) return;
+
+      try {
+        const res = await fetch(
+          `/api/instituciones_por_relevamiento/${relevamientoId}`
+        );
+        if (!res.ok)
+          throw new Error("Error al obtener instituciones guardadas");
+
+        const data = await res.json();
+        if (data.length > 0) {
+          setEditando(true); // 🟡 está en modo edición
+          setInstituciones(data); // carga como estado inicial
+          dispatch(setInstitucionesData(data));
+        }
+      } catch (err) {
+        console.error("Error al cargar instituciones guardadas:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInstitucionesGuardadas();
+  }, [relevamientoId]);
+
+  const agregarInstitucion = (data: InstitucionesData) => {
+    setInstituciones((prev) => {
+      const yaExiste = prev.some((inst) => inst.id === data.id);
+      if (yaExiste) return prev; // evita duplicados
+
+      const actualizadas = [...prev, data];
+      dispatch(setInstitucionesData(actualizadas));
+      localStorage.setItem(
+        "institucionesSeleccionadas",
+        JSON.stringify({
+          cui: cuiFromDB,
+          instituciones: actualizadas,
+        })
+      );
+      toast.success("¡Institución agregada!");
+      return actualizadas;
+    });
+  };
 
   const handleSave = async () => {
-    console.log("Instituciones a guardar:", selectedInstitutionId);
-    if (selectedInstitutionId && selectedCui) {
-      const yaExiste = instituciones.some(
-        (inst) => inst.id === selectedInstitutionId
-      );
-      if (yaExiste) {
-        toast.info("La institución ya fue agregada.");
-        return;
-      }
-
+    if (loading) return; // Evita clics múltiples
+    if (selectedInstitutionId && cuiFromDB) {
+      setLoading(true);
       try {
         const response = await fetch(
           `/api/instituciones/${selectedInstitutionId}`
@@ -95,22 +125,15 @@ const EstablecimientosComponent: React.FC = () => {
 
         const data: InstitucionesData = await response.json();
 
-        const nuevasInstituciones = [...instituciones, data];
-        setInstituciones(nuevasInstituciones);
-        dispatch(setInstitucionesData(nuevasInstituciones)); // <- 🔥 este es el paso que faltaba
-        localStorage.setItem(
-          "institucionesSeleccionadas",
-          JSON.stringify({
-            cui: selectedCui,
-            instituciones: nuevasInstituciones,
-          })
-        );
+        agregarInstitucion(data);
 
         toast.success("¡Institución agregada exitosamente!");
         closeModal();
       } catch (error) {
         console.error("Error al guardar la institución:", error);
         toast.error("Ocurrió un error al guardar.");
+      } finally {
+        setLoading(false);
       }
     } else {
       toast.error("Por favor, selecciona una institución.");
@@ -165,16 +188,48 @@ const EstablecimientosComponent: React.FC = () => {
     },
   ];
 
-  if (!instituciones || instituciones.length === 0) {
-    return (
-      <div className="mx-10 mt-4 text-gray-500">
-        <p>No se ha seleccionado ninguna institución.</p>
-      </div>
-    );
+  const handleGuardarRelaciones = async () => {
+  setGuardandoRelaciones(true); // ✅ Activamos loading apenas se clickea
+
+  if (!relevamientoId || instituciones.length === 0) {
+    toast.error("No hay instituciones para guardar.");
+    setGuardandoRelaciones(false); // 🔴 Desactivamos si hay error
+    return;
   }
+
+  try {
+    const response = await fetch("/api/instituciones_por_relevamiento", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        relevamiento_id: relevamientoId,
+        instituciones: instituciones.map((i) => i.id),
+      }),
+    });
+
+    if (!response.ok) throw new Error("Error al guardar las relaciones");
+
+    toast.success("¡Relaciones guardadas correctamente!");
+  } catch (error) {
+    console.error("Error al guardar relaciones:", error);
+    toast.error("Hubo un error al guardar las relaciones.");
+  } finally {
+    setGuardandoRelaciones(false); // 🔚 Desactivamos loading siempre
+  }
+};
+
+
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="mx-10 mt-4 text-sm">
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded text-sm text-center">
+          Estás editando establecimientos ya relevados anteriormente.
+        </div>
+      )}
       <div className="flex mt-2 p-2 border items-center rounded-lg bg-white text-black">
         <div className="w-6 h-6 flex justify-center items-center bg-custom rounded-full text-white">
           <p>B</p>
@@ -191,13 +246,32 @@ const EstablecimientosComponent: React.FC = () => {
         </p>
       </div>
       <ReusableTable data={instituciones} columns={establecimientos_columns} />
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-end mt-6 space-x-2">
         <button
           className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
           onClick={openModal}
         >
           Agregar establecimiento
         </button>
+        <button
+  className={`flex items-center justify-center gap-2 font-bold py-2 px-4 rounded-full transition duration-300 ${
+    guardandoRelaciones
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700 text-white"
+  }`}
+  onClick={handleGuardarRelaciones}
+  disabled={instituciones.length === 0 || guardandoRelaciones}
+>
+  {guardandoRelaciones ? (
+    <>
+      <Spinner  /> {/* tu spinner, ajustamos tamaño */}
+      Guardando...
+    </>
+  ) : (
+    "Guardar información"
+  )}
+</button>
+
       </div>
       <Modal
         isOpen={modalIsOpen}
@@ -208,18 +282,23 @@ const EstablecimientosComponent: React.FC = () => {
       >
         <CuiComponent
           label={""}
-          initialCui={selectedCui}
-          onCuiInputChange={(nuevoCui) => dispatch(setCui(nuevoCui))}
+          initialCui={cuiFromDB}
+          onCuiInputChange={()=> {}}
           isReadOnly={false}
           sublabel=""
           institucionActualId={selectedInstitutionId}
         />
         <div className="flex justify-center space-x-4 mt-4">
           <button
-            className="bg-custom hover:bg-custom/50 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            className={`font-bold py-2 px-4 rounded-full transition duration-300 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-custom hover:bg-custom/50 text-white"
+            }`}
             onClick={handleSave}
+            disabled={loading}
           >
-            Guardar
+            {loading ? "Guardando..." : "Guardar"}
           </button>
           <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"

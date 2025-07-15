@@ -1,16 +1,16 @@
 "use client";
 
+import ConstruccionInstituciones from "@/components/ConstruccionInstituciones";
 import CuiConstruccionComponent from "@/components/Forms/dinamicForm/CuiConstruccionComponent";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Spinner from "@/components/ui/Spinner";
+import { useCuiFromRelevamientoId } from "@/hooks/useCuiByRelevamientoId";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppSelector } from "@/redux/hooks";
 import { selectServiciosAgua } from "@/redux/slices/servicioAguaSlice";
-import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import AguaFormComponent from "./components/AguaFormComponent";
 import AntiguedadComponent from "./components/Antiguedad";
@@ -53,29 +53,45 @@ export default function RelevamientoConstruccionesPage() {
     InstitucionesData[] | null
   >(null);
   const [construccionId, setConstruccionId] = useState<number | null>(null);
+  const [relevadas, setRelevadas] = useState<number[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const todasRelevadas = !!construccionId;
 
-  console.log("CONSTRUCCION ID", construccionId);
-
-  const selectedCui = useAppSelector((state) => state.espacio_escolar.cui);
-
-  const institucionesRedux = useSelector(
-    (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
-  );
   const relevamientoId = useRelevamientoId();
-
+  const selectedCui = useCuiFromRelevamientoId(relevamientoId);
   const serviciosDeAguaEnRedux = useAppSelector(selectServiciosAgua);
-  useEffect(() => {
-    console.log(
-      "Estado de servicios de agua en Redux:",
-      serviciosDeAguaEnRedux
-    );
-  }, [serviciosDeAguaEnRedux]);
+
+  const handleConfirmSave = () => {
+    setShowConfirmModal(false);
+    handleSaveConstruccion(); // tu función real
+  };
+
+  const handleCancelSave = () => {
+    setShowConfirmModal(false);
+  };
+
+  useEffect(() => {}, [serviciosDeAguaEnRedux]);
 
   useEffect(() => {
-    if (institucionesRedux.length > 0) {
-      setSelectedInstitutions(institucionesRedux);
-    }
-  }, [institucionesRedux]);
+    if (!relevamientoId) return;
+
+    const fetchInstitucionesRelacionadas = async () => {
+      try {
+        const response = await fetch(
+          `/api/instituciones_por_relevamiento/${relevamientoId}`
+        );
+        if (!response.ok)
+          throw new Error("Error al obtener instituciones relacionadas");
+
+        const data = await response.json();
+        setSelectedInstitutions(data);
+      } catch (error) {
+        console.error("Error al cargar instituciones del relevamiento:", error);
+      }
+    };
+
+    fetchInstitucionesRelacionadas();
+  }, [relevamientoId]);
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!construccionId || !obs.trim()) return;
@@ -88,7 +104,8 @@ export default function RelevamientoConstruccionesPage() {
       });
 
       if (res.ok) {
-        toast.success("Observaciones guardadas correctamente");
+        // 🚀 Marcamos como relevada:
+        marcarComoRelevada(construccionId);
       } else {
         console.error("Error al guardar observaciones");
         toast.error("Observaciones guardadas correctamente");
@@ -98,16 +115,36 @@ export default function RelevamientoConstruccionesPage() {
     }
   };
   const handleSaveConstruccion = () => {
-    toast.success("Construcción guardada correctamente 🎉", {
+    toast.success("Construcciones guardadas correctamente", {
       position: "top-right",
       autoClose: 3000,
     });
     router.push("/relevamiento-locales");
   };
 
+  console.log(construccionId)
+
+  const marcarComoRelevada = (id: number) => {
+    if (!relevadas.includes(id)) {
+      setRelevadas([...relevadas, id]);
+    }
+  };
+
+  if (!selectedCui || selectedInstitutions === null) {
+  return (
+    <div className="flex justify-center items-center h-full mt-40">
+      <Spinner />
+    </div>
+  );
+}
+
   return (
     <div className="h-full bg-white text-black text-sm mt-28">
-      <div className="flex justify-center mt-20 mb-8 mx-4">
+      <div className="flex justify-between mt-20 mb-8 mx-8">
+        <div className="flex items-center">
+          <h1 className="font-bold">Relevamiento N° {relevamientoId}</h1>
+        </div>
+
         <div className="flex flex-col items-center justify-center">
           <h1 className="font-bold">GESTIÓN ESTATAL</h1>
           <h4 className="text-sm">
@@ -135,6 +172,11 @@ export default function RelevamientoConstruccionesPage() {
       ) : (
         <>
           {" "}
+          {/* Este debajo para gestionar las instituciones asociadas */}
+          <ConstruccionInstituciones
+            construccionId={construccionId}
+            relevamientoId={relevamientoId}
+          />
           <CantidadPlantas construccionId={construccionId} />
           <AntiguedadComponent construccionId={construccionId} />
           <ServiciosBasicos data={serviciosBasicos} />
@@ -228,13 +270,45 @@ export default function RelevamientoConstruccionesPage() {
           <ObservacionesComponent onSave={handleSaveObservaciones} />
           <div className="flex justify-center mt-4">
             <button
-              onClick={handleSaveConstruccion}
-              className="px-4 py-2 w-80 bg-custom text-white font-semibold rounded-md hover:bg-custom/50"
+              onClick={() => setShowConfirmModal(true)}
+              className={`px-4 py-2 w-80 text-white font-semibold rounded-md ${
+                todasRelevadas
+                  ? "bg-custom hover:bg-custom/50"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+              disabled={!todasRelevadas}
             >
               Guardar construcción
             </button>
           </div>
         </>
+      )}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-96">
+            <h2 className="text-lg font-bold mb-4">
+              ¿Desea guardar esta construcción?
+            </h2>
+            <p className="text-sm text-gray-700 mb-6">
+              Si hay datos sin completar, no podrá modificarlos desde aquí.
+              Puede cancelar para volver y completar lo faltante.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={handleCancelSave}
+                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-black"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                className="px-4 py-2 rounded-md bg-custom hover:bg-custom/50 text-white"
+              >
+                Confirmar y guardar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

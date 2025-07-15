@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { SituacionDominio } from "@/app/lib/SituacionDominio";
 import EstablecimientosPredio from "@/components/Forms/EstablecimientosPredio";
-import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
 import Check from "@/components/ui/Checkbox";
 import Select from "@/components/ui/SelectComponent";
@@ -12,10 +10,8 @@ import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setPredioId } from "@/redux/slices/predioSlice";
-import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation"; // ✅
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import AreasExterioresTable from "../components/AreasExterioresTable";
 import FactoresRiesgoTable from "../components/FactoresRiesgoTable";
@@ -59,52 +55,56 @@ export default function RelevamientoCPage() {
   const [mostrarObras, setMostrarObras] = useState(false); // Estado elevado
   const [showFormFuera, setShowFormFuera] = useState(false);
   const [mostrarFuera, setMostrarFuera] = useState(false); // Nuevo estado para ObrasFueraDelPredio
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
-
-  const institucionesRedux = useSelector(
-    (state: RootState) => state.espacio_escolar.institucionesSeleccionadas
-  );
 
   const relevamientoId = useRelevamientoId();
   const predioId = useAppSelector((state) => state.predio.predioId);
-
-  const predioObservaciones = useAppSelector(
-    (state) => state.predio.observaciones
-  );
-
   useEffect(() => {
-    if (institucionesRedux.length > 0) {
-      setSelectedInstitutions(institucionesRedux);
-    }
-  }, [institucionesRedux]);
+    if (!relevamientoId) return;
+
+    const fetchInstitucionesRelacionadas = async () => {
+      try {
+        const response = await fetch(
+          `/api/instituciones_por_relevamiento/${relevamientoId}`
+        );
+        if (!response.ok)
+          throw new Error("Error al obtener instituciones relacionadas");
+
+        const data = await response.json();
+        setSelectedInstitutions(data);
+      } catch (error) {
+        console.error("Error al cargar instituciones del relevamiento:", error);
+      }
+    };
+
+    fetchInstitucionesRelacionadas();
+  }, [relevamientoId]);
 
   const handleFormReuConfirm = () => {
     setShowFormFuera(true);
   };
 
-  console.log(predioId)
-
   const handleSaveObservacion = async (obs: string) => {
-      if (!predioId || !obs.trim()) return;
-  
-      try {
-        const res = await fetch(`/api/predio/${predioId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ observaciones: obs }),
-        });
-  
-        if (res.ok) {
-          toast.success("Observaciones guardadas correctamente");
-        } else {
-          console.error("Error al guardar observaciones");
-          toast.error("Observaciones guardadas correctamente");
-        }
-      } catch (err) {
-        console.error("Error de red al guardar:", err);
+    if (!predioId || !obs.trim()) return;
+
+    try {
+      const res = await fetch(`/api/predio/${predioId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observaciones: obs }),
+      });
+
+      if (res.ok) {
+        console.log("Observaciones guardadas correctamente");
+      } else {
+        console.error("Error al guardar observaciones");
+        toast.error("Observaciones guardadas correctamente");
       }
-    };
+    } catch (err) {
+      console.error("Error de red al guardar:", err);
+    }
+  };
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = Number(event.target.value);
@@ -130,6 +130,7 @@ export default function RelevamientoCPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setIsSubmitting(true);
 
     const payload = {
       relevamiento_id: relevamientoId,
@@ -152,59 +153,50 @@ export default function RelevamientoCPage() {
       const data = await response.json();
       const predioId = data.predioId; // ✅ propiedad correcta
 
-      toast.success("Enviado con éxito");
-
       // Guardar el predioId (podés usar Redux, context o estado local)
       dispatch(setPredioId(predioId));
+      await fetch(`/api/espacios_escolares/${relevamientoId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ predio_id: predioId }),
+      });
+      toast.success("Guardado con éxito");
     } catch (error) {
       console.error("Error al enviar:", error);
       toast.error("Error al enviar");
+    } finally {
+      setIsSubmitting(false);
     }
 
     setFormData({ descripcion: "", descripcionOtro: "", juicioCurso: "" });
     setSelectSituacion(null);
   };
 
-  const enviarDatosEspacioEscolar = async () => {
-    try {
-      const payload = {
-        observaciones: predioObservaciones,
-      };
-
-      const response = await fetch(`/api/predio/${predioId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al guardar los datos del espacio escolar.");
-      }
-
-      toast.success("Relevamiento predio guardado correctamente 🎉", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setTimeout(() => {
-        router.push("/relevamiento-construcciones");
-      }, 1000); // 1 segundo de espera
-      // Podés resetear el estado o mostrar confirmación visual acá
-    } catch (error: any) {
-      console.error("Error al enviar datos del espacio escolar:", error);
-      toast.error("Hubo un error al guardar los datos.", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      error(error.message);
+  const enviarDatosEspacioEscolar = () => {
+    if (!predioId) {
+      toast.error("Primero debes completar y guardar los datos del predio.");
+      return;
     }
+
+    toast.success("Relevamiento predio guardado correctamente 🎉", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+    setTimeout(() => {
+      router.push("/relevamiento-construcciones");
+    }, 1000);
   };
 
   return (
-    <div className="h-full bg-white text-black text-sm mt-28">
-      <Navbar />
-      <div className="flex flex-col justify-center mt-20 mb-8">
+    <div className="bg-white text-black text-sm mt-28 w-full">
+      <div className="flex justify-between mt-20 mb-8 mx-8">
+        <div className="flex items-center">
+          <h1 className="font-bold">Relevamiento N° {relevamientoId}</h1>
+        </div>
+
         <div className="flex justify-center mx-4">
           <div className="flex flex-col items-center justify-center">
             <h1 className="font-bold">GESTIÓN ESTATAL</h1>
@@ -315,14 +307,14 @@ export default function RelevamientoCPage() {
             <div className="flex justify-end pt-4">
               <button
                 type="submit"
-                disabled={!selectedJuicio?.length}
+                disabled={!selectedJuicio?.length || isSubmitting}
                 className={`${
-                  !selectedJuicio?.length
+                  !selectedJuicio?.length || isSubmitting
                     ? "bg-gray-400"
                     : "bg-green-600 hover:bg-green-700"
                 } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
               >
-                Cargar Información
+                {isSubmitting ? "Guardando..." : "Cargar Información"}
               </button>
             </div>
           </form>
@@ -366,7 +358,7 @@ export default function RelevamientoCPage() {
         serviciosData={factoresRiesgoData}
         columnsConfig={factoresRiesgoColumns}
       />
-      <AreasExterioresTable />
+      <AreasExterioresTable predioId={predioId}/>
       <FormReu
         setMostrarObras={setMostrarObras}
         question="¿Existen obras en este predio?"

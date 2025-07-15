@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Servicio {
@@ -17,8 +16,8 @@ interface ServiciosReuProps {
   sub_id: number;
   sublabel: string;
   servicios: Servicio[];
-  endpoint: string; // <- NUEVO
-  construccionId: number|null;
+  endpoint: string;
+  construccionId: number | null;
 }
 
 export default function ServiciosReu({
@@ -28,13 +27,51 @@ export default function ServiciosReu({
   sublabel,
   servicios,
   endpoint,
-  construccionId
+  construccionId,
 }: ServiciosReuProps) {
   const [selectedServicios, setSelectedServicios] = useState<
     { servicio: string; estado?: string }[]
   >([]);
-  const relevamientoId = useRelevamientoId(); // Asumo que 'espacio_escolar' contiene el relevamientoId
+  const relevamientoId = useRelevamientoId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editando, setEditando] = useState(false);
 
+  // Cargar datos existentes para saber si hay registros
+  useEffect(() => {
+    if (!relevamientoId || !construccionId) return;
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          `${endpoint}?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+
+          // Si el backend devuelve un array con datos, activar editando
+          if (Array.isArray(data) && data.length > 0) {
+            setEditando(true);
+
+            // Opcional: precargar los servicios ya guardados si quieres
+            // Por ahora dejamos vacío para que el usuario elija
+            // Si quieres precargar, descomenta lo siguiente:
+
+            // const precargados = data.map((item: any) => ({
+            //   servicio: item.servicio,
+            //   estado: item.estado || "",
+            // }));
+            // setSelectedServicios(precargados);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando servicios existentes:", error);
+      }
+    };
+
+    fetchData();
+  }, [relevamientoId, construccionId, endpoint]);
+
+  // Manejo de selección y cambio de estado (igual que antes)
 
   const handleServicioSelect = (servicioId: string) => {
     const servicio = servicios.find((s) => s.id === servicioId);
@@ -57,57 +94,61 @@ export default function ServiciosReu({
   };
 
   const handleGuardar = async () => {
-  // Validar si se seleccionó al menos un servicio
-  if (selectedServicios.length === 0) {
-    toast.warning("Debes seleccionar al menos un servicio antes de guardar.");
-    return;
-  }
-
-  // Validar que los servicios que requieren estado lo tengan asignado
-  for (const servicio of selectedServicios) {
-    const config = servicios.find((s) => s.question === servicio.servicio);
-    if (config?.showCondition && !servicio.estado) {
-      toast.warning(`Debes seleccionar un estado para el servicio: "${servicio.servicio}".`);
+    if (selectedServicios.length === 0) {
+      toast.warning("Debes seleccionar al menos un servicio antes de guardar.");
       return;
     }
-  }
 
-  // Creamos el payload a enviar
-  const payload = {
-    relevamiento_id: relevamientoId,
-    construccion_id: construccionId,
-    servicios: selectedServicios.map(({ servicio, estado }) => ({
-      servicio,
-      estado,
-    })),
-  };
-
-
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al guardar los servicios");
+    for (const servicio of selectedServicios) {
+      const config = servicios.find((s) => s.question === servicio.servicio);
+      if (config?.showCondition && !servicio.estado) {
+        toast.warning(
+          `Debes seleccionar un estado para el servicio: "${servicio.servicio}".`
+        );
+        return;
+      }
     }
 
-    const result = await response.json();
+    const payload = {
+      relevamiento_id: relevamientoId,
+      construccion_id: construccionId,
+      servicios: selectedServicios.map(({ servicio, estado }) => ({
+        servicio,
+        estado,
+      })),
+    };
 
-    toast.success("Servicios guardados exitosamente");
-  } catch (error) {
-    console.error("Error al enviar los datos:", error);
-    toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
-  }
-};
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(endpoint, {
+        method: editando ? "PATCH" : "POST", // Ajusta método si necesitas
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
+      if (!response.ok) {
+        throw new Error("Error al guardar los servicios");
+      }
+
+      toast.success("Servicios guardados exitosamente");
+      setEditando(true);
+    } catch (error) {
+      console.error("Error al enviar los datos:", error);
+      toast.error("Error al guardar los servicios. Inténtalo nuevamente.");
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
+
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -118,6 +159,7 @@ export default function ServiciosReu({
           </div>
         </div>
       )}
+
       {sub_id !== id && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-6 h-6 flex justify-center text-black font-bold">
@@ -163,9 +205,7 @@ export default function ServiciosReu({
                   {currentServicio?.showCondition ? (
                     <select
                       value={estado || ""}
-                      onChange={(e) =>
-                        handleEstadoChange(servicio, e.target.value)
-                      }
+                      onChange={(e) => handleEstadoChange(servicio, e.target.value)}
                       className="w-full p-2 border rounded"
                     >
                       <option value="">Seleccionar estado</option>
@@ -186,9 +226,10 @@ export default function ServiciosReu({
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
+          disabled={isSubmitting}
           className="text-sm text-white bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
-          Guardar información
+          {isSubmitting ? "Guardando..." : "Guardar información"}
         </button>
       </div>
     </div>

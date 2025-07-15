@@ -9,15 +9,19 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { LocalDetalleModal } from "./LocalesConstruccion";
 
 interface Props {
   construccion: Construccion;
+  relevamientoId: number
 }
 
-export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
+export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: Props) => {
+    const router = useRouter();
+  
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
   const [localSeleccionado, setLocalSeleccionado] =
     useState<LocalesConstruccion | null>(null);
@@ -29,6 +33,11 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
     setLocalSeleccionado(local);
     setShowModal(true);
   };
+
+  const handleEditarLocales = () => {
+    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    router.push("/relevamiento-locales"); // o la ruta que uses
+  }
 
   const toggleLocales = async () => {
     if (!showLocales && locales.length === 0 && construccion.id) {
@@ -89,6 +98,12 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
 
           {showLocales && (
             <div className="mt-4">
+               <button
+            onClick={handleEditarLocales}
+            className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+          >
+            Editar Locales
+          </button>
               {locales.length === 0 ? (
                 <p className="text-gray-500">
                   No hay locales cargados para esta construcción.
@@ -101,6 +116,7 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
                         <th className="px-3 py-2">Tipo</th>
                         <th className="px-3 py-2">Identificación</th>
                         <th className="px-3 py-2">Superficie (m²)</th>
+                        <th className="px-3 py-2">Estado</th>
                         <th className="px-3 py-2">Acciones</th>
                       </tr>
                     </thead>
@@ -112,6 +128,11 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
                             {local.identificacion_plano}
                           </td>
                           <td className="px-3 py-2">{local.superficie}</td>
+                          <td className={`font-semibold px-3 py-2 ${
+                        local.estado === "completo"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}>{local.estado}</td>
                           <td className="px-3 py-2">
                             <button
                               onClick={() => openModal(local)}

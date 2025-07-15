@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const connection = await getConnection();
     const data = await req.json();
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json(
         { error: "Payload debe ser un array" },
         { status: 400 }
@@ -14,29 +14,22 @@ export async function POST(req: Request) {
     }
 
     const insertQuery = `
-      INSERT INTO iluminacion_ventilacion (condicion, disponibilidad, superficie_iluminacion, superficie_ventilacion, relevamiento_id, local_id)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO iluminacion_ventilacion (
+        condicion, disponibilidad, superficie_iluminacion, superficie_ventilacion, relevamiento_id, local_id
+      ) VALUES ?
     `;
 
-    for (const item of data) {
-      const {
-        condicion,
-        disponibilidad,
-        superficie_iluminacion,
-        superficie_ventilacion,
-        relevamiento_id,
-        local_id,
-      } = item;
+    // Construir valores en formato [[a1, b1, ...], [a2, b2, ...]]
+    const values = data.map((item) => [
+      item.condicion ?? null,
+      item.disponibilidad ?? null,
+      item.superficie_iluminacion ?? null,
+      item.superficie_ventilacion ?? null,
+      item.relevamiento_id ?? null,
+      item.local_id ?? null,
+    ]);
 
-      await connection.execute(insertQuery, [
-        condicion ?? null,
-        disponibilidad ?? null,
-        superficie_iluminacion ?? null,
-        superficie_ventilacion ?? null,
-        relevamiento_id ?? null,
-        local_id ?? null,
-      ]);
-    }
+    await connection.query(insertQuery, [values]);
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },
