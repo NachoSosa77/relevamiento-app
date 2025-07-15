@@ -346,7 +346,41 @@ export default function LocalesPorConstruccion() {
         local_sin_uso: local.local_sin_uso === "Si" ? "Si" : "No",
       }));
 
-      await localesService.postLocales(localesConDatos);
+      const localesNuevos = localesConDatos.filter((local) => !local.id);
+      const localesExistentes = localesConDatos.filter(
+        (local): local is typeof local & { id: number } =>
+          local.id !== undefined
+      );
+
+      if (localesNuevos.length > 0) {
+        const response = await localesService.postLocales(localesNuevos);
+        const creados = response.inserted || [];
+        // Actualizamos el estado para que los locales nuevos tengan su id asignado y no se dupliquen
+        setLocalesPorConstruccion((prev) => {
+          const actualizados = { ...prev };
+          const actuales = actualizados[activeIndex] || [];
+
+          let idxCreados = 0;
+          const localesCreadosConId = creados.map((localCreado: any) => ({
+            ...localesNuevos[idxCreados++],
+            id: localCreado.id,
+          }));
+
+          const mezclados = actuales.map((local) =>
+            local.id ? local : localesCreadosConId.shift() || local
+          );
+
+          actualizados[activeIndex] = mezclados;
+          return actualizados;
+        });
+      }
+
+      for (const localExistente of localesExistentes) {
+        await localesService.updateLocalCompleto(
+          localExistente.id,
+          localExistente
+        );
+      }
 
       toast.success(
         editando

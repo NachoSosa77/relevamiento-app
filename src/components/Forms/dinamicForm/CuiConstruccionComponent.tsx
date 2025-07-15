@@ -1,5 +1,6 @@
 "use client";
 import NumericInput from "@/components/ui/NumericInput";
+import Spinner from "@/components/ui/Spinner";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
@@ -30,6 +31,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   setConstruccionId,
 }) => {
   const relevamientoId = useRelevamientoId();
+  const [isLoading, setIsLoading] = useState(true);
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
   const [selectedConstruccionId, setSelectedConstruccionId] = useState<
     number | null
@@ -42,6 +44,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       setSelectedConstruccionId(null);
       setNumeroConstruccion(0);
       setConstruccionId(null);
+      setIsLoading(false);
       return;
     }
 
@@ -62,6 +65,7 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       })
       .catch(() => {
         toast.error("Error al cargar construcciones");
+         setIsLoading(false);
       });
   }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
 
@@ -86,29 +90,34 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
           cada una por separado.
         </p>
 
-        {construcciones.length === 0 ? (
-          <p className="text-red-500">No hay construcciones</p>
-        ) : (
-          <div className="border-b border-gray-300 mb-4">
-            <nav className="-mb-px flex space-x-4 overflow-x-auto">
-              {construcciones.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => handleTabClick(c.id, c.numero_construccion)}
-                  disabled={isReadOnly}
-                  className={
-                    "whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm " +
-                    (selectedConstruccionId === c.id
-                      ? "border-custom text-custom"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
-                  }
-                >
-                  Construcción Nº {c.numero_construccion}
-                </button>
-              ))}
-            </nav>
-          </div>
-        )}
+ {isLoading ? (
+  <div className="flex justify-center items-center py-4">
+    <Spinner />
+  </div>
+) : construcciones.length === 0 ? (
+  <p className="text-black">No hay construcciones</p>
+) : (
+  <div className="border-b border-gray-300 mb-4">
+    <nav className="-mb-px flex space-x-4 overflow-x-auto">
+      {construcciones.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => handleTabClick(c.id, c.numero_construccion)}
+          disabled={isReadOnly}
+          className={
+            "whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm " +
+            (selectedConstruccionId === c.id
+              ? "border-custom text-custom"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+          }
+        >
+          Construcción Nº {c.numero_construccion}
+        </button>
+      ))}
+    </nav>
+  </div>
+)}
+
       </div>
 
       <div className="flex items-center justify-between gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">

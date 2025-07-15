@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -58,8 +59,13 @@ const DetalleLocalPage = () => {
   }, [id]); // ✅ id es la única dependencia real
 
   useEffect(() => {
-    fetchLocal();
-  }, [fetchLocal]);
+  if (!id) {
+    console.error("No hay ID en la ruta");
+    return;
+  }
+
+  fetchLocal();
+}, [fetchLocal]);
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!localId) return;

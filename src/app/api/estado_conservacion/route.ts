@@ -51,8 +51,10 @@ export async function POST(req: Request) {
       } = item;
 
       const [rows] = await connection.execute<RowDataPacket[]>(
-        `SELECT COUNT(*) as count FROM estado_conservacion WHERE relevamiento_id = ? AND construccion_id = ?`,
-        [relevamiento_id, construccion_id]
+        `SELECT COUNT(*) as count 
+     FROM estado_conservacion 
+     WHERE relevamiento_id = ? AND construccion_id = ? AND estructura = ?`,
+        [relevamiento_id, construccion_id, estructura]
       );
 
       const count = (rows[0] as { count: number }).count;

@@ -2,7 +2,7 @@ import FormReutilizable from "./FormReutilizable";
 
 export default function EstablecimientosPrivados() {
   return (
-    <div className="mx-8 my-6 border rounded-2xl">
+    <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">

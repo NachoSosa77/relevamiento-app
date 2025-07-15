@@ -9,15 +9,19 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { LocalDetalleModal } from "./LocalesConstruccion";
 
 interface Props {
   construccion: Construccion;
+  relevamientoId: number
 }
 
-export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
+export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: Props) => {
+    const router = useRouter();
+  
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
   const [localSeleccionado, setLocalSeleccionado] =
     useState<LocalesConstruccion | null>(null);
@@ -29,6 +33,11 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
     setLocalSeleccionado(local);
     setShowModal(true);
   };
+
+  const handleEditarLocales = () => {
+    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    router.push("/relevamiento-locales"); // o la ruta que uses
+  }
 
   const toggleLocales = async () => {
     if (!showLocales && locales.length === 0 && construccion.id) {
@@ -89,6 +98,12 @@ export const ConstruccionDetalleAccordion = ({ construccion }: Props) => {
 
           {showLocales && (
             <div className="mt-4">
+               <button
+            onClick={handleEditarLocales}
+            className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+          >
+            Editar Locales
+          </button>
               {locales.length === 0 ? (
                 <p className="text-gray-500">
                   No hay locales cargados para esta construcción.

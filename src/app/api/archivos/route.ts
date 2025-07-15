@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
-// Convierte File a Buffer
 function fileToBuffer(file: File): Promise<Buffer> {
   return file.arrayBuffer().then((ab) => Buffer.from(ab));
 }
@@ -22,16 +22,17 @@ export async function POST(req: Request) {
   }
 
   const archivosSubidos = [];
+  const errores: { nombre: string; mensaje: string }[] = [];
 
   for (const file of files) {
     try {
       const fileBuffer = await fileToBuffer(file);
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, "-"); // formato seguro para nombres de archivo
+      const timestamp = now.toISOString().replace(/[:.]/g, "-");
       const uniqueName = `Planos/${timestamp}_${file.name}`;
 
       const blob = await put(uniqueName, fileBuffer, {
-        access: "public", // o "private" si quieres proteger el acceso
+        access: "public",
         contentType: file.type,
       });
 
@@ -48,18 +49,20 @@ export async function POST(req: Request) {
         tipo_archivo,
         relevamiento_id: relevamientoId,
       });
-    } catch (err) {
-      console.error(err);
-      return NextResponse.json(
-        { error: "Error al subir uno de los archivos a Blob" },
-        { status: 500 }
-      );
+    } catch (err: any) {
+      console.error(`❌ Error al subir archivo ${file.name}:`, err);
+      errores.push({
+        nombre: file.name,
+        mensaje: err.message || "Error desconocido",
+      });
+      continue; // sigue con los demás archivos
     }
   }
 
   return NextResponse.json({
     success: true,
     archivos: archivosSubidos,
+    errores,
   });
 }
 

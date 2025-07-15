@@ -38,31 +38,52 @@ export default function AguaFormComponent({ relevamientoId, construccionId }: Ag
   const [editando, setEditando] = useState(false);
 
   const fetchServicioBasico = useCallback(async () => {
-    if (!relevamientoId || !construccionId) return;
-    try {
-      const res = await fetch(`/api/servicio_agua?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data) {
-          setEditando(true);
-          setServicioBasico({
-            tipo_provision: JSON.parse(data.tipo_provision || "[]"),
-            tipo_provision_estado: JSON.parse(data.tipo_provision_estado || "[]"),
-            tipo_almacenamiento: JSON.parse(data.tipo_almacenamiento || "[]"),
-            tipo_almacenamiento_estado: JSON.parse(data.tipo_almacenamiento_estado || "[]"),
-            alcance: JSON.parse(data.alcance || "[]"),
-            tratamiento: data.tratamiento || "",
-            tipo_tratamiento: data.tipo_tratamiento || "",
-            control_sanitario: data.control_sanitario || "",
-            cantidad_veces: data.cantidad_veces || "",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error al cargar servicio de agua:", error);
-      toast.error("Error al cargar los datos de servicio de agua");
+  if (!relevamientoId || !construccionId) return;
+
+  try {
+    const res = await fetch(`/api/servicio_agua?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`);
+    if (res.ok) {
+      const data = await res.json();
+    if (data && Object.keys(data).length > 0) {
+  setEditando(true);
+  setServicioBasico({
+    tipo_provision: JSON.parse(data.tipo_provision || "[]"),
+    tipo_provision_estado: JSON.parse(data.tipo_provision_estado || "[]"),
+    tipo_almacenamiento: JSON.parse(data.tipo_almacenamiento || "[]"),
+    tipo_almacenamiento_estado: JSON.parse(data.tipo_almacenamiento_estado || "[]"),
+    alcance: JSON.parse(data.alcance || "[]"),
+    tratamiento: data.tratamiento || "",
+    tipo_tratamiento: data.tipo_tratamiento || "",
+    control_sanitario: data.control_sanitario || "",
+    cantidad_veces: data.cantidad_veces || "",
+  });
+} else {
+  resetFormulario();
+}
+    } else {
+      resetFormulario();
     }
-  }, [relevamientoId, construccionId]);
+  } catch (error) {
+    console.error("Error al cargar servicio de agua:", error);
+    toast.error("Error al cargar los datos de servicio de agua");
+    resetFormulario();
+  }
+}, [relevamientoId, construccionId]);
+
+const resetFormulario = () => {
+  setEditando(false);
+  setServicioBasico({
+    tipo_provision: [],
+    tipo_provision_estado: [],
+    tipo_almacenamiento: [],
+    tipo_almacenamiento_estado: [],
+    alcance: [],
+    tratamiento: "",
+    tipo_tratamiento: "",
+    control_sanitario: "",
+    cantidad_veces: "",
+  });
+};
 
   useEffect(() => {
     fetchServicioBasico();

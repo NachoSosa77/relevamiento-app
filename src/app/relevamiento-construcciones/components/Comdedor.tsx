@@ -38,34 +38,39 @@ export default function Comedor({
   const [editando, setEditando] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!relevamientoId || !construccionId) return;
+  const fetchData = async () => {
+    if (!relevamientoId || !construccionId) return;
 
-      try {
-        const res = await fetch(
-          `/api/uso_comedor?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const initialResponses: Record<string, EspecificacionesComedor> = {};
-            data.forEach((item: any, index: number) => {
-              initialResponses[index.toString()] = {
-                disponibilidad: item.disponibilidad || "",
-                tipos_comedor: item.tipos_comedor || [],
-              };
-            });
-            setResponses(initialResponses);
-            setEditando(true);
-          }
+    try {
+      const res = await fetch(
+        `/api/uso_comedor?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const initialResponses: Record<string, EspecificacionesComedor> = {};
+          data.forEach((item: any, index: number) => {
+            initialResponses[index.toString()] = {
+              disponibilidad: item.disponibilidad || "",
+              tipos_comedor: item.tipos_comedor || [],
+            };
+          });
+          setResponses(initialResponses);
+          setEditando(true);
+        } else {
+          // 🧼 Acá está el fix
+          setResponses({});
+          setEditando(false);
         }
-      } catch (error) {
-        console.error("Error al cargar datos de comedor:", error);
       }
-    };
+    } catch (error) {
+      console.error("Error al cargar datos de comedor:", error);
+    }
+  };
 
-    fetchData();
-  }, [relevamientoId, construccionId]);
+  fetchData();
+}, [relevamientoId, construccionId]);
+
 
   const handleResponseChange = (
     servicioId: string,

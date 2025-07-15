@@ -20,26 +20,31 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
   // Precarga si hay datos guardados
   useEffect(() => {
-    const fetchAntiguedad = async () => {
-      if (!construccionId) return;
-      try {
-        const res = await axios.get(`/api/construcciones/${construccionId}`);
-        const data = res.data;
+  const fetchAntiguedad = async () => {
+    if (!construccionId) return;
+    try {
+      const res = await axios.get(`/api/construcciones/${construccionId}`);
+      const data = res.data;
 
-        if (data.antiguedad || data.destino) {
-          setAntiguedad({
-            ano: data.antiguedad || "",
-            destino: data.destino || "",
-          });
-          setEditando(true);
-        }
-      } catch (error) {
-        console.error("Error al cargar antigüedad:", error);
+      if (data.antiguedad || data.destino) {
+        setAntiguedad({
+          ano: data.antiguedad || "",
+          destino: data.destino || "",
+        });
+        setEditando(true);
+      } else {
+        setAntiguedad({ ano: "", destino: "" });
+        setEditando(false); // 👈 importante
       }
-    };
+    } catch (error) {
+      console.error("Error al cargar antigüedad:", error);
+      setAntiguedad({ ano: "", destino: "" });
+      setEditando(false); // 👈 también en error
+    }
+  };
 
-    fetchAntiguedad();
-  }, [construccionId]);
+  fetchAntiguedad();
+}, [construccionId]);
 
   const handleGuardarCambios = async () => {
     if (!antiguedad.ano.trim() || !antiguedad.destino) {

@@ -35,13 +35,15 @@ export default function HomePage() {
   };
 
   const handleNuevoRelevamiento = async () => {
-    if (!cuiInputValue || !user?.email) return;
+    if (!cuiInputValue || !user?.email || !user?.id) return;
 
     try {
-      const data = await relevamientoService.createRelevamiento(
-        cuiInputValue,
-        user.email
-      );
+      const data = await relevamientoService.createRelevamiento({
+        cui: cuiInputValue,
+        created_by: user.email,
+        usuario_id: user.id,
+        email: user.email,
+      });
 
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;

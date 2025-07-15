@@ -46,40 +46,44 @@ export default function CondicionesAccesibilidad({
 
   // Cargar datos existentes para editar
   useEffect(() => {
-    if (!relevamientoId || !construccionId) return;
+  if (!relevamientoId || !construccionId) return;
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            // Mapeamos las respuestas para el estado local
-            const initialResponses: Record<string, RespuestaAccesibilidad> = {};
-            data.forEach((item: any) => {
-              // Asumimos que item.servicio_id o similar está para clave, sino usamos item.servicio o index
-              const servicioId = item.servicio_id || item.servicio || item.id?.toString() || "";
-              initialResponses[servicioId] = {
-                id: item.id,
-                disponibilidad: item.disponibilidad || "",
-                estado: item.estado || "",
-                cantidad: item.cantidad || 0,
-                mantenimiento: item.mantenimiento || "",
-              };
-            });
-            setResponses(initialResponses);
-            setEditando(true);
-          }
+  const fetchData = async () => {
+    try {
+      const res = await fetch(
+        `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const initialResponses: Record<string, RespuestaAccesibilidad> = {};
+          data.forEach((item: any) => {
+            const servicioId = item.servicio_id || item.servicio || item.id?.toString() || "";
+            initialResponses[servicioId] = {
+              id: item.id,
+              disponibilidad: item.disponibilidad || "",
+              estado: item.estado || "",
+              cantidad: item.cantidad || 0,
+              mantenimiento: item.mantenimiento || "",
+            };
+          });
+          setResponses(initialResponses);
+          setEditando(true);
+        } else {
+          // 👇 FIX ACÁ
+          setResponses({});
+          setEditando(false);
         }
-      } catch (error) {
-        console.error("Error al cargar condiciones accesibilidad:", error);
       }
-    };
+    } catch (error) {
+      console.error("Error al cargar condiciones accesibilidad:", error);
+    }
+  };
 
-    fetchData();
-  }, [relevamientoId, construccionId]);
+  fetchData();
+}, [relevamientoId, construccionId]);
+
 
   const handleResponseChange = (
     servicioId: string,

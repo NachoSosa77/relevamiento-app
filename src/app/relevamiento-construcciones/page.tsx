@@ -104,7 +104,6 @@ export default function RelevamientoConstruccionesPage() {
       });
 
       if (res.ok) {
-        toast.success("Observaciones guardadas correctamente");
         // 🚀 Marcamos como relevada:
         marcarComoRelevada(construccionId);
       } else {
@@ -123,11 +122,21 @@ export default function RelevamientoConstruccionesPage() {
     router.push("/relevamiento-locales");
   };
 
+  console.log(construccionId)
+
   const marcarComoRelevada = (id: number) => {
     if (!relevadas.includes(id)) {
       setRelevadas([...relevadas, id]);
     }
   };
+
+  if (!selectedCui || selectedInstitutions === null) {
+  return (
+    <div className="flex justify-center items-center h-full mt-40">
+      <Spinner />
+    </div>
+  );
+}
 
   return (
     <div className="h-full bg-white text-black text-sm mt-28">

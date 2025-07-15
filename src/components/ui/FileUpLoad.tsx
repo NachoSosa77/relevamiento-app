@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useAppDispatch, useAppSelector } from "@/redux/hooks"; // Asegúrate de que el hook esté configurado
-import { setArchivosSubidos } from "@/redux/slices/archivoSlice"; // Importa la acción de Redux
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setArchivosSubidos } from "@/redux/slices/archivoSlice";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -13,8 +13,6 @@ interface Props {
 
 const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   const dispatch = useAppDispatch();
-
-  // Verifica si el estado está inicializado correctamente
   const archivosSubidosRedux = useAppSelector(
     (state) => state.archivos?.archivosSubidos || []
   );
@@ -22,12 +20,13 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   const [archivos, setArchivos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [modalIndex, setModalIndex] = useState<number | null>(null);
+
   const closeModal = () => setModalIndex(null);
-  const nextImage = () =>
-    setModalIndex((prev) => (prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev));
-  const prevImage = () =>
-    setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+  const nextImage = () => setModalIndex((prev) => (prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev));
+  const prevImage = () => setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -42,21 +41,32 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   };
 
   const handleUpload = async () => {
-    if (!relevamientoId || relevamientoId <= 0) {
-      toast.error("ID de relevamiento inválido o no proporcionado");
-      return;
-    }
-    if (!archivos.length) {
-      toast.warning("No hay archivos para subir");
-      return;
-    }
+  if (!relevamientoId || relevamientoId <= 0) {
+    toast.error("ID de relevamiento inválido o no proporcionado");
+    return;
+  }
+  if (!archivos.length) {
+    toast.warning("No hay archivos para subir");
+    return;
+  }
 
+  const loteSize = 20; // cantidad de archivos por lote
+  const totalLotes = Math.ceil(archivos.length / loteSize); // total de lotes a subir
+  let subidosTotal: any[] = [];
+
+  setIsUploading(true);
+  setUploadProgress(0); // Resetear barra
+
+  for (let i = 0; i < archivos.length; i += loteSize) {
+    const lote = archivos.slice(i, i + loteSize);
+    const currentLote = Math.floor(i / loteSize) + 1;
     const formData = new FormData();
-    archivos.forEach((file) => formData.append("files", file));
+
+    lote.forEach((file) => formData.append("files", file));
     formData.append("relevamientoId", relevamientoId.toString());
 
     try {
-      setIsUploading(true);
+      toast.info(`Subiendo lote ${currentLote} de ${totalLotes}...`);
 
       const res = await fetch("/api/archivos", {
         method: "POST",
@@ -67,21 +77,30 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
 
       if (!res.ok) throw new Error(data.error || "Error al subir archivos");
 
-      toast.success("Archivos subidos con éxito");
-      setArchivos([]); // Limpiar los archivos en el estado local
-      setPreviews([]); // Limpiar las vistas previas
-      dispatch(setArchivosSubidos(data.archivos)); // Actualiza el estado global de Redux
-      onUploadSuccess?.(data.archivos);
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Error al subir archivos");
-    } finally {
-      setIsUploading(false);
+      subidosTotal = [...subidosTotal, ...data.archivos];
+      dispatch(setArchivosSubidos([...archivosSubidosRedux, ...data.archivos]));
+
+      // Calcular progreso porcentual
+      const progress = Math.min((currentLote / totalLotes) * 100, 100);
+      setUploadProgress(progress);
+
+    } catch (err) {
+      console.error("Error en lote:", err);
+      toast.error(`Error en la subida de archivos del grupo ${i + 1} al ${i + lote.length}`);
     }
-  };
+  }
+
+  setArchivos([]); // Limpiar después de todo
+  setPreviews([]);
+  onUploadSuccess?.(subidosTotal);
+  toast.success("Todos los archivos fueron subidos");
+
+  setIsUploading(false);
+  setUploadProgress(100); // Finalizar barra al 100%
+};
+
 
   useEffect(() => {
-    // Revoke object URLs para liberar memoria
     return () => {
       previews.forEach((url) => URL.revokeObjectURL(url));
     };
@@ -91,23 +110,14 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (modalIndex === null) return;
 
-      if (e.key === "ArrowRight") {
-        nextImage();
-      } else if (e.key === "ArrowLeft") {
-        prevImage();
-      } else if (e.key === "Escape") {
-        closeModal();
-      }
+      if (e.key === "ArrowRight") nextImage();
+      else if (e.key === "ArrowLeft") prevImage();
+      else if (e.key === "Escape") closeModal();
     };
 
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalIndex, archivosSubidosRedux.length]);
-
-
 
   const handleEliminarArchivoSubido = (index: number) => {
     const nuevosArchivos = archivosSubidosRedux.filter((_, i) => i !== index);
@@ -121,12 +131,7 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
         accept="image/*,application/pdf"
         multiple
         onChange={handleFileChange}
-        className="block w-full text-sm text-gray-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded-full file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-custom
-          hover:file:bg-custom/50"
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-custom hover:file:bg-custom/50"
       />
 
       <div className="flex flex-wrap gap-4 max-h-[300px] overflow-y-auto">
@@ -138,7 +143,7 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
           >
             <button
               onClick={(e) => {
-                e.stopPropagation(); // evita que se dispare el modal
+                e.stopPropagation();
                 handleEliminarArchivoSubido(index);
               }}
               className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
@@ -147,7 +152,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
             >
               ×
             </button>
-
             {archivo.tipo_archivo === "pdf" ? (
               <iframe src={archivo.archivo_url} className="w-full h-full" />
             ) : (
@@ -160,7 +164,7 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
             )}
           </div>
         ))}
-        {/* Archivos recién seleccionados (previews) */}
+
         {previews.map((preview, index) => (
           <div
             key={"nuevo-" + index}
@@ -168,7 +172,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
           >
             <button
               onClick={() => {
-                // Eliminar archivo local seleccionado
                 setArchivos((prev) => prev.filter((_, i) => i !== index));
                 setPreviews((prev) => prev.filter((_, i) => i !== index));
               }}
@@ -178,8 +181,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
             >
               ×
             </button>
-
-            {/* Mostrar imagen si es imagen, o ícono para pdf */}
             {archivos[index]?.type === "application/pdf" ? (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-600 font-semibold text-center">
                 PDF
@@ -190,7 +191,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
                 alt={`archivo-nuevo-${index}`}
                 fill
                 style={{ objectFit: "cover" }}
-
               />
             )}
           </div>
@@ -204,6 +204,16 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
       >
         {isUploading ? "Subiendo..." : "Confirmar subida"}
       </button>
+
+      {isUploading && (
+        <div className="w-full bg-gray-200 rounded h-4 overflow-hidden mt-2">
+          <div
+            className="bg-blue-500 h-full transition-all duration-500"
+            style={{ width: `${uploadProgress}%` }}
+          ></div>
+        </div>
+      )}
+
       {modalIndex !== null && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
           <button
@@ -212,7 +222,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
           >
             ×
           </button>
-
           <div className="relative w-[90%] max-w-4xl h-[80%]">
             {archivosSubidosRedux[modalIndex].tipo_archivo === "pdf" ? (
               <iframe
@@ -227,8 +236,6 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
                 style={{ objectFit: "contain" }}
               />
             )}
-
-            {/* Botones para navegar */}
             <button
               onClick={prevImage}
               disabled={modalIndex === 0}

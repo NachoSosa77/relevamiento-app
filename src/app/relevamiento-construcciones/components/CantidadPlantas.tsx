@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Plantas {
@@ -46,6 +46,55 @@ export default function CantidadPlantas({
   const [onConfirmCallback, setOnConfirmCallback] = useState<() => void>(
     () => {}
   );
+
+ useEffect(() => {
+  const fetchPlantas = async () => {
+    if (!relevamientoId || !construccionId) return;
+
+    try {
+      const res = await fetch("/api/plantas/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          relevamiento_id: relevamientoId,
+          construccion_id: construccionId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.exists && data.planta_id) {
+        setPlantaIdExistente(data.planta_id);
+        setPlantas({
+          subsuelo: data.subsuelo ?? 0,
+          pb: data.pb ?? 0,
+          pisos_superiores: data.pisos_superiores ?? 0,
+          total_plantas:
+            Math.abs(data.subsuelo ?? 0) +
+            Math.abs(data.pb ?? 0) +
+            Math.abs(data.pisos_superiores ?? 0),
+        });
+      } else {
+        setPlantaIdExistente(null);  // muy importante resetear si no existe registro
+        setPlantas({
+          subsuelo: undefined,
+          pb: undefined,
+          pisos_superiores: undefined,
+          total_plantas: undefined,
+        });
+      }
+    } catch (error) {
+      console.error("Error al verificar existencia de plantas", error);
+      setPlantaIdExistente(null);
+    }
+  };
+
+  fetchPlantas();
+}, [relevamientoId, construccionId]);
+
+
   const calcularTotal = (datos: Plantas) =>
     Math.abs(datos.subsuelo || 0) +
     Math.abs(datos.pb || 0) +
@@ -167,6 +216,12 @@ export default function CantidadPlantas({
           </p>
         </div>
       </div>
+
+      {plantaIdExistente && (
+  <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+    Estás editando un registro ya existente.
+  </div>
+)}
 
       {/* tabla */}
       <div className="mt-2 overflow-x-auto">

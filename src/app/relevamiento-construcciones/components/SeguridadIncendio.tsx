@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Servicio {
@@ -51,8 +50,58 @@ export default function SeguridadIncendio({
       }
     >
   >({});
+  const [cantidadOptions, setCantidadOptions] = useState<Record<string, number>>(
+    {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const relevamientoId = useRelevamientoId();
+  const [editando, setEditando] = useState(false);
+
+  useEffect(() => {
+    if (!relevamientoId || !construccionId) return;
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          `/api/instalaciones_seguridad_incendio?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const initialResponses: typeof responses = {};
+            const initialCantidades: typeof cantidadOptions = {};
+
+            data.forEach((item: any) => {
+              const servicioId = item.servicio_id || item.id || item.servicio;
+              if (!servicioId) return;
+
+              initialResponses[servicioId] = {
+                disponibilidad: item.disponibilidad || "",
+                cantidad: item.cantidad || 0,
+                carga_anual_matafuegos: item.carga_anual_matafuegos || "",
+                simulacros_evacuacion: item.simulacros_evacuacion || "",
+              };
+
+              initialCantidades[servicioId] = item.cantidad || 0;
+            });
+
+            setResponses(initialResponses);
+            setCantidadOptions(initialCantidades);
+            setEditando(true);
+          } else {
+            // Si no hay datos, limpiar estados
+            setResponses({});
+            setCantidadOptions({});
+            setEditando(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando datos existentes de seguridad incendio:", error);
+      }
+    };
+
+    fetchData();
+  }, [relevamientoId, construccionId]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -69,17 +118,12 @@ export default function SeguridadIncendio({
     }));
   };
 
-  const [cantidadOptions, setCantidadOptions] = useState<{
-    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
-  }>({});
-
   const handleGuardar = async () => {
     // Filtrar solo servicios con datos válidos
     const serviciosValidos = Object.keys(responses).filter((key) => {
       const r = responses[key];
       const cantidad = cantidadOptions[key] ?? 0;
 
-      // Validar que haya al menos un campo no vacío o cantidad > 0
       return (
         (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
         cantidad > 0 ||
@@ -113,7 +157,7 @@ export default function SeguridadIncendio({
 
     try {
       const response = await fetch("/api/instalaciones_seguridad_incendio", {
-        method: "POST",
+        method: editando ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -137,6 +181,11 @@ export default function SeguridadIncendio({
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -174,28 +223,30 @@ export default function SeguridadIncendio({
             <tr key={id} className="border">
               <td className="border p-2 text-center">{id}</td>
               <td className="border p-2">{question}</td>
+
+              {/* Radios No */}
               <td className="border p-2 text-center">
                 <input
                   type="radio"
                   name={`disponibilidad-${id}`}
                   value="No"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "No")
-                  }
+                  checked={responses[id]?.disponibilidad === "No"}
+                  onChange={() => handleResponseChange(id, "disponibilidad", "No")}
                 />
               </td>
+
+              {/* Radios Si */}
               <td className="border p-2 text-center">
                 <input
                   type="radio"
                   name={`disponibilidad-${id}`}
                   value="Si"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "Si")
-                  }
+                  checked={responses[id]?.disponibilidad === "Si"}
+                  onChange={() => handleResponseChange(id, "disponibilidad", "Si")}
                 />
               </td>
 
-              {/* Agregar la columna de "NC" solo si sub_id es 7 */}
+              {/* Radio NC solo si sub_id === 7 */}
               {sub_id === 7 && (
                 <td className="border p-2 text-center">
                   {id === "7.2" && (
@@ -203,9 +254,8 @@ export default function SeguridadIncendio({
                       type="radio"
                       name={`disponibilidad-${id}`}
                       value="NC"
-                      onChange={() =>
-                        handleResponseChange(id, "disponibilidad", "NC")
-                      }
+                      checked={responses[id]?.disponibilidad === "NC"}
+                      onChange={() => handleResponseChange(id, "disponibilidad", "NC")}
                     />
                   )}
                 </td>
@@ -214,14 +264,14 @@ export default function SeguridadIncendio({
               {/* Especificaciones */}
               <td
                 className={`border p-2 text-center ${
-                  !showCondition ? " text-slate-400" : ""
+                  !showCondition ? "text-slate-400" : ""
                 }`}
               >
                 {!showCondition ? (
                   "No corresponde"
                 ) : (
                   <div className="flex gap-2 items-center justify-center">
-                    {/* TextInput para 7.2 y 7.7 */}
+                    {/* NumericInput para 7.2 y 7.7 */}
                     {(id === "7.2" || id === "7.7") && (
                       <NumericInput
                         disabled={false}
@@ -241,12 +291,12 @@ export default function SeguridadIncendio({
                       />
                     )}
 
-                    {/* Campos de cantidad y carga de matafuegos para 7.3 - 7.6 */}
+                    {/* Cantidad + carga anual para 7.3 a 7.6 */}
                     {(id === "7.3" ||
                       id === "7.4" ||
                       id === "7.5" ||
                       id === "7.6") && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center justify-center">
                         <NumericInput
                           disabled={false}
                           label="Cantidad"
@@ -266,6 +316,7 @@ export default function SeguridadIncendio({
                               type="radio"
                               name={`carga-anual-${id}`}
                               value="No"
+                              checked={responses[id]?.carga_anual_matafuegos === "No"}
                               onChange={() =>
                                 handleResponseChange(
                                   id,
@@ -282,6 +333,7 @@ export default function SeguridadIncendio({
                               type="radio"
                               name={`carga-anual-${id}`}
                               value="No sabe"
+                              checked={responses[id]?.carga_anual_matafuegos === "No sabe"}
                               onChange={() =>
                                 handleResponseChange(
                                   id,
@@ -298,6 +350,7 @@ export default function SeguridadIncendio({
                               type="radio"
                               name={`carga-anual-${id}`}
                               value="Si"
+                              checked={responses[id]?.carga_anual_matafuegos === "Si"}
                               onChange={() =>
                                 handleResponseChange(
                                   id,
@@ -321,12 +374,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En todas"
+                            checked={responses[id]?.disponibilidad === "En todas"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En todas"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En todas")
                             }
                             className="mr-1"
                           />
@@ -337,12 +387,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En algunas"
+                            checked={responses[id]?.disponibilidad === "En algunas"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En algunas"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En algunas")
                             }
                             className="mr-1"
                           />
@@ -353,12 +400,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En ninguna"
+                            checked={responses[id]?.disponibilidad === "En ninguna"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En ninguna"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En ninguna")
                             }
                             className="mr-1"
                           />
@@ -367,7 +411,7 @@ export default function SeguridadIncendio({
                       </div>
                     )}
 
-                    {/* TextInput para 7.10 */}
+                    {/* Simulacros para 7.10 */}
                     {id === "7.10" && (
                       <div className="flex gap-2 items-center justify-center">
                         ¿Se realizan simulacros de evacuación?{" "}
@@ -376,12 +420,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`simulacros_evacuacion-${id}`}
                             value="No"
+                            checked={responses[id]?.simulacros_evacuacion === "No"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "simulacros_evacuacion",
-                                "No"
-                              )
+                              handleResponseChange(id, "simulacros_evacuacion", "No")
                             }
                             className="mr-1"
                           />
@@ -392,12 +433,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`simulacros_evacuacion-${id}`}
                             value="No sabe"
+                            checked={responses[id]?.simulacros_evacuacion === "No sabe"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "simulacros_evacuacion",
-                                "No sabe"
-                              )
+                              handleResponseChange(id, "simulacros_evacuacion", "No sabe")
                             }
                             className="mr-1"
                           />
@@ -408,12 +446,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`simulacros_evacuacion-${id}`}
                             value="Si"
+                            checked={responses[id]?.simulacros_evacuacion === "Si"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "simulacros_evacuacion",
-                                "Si"
-                              )
+                              handleResponseChange(id, "simulacros_evacuacion", "Si")
                             }
                             className="mr-1"
                           />
@@ -422,7 +457,7 @@ export default function SeguridadIncendio({
                       </div>
                     )}
 
-                    {/* TextInput para 7.11 */}
+                    {/* Opciones especiales para 7.11 */}
                     {id === "7.11" && (
                       <div className="flex gap-4 items-center justify-center">
                         <label>
@@ -430,24 +465,22 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En todos"
+                            checked={responses[id]?.disponibilidad === "En todos"}
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "No")
+                              handleResponseChange(id, "disponibilidad", "En todos")
                             }
                             className="mr-1"
                           />
-                          No
+                          En todos
                         </label>
                         <label>
                           <input
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="Sólo PB"
+                            checked={responses[id]?.disponibilidad === "Sólo PB"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "Sólo PB"
-                              )
+                              handleResponseChange(id, "disponibilidad", "Sólo PB")
                             }
                             className="mr-1"
                           />
@@ -458,16 +491,18 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En ninguno"
+                            checked={responses[id]?.disponibilidad === "En ninguno"}
                             onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "Si")
+                              handleResponseChange(id, "disponibilidad", "En ninguno")
                             }
                             className="mr-1"
                           />
-                          Si
+                          En ninguno
                         </label>
                       </div>
                     )}
 
+                    {/* Opciones especiales para 7.15 */}
                     {id === "7.15" && (
                       <div className="flex gap-4 items-center justify-center">
                         <label>
@@ -475,12 +510,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En todos"
+                            checked={responses[id]?.disponibilidad === "En todos"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En todos"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En todos")
                             }
                             className="mr-1"
                           />
@@ -491,12 +523,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En algunos"
+                            checked={responses[id]?.disponibilidad === "En algunos"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En algunos"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En algunos")
                             }
                             className="mr-1"
                           />
@@ -507,12 +536,9 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="En ninguno"
+                            checked={responses[id]?.disponibilidad === "En ninguno"}
                             onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "disponibilidad",
-                                "En ninguno"
-                              )
+                              handleResponseChange(id, "disponibilidad", "En ninguno")
                             }
                             className="mr-1"
                           />
@@ -523,6 +549,7 @@ export default function SeguridadIncendio({
                             type="radio"
                             name={`disponibilidad-${id}`}
                             value="Ns"
+                            checked={responses[id]?.disponibilidad === "Ns"}
                             onChange={() =>
                               handleResponseChange(id, "disponibilidad", "Ns")
                             }

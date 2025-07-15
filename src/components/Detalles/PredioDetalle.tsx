@@ -34,6 +34,11 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
     router.push("/espacios-escolares"); // o la ruta que uses
   };
 
+  const handleEditarConstruccion = () => {
+    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    router.push("/relevamiento-construcciones"); // o la ruta que uses
+  }
+
   useEffect(() => {
     const fetchPredioYConstrucciones = async () => {
       try {
@@ -102,12 +107,20 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
       {(predio?.cantidad_construcciones ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-md font-semibold">Construcciones relevadas</h3>
+                    <button
+            onClick={handleEditarConstruccion}
+            className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+          >
+            Editar Construcciones
+          </button>
+
           {construcciones.length > 0 && (
             <div className="space-y-2">
               {construcciones.map((construccion, index) => (
                 <ConstruccionDetalleAccordion
                   key={construccion.id}
                   construccion={construccion}
+                  relevamientoId={relevamientoId}
                 />
               ))}
             </div>

@@ -189,35 +189,37 @@ const EstablecimientosComponent: React.FC = () => {
   ];
 
   const handleGuardarRelaciones = async () => {
-    if (!relevamientoId || instituciones.length === 0) {
-      toast.error("No hay instituciones para guardar.");
-      setGuardandoRelaciones(true); // 🟢 iniciar bloqueo
-      return;
+  setGuardandoRelaciones(true); // ✅ Activamos loading apenas se clickea
 
-    }
+  if (!relevamientoId || instituciones.length === 0) {
+    toast.error("No hay instituciones para guardar.");
+    setGuardandoRelaciones(false); // 🔴 Desactivamos si hay error
+    return;
+  }
 
-    try {
-      const response = await fetch("/api/instituciones_por_relevamiento", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          relevamiento_id: relevamientoId,
-          instituciones: instituciones.map((i) => i.id),
-        }),
-      });
+  try {
+    const response = await fetch("/api/instituciones_por_relevamiento", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        relevamiento_id: relevamientoId,
+        instituciones: instituciones.map((i) => i.id),
+      }),
+    });
 
-      if (!response.ok) throw new Error("Error al guardar las relaciones");
+    if (!response.ok) throw new Error("Error al guardar las relaciones");
 
-      toast.success("¡Relaciones guardadas correctamente!");
-    } catch (error) {
-      console.error("Error al guardar relaciones:", error);
-      toast.error("Hubo un error al guardar las relaciones.");
-    } finally {
-      setGuardandoRelaciones(false); // 🔴 desbloquear
-    }
-  };
+    toast.success("¡Relaciones guardadas correctamente!");
+  } catch (error) {
+    console.error("Error al guardar relaciones:", error);
+    toast.error("Hubo un error al guardar las relaciones.");
+  } finally {
+    setGuardandoRelaciones(false); // 🔚 Desactivamos loading siempre
+  }
+};
+
 
   if (isLoading) return <Spinner />;
 
@@ -252,16 +254,24 @@ const EstablecimientosComponent: React.FC = () => {
           Agregar establecimiento
         </button>
         <button
-          className={`font-bold py-2 px-4 rounded-full transition duration-300 ${
-            guardandoRelaciones
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
-          onClick={handleGuardarRelaciones}
-          disabled={instituciones.length === 0 || guardandoRelaciones}
-        >
-          {guardandoRelaciones ? "Guardando..." : "Guardar información"}
-        </button>
+  className={`flex items-center justify-center gap-2 font-bold py-2 px-4 rounded-full transition duration-300 ${
+    guardandoRelaciones
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700 text-white"
+  }`}
+  onClick={handleGuardarRelaciones}
+  disabled={instituciones.length === 0 || guardandoRelaciones}
+>
+  {guardandoRelaciones ? (
+    <>
+      <Spinner  /> {/* tu spinner, ajustamos tamaño */}
+      Guardando...
+    </>
+  ) : (
+    "Guardar información"
+  )}
+</button>
+
       </div>
       <Modal
         isOpen={modalIsOpen}

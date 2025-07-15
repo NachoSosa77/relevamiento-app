@@ -96,7 +96,7 @@ export default function RelevamientoCPage() {
       });
 
       if (res.ok) {
-        toast.success("Observaciones guardadas correctamente");
+        console.log("Observaciones guardadas correctamente");
       } else {
         console.error("Error al guardar observaciones");
         toast.error("Observaciones guardadas correctamente");
@@ -162,7 +162,7 @@ export default function RelevamientoCPage() {
         },
         body: JSON.stringify({ predio_id: predioId }),
       });
-      toast.success("Enviado con éxito");
+      toast.success("Guardado con éxito");
     } catch (error) {
       console.error("Error al enviar:", error);
       toast.error("Error al enviar");

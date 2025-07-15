@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
   FLUSH,
@@ -33,9 +34,23 @@ const rootReducer = combineReducers({
   predio: predioReducer,
 });
 
+function createNoopStorage() {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, _value: string) {
+      return Promise.resolve();
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+}
+
 const persistConfig = {
   key: "root",
-  storage,
+  storage: typeof window !== "undefined" ? storage : createNoopStorage(),
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

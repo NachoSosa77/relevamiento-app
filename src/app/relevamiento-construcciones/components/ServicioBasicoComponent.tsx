@@ -104,6 +104,7 @@ export default function ServicioBasicoComponent({ value, onChange }: ServicioBas
               value={provisionSeleccionada.estado}
               onChange={(e) => setProvisionSeleccionada({ ...provisionSeleccionada, estado: e.target.value })}
               options={["Bueno", "Regular", "Malo"].map(e => ({ value: e, label: e }))}
+              direction="row" // 👈 cambia el layout a horizontal
             />
           )}
           <button className="bg-custom text-white px-2 rounded" onClick={agregarProvision}>Agregar</button>
