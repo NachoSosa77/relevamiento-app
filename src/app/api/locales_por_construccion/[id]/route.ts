@@ -81,40 +81,39 @@ export async function GET(
 // PUT - Actualizar campos por ID escalable
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: { id: string } } // ✅ no Promise
 ) {
-  try {
-    const { id } = await params;
-    const body = await req.json();
+  const id = Number(params.id);
 
-    if (!id || isNaN(id)) {
-      return NextResponse.json({ message: "ID inválido" }, { status: 400 });
-    }
+  if (!id || isNaN(id)) {
+    return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+  }
 
-    // Lista blanca de campos que se pueden actualizar
-    const allowedFields = ["destino_original", "proteccion_contra_robo"];
-    const fieldsToUpdate = Object.entries(body).filter(([key]) =>
-      allowedFields.includes(key)
+  const body = await req.json();
+
+  const allowedFields = ["destino_original", "proteccion_contra_robo"];
+  const fieldsToUpdate = Object.entries(body).filter(([key]) =>
+    allowedFields.includes(key)
+  );
+
+  if (fieldsToUpdate.length === 0) {
+    return NextResponse.json(
+      { message: "No se enviaron campos válidos para actualizar" },
+      { status: 400 }
     );
+  }
 
-    if (fieldsToUpdate.length === 0) {
-      return NextResponse.json(
-        { message: "No se enviaron campos válidos para actualizar" },
-        { status: 400 }
-      );
-    }
+  const setClause = fieldsToUpdate.map(([key]) => `${key} = ?`).join(", ");
+  const values = fieldsToUpdate.map(([, value]) => value);
 
-    const setClause = fieldsToUpdate.map(([key]) => `${key} = ?`).join(", ");
-    const values = fieldsToUpdate.map(([, value]) => value);
+  let connection;
 
-    const connection = await getConnection();
-
+  try {
+    connection = await getConnection();
     const [result] = await connection.query(
       `UPDATE locales_por_construccion SET ${setClause} WHERE id = ?`,
       [...values, id]
     );
-
-    connection.release();
 
     return NextResponse.json({
       message: "Actualización exitosa",
@@ -126,6 +125,8 @@ export async function PUT(
       { message: "Error interno", error: err.message },
       { status: 500 }
     );
+  } finally {
+    connection?.release(); // ✅ Liberación garantizada
   }
 }
 

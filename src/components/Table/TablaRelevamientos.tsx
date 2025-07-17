@@ -52,9 +52,7 @@ export default function TablaRelevamientos() {
 
   // 🔽 Spinner
   if (loading) {
-    return (
-      <Spinner/>
-    );
+    return <Spinner />;
   }
 
   return (
@@ -63,11 +61,21 @@ export default function TablaRelevamientos() {
       <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">ID</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">CUI</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Usuario</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Fecha</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Estado</th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              ID
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              CUI
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Usuario
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Fecha
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Estado
+            </th>
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
@@ -78,11 +86,15 @@ export default function TablaRelevamientos() {
               <td className="px-4 py-2 text-center text-sm">{r.cui_id}</td>
               <td className="px-4 py-2 text-center text-sm">{r.created_by}</td>
               <td className="px-4 py-2 text-center text-sm">
-                {format(new Date(r.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                {format(new Date(r.created_at), "dd/MM/yyyy HH:mm", {
+                  locale: es,
+                })}
               </td>
               <td className="px-4 py-2 text-center text-sm">
                 {r.estado === "incompleto" ? (
-                  <span className="text-yellow-600 font-semibold">Incompleto</span>
+                  <span className="text-yellow-600 font-semibold">
+                    Incompleto
+                  </span>
                 ) : r.estado === "completo" ? (
                   <span className="text-green-600 font-semibold">Completo</span>
                 ) : (
@@ -107,7 +119,10 @@ export default function TablaRelevamientos() {
           ))}
           {relevamientos.length === 0 && (
             <tr>
-              <td colSpan={6} className="text-center py-4 text-sm text-gray-500">
+              <td
+                colSpan={6}
+                className="text-center py-4 text-sm text-gray-500"
+              >
                 No hay relevamientos disponibles.
               </td>
             </tr>

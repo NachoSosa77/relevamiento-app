@@ -13,11 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const insertQuery = `
-      INSERT INTO aberturas (abertura, tipo, estado, cantidad, relevamiento_id, local_id)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
+    const values = [];
     for (const item of data) {
       const { abertura, tipo, estado, cantidad, relevamiento_id, local_id } =
         item;
@@ -36,7 +32,7 @@ export async function POST(req: Request) {
         );
       }
 
-      await connection.execute(insertQuery, [
+      values.push([
         abertura ?? null,
         tipo ?? null,
         estado ?? null,
@@ -45,6 +41,17 @@ export async function POST(req: Request) {
         local_id ?? null,
       ]);
     }
+
+    // Armar placeholders para todas las filas
+    const placeholders = values.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
+    const flatValues = values.flat();
+
+    const insertQuery = `
+      INSERT INTO aberturas (abertura, tipo, estado, cantidad, relevamiento_id, local_id)
+      VALUES ${placeholders}
+    `;
+
+    await connection.execute(insertQuery, flatValues);
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },

@@ -1,6 +1,14 @@
 import { getConnection } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+const chunkArray = <T>(arr: T[], size: number): T[][] => {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
+
 export async function POST(req: Request) {
   try {
     const connection = await getConnection();
@@ -19,24 +27,29 @@ export async function POST(req: Request) {
       ) VALUES ?
     `;
 
-    // Construir valores en formato [[a1, b1, ...], [a2, b2, ...]]
-    const values = data.map((item) => [
-      item.condicion ?? null,
-      item.disponibilidad ?? null,
-      item.superficie_iluminacion ?? null,
-      item.superficie_ventilacion ?? null,
-      item.relevamiento_id ?? null,
-      item.local_id ?? null,
-    ]);
+    // Chunk de 100 filas
+    const chunkSize = 100;
+    const chunks = chunkArray(data, chunkSize);
 
-    await connection.query(insertQuery, [values]);
+    for (const chunk of chunks) {
+      const values = chunk.map((item) => [
+        item.condicion ?? null,
+        item.disponibilidad ?? null,
+        item.superficie_iluminacion ?? null,
+        item.superficie_ventilacion ?? null,
+        item.relevamiento_id ?? null,
+        item.local_id ?? null,
+      ]);
+
+      await connection.query(insertQuery, [values]);
+    }
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al insertar aberturas:", error);
+    console.error("Error al insertar iluminacion_ventilacion:", error);
     return NextResponse.json(
       { error: "Error al insertar los datos" },
       { status: 500 }

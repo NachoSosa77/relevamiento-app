@@ -4,8 +4,10 @@ import { getConnection } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  let connection;
+
   try {
-    const connection = await getConnection();
+    connection = await getConnection();
     const { localId, observaciones } = await req.json();
 
     if (!localId || typeof observaciones !== "string") {
@@ -21,5 +23,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error guardando observaciones:", error);
     return NextResponse.json({ error: "Error al guardar" }, { status: 500 });
+  } finally {
+    connection?.release(); // ✅ garantiza liberación incluso si falla
   }
 }
