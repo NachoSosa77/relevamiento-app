@@ -13,13 +13,14 @@ export interface ServicioGas extends RowDataPacket {
 }
 
 export const getServicioGasByRelevamientoId = async (
-  relevamientoId: number
+  relevamientoId: number,
+  construccionId: number
 ): Promise<ServicioGas[]> => {
   const connection = await getConnection();
 
   const [rows] = await connection.execute<ServicioGas[]>(
     `SELECT * FROM servicio_gas WHERE relevamiento_id = ? AND construccion_id = ?`,
-    [relevamientoId]
+    [relevamientoId, construccionId]
   );
 
   connection.release();

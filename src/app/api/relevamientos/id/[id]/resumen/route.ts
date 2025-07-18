@@ -7,13 +7,21 @@ import { getConstruccionesByRelevamientoId } from "@/app/lib/server/construccion
 import { getEnergiasAlternativasByConstruccionId } from "@/app/lib/server/energiasalternativasDb";
 import { getEquipamientoCocinaOfficesByRelevamientoId } from "@/app/lib/server/equipamientoOfficeDb";
 import { getEquipamientoSanitariosByRelevamientoId } from "@/app/lib/server/equipamientoSanitarioDb";
+import { getEstadoConservacionByRelevamientoId } from "@/app/lib/server/estadoconservacionDb";
 import { getIluminacionVentilacionByRelevamientoId } from "@/app/lib/server/iluminacionVentilacionDb";
 import { getInstalacionesBasicasByRelevamientoId } from "@/app/lib/server/instalacionesBasicasDb";
 import { getInstalacionesSeguridadIncendioByConstruccionId } from "@/app/lib/server/instalacionesSeguridadIncendioDb";
+import { getInstitucionesPorConstruccion } from "@/app/lib/server/institucionesConstruccionDb";
 import { getLocalesByConstruccionAndRelevamiento } from "@/app/lib/server/localesPorConstruccionDb";
 import { getMaterialesPredominantesByRelevamientoId } from "@/app/lib/server/materialesPredominantesDb";
+import { getPlantasPorConstruccion } from "@/app/lib/server/plantasconstruccionDb";
 import { getRelevamientoByIdServer } from "@/app/lib/server/relevamientoDb";
 import { getRespondientesByRelevamientoId } from "@/app/lib/server/respondientesDb";
+import { getServicioAguaByRelevamientoId } from "@/app/lib/server/servicioAguaDb";
+import { getServicioDesagueByRelevamientoId } from "@/app/lib/server/servicioDesagueDb";
+import { getServicioElectricidadByRelevamientoId } from "@/app/lib/server/servicioElectricidadDb";
+import { getServicioGasByRelevamientoId } from "@/app/lib/server/servicioGasDb";
+import { getUsoComedorByRelevamientoId } from "@/app/lib/server/usoComedorDb";
 import { getVisitasByRelevamientoIdServer } from "@/app/lib/server/visitasDb";
 import { NextResponse } from "next/server";
 // ...otros imports
@@ -73,18 +81,42 @@ export async function GET(
         condicionesAccesibilidad,
         energiasAlternativas,
         instalacionesSeguridadIncendio,
+        instituciones,
+        plantas,
+        servicioAgua,
+        servicioDesague,
+        servicioElectricidad,
+        servicioGas,
+        servicioComedor,
+        estadoConservacion,
       ] = await Promise.all([
         getCondicionesAccesibilidadByConstruccionId(id, construccion.id),
         getEnergiasAlternativasByConstruccionId(id, construccion.id),
         getInstalacionesSeguridadIncendioByConstruccionId(id, construccion.id),
+        getInstitucionesPorConstruccion(id, construccion.id),
+        getPlantasPorConstruccion(id, construccion.id),
+        getServicioAguaByRelevamientoId(id, construccion.id),
+        getServicioDesagueByRelevamientoId(id, construccion.id),
+        getServicioElectricidadByRelevamientoId(id, construccion.id),
+        getServicioGasByRelevamientoId(id, construccion.id),
+        getUsoComedorByRelevamientoId(id, construccion.id),
+        getEstadoConservacionByRelevamientoId(id, construccion.id),
       ]);
 
       return {
         ...construccion,
         locales: localesConDetalles,
+        instituciones,
+        plantas,
+        servicioAgua,
+        servicioDesague,
+        servicioGas,
+        servicioElectricidad,
+        instalacionesSeguridadIncendio,
         condicionesAccesibilidad,
         energiasAlternativas,
-        instalacionesSeguridadIncendio,
+        servicioComedor,
+        estadoConservacion,
       };
     })
   );

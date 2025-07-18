@@ -20,6 +20,14 @@ const styles = StyleSheet.create({
     color: "#1A202C",
     backgroundColor: "#FAFAFA",
   },
+  containerBox: {
+    marginTop: 8,
+    backgroundColor: "#fff",
+    padding: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
   tabla: {
     width: "auto",
     borderStyle: "solid",
@@ -27,6 +35,22 @@ const styles = StyleSheet.create({
     borderRightWidth: 0,
     borderBottomWidth: 0,
     marginTop: 6,
+  },
+  detailRow: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  detailLabel: {
+    fontSize: 10,
+    fontWeight: "bold",
+    width: "50%",
+  },
+  detailValue: {
+    fontSize: 10,
+    width: "50%",
+    textAlign: "right",
   },
   fila: {
     flexDirection: "row",
@@ -75,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9F0F7",
   },
   title: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#2D3748",
     marginBottom: 8,
@@ -102,7 +126,10 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "1pt solid #E2E8F0",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#ccc",
   },
   tableHeaderCell: {
     flex: 1,
@@ -117,6 +144,19 @@ const styles = StyleSheet.create({
     padding: 6,
     fontSize: 9,
     borderRight: "1pt solid #E2E8F0",
+  },
+  labelCell: {
+    fontSize: 10,
+    fontWeight: "bold",
+    width: "45%",
+    color: "#333",
+  },
+
+  valueCell: {
+    fontSize: 10,
+    width: "55%",
+    textAlign: "right",
+    color: "#000",
   },
   imageGrid: {
     flexDirection: "row",
@@ -142,6 +182,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderBottom: "1pt solid #CBD5E0",
     paddingBottom: 2,
+  },
+  subTitle: {
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#4A5568",
+    marginBottom: 4,
+    paddingBottom: 2,
+    alignItems: "center",
+    textAlign: "center",
   },
   localContainer: {
     marginBottom: 12,
@@ -300,70 +350,304 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
         {/* Construcciones y Locales con detalle */}
         {construcciones?.length > 0 &&
           construcciones.map((c: any) => (
-            <View key={c.id} style={styles.section}>
+            <View key={c.id} style={styles.section} break>
               <Text style={styles.title}>
+                CUI(Código unico de infraestructura): {relevamiento.cui_id}{" "}
                 Construcción N° {c.numero_construccion}
               </Text>
               <View style={styles.tableContainer}>
                 <View style={styles.tableRow}>
                   <Text style={styles.tableHeaderCell}>Destino:</Text>
                   <Text style={styles.tableHeaderCell}>Antigüedad:</Text>
+                  <Text style={styles.tableHeaderCell}>
+                    Superficie semi cubierta:
+                  </Text>
+                  <Text style={styles.tableHeaderCell}>
+                    Superficie cubierta:
+                  </Text>
                   <Text style={styles.tableHeaderCell}>Superficie Total:</Text>
                 </View>
 
                 <View style={styles.tableRow}>
                   <Text style={styles.tableCell}>{c.destino}</Text>
                   <Text style={styles.tableCell}>{c.antiguedad}</Text>
-                  <Text style={styles.tableCell}>{c.superficie_total} m²</Text>
+                  <Text style={styles.tableCell}>
+                    {c.superficie_semi_cubierta
+                      ? `${c.superficie_semi_cubierta} m²`
+                      : "-"}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {c.superficie_cubierta
+                      ? `${c.superficie_cubierta} m²`
+                      : "-"}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {c.superficie_total ? `${c.superficie_total} m²` : "-"}
+                  </Text>
                 </View>
               </View>
 
-              {/* Condiciones de accesibilidad */}
-              {c.condicionesAccesibilidad?.length > 0 && (
+              {/* Instituciones */}
+              {c.instituciones?.length > 0 && (
                 <View style={{ marginTop: 8 }}>
-                  <Text style={styles.subSectionTitle}>
-                    Condiciones de Accesibilidad
-                  </Text>
+                  <Text style={styles.subSectionTitle}>Instituciones</Text>
 
                   {/* Encabezado de tabla */}
                   <View style={styles.tableRow}>
-                    <Text style={styles.tableHeaderCell}>Servicio</Text>
-                    <Text style={styles.tableHeaderCell}>Disponibilidad</Text>
-                    <Text style={styles.tableHeaderCell}>Cantidad</Text>
-                    <Text style={styles.tableHeaderCell}>Estado</Text>
-                    <Text style={styles.tableHeaderCell}>Mantenimiento</Text>
+                    <Text style={styles.tableHeaderCell}>Institución</Text>
+                    <Text style={styles.tableHeaderCell}>Cue</Text>
                   </View>
 
                   {/* Filas de datos */}
-                  {c.condicionesAccesibilidad.map((cond: any, i: number) => (
+                  {c.instituciones.map((ins: any, i: number) => (
                     <View key={i} style={styles.tableRow}>
                       <Text style={styles.tableCell}>
-                        {cond.servicio ?? "-"}
+                        {ins.institucion ?? "-"}
+                      </Text>
+                      <Text style={styles.tableCell}>{ins.cue ?? "-"}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Plantas */}
+              {c.plantas?.length > 0 && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={styles.subSectionTitle}>Plantas</Text>
+
+                  {/* Encabezado de tabla */}
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableHeaderCell}>Subsuelo</Text>
+                    <Text style={styles.tableHeaderCell}>Planta baja</Text>
+                    <Text style={styles.tableHeaderCell}>Pisos superiores</Text>
+                    <Text style={styles.tableHeaderCell}>Total plantas</Text>
+                  </View>
+
+                  {/* Filas de datos */}
+                  {c.plantas.map((plan: any, i: number) => (
+                    <View key={i} style={styles.tableRow}>
+                      <Text style={styles.tableCell}>
+                        {plan.subsuelo ?? "-"}
+                      </Text>
+                      <Text style={styles.tableCell}>{plan.pb ?? "-"}</Text>
+                      <Text style={styles.tableCell}>
+                        {plan.pisos_superiores ?? "-"}
                       </Text>
                       <Text style={styles.tableCell}>
-                        {cond.disponibilidad ?? "-"}
-                      </Text>
-                      <Text style={styles.tableCell}>
-                        {cond.cantidad ?? "-"}
-                      </Text>
-                      <Text style={styles.tableCell}>{cond.estado ?? "-"}</Text>
-                      <Text style={styles.tableCell}>
-                        {cond.mantenimiento ?? "-"}
+                        {plan.total_plantas ?? "-"}
                       </Text>
                     </View>
                   ))}
                 </View>
               )}
 
-              {/* Energías alternativas */}
-              {c.energiasAlternativas?.length > 0 && (
-                <View style={{ marginTop: 8 }}>
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.subTitle}>SERVICIOS BÁSICOS</Text>
+              </View>
+              {/* Servicio Agua */}
+              {c.servicioAgua?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>AGUA</Text>
+
+                  {c.servicioAgua.map((cond: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Provisión:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_provision ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Estado de provisión:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_provision_estado ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Tipo de almacenamiento:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_almacenamiento ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Estado del almacenamiento:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_almacenamiento_estado ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Alcance:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.alcance ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          ¿Tiene tratamiento?:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tratamiento ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Tipo de tratamiento:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_tratamiento ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          ¿Tiene control sanitario?:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.control_sanitario ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Cantidad de veces:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.cantidad_veces ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Servicio Desagues Cloacales */}
+              {c.servicioDesague?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>DESAGÜES CLOACALES</Text>
+
+                  {c.servicioDesague.map((cond: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Tipo de provisión:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.servicio ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estado:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.estado ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Servicio Gas */}
+              {c.servicioGas?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
                   <Text style={styles.subSectionTitle}>
-                    Energías Alternativas
+                    INSTALACIÓN DE GAS U OTRO COMBUSTIBLE
                   </Text>
-                  {c.energiasAlternativas.map((ea: any, i: number) => (
-                    <View key={i} style={styles.localSubItem}>
-                      <Text>{ea.disponibilidad}</Text>
+
+                  {c.servicioGas.map((cond: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Tipo de provisión:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.servicio ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estado:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.estado ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Servicio Electricidad */}
+              {c.servicioElectricidad?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                  break
+                >
+                  <Text style={styles.subSectionTitle}>ELECTRICIDAD</Text>
+
+                  {c.servicioElectricidad.map((cond: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Tipo de provisión:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.servicio ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estado:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.estado ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Disponibilidad:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.disponibilidad ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Potencia:</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.potencia ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Estado de la bateria:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.estado_bateria ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>
+                          Tipo de combustible:
+                        </Text>
+                        <Text style={styles.valueCell}>
+                          {cond.tipo_combustible ?? "-"}
+                        </Text>
+                      </View>
                     </View>
                   ))}
                 </View>
@@ -371,45 +655,220 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
 
               {/* Instalaciones seguridad incendio */}
               {c.instalacionesSeguridadIncendio?.length > 0 && (
-                <View style={{ marginTop: 8 }}>
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
                   <Text style={styles.subSectionTitle}>
-                    Instalaciones Seguridad Incendio
+                    INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIOS
                   </Text>
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableHeaderCell}>Servicio</Text>
-                    <Text style={styles.tableHeaderCell}>Disponibilidad</Text>
-                    <Text style={styles.tableHeaderCell}>Cantidad</Text>
-                    <Text style={styles.tableHeaderCell}>Estado</Text>
-                    <Text style={styles.tableHeaderCell}>Mantenimiento</Text>
-                  </View>
 
                   {c.instalacionesSeguridadIncendio.map(
                     (ins: any, i: number) => (
-                      <View key={i} style={styles.tableRow}>
-                        <Text style={styles.tableCell}>
-                          {ins.servicio ?? "-"}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {ins.disponibilidad ?? "-"}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {ins.cantidad ?? "-"}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {ins.carga_anual_matafuegos ?? "-"}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {ins.simulacros_evacuación ?? "-"}
-                        </Text>
+                      <View key={i} style={{ marginBottom: 8 }}>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>Servicio:</Text>
+                          <Text style={styles.valueCell}>
+                            {ins.servicio ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>Disponibilidad:</Text>
+                          <Text style={styles.valueCell}>
+                            {ins.disponibilidad ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>Cantidad:</Text>
+                          <Text style={styles.valueCell}>
+                            {ins.cantidad ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Carga anual matafuegos:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {ins.carga_anual_matafuegos ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Simulacros de evacuación:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {ins.simulacros_evacuación ?? "-"}
+                          </Text>
+                        </View>
                       </View>
                     )
                   )}
                 </View>
               )}
 
+              {/* Condiciones de accesibilidad */}
+              {c.condicionesAccesibilidad?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>
+                    CONDICIONES DE ACCESIBILIDAD
+                  </Text>
+
+                  {c.condicionesAccesibilidad.map((cond: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Servicio</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.servicio ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Disponibilidad</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.disponibilidad ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Cantidad</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.cantidad ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estado</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.estado ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Mantenimiento</Text>
+                        <Text style={styles.valueCell}>
+                          {cond.mantenimiento ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Comedor */}
+              {c.servicioComedor?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>USO DEL COMEDOR</Text>
+
+                  {c.servicioComedor.map((ea: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      {/*                       <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Servicio</Text>
+                        <Text style={styles.valueCell}>
+                          {ea.servicio ?? "-"}
+                        </Text>
+                      </View>
+ */}{" "}
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Disponibilidad</Text>
+                        <Text style={styles.valueCell}>
+                          {ea.disponibilidad ?? "-"}
+                        </Text>
+                      </View>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Locación</Text>
+                        <Text style={styles.valueCell}>
+                          {ea.tipos_comedor ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Energías alternativas */}
+              {c.energiasAlternativas?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                  break
+                >
+                  <Text style={styles.subSectionTitle}>
+                    ENERGÍAS ALTERNATIVAS
+                  </Text>
+
+                  {c.energiasAlternativas.map((ea: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Disponibilidad</Text>
+
+                        <Text style={styles.valueCell}>
+                          {ea.disponibilidad ?? "-"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/*Estado de conservacion*/}
+              {c.estadoConservacion?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>
+                    CARACTERÍSTICAS CONSTRUCTIVAS Y ESTADO DE CONSERVACIÓN
+                  </Text>
+
+                  {c.estadoConservacion.map((ea: any, i: number) => (
+                    <View key={i} style={{ marginBottom: 8 }}>
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estructura</Text>
+                        <Text style={styles.valueCell}>
+                          {ea.estructura ?? "-"}
+                        </Text>
+                      </View>
+                      {/*                                         <View style={styles.tableRow}>
+                      <Text style={styles.labelCell}>Disponibilidad</Text>
+                      <Text style={styles.valueCell}>
+                        {ea.disponibilidad ?? "-"}
+                      </Text>
+                    </View>
+ */}{" "}
+                      <View style={styles.tableRow}>
+                        <Text style={styles.labelCell}>Estado</Text>
+                        <Text style={styles.valueCell}>{ea.estado ?? "-"}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               {/* Locales */}
               {c.locales?.length > 0 && (
-                <>
+                <View break>
                   <Text style={[styles.subSectionTitle, { marginTop: 12 }]}>
                     Locales
                   </Text>
@@ -443,7 +902,12 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                           <Text style={styles.tableHeaderCell}>
                             Observaciones
                           </Text>
-                          <Text style={[styles.tableCell, { flex: 3 }]}>
+                          <Text
+                            style={[
+                              styles.tableCell,
+                              { flex: 3, fontSize: 10 },
+                            ]}
+                          >
                             {l.observaciones?.trim() ? l.observaciones : "-"}
                           </Text>
                         </View>
@@ -580,7 +1044,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                         )}
                     </View>
                   ))}
-                </>
+                </View>
               )}
             </View>
           ))}
@@ -589,22 +1053,22 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
         {archivos?.some((a: any) =>
           a.tipo_archivo?.toLowerCase().includes("plano")
         ) && (
-          <View style={styles.section}>
-            <Text style={styles.title}>Planos</Text>
-            {archivos
-              .filter((a: any) =>
-                a.tipo_archivo?.toLowerCase().includes("plano")
-              )
-              .map((plano: any) => (
-                <View key={plano.id} style={styles.row}>
-                  <Text style={styles.label}>Plano:</Text>
-                  <Link src={plano.archivo_url} style={styles.value}>
-                    {plano.archivo_url}
-                  </Link>
-                </View>
-              ))}
-          </View>
-        )}
+            <View style={styles.section}>
+              <Text style={styles.title}>Planos</Text>
+              {archivos
+                .filter((a: any) =>
+                  a.tipo_archivo?.toLowerCase().includes("plano")
+                )
+                .map((plano: any) => (
+                  <View key={plano.id} style={styles.row}>
+                    <Text style={styles.label}>Plano:</Text>
+                    <Link src={plano.archivo_url} style={styles.value}>
+                      {plano.archivo_url}
+                    </Link>
+                  </View>
+                ))}
+            </View>
+          )}
 
         {/* Archivos: Imágenes en 2 columnas */}
         {archivos?.some((a: any) => a.tipo_archivo?.includes("imagen")) && (
