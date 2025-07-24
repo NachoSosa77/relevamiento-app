@@ -10,6 +10,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 import { JSX } from "react";
+import EstadoConservacionDetailComponent from "./EstadoConservacionPdf";
 const logoUrl = "/img/logo-ministerio.png";
 
 const styles = StyleSheet.create({
@@ -54,14 +55,15 @@ const styles = StyleSheet.create({
   },
   fila: {
     flexDirection: "row",
+    alignItems: "stretch",
+    borderBottomWidth: 0.5,
+    borderColor: "#CBD5E0",
   },
   celda: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    padding: 4,
-    fontSize: 10,
+    borderWidth: 0.5,
+    borderColor: "#CBD5E0",
+    padding: 6,
+    fontSize: 9,
     flex: 1,
     textAlign: "left",
   },
@@ -127,12 +129,13 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 2,
+    paddingVertical: 4, // antes: 2
+    paddingHorizontal: 2,
     borderBottomWidth: 0.5,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#CBD5E0",
   },
   tableHeaderCell: {
-    flex: 1,
+    width: "25%", // o ajustá dinámicamente
     padding: 6,
     backgroundColor: "#EDF2F7",
     fontWeight: "bold",
@@ -146,6 +149,8 @@ const styles = StyleSheet.create({
     borderRight: "1pt solid #E2E8F0",
   },
   labelCell: {
+    paddingVertical: 4,
+    justifyContent: "center",
     fontSize: 10,
     fontWeight: "bold",
     width: "45%",
@@ -153,6 +158,9 @@ const styles = StyleSheet.create({
   },
 
   valueCell: {
+    paddingVertical: 4,
+    justifyContent: "center",
+
     fontSize: 10,
     width: "55%",
     textAlign: "right",
@@ -496,7 +504,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                       </View>
                       <View style={styles.tableRow}>
                         <Text style={styles.labelCell}>
-                          ¿Tiene tratamiento?:
+                          Tratamiento potabilizador:
                         </Text>
                         <Text style={styles.valueCell}>
                           {cond.tratamiento ?? "-"}
@@ -511,9 +519,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                         </Text>
                       </View>
                       <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          ¿Tiene control sanitario?:
-                        </Text>
+                        <Text style={styles.labelCell}>Control sanitario:</Text>
                         <Text style={styles.valueCell}>
                           {cond.control_sanitario ?? "-"}
                         </Text>
@@ -569,6 +575,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
+                  break
                 >
                   <Text style={styles.subSectionTitle}>
                     INSTALACIÓN DE GAS U OTRO COMBUSTIBLE
@@ -602,7 +609,6 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
-                  break
                 >
                   <Text style={styles.subSectionTitle}>ELECTRICIDAD</Text>
 
@@ -662,6 +668,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
+                  break
                 >
                   <Text style={styles.subSectionTitle}>
                     INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIOS
@@ -776,12 +783,12 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                   {c.servicioComedor.map((ea: any, i: number) => (
                     <View key={i} style={{ marginBottom: 8 }}>
                       {/*                       <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Servicio</Text>
-                        <Text style={styles.valueCell}>
-                          {ea.servicio ?? "-"}
-                        </Text>
-                      </View>
- */}{" "}
+                          <Text style={styles.labelCell}>Servicio</Text>
+                          <Text style={styles.valueCell}>
+                            {ea.servicio ?? "-"}
+                          </Text>
+                        </View>
+  */}{" "}
                       <View style={styles.tableRow}>
                         <Text style={styles.labelCell}>Disponibilidad</Text>
                         <Text style={styles.valueCell}>
@@ -808,7 +815,6 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
-                  break
                 >
                   <Text style={styles.subSectionTitle}>
                     ENERGÍAS ALTERNATIVAS
@@ -828,43 +834,8 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
                 </View>
               )}
 
-              {/*Estado de conservacion*/}
-              {c.estadoConservacion?.length > 0 && (
-                <View
-                  style={{
-                    marginTop: 8,
-                    backgroundColor: "#fff",
-                    padding: 6,
-                    borderRadius: 4,
-                  }}
-                >
-                  <Text style={styles.subSectionTitle}>
-                    CARACTERÍSTICAS CONSTRUCTIVAS Y ESTADO DE CONSERVACIÓN
-                  </Text>
-
-                  {c.estadoConservacion.map((ea: any, i: number) => (
-                    <View key={i} style={{ marginBottom: 8 }}>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Estructura</Text>
-                        <Text style={styles.valueCell}>
-                          {ea.estructura ?? "-"}
-                        </Text>
-                      </View>
-                      {/*                                         <View style={styles.tableRow}>
-                      <Text style={styles.labelCell}>Disponibilidad</Text>
-                      <Text style={styles.valueCell}>
-                        {ea.disponibilidad ?? "-"}
-                      </Text>
-                    </View>
- */}{" "}
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Estado</Text>
-                        <Text style={styles.valueCell}>{ea.estado ?? "-"}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
+              {/* Estado de conservación */}
+              <EstadoConservacionDetailComponent c={c.estadoConservacion} />
 
               {/* Locales */}
               {c.locales?.length > 0 && (
@@ -1053,22 +1024,22 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
         {archivos?.some((a: any) =>
           a.tipo_archivo?.toLowerCase().includes("plano")
         ) && (
-            <View style={styles.section}>
-              <Text style={styles.title}>Planos</Text>
-              {archivos
-                .filter((a: any) =>
-                  a.tipo_archivo?.toLowerCase().includes("plano")
-                )
-                .map((plano: any) => (
-                  <View key={plano.id} style={styles.row}>
-                    <Text style={styles.label}>Plano:</Text>
-                    <Link src={plano.archivo_url} style={styles.value}>
-                      {plano.archivo_url}
-                    </Link>
-                  </View>
-                ))}
-            </View>
-          )}
+          <View style={styles.section}>
+            <Text style={styles.title}>Planos</Text>
+            {archivos
+              .filter((a: any) =>
+                a.tipo_archivo?.toLowerCase().includes("plano")
+              )
+              .map((plano: any) => (
+                <View key={plano.id} style={styles.row}>
+                  <Text style={styles.label}>Plano:</Text>
+                  <Link src={plano.archivo_url} style={styles.value}>
+                    {plano.archivo_url}
+                  </Link>
+                </View>
+              ))}
+          </View>
+        )}
 
         {/* Archivos: Imágenes en 2 columnas */}
         {archivos?.some((a: any) => a.tipo_archivo?.includes("imagen")) && (

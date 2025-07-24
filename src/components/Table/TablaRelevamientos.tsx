@@ -50,6 +50,10 @@ export default function TablaRelevamientos() {
     router.push(`/home/relevamiento/detalle/${id}`);
   };
 
+  const handleViewPdf = (id: number) => {
+    router.push(`/home/pdf/${id}`);
+  };
+
   // 🔽 Spinner
   if (loading) {
     return <Spinner />;
@@ -114,6 +118,13 @@ export default function TablaRelevamientos() {
                 >
                   Editar / Continuar
                 </button>
+                                <button
+                  onClick={() => handleViewPdf(r.id)}
+                  className="bg-green-600 text-white font-bold px-4 py-1 rounded hover:bg-green-600/50"
+                >
+                  Ver Informe Pdf
+                </button>
+
               </td>
             </tr>
           ))}

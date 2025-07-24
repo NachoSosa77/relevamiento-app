@@ -248,18 +248,21 @@ export default function RelevamientoConstruccionesPage() {
             label="ESTRUCTURA RESISTENTE"
             estructuras={estructuraResistente}
             construccionId={construccionId}
+            tipo="estructura_resistente"
           />
           <CaracteristicasConservacion
             id={11}
             label="TECHO"
             estructuras={estructuraTecho}
             construccionId={construccionId}
+            tipo="techo"
           />
           <CaracteristicasConservacion
             id={12}
             label="PAREDES Y CERRAMIENTOS EXTERIORES"
             estructuras={paredesCerramientos}
             construccionId={construccionId}
+            tipo="paredes_cerramientos"
           />
           <EnergiasAlternativas
             id={13}

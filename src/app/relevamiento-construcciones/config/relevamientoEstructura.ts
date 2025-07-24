@@ -78,7 +78,7 @@ export const estructuraTecho = [
   },
   {
     id: "11.2",
-    question: "Cuierta",
+    question: "Cubierta",
     showCondition: true,
     opciones: [
       {

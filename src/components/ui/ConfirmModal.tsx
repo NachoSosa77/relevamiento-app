@@ -51,7 +51,7 @@ export default function ConfirmModal({
               <div className="mt-4 flex justify-center gap-4">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300"
+                  className="px-4 py-2 bg-gray-200 text-sm text-black rounded hover:bg-gray-300"
                 >
                   Cancelar
                 </button>

@@ -48,6 +48,7 @@ export async function POST(req: Request) {
         estructura,
         disponibilidad,
         estado,
+        tipo,
       } = item;
 
       const [rows] = await connection.execute<RowDataPacket[]>(
@@ -71,14 +72,15 @@ export async function POST(req: Request) {
       }
 
       await connection.execute(
-        `INSERT INTO estado_conservacion (estructura, disponibilidad, estado, relevamiento_id, construccion_id)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO estado_conservacion (estructura, disponibilidad, estado, relevamiento_id, construccion_id, tipo)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [
           estructura ?? null,
           disponibilidad ?? null,
           estado ?? null,
           relevamiento_id,
           construccion_id,
+          tipo,
         ]
       );
     }
@@ -117,15 +119,17 @@ export async function PATCH(req: Request) {
         estado,
         relevamiento_id,
         construccion_id,
+        tipo,
       } = item;
 
       await connection.execute(
         `UPDATE estado_conservacion 
-         SET disponibilidad = ?, estado = ? 
+         SET disponibilidad = ?, estado = ?, tipo = ? 
          WHERE relevamiento_id = ? AND construccion_id = ? AND estructura = ?`,
         [
           disponibilidad ?? null,
           estado ?? null,
+          tipo ?? null,
           relevamiento_id,
           construccion_id,
           estructura,

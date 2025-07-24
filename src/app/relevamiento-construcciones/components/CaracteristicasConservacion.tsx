@@ -27,6 +27,7 @@ interface EstructuraReuProps {
   label: string;
   estructuras: Estructura[];
   construccionId: number | null;
+  tipo: string;
 }
 
 export default function CaracteristicasConservacion({
@@ -34,6 +35,7 @@ export default function CaracteristicasConservacion({
   label,
   estructuras,
   construccionId,
+  tipo,
 }: EstructuraReuProps) {
   const [responses, setResponses] = useState<
     Record<string, { disponibilidad: string; estado: string; estructura: string }>
@@ -122,6 +124,7 @@ export default function CaracteristicasConservacion({
       estado: respuesta.estado || "",
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
+      tipo: tipo,
     };
   });
 
