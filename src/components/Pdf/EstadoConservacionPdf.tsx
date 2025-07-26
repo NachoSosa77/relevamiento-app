@@ -270,12 +270,12 @@ export default function EstadoConservacionDetailComponent({ c }: { c: any[] }) {
           ? item.subtipo.charAt(0).toUpperCase() + item.subtipo.slice(1)
           : "Subtipo"}
       </Text>
-      <Text style={styles.valueCell}>{"—"}</Text>
+      <Text style={styles.valueCell}>{" "}</Text>
     </View>
 
     <View style={styles.tableRow}>
-      <Text style={styles.labelCell}>{item.estructura ?? "—"}</Text>
-      <Text style={styles.valueCell}>{item.estado ?? "—"}</Text>
+      <Text style={styles.labelCell}>{item.estructura ?? " "}</Text>
+      <Text style={styles.valueCell}>{item.estado ?? " "}</Text>
     </View>
   </View>
 ))}

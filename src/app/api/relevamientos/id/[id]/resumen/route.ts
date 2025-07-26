@@ -7,7 +7,7 @@ import { getConstruccionesByRelevamientoId } from "@/app/lib/server/construccion
 import { getEnergiasAlternativasByConstruccionId } from "@/app/lib/server/energiasalternativasDb";
 import { getEquipamientoCocinaOfficesByRelevamientoId } from "@/app/lib/server/equipamientoOfficeDb";
 import { getEquipamientoSanitariosByRelevamientoId } from "@/app/lib/server/equipamientoSanitarioDb";
-import { getEstadoConservacionByRelevamientoId } from "@/app/lib/server/estadoconservacionDb";
+import { getEstadoConservacionByRelevamientoId } from "@/app/lib/server/estadoConservacionDb";
 import { getIluminacionVentilacionByRelevamientoId } from "@/app/lib/server/iluminacionVentilacionDb";
 import { getInstalacionesBasicasByRelevamientoId } from "@/app/lib/server/instalacionesBasicasDb";
 import { getInstalacionesSeguridadIncendioByConstruccionId } from "@/app/lib/server/instalacionesSeguridadIncendioDb";

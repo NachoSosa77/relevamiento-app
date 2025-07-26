@@ -81,9 +81,9 @@ export async function GET(
 // PUT - Actualizar campos por ID escalable
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } } // ✅ no Promise
+  { params }: { params: Promise<{ id: number }> }
 ) {
-  const id = Number(params.id);
+  const { id } = await params;
 
   if (!id || isNaN(id)) {
     return NextResponse.json({ message: "ID inválido" }, { status: 400 });
