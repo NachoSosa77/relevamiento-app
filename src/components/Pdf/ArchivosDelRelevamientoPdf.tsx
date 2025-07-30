@@ -3,6 +3,7 @@
 import {
   Document,
   Image,
+  Link,
   Page,
   StyleSheet,
   Text,
@@ -231,12 +232,8 @@ const styles = StyleSheet.create({
   },
 });
 
-
-export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
-
-  
-  
-  const { relevamiento, respondientes, visitas, espacioEscolar } = data;
+export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
+  const { relevamiento, archivos } = data;
 
   return (
     <Document>
@@ -273,75 +270,41 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
           </View>
         </View>
 
-        {/* Visitas */}
-        {visitas?.length > 0 && (
+        {/* Archivos: Planos primero */}
+        {archivos?.some((a: any) =>
+          a.tipo_archivo?.toLowerCase().includes("pdf")
+        ) && (
           <View style={styles.section}>
-            <Text style={styles.title}>Visitas Realizadas</Text>
-            <View style={styles.tableContainer}>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeaderCell}>N°</Text>
-                <Text style={styles.tableHeaderCell}>Fecha</Text>
-                <Text style={styles.tableHeaderCell}>Inicio</Text>
-                <Text style={styles.tableHeaderCell}>Finalización</Text>
-              </View>
-              {visitas.map((v: any) => (
-                <View key={v.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{v.numero_visita}</Text>
-                  <Text style={styles.tableCell}>{v.fecha}</Text>
-                  <Text style={styles.tableCell}>{v.hora_inicio}</Text>
-                  <Text style={styles.tableCell}>{v.hora_finalizacion}</Text>
+            <Text style={styles.title}>Planos</Text>
+            {archivos
+              .filter((a: any) => a.tipo_archivo?.toLowerCase().includes("pdf"))
+              .map((plano: any) => (
+                <View key={plano.id} style={styles.row}>
+                  <Text style={styles.label}>Plano:</Text>
+                  <Link src={plano.archivo_url} style={styles.value}>
+                    {plano.archivo_url}
+                  </Link>
                 </View>
               ))}
-            </View>
           </View>
         )}
 
-        {/* Respondientes */}
-        {respondientes?.length > 0 && (
+        {/* Archivos: Imágenes en 2 columnas */}
+        {archivos?.some((a: any) => a.tipo_archivo?.includes("imagen")) && (
           <View style={styles.section}>
-            <Text style={styles.title}>Respondientes</Text>
-            <View style={styles.tableContainer}>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeaderCell}>Nombre</Text>
-                <Text style={styles.tableHeaderCell}>Cargo</Text>
-                <Text style={styles.tableHeaderCell}>Establecimiento</Text>
-                <Text style={styles.tableHeaderCell}>Teléfono</Text>
-              </View>
-              {respondientes.map((r: any) => (
-                <View key={r.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{r.nombre_completo}</Text>
-                  <Text style={styles.tableCell}>{r.cargo}</Text>
-                  <Text style={styles.tableCell}>{r.establecimiento}</Text>
-                  <Text style={styles.tableCell}>{r.telefono}</Text>
-                </View>
-              ))}
+            <Text style={styles.title}>Imágenes Adjuntas</Text>
+            <View style={styles.imageGrid}>
+              {archivos
+                .filter((a: any) => a.tipo_archivo?.includes("imagen"))
+                .map((img: any) => (
+                  <View key={img.id} style={styles.imageContainer}>
+                    <Image src={img.archivo_url} style={styles.image} />
+                    <Text>{img.tipo_archivo}</Text>
+                  </View>
+                ))}
             </View>
           </View>
         )}
-
-         {/* Respondientes */}
-        {espacioEscolar?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.title}>Predio</Text>
-            <View style={styles.tableContainer}>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeaderCell}>Cantidad de construcciones</Text>
-                <Text style={styles.tableHeaderCell}>Superficie total del predio</Text>
-                <Text style={styles.tableHeaderCell}>Cui</Text>
-                <Text style={styles.tableHeaderCell}>Observaciones</Text>
-              </View>
-              {espacioEscolar.map((r: any) => (
-                <View key={r.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{r.cantidad_construcciones}</Text>
-                  <Text style={styles.tableCell}>{r.superficie_total_predio}</Text>
-                  <Text style={styles.tableCell}>{r.cui}</Text>
-                  <Text style={styles.tableCell}>{r.observaciones}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
       </Page>
     </Document>
   );
