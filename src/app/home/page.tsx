@@ -23,6 +23,7 @@ export default function HomePage() {
     undefined
   );
   const [relevamientos, setRelevamientos] = useState<Relevamiento[]>([]);
+  const [botonCrearHabilitado, setBotonCrearHabilitado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -81,11 +82,12 @@ export default function HomePage() {
         onCuiInputChange={handleCuiInputChange}
         isReadOnly={false}
         sublabel=""
+        onValidInstitutionSelected={(valido) => setBotonCrearHabilitado(valido)}
       />
 
       <button
         className="bg-green-600 hover:bg-green-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-        disabled={!selectedInstitutionId}
+        disabled={!botonCrearHabilitado}
         onClick={handleNuevoRelevamiento} // Función para crear un nuevo relevamiento
       >
         Nuevo Relevamiento

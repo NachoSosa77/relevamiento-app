@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -16,6 +17,7 @@ interface CuiComponentProps {
   initialCui: number | undefined;
   onCuiInputChange: (cui: number | undefined) => void;
   institucionActualId?: number; // 👈 nueva prop para ocultar institución seleccionada
+  onValidInstitutionSelected?: (valid: boolean) => void;
 }
 
 const CuiComponent: React.FC<CuiComponentProps> = ({
@@ -25,6 +27,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   initialCui,
   onCuiInputChange,
   institucionActualId,
+  onValidInstitutionSelected,
 }) => {
   const [inputValue, setInputValue] = useState<number | undefined>(undefined);
   const [instituciones, setInstituciones] = useState<InstitucionesData[]>([]);
@@ -61,17 +64,21 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   }, [isReadOnly]);
 
   useEffect(() => {
-    if (!isReadOnly) {
-      if (inputValue === undefined) {
-        setFilteredInstitutions([]);
-      } else {
-        const filtered = instituciones.filter(
-          (inst) => inst.cui === inputValue
-        );
-        setFilteredInstitutions(filtered);
-      }
+  if (!isReadOnly) {
+    if (inputValue === undefined) {
+      setFilteredInstitutions([]);
+      setSelectedInstitutionId(null); // 👈 reset
+      onValidInstitutionSelected?.(false); // 👈 aún no es válido
+    } else {
+      const filtered = instituciones.filter(
+        (inst) => inst.cui === inputValue
+      );
+      setFilteredInstitutions(filtered);
+      setSelectedInstitutionId(null); // 👈 reset cuando cambia el CUI
+      onValidInstitutionSelected?.(false); // 👈 hasta que seleccione
     }
-  }, [inputValue, instituciones, isReadOnly]);
+  }
+}, [inputValue, instituciones, isReadOnly]);
 
   const handleChange = (newValue: number | undefined) => {
     setInputValue(newValue);
@@ -87,6 +94,9 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   const selected = filteredInstitutions.find((inst) => inst.id === id);
   if (selected) {
     dispatch(setInstitucionSeleccionada(selected.id));
+    onValidInstitutionSelected?.(true); // 👈 habilita botón
+  }else {
+    onValidInstitutionSelected?.(false); // 👈 no hay selección
   }
 };
 
