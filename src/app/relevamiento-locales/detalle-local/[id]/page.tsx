@@ -291,7 +291,7 @@ const DetalleLocalPage = () => {
       />
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal" ||
+        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Sala de nivel inicial" || local?.nombre_local === "Laboratorio" ||
         local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidadSanitarios
           id={10}

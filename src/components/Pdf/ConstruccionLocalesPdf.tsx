@@ -367,6 +367,41 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                           </Text>
                         </View>
 
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableHeaderCell}>Largo predominante</Text>
+                          <Text style={styles.tableCell}>
+                            {l.largo_predominante ? `${l.largo_predominante} m²` : "N/A"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableHeaderCell}>Ancho predominante</Text>
+                          <Text style={styles.tableCell}>
+                            {l.ancho_predominante ? `${l.ancho_predominante} m²` : "N/A"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableHeaderCell}>Diámetro</Text>
+                          <Text style={styles.tableCell}>
+                            {l.diametro ? `${l.diametro} m²` : "N/A"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableHeaderCell}>Altura máxima</Text>
+                          <Text style={styles.tableCell}>
+                            {l.altura_maxima ? `${l.altura_maxima} m²` : "N/A"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableHeaderCell}>Altura mínima</Text>
+                          <Text style={styles.tableCell}>
+                            {l.altura_minima ? `${l.altura_minima} m²` : "N/A"}
+                          </Text>
+                        </View>
+
                         {/* Fila: Protección contra robo */}
                         <View style={styles.tableRow}>
                           <Text style={styles.tableHeaderCell}>
