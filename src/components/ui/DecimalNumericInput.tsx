@@ -21,17 +21,15 @@ const DecimalNumericInput: React.FC<InputProps> = ({
 
   // Solo sincroniza cuando el valor externo cambia pero no mientras el usuario escribe
   useEffect(() => {
-    if (value !== undefined && !isNaN(value)) {
-      const formatted = value.toString().replace(".", ",");
-      if (formatted !== inputValue) {
-        setInputValue(formatted);
-      }
+  if (value !== undefined && value !== null && !isNaN(value)) {
+    const formatted = value.toString().replace(".", ",");
+    if (formatted !== inputValue) {
+      setInputValue(formatted);
     }
-    if (value === undefined && inputValue !== "") {
-      setInputValue("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  } else if ((value === undefined || value === null) && inputValue !== "") {
+    setInputValue("");
+  }
+}, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let raw = e.target.value;

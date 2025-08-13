@@ -42,6 +42,8 @@ export default function EspaciosEscolaresPage() {
 
   useEffect(() => {}, [selectedInstitutionId]);
 
+  console.log("selectedInstitutionId", selectedInstitutionId)
+
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
