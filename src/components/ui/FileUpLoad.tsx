@@ -45,6 +45,7 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
     toast.error("ID de relevamiento inválido o no proporcionado");
     return;
   }
+
   if (!archivos.length) {
     toast.warning("No hay archivos para subir");
     return;
@@ -55,18 +56,15 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   let subidosTotal: any[] = [];
 
   setIsUploading(true);
-  setUploadProgress(0); // Resetear barra
+  setUploadProgress(0); // resetear barra
 
   for (let i = 0; i < archivos.length; i += loteSize) {
     const lote = archivos.slice(i, i + loteSize);
     const currentLote = Math.floor(i / loteSize) + 1;
-    const formData = new FormData();
 
+    const formData = new FormData();
     lote.forEach((file) => formData.append("files", file));
-    if (!relevamientoId || relevamientoId <= 0) {
-  toast.error("ID de relevamiento inválido o no proporcionado");
-  return;
-}
+    formData.append("relevamientoId", relevamientoId.toString()); // 🔹 enviamos el ID al backend
 
     try {
       toast.info(`Subiendo lote ${currentLote} de ${totalLotes}...`);
@@ -86,20 +84,21 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
       // Calcular progreso porcentual
       const progress = Math.min((currentLote / totalLotes) * 100, 100);
       setUploadProgress(progress);
-
     } catch (err) {
       console.error("Error en lote:", err);
-      toast.error(`Error en la subida de archivos del grupo ${i + 1} al ${i + lote.length}`);
+      toast.error(
+        `Error en la subida de archivos del grupo ${i + 1} al ${i + lote.length}`
+      );
     }
   }
 
-  setArchivos([]); // Limpiar después de todo
+  setArchivos([]); // limpiar después de todo
   setPreviews([]);
   onUploadSuccess?.(subidosTotal);
   toast.success("Todos los archivos fueron subidos");
 
   setIsUploading(false);
-  setUploadProgress(100); // Finalizar barra al 100%
+  setUploadProgress(100); // finalizar barra al 100%
 };
 
 
