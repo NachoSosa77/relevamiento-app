@@ -63,7 +63,10 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
     const formData = new FormData();
 
     lote.forEach((file) => formData.append("files", file));
-    formData.append("relevamientoId", relevamientoId.toString());
+    if (!relevamientoId || relevamientoId <= 0) {
+  toast.error("ID de relevamiento inválido o no proporcionado");
+  return;
+}
 
     try {
       toast.info(`Subiendo lote ${currentLote} de ${totalLotes}...`);

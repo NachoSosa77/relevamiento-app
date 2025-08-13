@@ -599,23 +599,34 @@ export default function LocalesPorConstruccion() {
                       <Select
                         label="Tipo de local"
                         value={
-                          formValues[idx].local_id
-                            ? formValues[idx].local_id.toString()
+                          formValues[idx]?.local_id != null &&
+                          formValues[idx].local_id !== 0
+                            ? String(formValues[idx].local_id)
                             : ""
                         }
-                        options={opcionesLocales.map((local) => ({
-                          value: local.id.toString(), // value como string
-                          label: `${local.id} - ${local.name}`,
-                        }))}
+                        options={opcionesLocales
+                          .filter((l) => l?.id != null && l?.name) // opcional pero recomendado
+                          .map((local) => ({
+                            value: String(local.id),
+                            label: `${local.id} - ${local.name}`,
+                          }))}
                         onChange={(e) => {
-                          const selectedId = parseInt(e.target.value, 10); // convertir a número
-                          const selected = opcionesLocales.find(
-                            (local) => local.id === selectedId
-                          );
-                          if (selected) {
-                            handleFormChange(idx, "tipo", selected.name);
-                            handleFormChange(idx, "local_id", selected.id); // guardar como número
+                          const v = e.target.value;
+
+                          if (!v) {
+                            // reset si no hay valor seleccionado
+                            handleFormChange(idx, "tipo", "");
+                            handleFormChange(idx, "local_id", 0);
+                            return;
                           }
+
+                          const selectedId = Number(v);
+                          const selected = opcionesLocales.find(
+                            (local) => local?.id === selectedId
+                          );
+
+                          handleFormChange(idx, "tipo", selected?.name ?? "");
+                          handleFormChange(idx, "local_id", selectedId);
                         }}
                       />
 
