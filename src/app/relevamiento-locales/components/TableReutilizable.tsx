@@ -150,7 +150,7 @@ export default function TableReutilizable({
               <td className="border p-2">
                 <Select
                   label=""
-                  value={materialesSeleccionados[id]?.id.toString() || ""}
+                  value={materialesSeleccionados[id] ? materialesSeleccionados[id].id.toString() : ""}
                   onChange={(e) => {
                     const opcion = opciones.find(
                       (opt) => opt.id.toString() === e.target.value

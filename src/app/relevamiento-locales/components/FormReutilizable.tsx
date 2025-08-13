@@ -36,8 +36,8 @@ export default function FormReutilizable({
   const [responses, setResponses] = useState<
     Record<string, { disponibilidad: string; descripcion: string }>
   >({});
-  const [opcionSeleccionada, setOpcionSeleccionada] = useState<string | null>(
-    null
+  const [opcionSeleccionada, setOpcionSeleccionada] = useState<string>(
+    ""
   );
   const [radioSeleccion, setRadioSeleccion] = useState<string | null>(null);
 
@@ -127,7 +127,7 @@ export default function FormReutilizable({
                 {id === "1.1" && (
                   <Select
                     label=""
-                    value={opcionSeleccionada || ""}
+                    value={opcionSeleccionada}
                     onChange={(e) => handleOpcionChange(e.target.value)}
                     options={opciones.map((option) => ({
                       value: option.id,

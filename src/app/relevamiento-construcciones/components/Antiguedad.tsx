@@ -20,31 +20,31 @@ export default function AntiguedadComponent({ construccionId }: Props) {
 
   // Precarga si hay datos guardados
   useEffect(() => {
-  const fetchAntiguedad = async () => {
-    if (!construccionId) return;
-    try {
-      const res = await axios.get(`/api/construcciones/${construccionId}`);
-      const data = res.data;
+    const fetchAntiguedad = async () => {
+      if (!construccionId) return;
+      try {
+        const res = await axios.get(`/api/construcciones/${construccionId}`);
+        const data = res.data;
 
-      if (data.antiguedad || data.destino) {
-        setAntiguedad({
-          ano: data.antiguedad || "",
-          destino: data.destino || "",
-        });
-        setEditando(true);
-      } else {
+        if (data.antiguedad || data.destino) {
+          setAntiguedad({
+            ano: data.antiguedad || "",
+            destino: data.destino || "",
+          });
+          setEditando(true);
+        } else {
+          setAntiguedad({ ano: "", destino: "" });
+          setEditando(false); // 👈 importante
+        }
+      } catch (error) {
+        console.error("Error al cargar antigüedad:", error);
         setAntiguedad({ ano: "", destino: "" });
-        setEditando(false); // 👈 importante
+        setEditando(false); // 👈 también en error
       }
-    } catch (error) {
-      console.error("Error al cargar antigüedad:", error);
-      setAntiguedad({ ano: "", destino: "" });
-      setEditando(false); // 👈 también en error
-    }
-  };
+    };
 
-  fetchAntiguedad();
-}, [construccionId]);
+    fetchAntiguedad();
+  }, [construccionId]);
 
   const handleGuardarCambios = async () => {
     if (!antiguedad.ano.trim() || !antiguedad.destino) {
@@ -68,7 +68,7 @@ export default function AntiguedadComponent({ construccionId }: Props) {
           : "Datos guardados correctamente"
       );
       setConstruccionEnviada(payload);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error al guardar los datos:", error);
       toast.error(
@@ -127,9 +127,11 @@ export default function AntiguedadComponent({ construccionId }: Props) {
             <div>
               <Select
                 label=""
-                value={antiguedadDestinoOpciones.find(
-                  (opt) => opt.name === antiguedad.destino
-                )?.id.toString() || ""}
+                value={
+                  antiguedadDestinoOpciones
+                    .find((opt) => opt.name === antiguedad.destino)
+                    ?.id?.toString() ?? ""
+                }
                 options={antiguedadDestinoOpciones.map((option) => ({
                   value: option.id,
                   label: option.name,
@@ -185,7 +187,11 @@ export default function AntiguedadComponent({ construccionId }: Props) {
           }`}
           disabled={loading}
         >
-          {loading ? "Guardando..." : editando ? "Actualizar Información" : "Guardar Información"}
+          {loading
+            ? "Guardando..."
+            : editando
+            ? "Actualizar Información"
+            : "Guardar Información"}
         </button>
       </div>
     </div>

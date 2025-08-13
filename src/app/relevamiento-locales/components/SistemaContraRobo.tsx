@@ -116,7 +116,7 @@ export default function SistemaContraRobo({
               <td className="border p-2">
                 <Select
                   label=""
-                  value={opcionesSeleccionadas[id]?.id.toString() || ""}
+                  value={opcionesSeleccionadas[id] ? opcionesSeleccionadas[id].id.toString() : ""}
                   onChange={(e) =>
                     handleOpcionChange(e.target.value, opciones, id)
                   }
