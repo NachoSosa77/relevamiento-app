@@ -6,6 +6,7 @@ import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { LocalesConstruccion } from "@/interfaces/Locales";
 import { localesService } from "@/services/localesServices";
 import { relevamientoService } from "@/services/relevamientoService";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -238,7 +239,7 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                   <td className="border px-2 py-1 text-center text-green-600 font-bold">
                     Completo ✔️
                   </td>
-                  <td className="border px-2 py-1 text-center">
+                  <td className="space-x-2 border px-2 span-2 py-1 text-center">
                     <button
                       onClick={() => handleVerDetalle(local)}
                       className={`px-3 py-1 rounded text-white ${
@@ -249,6 +250,16 @@ const CuiLocalesComponent: React.FC<CuiLocalesComponentProps> = ({
                     >
                       Ver
                     </button>
+                    <Link
+                      href={`/relevamiento-locales/editar-local/${local.id}`} // pasamos id si necesitás
+                      className={`px-3 py-1 rounded text-white ${
+                        isReadOnly
+                          ? "bg-gray-400 pointer-events-none"
+                          : "bg-yellow-600 hover:bg-yellow-700"
+                      }`}
+                    >
+                      Editar
+                    </Link>
                   </td>
                 </tr>
               ))}

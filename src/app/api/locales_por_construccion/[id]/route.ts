@@ -141,7 +141,7 @@ export async function PATCH(
     return NextResponse.json({ message: "ID inválido" }, { status: 400 });
   }
 
-  // Campos que pueden ser actualizados
+  // Campos permitidos
   const allowedFields = [
     "construccion_id",
     "identificacion_plano",
@@ -168,8 +168,9 @@ export async function PATCH(
   const fields = [];
   const values = [];
 
+  // Filtramos solo campos que realmente están presentes en el body
   for (const key of allowedFields) {
-    if (key in body) {
+    if (key in body && body[key] !== undefined) {
       fields.push(`${key} = ?`);
       values.push(body[key]);
     }
@@ -187,10 +188,12 @@ export async function PATCH(
   try {
     const connection = await getConnection();
 
+    console.time("PATCH locales_por_construccion");
     const [result] = await connection.query(
       `UPDATE locales_por_construccion SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
+    console.timeEnd("PATCH locales_por_construccion");
 
     connection.release();
 

@@ -250,7 +250,7 @@ const DetalleLocalPage = () => {
         </div>
       )}
 
-      <Dimensiones onUpdate={marcarComoModificado} />
+      <Dimensiones onUpdate={marcarComoModificado} localId={local?.id} />
       <TableReutilizable
         id={3}
         label="MATERIALES PREDOMINANTES"

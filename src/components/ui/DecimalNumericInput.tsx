@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface InputProps {
   label?: string;
@@ -15,19 +15,20 @@ const DecimalNumericInput: React.FC<InputProps> = ({
   value,
   onChange,
   disabled = false,
-  
 }) => {
   const [inputValue, setInputValue] = useState("");
-
+  const prevValueRef = useRef<string>("");
   // Solo sincroniza cuando el valor externo cambia pero no mientras el usuario escribe
-  useEffect(() => {
+useEffect(() => {
   if (value !== undefined && value !== null && !isNaN(value)) {
     const formatted = value.toString().replace(".", ",");
-    if (formatted !== inputValue) {
+    if (formatted !== prevValueRef.current) {
       setInputValue(formatted);
+      prevValueRef.current = formatted;
     }
-  } else if ((value === undefined || value === null) && inputValue !== "") {
+  } else if ((value === undefined || value === null) && prevValueRef.current !== "") {
     setInputValue("");
+    prevValueRef.current = "";
   }
 }, [value]);
 

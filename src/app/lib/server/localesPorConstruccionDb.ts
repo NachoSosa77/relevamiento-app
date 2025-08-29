@@ -31,3 +31,17 @@ export const getLocalesByConstruccionAndRelevamiento = async (
   connection.release();
   return rows;
 };
+
+export const getLocalById = async (
+  localId: number
+): Promise<LocalPorConstruccion | null> => {
+  const connection = await getConnection();
+
+  const [rows] = await connection.execute<LocalPorConstruccion[]>(
+    `SELECT * FROM locales_por_construccion WHERE id = ?`,
+    [localId]
+  );
+
+  connection.release();
+  return rows[0] || null;
+};

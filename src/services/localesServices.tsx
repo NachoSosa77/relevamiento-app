@@ -129,6 +129,13 @@ const updateConstruccionAntiRoboById = async (
   return await response.json();
 };
 
+export const getDimensionesById = async (id: number) => {
+  const response = await fetch(`/api/locales_por_construccion/${id}/dimensiones`);
+  if (!response.ok) {
+    throw new Error("Error al obtener dimensiones");
+  }
+  return await response.json();
+};
 
 export const updateDimensionesById = async (
   id: number,
@@ -202,4 +209,5 @@ export const localesService = {
   updateEstadoLocal,
   putConstruccion,
   updateLocalCompleto,
+  getDimensionesById,
 };

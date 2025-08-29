@@ -1,5 +1,17 @@
 import { getConnection } from "@/app/lib/db";
+import { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
+import pLimit from "p-limit";
+
+// Tipado de cada item del POST
+interface AcondicionamientoItem {
+  cantidad?: number;
+  disponibilidad?: string;
+  temperatura?: string;
+  tipo?: string;
+  relevamiento_id: number;
+  local_id: number;
+}
 
 const chunkArray = <T>(arr: T[], size: number): T[][] => {
   const result: T[][] = [];
@@ -9,10 +21,12 @@ const chunkArray = <T>(arr: T[], size: number): T[][] => {
   return result;
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  let connection: PoolConnection | undefined;
+
   try {
-    const connection = await getConnection();
-    const data = await req.json();
+    connection = await getConnection();
+    const data: AcondicionamientoItem[] = await req.json();
 
     if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json(
@@ -21,38 +35,56 @@ export async function POST(req: Request) {
       );
     }
 
-    const chunkSize = 100;
+    const chunkSize = 50;
     const chunks = chunkArray(data, chunkSize);
 
+    const limit = pLimit(3); // máximo 3 chunks en paralelo
     const insertQuery = `
       INSERT INTO acondicionamiento_termico (
         cantidad, disponibilidad, temperatura, tipo, relevamiento_id, local_id
       ) VALUES ?
     `;
 
-    for (const chunk of chunks) {
-      const values = chunk.map((item) => [
-        item.cantidad ?? null,
-        item.disponibilidad ?? null,
-        item.temperatura ?? null,
-        item.tipo ?? null,
-        item.relevamiento_id ?? null,
-        item.local_id ?? null,
-      ]);
+    console.time("insertTotal");
 
-      await connection.query(insertQuery, [values]);
-    }
+    await Promise.all(
+      chunks.map((chunk, index) =>
+        limit(async () => {
+          console.time(`chunk-${index}`);
+
+          const values = chunk.map((item) => [
+            item.cantidad ?? null,
+            item.disponibilidad ?? null,
+            item.temperatura ?? null,
+            item.tipo ?? null,
+            item.relevamiento_id,
+            item.local_id,
+          ]);
+
+          await connection!.query<RowDataPacket[]>(insertQuery, [values]);
+
+          console.timeEnd(`chunk-${index}`);
+        })
+      )
+    );
+
+    console.timeEnd("insertTotal");
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error al insertar acondicionamiento_termico:", error);
+
+    const details = error instanceof Error ? error.message : String(error);
+
     return NextResponse.json(
-      { error: "Error al insertar los datos" },
+      { error: "Error al insertar los datos", details },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }
 
@@ -66,7 +98,7 @@ export async function GET(req: NextRequest) {
 
   const connection = await getConnection();
 
-  const [rows] = await connection.execute(
+  const [rows] = await connection.execute<RowDataPacket[]>(
     `SELECT * FROM acondicionamiento_termico WHERE local_id = ? AND relevamiento_id = ?`,
     [localId, relevamientoId]
   );
