@@ -5,6 +5,7 @@ import { Dimension } from "@/interfaces/DimensionLocales";
 import { localesService } from "@/services/localesServices";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import DimensionesSkeleton from "./skeletons/DimensionesSkeleton";
 
 type DimensionesProps = {
   localId: number;
@@ -23,30 +24,52 @@ export default function Dimensiones({ localId, onUpdate }: DimensionesProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Cargar dimensiones iniciales
-  useEffect(() => {
-    let isMounted = true;
+  // 🔹 Cargar dimensiones existentes
+ // 🔹 Cargar dimensiones existentes
+useEffect(() => {
+  let isMounted = true;
 
-    (async () => {
-      try {
-        const data = await localesService.getDimensionesById(localId);
-        if (isMounted && data) {
-          setDimensiones(data);
-        }
-      } catch (err: unknown) {
-        console.error("Error al cargar dimensiones:", err);
-        const message = err instanceof Error ? err.message : String(err);
-        toast.error("Error al cargar dimensiones: " + message);
-      } finally {
-        if (isMounted) setIsLoading(false);
+  (async () => {
+    try {
+      const data = await localesService.getDimensionesById(localId);
+
+      if (isMounted && data) {
+        // Inicializamos los valores, reemplazando null por 0 para mostrar en inputs
+        setDimensiones({
+          id: data.id,
+          largo_predominante: data.largo_predominante ?? 0,
+          ancho_predominante: data.ancho_predominante ?? 0,
+          diametro: data.diametro ?? 0,
+          altura_maxima: data.altura_maxima ?? 0,
+          altura_minima: data.altura_minima ?? 0,
+        });
+
+        // Solo consideramos modo edición si algún campo numérico distinto de id NO es null
+        const hasData =
+          data.largo_predominante !== null ||
+          data.ancho_predominante !== null ||
+          data.diametro !== null ||
+          data.altura_maxima !== null ||
+          data.altura_minima !== null;
+
+        setIsEditing(hasData);
       }
-    })();
+    } catch (err: unknown) {
+      console.error("Error al cargar dimensiones:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error("Error al cargar dimensiones: " + message);
+    } finally {
+      if (isMounted) setIsLoading(false);
+    }
+  })();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [localId]);
+  return () => {
+    isMounted = false;
+  };
+}, [localId]);
+
 
   const handleInputChange = (
     field: keyof Omit<Dimension, "id">,
@@ -56,7 +79,7 @@ export default function Dimensiones({ localId, onUpdate }: DimensionesProps) {
   };
 
   const handleGuardar = async () => {
-    const {...payload } = dimensiones;
+    const { ...payload } = dimensiones;
 
     const hayDatos = Object.values(payload).some(
       (v) => v !== null && v !== undefined && v !== 0
@@ -73,7 +96,11 @@ export default function Dimensiones({ localId, onUpdate }: DimensionesProps) {
 
     try {
       await localesService.updateDimensionesById(localId, payload);
-      toast.success("Dimensiones actualizadas correctamente.");
+      toast.success(
+        isEditing
+          ? "Dimensiones actualizadas correctamente."
+          : "Dimensiones guardadas correctamente."
+      );
       onUpdate?.();
     } catch (err: unknown) {
       console.error("Error al guardar dimensiones:", err);
@@ -84,10 +111,18 @@ export default function Dimensiones({ localId, onUpdate }: DimensionesProps) {
     }
   };
 
-  if (isLoading) return <p>Cargando dimensiones...</p>;
+  // 🔹 Skeleton mientras carga
+  if (isLoading) return <DimensionesSkeleton />;
 
   return (
     <div className="mx-10 text-sm">
+      {isEditing && (
+        <div className="bg-yellow-100 text-yellow-700 p-2 mb-2 rounded-md text-xs">
+          ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a
+          guardar.
+        </div>
+      )}
+
       <table className="w-full border mt-2 text-xs">
         <thead>
           <tr className="bg-custom text-white">
@@ -145,7 +180,11 @@ export default function Dimensiones({ localId, onUpdate }: DimensionesProps) {
                 disabled={isSubmitting}
                 className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
               >
-                {isSubmitting ? "Guardando..." : "Guardar"}
+                {isSubmitting
+                  ? "Guardando..."
+                  : isEditing
+                  ? "Actualizar"
+                  : "Guardar"}
               </button>
             </td>
           </tr>

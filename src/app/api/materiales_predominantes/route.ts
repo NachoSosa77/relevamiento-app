@@ -13,11 +13,9 @@ export async function POST(req: NextRequest) {
     // Validación opcional: verificar campos requeridos
     for (const [index, item] of data.entries()) {
       if (
-        item.item === undefined ||
-        item.material === undefined ||
-        item.estado === undefined ||
-        item.relevamiento_id === undefined ||
-        item.local_id === undefined
+        item.item == null ||
+        item.relevamiento_id == null ||
+        item.local_id == null
       ) {
         return new NextResponse(`Faltan campos en la fila ${index + 1}`, {
           status: 400,

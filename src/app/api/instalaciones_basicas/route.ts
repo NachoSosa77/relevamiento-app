@@ -102,3 +102,58 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(rows);
 }
+
+export async function PUT(req: Request) {
+  let connection: PoolConnection | undefined;
+
+  try {
+    connection = await getConnection();
+    const data: (InstalacionBasicaItem & { id: number })[] = await req.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return NextResponse.json(
+        { error: "Payload debe ser un array no vacío" },
+        { status: 400 }
+      );
+    }
+
+    // 🔹 Actualizamos cada registro
+    for (const item of data) {
+      if (!item.id) continue; // si no hay id, lo saltamos
+
+      const updateQuery = `
+        UPDATE instalaciones_basicas
+        SET servicio = ?, 
+            tipo_instalacion = ?, 
+            funciona = ?, 
+            motivo = ?
+        WHERE id = ? AND relevamiento_id = ? AND local_id = ?
+      `;
+
+      await connection.execute(updateQuery, [
+        item.servicio ?? null,
+        item.tipo_instalacion ?? null,
+        item.funciona ?? null,
+        item.motivo ?? null,
+        item.id,
+        item.relevamiento_id,
+        item.local_id,
+      ]);
+    }
+
+    return NextResponse.json(
+      { message: "Datos actualizados correctamente" },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    console.error("❌ Error al actualizar instalaciones_basicas:", error);
+    const details = error instanceof Error ? error.message : String(error);
+
+    return NextResponse.json(
+      { error: "Error al actualizar los datos", details },
+      { status: 500 }
+    );
+  } finally {
+    if (connection) connection.release();
+  }
+}

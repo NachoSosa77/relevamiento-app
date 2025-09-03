@@ -285,7 +285,7 @@ export default function LoginPage() {
             </motion.span>
           </motion.button>
         </div>
-        <div className="flex justify-end text-xs text-gray-400">V1.5 beta 29-08</div>
+        <div className="flex justify-end text-xs text-gray-400">V1.6 beta 03-09</div>
       </div>
     </div>
   );

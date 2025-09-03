@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import DecimalNumericInput from "@/components/ui/DecimalNumericInput";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
+import { InterfaceIluminacionVentilacion } from "@/interfaces/InterfaceIluminacionVentilacion";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import IluminacionVentilacionSkeleton from "./skeletons/IluminacionVentilacionSkeleton";
 
 interface ResponseData {
   [id: string]: {
@@ -26,18 +27,66 @@ interface EstructuraReuProps {
   id: number;
   label: string;
   locales: Locales[];
+  onUpdate?: () => void;
 }
 
 export default function IluminacionVentilacion({
   id,
   label,
   locales,
+  onUpdate,
 }: EstructuraReuProps) {
   const params = useParams();
   const localId = Number(params.id);
   const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<ResponseData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // 🔹 Cargar datos existentes
+ useEffect(() => {
+      if (!relevamientoId || isNaN(localId)) return;
+
+  let isMounted = true;
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch(`/api/iluminacion_ventilacion?localId=${localId}&relevamientoId=${relevamientoId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (isMounted && data.length > 0) {
+        const newResponses: ResponseData = {};
+
+        data.forEach((item: InterfaceIluminacionVentilacion) => {
+          // Buscar local correspondiente por condicion
+          const local = locales.find((l) => l.question === item.condicion);
+          if (!local) return;
+          const key = local.id; // usamos id de locales
+          newResponses[key] = {
+            disponibilidad: item.disponibilidad ?? undefined,
+            superficieIluminacion: item.superficie_iluminacion ? Number(item.superficie_iluminacion) : 0,
+            superficieVentilacion: item.superficie_ventilacion ? Number(item.superficie_ventilacion) : 0,
+          };
+        });
+
+        setResponses(newResponses);
+         setIsEditing(true); // activamos modo edición si hay datos
+      }
+    } catch (err) {
+      console.error("Error cargando iluminación y ventilación:", err);
+    }
+    finally {
+  if (isMounted) setIsLoading(false);
+}
+  };
+
+  fetchData();
+  return () => {
+    isMounted = false;
+  };
+}, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
     id: string,
@@ -63,37 +112,52 @@ export default function IluminacionVentilacion({
       local_id: localId,
     }));
 
-    // Validación mínima: al menos un campo con datos
     const hayDatos = payload.some(
-      (item) => item.disponibilidad && item.disponibilidad.trim() !== ""
+      (item) =>
+        item.disponibilidad ||
+        item.superficie_iluminacion ||
+        item.superficie_ventilacion
     );
 
     if (!hayDatos) {
       toast.warning("Por favor, completá al menos un dato antes de guardar.");
       return;
     }
-    if (isSubmitting) return; // prevenir doble clic
-    setIsSubmitting(true); // Deshabilitar botón mientras se envía
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/iluminacion_ventilacion", {
+      await fetch("/api/iluminacion_ventilacion", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      toast.success("Información guardada correctamente");
+      toast.success(
+        isEditing
+          ? "Información actualizada correctamente"
+          : "Información guardada correctamente"
+      );
+      onUpdate?.();
     } catch (error) {
       console.error(error);
       toast.error("Error al guardar los datos");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false); // Rehabilitar botón después de enviar
   };
+
+  if (isLoading) return <IluminacionVentilacionSkeleton />;
 
   return (
     <div className="mx-10 text-sm">
+
       <div className="flex items-center gap-2 mt-2 p-2 border bg-custom text-white">
+      {isEditing && (
+        <div className="bg-yellow-100 text-yellow-700 p-2 mb-2 rounded-md text-xs">
+          ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a guardar.
+        </div>
+      )}
         <div className="w-6 h-6 rounded-full flex justify-center items-center text-custom bg-white">
           <p>{id}</p>
         </div>
@@ -101,6 +165,7 @@ export default function IluminacionVentilacion({
           <p className="px-2 text-sm font-bold">{label}</p>
         </div>
       </div>
+
       <table className="w-full border text-xs">
         <thead>
           <tr className="bg-custom text-white">
@@ -173,13 +238,14 @@ export default function IluminacionVentilacion({
           ))}
         </tbody>
       </table>
+
       <div className="flex justify-end mt-4">
         <button
           onClick={handleGuardar}
           disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          {isSubmitting ? "Guardando..." : "Guardar Información"}
+          {isSubmitting ? "Guardando..." : isEditing ? "Actualizar Información" : "Guardar Información"}
         </button>
       </div>
     </div>

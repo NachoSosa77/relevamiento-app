@@ -6,12 +6,12 @@
 
 import Navbar from "@/components/NavBar/NavBar";
 import ObservacionesComponent from "@/components/ObservacionesComponent";
-import Spinner from "@/components/ui/Spinner";
 import { localesService } from "@/services/localesServices"; // Asegúrate de que este import esté correcto según tu estructura de proyecto
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AcondicionamientoTermico from "../../components/AcondicionamientoTermico";
+import DetalleLocalPageSkeleton from "../../components/DetalleLocalPageSkeleton";
 import Dimensiones from "../../components/Dimensiones";
 import EquipamientoCantidad from "../../components/EquipamientoCantidad";
 import EquipamientoCantidadSanitarios from "../../components/EquipamientoCantidadSanitarios";
@@ -59,13 +59,13 @@ const DetalleLocalPage = () => {
   }, [id]); // ✅ id es la única dependencia real
 
   useEffect(() => {
-  if (!id) {
-    console.error("No hay ID en la ruta");
-    return;
-  }
+    if (!id) {
+      console.error("No hay ID en la ruta");
+      return;
+    }
 
-  fetchLocal();
-}, [fetchLocal]);
+    fetchLocal();
+  }, [fetchLocal]);
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!localId) return;
@@ -143,10 +143,7 @@ const DetalleLocalPage = () => {
   const handleBack = () => {
     router.back();
   };
-  if (loading) return <div className="items-center justify-center">
-          <Spinner />
-          Cargando locales...
-        </div>;
+  if (loading) return <DetalleLocalPageSkeleton />;
   if (error) return <p className="text-red-500">{error}</p>;
   return (
     <div className="h-full bg-white text-black text-sm mt-32">
@@ -291,7 +288,9 @@ const DetalleLocalPage = () => {
       />
 
       {(local?.nombre_local === "Sanitarios Alumnos" ||
-        local?.nombre_local === "Sanitarios docentes/personal" || local?.nombre_local === "Sala de nivel inicial" || local?.nombre_local === "Laboratorio" ||
+        local?.nombre_local === "Sanitarios docentes/personal" ||
+        local?.nombre_local === "Sala de nivel inicial" ||
+        local?.nombre_local === "Laboratorio" ||
         local?.nombre_local === "Aula especial") && (
         <EquipamientoCantidadSanitarios
           id={10}
