@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
 });
 
 export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
- 
   const { relevamiento, construcciones } = data;
 
   // Helper to render arrays of items for locals, e.g. aberturas, acondicionamiento, etc.
@@ -368,16 +367,24 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                         </View>
 
                         <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Largo predominante</Text>
+                          <Text style={styles.tableHeaderCell}>
+                            Largo predominante
+                          </Text>
                           <Text style={styles.tableCell}>
-                            {l.largo_predominante ? `${l.largo_predominante} m²` : "N/A"}
+                            {l.largo_predominante
+                              ? `${l.largo_predominante} m²`
+                              : "N/A"}
                           </Text>
                         </View>
 
                         <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Ancho predominante</Text>
+                          <Text style={styles.tableHeaderCell}>
+                            Ancho predominante
+                          </Text>
                           <Text style={styles.tableCell}>
-                            {l.ancho_predominante ? `${l.ancho_predominante} m²` : "N/A"}
+                            {l.ancho_predominante
+                              ? `${l.ancho_predominante} m²`
+                              : "N/A"}
                           </Text>
                         </View>
 
@@ -389,14 +396,18 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                         </View>
 
                         <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Altura máxima</Text>
+                          <Text style={styles.tableHeaderCell}>
+                            Altura máxima
+                          </Text>
                           <Text style={styles.tableCell}>
                             {l.altura_maxima ? `${l.altura_maxima} m²` : "N/A"}
                           </Text>
                         </View>
 
                         <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Altura mínima</Text>
+                          <Text style={styles.tableHeaderCell}>
+                            Altura mínima
+                          </Text>
                           <Text style={styles.tableCell}>
                             {l.altura_minima ? `${l.altura_minima} m²` : "N/A"}
                           </Text>
@@ -545,12 +556,23 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                         "Equipamiento Cocina/Offices",
                         l.equipamientoCocina,
                         (item, idx) => (
-                          <Text key={idx}>
-                            {typeof item === "object"
-                              ? item?.equipo ?? "-"
-                              : item ?? "-"}
-                          </Text>
-                        )
+                          <View style={styles.fila} key={idx}>
+                            <Text style={styles.celda}>
+                              {item?.equipamiento ?? "-"}
+                            </Text>
+                            <Text style={styles.celda}>
+                              {item?.cantidad ?? 0}
+                            </Text>
+                            <Text style={styles.celda}>
+                              {item?.cantidad_funcionamiento ?? 0}
+                            </Text>
+                            <Text style={styles.celda}>
+                              {item?.estado ?? "-"}
+                            </Text>
+                          </View>
+                        ),
+                        true,
+                        ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
                       )}
 
                       {(l.tipo === "Sanitarios Alumnos" ||
@@ -560,12 +582,23 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                           "Equipamiento Sanitario",
                           l.equipamientoSanitario,
                           (item, idx) => (
-                            <Text key={idx}>
-                              {typeof item === "object"
-                                ? item?.equipo ?? "-"
-                                : item ?? "-"}
-                            </Text>
-                          )
+                            <View style={styles.fila} key={idx}>
+                              <Text style={styles.celda}>
+                                {item?.equipamiento ?? "-"}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item?.cantidad ?? 0}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item?.cantidad_funcionamiento ?? 0}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item?.estado ?? "-"}
+                              </Text>
+                            </View>
+                          ),
+                          true,
+                          ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
                         )}
                     </View>
                   ))}
