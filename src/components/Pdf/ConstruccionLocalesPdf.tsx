@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
 });
 
 export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
+  console.log("ConstruccionLocalesPdf data", data);
   const { relevamiento, construcciones } = data;
 
   // Helper to render arrays of items for locals, e.g. aberturas, acondicionamiento, etc.
@@ -330,8 +331,8 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                   <Text style={styles.tableCell}>{c.destino}</Text>
                   <Text style={styles.tableCell}>{c.antiguedad}</Text>
                   <Text style={styles.tableCell}>
-                    {c.superficie_semi_cubierta
-                      ? `${c.superficie_semi_cubierta} m²`
+                    {c.superficie_semicubierta
+                      ? `${c.superficie_semicubierta} m²`
                       : "-"}
                   </Text>
                   <Text style={styles.tableCell}>
@@ -345,7 +346,6 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                 </View>
               </View>
 
-              {/* Locales */}
               {c.locales?.length > 0 && (
                 <View>
                   <Text style={[styles.subSectionTitle, { marginTop: 12 }]}>
@@ -471,7 +471,7 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                           </View>
                         ),
                         true,
-                        ["Item", "Tipo", "Material", "Estado"]
+                        ["Item", "Tipo", "Cantidad", "Estado"]
                       )}
 
                       {renderLocalArray(
@@ -575,30 +575,50 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                         ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
                       )}
 
-                      {(l.tipo === "Sanitarios Alumnos" ||
-                        l.tipo === "Sanitarios docentes/personal" ||
-                        l.tipo === "Aula especial") &&
-                        renderLocalArray(
-                          "Equipamiento Sanitario",
-                          l.equipamientoSanitario,
-                          (item, idx) => (
-                            <View style={styles.fila} key={idx}>
-                              <Text style={styles.celda}>
-                                {item?.equipamiento ?? "-"}
-                              </Text>
-                              <Text style={styles.celda}>
-                                {item?.cantidad ?? 0}
-                              </Text>
-                              <Text style={styles.celda}>
-                                {item?.cantidad_funcionamiento ?? 0}
-                              </Text>
-                              <Text style={styles.celda}>
-                                {item?.estado ?? "-"}
-                              </Text>
+                      {[
+                        "Sanitarios Alumnos",
+                        "Sanitarios docentes/personal",
+                        "Aula especial",
+                      ].includes(l.tipo) &&
+                        Array.isArray(l.equipamientoSanitario) &&
+                        l.equipamientoSanitario.length > 0 && (
+                          <View style={{ marginTop: 8 }}>
+                            <Text style={styles.subSectionTitle}>
+                              Equipamiento Sanitario
+                            </Text>
+                            <View style={styles.tabla}>
+                              <View style={styles.fila}>
+                                <Text style={[styles.celda, styles.encabezado]}>
+                                  Equipo
+                                </Text>
+                                <Text style={[styles.celda, styles.encabezado]}>
+                                  Cantidad
+                                </Text>
+                                <Text style={[styles.celda, styles.encabezado]}>
+                                  En funcionamiento
+                                </Text>
+                                <Text style={[styles.celda, styles.encabezado]}>
+                                  Estado
+                                </Text>
+                              </View>
+                              {l.equipamientoSanitario.map((item: any, idx: number) => (
+                                <View style={styles.fila} key={idx}>
+                                  <Text style={styles.celda}>
+                                    {item.equipamiento ?? "-"}
+                                  </Text>
+                                  <Text style={styles.celda}>
+                                    {item.cantidad ?? 0}
+                                  </Text>
+                                  <Text style={styles.celda}>
+                                    {item.cantidad_funcionamiento ?? 0}
+                                  </Text>
+                                  <Text style={styles.celda}>
+                                    {item.estado ?? "-"}
+                                  </Text>
+                                </View>
+                              ))}
                             </View>
-                          ),
-                          true,
-                          ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
+                          </View>
                         )}
                     </View>
                   ))}
