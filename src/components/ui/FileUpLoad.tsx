@@ -24,8 +24,12 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   const [modalIndex, setModalIndex] = useState<number | null>(null);
 
   const closeModal = () => setModalIndex(null);
-  const nextImage = () => setModalIndex((prev) => (prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev));
-  const prevImage = () => setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+  const nextImage = () =>
+    setModalIndex((prev) =>
+      prev !== null && prev < archivosSubidosRedux.length - 1 ? prev + 1 : prev
+    );
+  const prevImage = () =>
+    setModalIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -41,66 +45,69 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
   };
 
   const handleUpload = async () => {
-  if (!relevamientoId || relevamientoId <= 0) {
-    toast.error("ID de relevamiento inválido o no proporcionado");
-    return;
-  }
-
-  if (!archivos.length) {
-    toast.warning("No hay archivos para subir");
-    return;
-  }
-
-  const loteSize = 20; // cantidad de archivos por lote
-  const totalLotes = Math.ceil(archivos.length / loteSize); // total de lotes a subir
-  let subidosTotal: any[] = [];
-
-  setIsUploading(true);
-  setUploadProgress(0); // resetear barra
-
-  for (let i = 0; i < archivos.length; i += loteSize) {
-    const lote = archivos.slice(i, i + loteSize);
-    const currentLote = Math.floor(i / loteSize) + 1;
-
-    const formData = new FormData();
-    lote.forEach((file) => formData.append("files", file));
-    formData.append("relevamientoId", relevamientoId.toString()); // 🔹 enviamos el ID al backend
-
-    try {
-      toast.info(`Subiendo lote ${currentLote} de ${totalLotes}...`);
-
-      const res = await fetch("/api/archivos", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Error al subir archivos");
-
-      subidosTotal = [...subidosTotal, ...data.archivos];
-      dispatch(setArchivosSubidos([...archivosSubidosRedux, ...data.archivos]));
-
-      // Calcular progreso porcentual
-      const progress = Math.min((currentLote / totalLotes) * 100, 100);
-      setUploadProgress(progress);
-    } catch (err) {
-      console.error("Error en lote:", err);
-      toast.error(
-        `Error en la subida de archivos del grupo ${i + 1} al ${i + lote.length}`
-      );
+    if (!relevamientoId || relevamientoId <= 0) {
+      toast.error("ID de relevamiento inválido o no proporcionado");
+      return;
     }
-  }
 
-  setArchivos([]); // limpiar después de todo
-  setPreviews([]);
-  onUploadSuccess?.(subidosTotal);
-  toast.success("Todos los archivos fueron subidos");
+    if (!archivos.length) {
+      toast.warning("No hay archivos para subir");
+      return;
+    }
 
-  setIsUploading(false);
-  setUploadProgress(100); // finalizar barra al 100%
-};
+    const loteSize = 20; // cantidad de archivos por lote
+    const totalLotes = Math.ceil(archivos.length / loteSize); // total de lotes a subir
+    let subidosTotal: any[] = [];
 
+    setIsUploading(true);
+    setUploadProgress(0); // resetear barra
+
+    for (let i = 0; i < archivos.length; i += loteSize) {
+      const lote = archivos.slice(i, i + loteSize);
+      const currentLote = Math.floor(i / loteSize) + 1;
+
+      const formData = new FormData();
+      lote.forEach((file) => formData.append("files", file));
+      formData.append("relevamientoId", relevamientoId.toString()); // 🔹 enviamos el ID al backend
+
+      try {
+        toast.info(`Subiendo lote ${currentLote} de ${totalLotes}...`);
+
+        const res = await fetch("/api/archivos", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Error al subir archivos");
+
+        subidosTotal = [...subidosTotal, ...data.archivos];
+        dispatch(
+          setArchivosSubidos([...archivosSubidosRedux, ...data.archivos])
+        );
+
+        // Calcular progreso porcentual
+        const progress = Math.min((currentLote / totalLotes) * 100, 100);
+        setUploadProgress(progress);
+      } catch (err) {
+        console.error("Error en lote:", err);
+        toast.error(
+          `Error en la subida de archivos del grupo ${i + 1} al ${
+            i + lote.length
+          }`
+        );
+      }
+    }
+
+    setArchivos([]); // limpiar después de todo
+    setPreviews([]);
+    onUploadSuccess?.(subidosTotal);
+    toast.success("Todos los archivos fueron subidos");
+
+    setIsUploading(false);
+    setUploadProgress(100); // finalizar barra al 100%
+  };
 
   useEffect(() => {
     return () => {
@@ -154,16 +161,22 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
             >
               ×
             </button>
-            {archivo.tipo_archivo === "pdf" ? (
-              <iframe src={archivo.archivo_url} className="w-full h-full" />
-            ) : (
-              <Image
-                src={archivo.archivo_url}
-                alt={`archivo-${index}`}
-                fill
-                style={{ objectFit: "cover" }}
-              />
-            )}
+            <div className="w-full h-40 relative">
+              {archivo.tipo_archivo === "pdf" ? (
+                <iframe src={archivo.archivo_url} className="w-full h-full" />
+              ) : (
+                <Image
+                  src={archivo.archivo_url}
+                  alt={archivo.nombre_archivo ?? "Archivo subido"}
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              )}
+            </div>
+            {/* 👇 Mostrar nombre del archivo */}
+            <div className="p-1 text-xs text-center truncate">
+              {archivo.nombre_archivo}
+            </div>
           </div>
         ))}
 

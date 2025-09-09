@@ -1,5 +1,4 @@
 /* eslint-disable jsx-a11y/alt-text */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Document,
   Image,
@@ -10,6 +9,26 @@ import {
   View,
 } from "@react-pdf/renderer";
 const logoUrl = "/img/logo-ministerio.png";
+
+interface Archivo {
+  id: number;
+  relevamiento_id: number | null;
+  archivo_url: string;
+  nombre_archivo: string | null;
+  tipo_archivo: string | null;
+  fecha_subida: string | null;
+}
+
+interface ArchivosDelRelevamientoProps {
+  data: {
+    relevamiento: {
+      id: number;
+      estado?: string;
+      email?: string;
+    };
+    archivos: Archivo[];
+  };
+}
 
 const styles = StyleSheet.create({
   page: {
@@ -232,7 +251,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
+export const ArchivosDelRelevamiento = ({ data }: ArchivosDelRelevamientoProps) => {
   const { relevamiento, archivos } = data;
 
   return (
@@ -253,6 +272,7 @@ export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
             <Text style={styles.headerText}>EX-2024-00069131-CFI-GES#DC</Text>
           </View>
         </View>
+
         {/* Relevamiento */}
         <View style={styles.section}>
           <Text style={styles.title}>Resumen del Relevamiento</Text>
@@ -270,19 +290,17 @@ export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
           </View>
         </View>
 
-        {/* Archivos: Planos primero */}
-        {archivos?.some((a: any) =>
-          a.tipo_archivo?.toLowerCase().includes("pdf")
-        ) && (
+        {/* Archivos: Planos (PDFs) */}
+        {archivos?.some((a) => a.tipo_archivo?.toLowerCase().includes("pdf")) && (
           <View style={styles.section}>
             <Text style={styles.title}>Planos</Text>
             {archivos
-              .filter((a: any) => a.tipo_archivo?.toLowerCase().includes("pdf"))
-              .map((plano: any) => (
+              .filter((a) => a.tipo_archivo?.toLowerCase().includes("pdf"))
+              .map((plano) => (
                 <View key={plano.id} style={styles.row}>
                   <Text style={styles.label}>Plano:</Text>
                   <Link src={plano.archivo_url} style={styles.value}>
-                    {plano.archivo_url}
+                    {plano.nombre_archivo ?? "Archivo PDF"}
                   </Link>
                 </View>
               ))}
@@ -290,16 +308,21 @@ export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
         )}
 
         {/* Archivos: Imágenes en 2 columnas */}
-        {archivos?.some((a: any) => a.tipo_archivo?.includes("imagen")) && (
+        {archivos?.some((a) => a.tipo_archivo?.includes("imagen")) && (
           <View style={styles.section}>
             <Text style={styles.title}>Imágenes Adjuntas</Text>
             <View style={styles.imageGrid}>
               {archivos
-                .filter((a: any) => a.tipo_archivo?.includes("imagen"))
-                .map((img: any) => (
+                .filter((a) => a.tipo_archivo?.includes("imagen"))
+                .map((img) => (
                   <View key={img.id} style={styles.imageContainer}>
-                    <Image src={img.archivo_url} style={styles.image} />
-                    <Text>{img.tipo_archivo}</Text>
+                    <Image
+                      src={img.archivo_url}
+                      style={styles.image}
+                    />
+                    <Text>
+                      {img.nombre_archivo ?? "Imagen subida"}
+                    </Text>
                   </View>
                 ))}
             </View>
@@ -309,3 +332,4 @@ export const ArchivosDelRelevamiento = ({ data }: { data: any }) => {
     </Document>
   );
 };
+

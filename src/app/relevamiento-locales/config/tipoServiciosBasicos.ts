@@ -1,7 +1,7 @@
 export const tipoServiciosBasicos = [
   {
     id: "8.1.1",
-    question: "Distribución de agua fria",
+    question: "Distribución de agua fría",
     showCondition: true,
     opciones: [
       {

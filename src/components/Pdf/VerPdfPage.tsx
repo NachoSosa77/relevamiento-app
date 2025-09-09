@@ -12,6 +12,26 @@ import { ConstruccionPdf } from "./ConstruccionesPdf";
 import { ConstruccionLocalesPdf } from "./ConstruccionLocalesPdf";
 import { PdfRelevamientoResumen } from "./PdfRelevameintoResumen";
 
+interface Archivo {
+  id: number;
+  relevamiento_id: number | null;
+  archivo_url: string;
+  nombre_archivo: string | null;
+  tipo_archivo: string | null;
+  fecha_subida: string | null;
+}
+
+interface ArchivosDelRelevamientoProps {
+  data: {
+    relevamiento: {
+      id: number;
+      estado?: string;
+      email?: string;
+    };
+    archivos: Archivo[];
+  };
+}
+
 export default function VerPdfPage({
   relevamientoId,
 }: {
@@ -20,7 +40,7 @@ export default function VerPdfPage({
   const [resumenData, setResumenData] = useState(null);
   const [construccionesData, setConstruccionesData] = useState(null);
   const [localesData, setLocalesData] = useState(null);
-  const [archivosData, setArchivosData] = useState(null);
+  const [archivosData, setArchivosData] = useState<ArchivosDelRelevamientoProps["data"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPdfIndex, setSelectedPdfIndex] = useState(0); // 👈 tab seleccionada
 
@@ -65,7 +85,7 @@ export default function VerPdfPage({
     },
     {
       title: "Archivos del relevamiento",
-      component: <ArchivosDelRelevamiento data={archivosData} />,
+      component: <ArchivosDelRelevamiento data={archivosData!} />,
     },
   ];
 

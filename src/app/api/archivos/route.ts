@@ -27,9 +27,9 @@ export async function POST(req: Request) {
   for (const file of files) {
     try {
       const fileBuffer = await fileToBuffer(file);
-      const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, "-");
-      const uniqueName = `Planos/${timestamp}_${file.name}`;
+
+      // usar directamente el nombre original
+      const uniqueName = file.name;
 
       const blob = await put(uniqueName, fileBuffer, {
         access: "public",
@@ -39,15 +39,16 @@ export async function POST(req: Request) {
       const tipo_archivo = file.type.includes("pdf") ? "pdf" : "imagen";
 
       await connection.execute(
-        `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, fecha_subida)
-         VALUES (?, ?, ?, NOW())`,
-        [relevamientoId, blob.url, tipo_archivo]
+        `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, nombre_archivo, fecha_subida)
+         VALUES (?, ?, ?, ?, NOW())`,
+        [relevamientoId, blob.url, tipo_archivo, file.name]
       );
 
       archivosSubidos.push({
         archivo_url: blob.url,
         tipo_archivo,
         relevamiento_id: relevamientoId,
+        nombre_archivo: file.name, // 👈 importante devolverlo también
       });
     } catch (err: any) {
       console.error(`❌ Error al subir archivo ${file.name}:`, err);
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
         nombre: file.name,
         mensaje: err.message || "Error desconocido",
       });
-      continue; // sigue con los demás archivos
+      continue;
     }
   }
 
@@ -80,7 +81,9 @@ export async function GET(req: Request) {
   try {
     const connection = await getConnection();
     const [rows] = await connection.execute(
-      `SELECT archivo_url, tipo_archivo FROM archivos WHERE relevamiento_id = ?`,
+      `SELECT archivo_url, tipo_archivo, nombre_archivo 
+       FROM archivos 
+       WHERE relevamiento_id = ?`,
       [relevamientoId]
     );
 

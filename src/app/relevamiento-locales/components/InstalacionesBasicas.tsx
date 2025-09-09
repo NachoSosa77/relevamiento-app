@@ -147,22 +147,22 @@ export default function ServiciosBasicos({
       }
 
       return {
-        id: respuesta?.id, // 👈 incluimos el ID si ya existe
+        id: respuesta?.id,
         servicio: question,
-        tipo_instalacion: respuesta?.disponibilidad || "No",
-        funciona: respuesta?.funciona || "No",
-        motivo: motivoTexto,
+        tipo_instalacion: respuesta?.disponibilidad || null,
+        funciona: respuesta?.funciona || null,
+        motivo: motivoTexto || null,
         relevamiento_id: relevamientoId,
         local_id: localId,
       };
     });
 
     const hayAlMenosUnDato = payload.some(
-      (item) =>
-        item.tipo_instalacion !== "No" ||
-        item.funciona !== "No" ||
-        (item.motivo && item.motivo.trim() !== "")
-    );
+  (item) =>
+    item.tipo_instalacion !== null ||
+    item.funciona !== null ||
+    (item.motivo && item.motivo.trim() !== "")
+);
 
     if (!hayAlMenosUnDato) {
       toast.warning(

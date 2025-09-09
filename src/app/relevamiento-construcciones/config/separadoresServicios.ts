@@ -1,4 +1,4 @@
-export const serviciosBasicos = {
+export const serviciosBasicosSeparador = {
   label: "SERVICIOS BÁSICOS",
   value:
     "Indague al respondente si la construcción cuenta con los servicios básicos listados (agua, desagues cloacales, gas, electricidad) e indique &quotsi&quot o &quotno&quot según corresponda. Luego de haber registrado las respuestas, registre el estado de conservación de cada una de las instalaciones a partir de su observación.",

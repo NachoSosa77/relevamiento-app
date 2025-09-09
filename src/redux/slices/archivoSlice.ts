@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface Archivo {
   archivo_url: string;
   tipo_archivo: string;
+  nombre_archivo: string;
   relevamiento_id: string;
 }
 

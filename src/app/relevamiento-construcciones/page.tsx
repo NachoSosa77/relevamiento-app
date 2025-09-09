@@ -21,10 +21,9 @@ import CondicionesAccesibilidad from "./components/CondicionesAccesibilidad";
 import ElectricidadServicio from "./components/ElectricidadServicio";
 import EnergiasAlternativas from "./components/EnergiasAlternativas";
 import SeguridadIncendio from "./components/SeguridadIncendio";
-import {
-  default as SeparadorReutilizable,
-  default as ServiciosBasicos,
-} from "./components/ServiciosBasicos";
+import SeparadorServiciosBasicos, {
+  default as SeparadorReutilizable
+} from "./components/SeparadorServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import { servicioAccesibilidad } from "./config/relevamientoAccesibilidad";
 import { usoComedor } from "./config/relevamientoComedor";
@@ -43,7 +42,7 @@ import { servicioGas } from "./config/relevamientoGas";
 import { seguridadIncendio } from "./config/relevamientoSeguridadIncendio";
 import {
   caracteristicasConstruccion,
-  serviciosBasicos,
+  serviciosBasicosSeparador
 } from "./config/separadoresServicios";
 // ... otros imports
 
@@ -179,7 +178,7 @@ export default function RelevamientoConstruccionesPage() {
           />
           <CantidadPlantas construccionId={construccionId} />
           <AntiguedadComponent construccionId={construccionId} />
-          <ServiciosBasicos data={serviciosBasicos} />
+          <SeparadorServiciosBasicos data={serviciosBasicosSeparador} />
           <AguaFormComponent
             relevamientoId={relevamientoId}
             construccionId={construccionId}

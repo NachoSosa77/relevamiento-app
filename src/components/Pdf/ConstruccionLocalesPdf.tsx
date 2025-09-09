@@ -245,7 +245,7 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
   ) => {
     if (!items || items.length === 0) return null;
     return (
-      <View style={styles.localSubListContainer}>
+      <View style={styles.localSubListContainer} wrap={false}>
         <Text style={styles.subSectionTitle}>{title}</Text>
         {isTable ? (
           <View style={styles.tabla}>
@@ -273,47 +273,52 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
 
   return (
     <Document>
-      <Page style={styles.page}>
-        <View style={styles.header}>
-          <Image src={logoUrl} style={styles.logo} />
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerText}>
-              CFI (Consejo Federal de Inversiones).
-            </Text>
-            <Text style={styles.headerText}>
-              Proyecto: Relevamiento de la infraestructura educativa
-            </Text>
-            <Text style={styles.headerText}>
-              Zona 2 - Departamentos: Capital, Toay, Catriló y Atreuco.
-            </Text>
-            <Text style={styles.headerText}>EX-2024-00069131-CFI-GES#DC</Text>
-          </View>
-        </View>
-        {/* Relevamiento */}
-        <View style={styles.section}>
-          <Text style={styles.title}>Resumen del Relevamiento</Text>
-          <View style={styles.tableContainer}>
-            <View style={styles.tableRow}>
-              <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
-              <Text style={styles.tableHeaderCell}>Estado:</Text>
-              <Text style={styles.tableHeaderCell}>Email:</Text>
+      {construcciones?.map((c: any) =>
+        c.locales?.map((l: any) => (
+          <Page key={l.id} style={styles.page} size="LEGAL">
+            <View style={styles.header}>
+              <Image src={logoUrl} style={styles.logo} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerText}>
+                  CFI (Consejo Federal de Inversiones).
+                </Text>
+                <Text style={styles.headerText}>
+                  Proyecto: Relevamiento de la infraestructura educativa
+                </Text>
+                <Text style={styles.headerText}>
+                  Zona 2 - Departamentos: Capital, Toay, Catriló y Atreuco.
+                </Text>
+                <Text style={styles.headerText}>
+                  EX-2024-00069131-CFI-GES#DC
+                </Text>
+              </View>
             </View>
-            <View key={relevamiento.id} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{relevamiento?.id}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.email}</Text>
+            {/* Relevamiento */}
+            <View style={styles.section}>
+              <Text style={styles.title}>Resumen del Relevamiento</Text>
+              <View style={styles.tableContainer}>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
+                  <Text style={styles.tableHeaderCell}>Estado:</Text>
+                  <Text style={styles.tableHeaderCell}>Email:</Text>
+                </View>
+                <View key={relevamiento.id} style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{relevamiento?.id}</Text>
+                  <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
+                  <Text style={styles.tableCell}>{relevamiento?.email}</Text>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
 
-        {/* Construcciones y Locales con detalle */}
-        {construcciones?.length > 0 &&
-          construcciones.map((c: any) => (
-            <View key={c.id} style={styles.section}>
+            {/* Construcciones y Locales con detalle */}
+            <View style={styles.section}>
               <Text style={styles.title}>
                 CUI(Código unico de infraestructura): {relevamiento.cui_id}
+              </Text>
+              <Text style={styles.title}>
                 Construcción N° {c.numero_construccion}
               </Text>
+
               <View style={styles.tableContainer}>
                 <View style={styles.tableRow}>
                   <Text style={styles.tableHeaderCell}>Destino:</Text>
@@ -346,287 +351,262 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                 </View>
               </View>
 
-              {c.locales?.length > 0 && (
-                <View>
-                  <Text style={[styles.subSectionTitle, { marginTop: 12 }]}>
-                    Locales
-                  </Text>
-                  {c.locales.map((l: any) => (
-                    <View key={l.id} style={styles.localContainer}>
-                      <Text style={styles.localHeader}>
-                        • {l.identificacion_plano} - {l.tipo}
+              <View style={styles.localContainer}>
+                <Text style={styles.localHeader}>
+                  • {l.identificacion_plano} - {l.tipo}
+                </Text>
+
+                {/* Local: detalle de medidas y protección */}
+                <View style={styles.tableContainer}>
+                  {/* Fila 1: Superficie | Largo predominante */}
+                  <View style={styles.tableRow}>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>Superficie</Text>
+                      <Text style={styles.tableCell}>
+                        {l.superficie ? `${l.superficie} m²` : "N/A"}
                       </Text>
-
-                      <View style={styles.tableContainer}>
-                        {/* Fila: Superficie */}
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Superficie</Text>
-                          <Text style={styles.tableCell}>
-                            {l.superficie ? `${l.superficie} m²` : "N/A"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Largo predominante
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {l.largo_predominante
-                              ? `${l.largo_predominante} m²`
-                              : "N/A"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Ancho predominante
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {l.ancho_predominante
-                              ? `${l.ancho_predominante} m²`
-                              : "N/A"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>Diámetro</Text>
-                          <Text style={styles.tableCell}>
-                            {l.diametro ? `${l.diametro} m²` : "N/A"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Altura máxima
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {l.altura_maxima ? `${l.altura_maxima} m²` : "N/A"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Altura mínima
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {l.altura_minima ? `${l.altura_minima} m²` : "N/A"}
-                          </Text>
-                        </View>
-
-                        {/* Fila: Protección contra robo */}
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Protección contra robo
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {l.proteccion_contra_robo ?? "N/A"}
-                          </Text>
-                        </View>
-
-                        {/* Fila: Observaciones */}
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableHeaderCell}>
-                            Observaciones
-                          </Text>
-                          <Text
-                            style={[
-                              styles.tableCell,
-                              { flex: 3, fontSize: 10 },
-                            ]}
-                          >
-                            {l.observaciones?.trim() ? l.observaciones : "-"}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Render arrays con helper */}
-
-                      {renderLocalArray(
-                        "Materiales Predominantes",
-                        l.materialesPredominantes,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>{item.item ?? "-"}</Text>
-                            <Text style={styles.celda}>
-                              {item.material ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.estado ?? "-"}
-                            </Text>
-                          </View>
-                        ),
-                        true, // le pasamos un flag para saber si es tabla
-                        ["Item", "Material", "Estado"]
-                      )}
-
-                      {renderLocalArray(
-                        "Aberturas",
-                        l.aberturas,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>{item.abertura}</Text>
-                            <Text style={styles.celda}>{item.tipo}</Text>
-                            <Text style={styles.celda}>{item.cantidad}</Text>
-                            <Text style={styles.celda}>{item.estado}</Text>
-                          </View>
-                        ),
-                        true,
-                        ["Item", "Tipo", "Cantidad", "Estado"]
-                      )}
-
-                      {renderLocalArray(
-                        "Iluminación y Ventilación",
-                        l.iluminacionVentilacion,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>
-                              {item.condicion ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.disponibilidad ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.superficie_iluminacion
-                                ? `${item.superficie_iluminacion} m²`
-                                : "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.superficie_ventilacion
-                                ? `${item.superficie_ventilacion} m²`
-                                : "-"}
-                            </Text>
-                          </View>
-                        ),
-                        true,
-                        [
-                          "Condición",
-                          "Disponibilidad",
-                          "Superficie de iluminación",
-                          "Superficie de ventilación",
-                        ]
-                      )}
-
-                      {renderLocalArray(
-                        "Acondicionamiento Térmico",
-                        l.acondicionamientoTermico,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>{item.tipo ?? "-"}</Text>
-                            <Text style={styles.celda}>
-                              {item.cantidad ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.disponibilidad ?? "-"}
-                            </Text>
-                          </View>
-                        ),
-                        true,
-                        ["Tipo", "Cantidad", "Disponibilidad"]
-                      )}
-
-                      {renderLocalArray(
-                        "Servicios Básicos",
-                        l.instalacionesBasicas,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>
-                              {item.servicio ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.tipo_instalacion ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.funciona ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item.motivo ?? "-"}
-                            </Text>
-                          </View>
-                        ),
-                        true,
-                        [
-                          "Servicio",
-                          "Tipo instalación",
-                          "Funcionamiento",
-                          "Motivo",
-                        ]
-                      )}
-
-                      {renderLocalArray(
-                        "Equipamiento Cocina/Offices",
-                        l.equipamientoCocina,
-                        (item, idx) => (
-                          <View style={styles.fila} key={idx}>
-                            <Text style={styles.celda}>
-                              {item?.equipamiento ?? "-"}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item?.cantidad ?? 0}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item?.cantidad_funcionamiento ?? 0}
-                            </Text>
-                            <Text style={styles.celda}>
-                              {item?.estado ?? "-"}
-                            </Text>
-                          </View>
-                        ),
-                        true,
-                        ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
-                      )}
-
-                      {[
-                        "Sanitarios Alumnos",
-                        "Sanitarios docentes/personal",
-                        "Aula especial",
-                      ].includes(l.tipo) &&
-                        Array.isArray(l.equipamientoSanitario) &&
-                        l.equipamientoSanitario.length > 0 && (
-                          <View style={{ marginTop: 8 }}>
-                            <Text style={styles.subSectionTitle}>
-                              Equipamiento Sanitario
-                            </Text>
-                            <View style={styles.tabla}>
-                              <View style={styles.fila}>
-                                <Text style={[styles.celda, styles.encabezado]}>
-                                  Equipo
-                                </Text>
-                                <Text style={[styles.celda, styles.encabezado]}>
-                                  Cantidad
-                                </Text>
-                                <Text style={[styles.celda, styles.encabezado]}>
-                                  En funcionamiento
-                                </Text>
-                                <Text style={[styles.celda, styles.encabezado]}>
-                                  Estado
-                                </Text>
-                              </View>
-                              {l.equipamientoSanitario.map((item: any, idx: number) => (
-                                <View style={styles.fila} key={idx}>
-                                  <Text style={styles.celda}>
-                                    {item.equipamiento ?? "-"}
-                                  </Text>
-                                  <Text style={styles.celda}>
-                                    {item.cantidad ?? 0}
-                                  </Text>
-                                  <Text style={styles.celda}>
-                                    {item.cantidad_funcionamiento ?? 0}
-                                  </Text>
-                                  <Text style={styles.celda}>
-                                    {item.estado ?? "-"}
-                                  </Text>
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        )}
                     </View>
-                  ))}
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>
+                        Largo predominante
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {l.largo_predominante
+                          ? `${l.largo_predominante} m²`
+                          : "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Fila 2: Ancho predominante | Diámetro */}
+                  <View style={styles.tableRow}>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>
+                        Ancho predominante
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {l.ancho_predominante
+                          ? `${l.ancho_predominante} m²`
+                          : "N/A"}
+                      </Text>
+                    </View>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>Diámetro</Text>
+                      <Text style={styles.tableCell}>
+                        {l.diametro ? `${l.diametro} m²` : "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Fila 3: Altura máxima | Altura mínima */}
+                  <View style={styles.tableRow}>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>Altura máxima</Text>
+                      <Text style={styles.tableCell}>
+                        {l.altura_maxima ? `${l.altura_maxima} m²` : "N/A"}
+                      </Text>
+                    </View>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>Altura mínima</Text>
+                      <Text style={styles.tableCell}>
+                        {l.altura_minima ? `${l.altura_minima} m²` : "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Fila 4: Protección contra robo */}
+                  <View style={styles.tableRow}>
+                    <View style={{ width: "50%", flexDirection: "row" }}>
+                      <Text style={styles.tableHeaderCell}>
+                        Protección contra robo
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {l.proteccion_contra_robo ?? "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Fila 5: Observaciones (toda la fila) */}
+                  <View style={styles.tableRow}>
+                    <Text style={[styles.tableHeaderCell, { flex: 1 }]}>
+                      Observaciones
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        { flex: 3, fontSize: 10, minHeight: 20 },
+                      ]}
+                    >
+                      {l.observaciones?.trim() ? l.observaciones : "-"}
+                    </Text>
+                  </View>
                 </View>
-              )}
+
+                {/* Render arrays con helper */}
+
+                {renderLocalArray(
+                  "Materiales Predominantes",
+                  l.materialesPredominantes,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>{item.item ?? "-"}</Text>
+                      <Text style={styles.celda}>{item.material ?? "-"}</Text>
+                      <Text style={styles.celda}>{item.estado ?? "-"}</Text>
+                    </View>
+                  ),
+                  true, // le pasamos un flag para saber si es tabla
+                  ["Item", "Material", "Estado"]
+                )}
+
+                {renderLocalArray(
+                  "Aberturas",
+                  l.aberturas,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>{item.abertura}</Text>
+                      <Text style={styles.celda}>{item.tipo}</Text>
+                      <Text style={styles.celda}>{item.cantidad}</Text>
+                      <Text style={styles.celda}>{item.estado}</Text>
+                    </View>
+                  ),
+                  true,
+                  ["Item", "Tipo", "Cantidad", "Estado"]
+                )}
+
+                {renderLocalArray(
+                  "Iluminación y Ventilación",
+                  l.iluminacionVentilacion,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>{item.condicion ?? "-"}</Text>
+                      <Text style={styles.celda}>
+                        {item.disponibilidad ?? "-"}
+                      </Text>
+                      <Text style={styles.celda}>
+                        {item.superficie_iluminacion
+                          ? `${item.superficie_iluminacion} m²`
+                          : "-"}
+                      </Text>
+                      <Text style={styles.celda}>
+                        {item.superficie_ventilacion
+                          ? `${item.superficie_ventilacion} m²`
+                          : "-"}
+                      </Text>
+                    </View>
+                  ),
+                  true,
+                  [
+                    "Condición",
+                    "Disponibilidad",
+                    "Superficie de iluminación",
+                    "Superficie de ventilación",
+                  ]
+                )}
+
+                {renderLocalArray(
+                  "Acondicionamiento Térmico",
+                  l.acondicionamientoTermico,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>{item.tipo ?? "-"}</Text>
+                      <Text style={styles.celda}>{item.cantidad ?? "-"}</Text>
+                      <Text style={styles.celda}>
+                        {item.disponibilidad ?? "-"}
+                      </Text>
+                    </View>
+                  ),
+                  true,
+                  ["Tipo", "Cantidad", "Disponibilidad"]
+                )}
+
+                {renderLocalArray(
+                  "Servicios Básicos",
+                  l.instalacionesBasicas,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>{item.servicio ?? "-"}</Text>
+                      <Text style={styles.celda}>
+                        {item.tipo_instalacion ?? "-"}
+                      </Text>
+                      <Text style={styles.celda}>{item.funciona ?? "-"}</Text>
+                      <Text style={styles.celda}>{item.motivo ?? "-"}</Text>
+                    </View>
+                  ),
+                  true,
+                  ["Servicio", "Tipo instalación", "Funcionamiento", "Motivo"]
+                )}
+
+                {renderLocalArray(
+                  "Equipamiento Cocina/Offices",
+                  l.equipamientoCocina,
+                  (item, idx) => (
+                    <View style={styles.fila} key={idx}>
+                      <Text style={styles.celda}>
+                        {item?.equipamiento ?? "-"}
+                      </Text>
+                      <Text style={styles.celda}>{item?.cantidad ?? 0}</Text>
+                      <Text style={styles.celda}>
+                        {item?.cantidad_funcionamiento ?? 0}
+                      </Text>
+                      <Text style={styles.celda}>{item?.estado ?? "-"}</Text>
+                    </View>
+                  ),
+                  true,
+                  ["Equipo", "Cantidad", "En funcionamiento", "Estado"]
+                )}
+
+                {[
+                  "Sanitarios Alumnos",
+                  "Sanitarios docentes/personal",
+                  "Aula especial",
+                ].includes(l.tipo) &&
+                  Array.isArray(l.equipamientoSanitario) &&
+                  l.equipamientoSanitario.length > 0 && (
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={styles.subSectionTitle}>
+                        Equipamiento Sanitario
+                      </Text>
+                      <View style={styles.tabla}>
+                        <View style={styles.fila}>
+                          <Text style={[styles.celda, styles.encabezado]}>
+                            Equipo
+                          </Text>
+                          <Text style={[styles.celda, styles.encabezado]}>
+                            Cantidad
+                          </Text>
+                          <Text style={[styles.celda, styles.encabezado]}>
+                            En funcionamiento
+                          </Text>
+                          <Text style={[styles.celda, styles.encabezado]}>
+                            Estado
+                          </Text>
+                        </View>
+                        {l.equipamientoSanitario.map(
+                          (item: any, idx: number) => (
+                            <View style={styles.fila} key={idx}>
+                              <Text style={styles.celda}>
+                                {item.equipamiento ?? "-"}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item.cantidad ?? 0}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item.cantidad_funcionamiento ?? 0}
+                              </Text>
+                              <Text style={styles.celda}>
+                                {item.estado ?? "-"}
+                              </Text>
+                            </View>
+                          )
+                        )}
+                      </View>
+                    </View>
+                  )}
+              </View>
             </View>
-          ))}
-      </Page>
+          </Page>
+        ))
+      )}
     </Document>
   );
 };
