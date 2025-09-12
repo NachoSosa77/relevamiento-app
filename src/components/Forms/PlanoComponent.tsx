@@ -7,11 +7,11 @@ import {
   setSuperficieTotalPredio,
 } from "@/redux/slices/espacioEscolarSlice";
 import { useEffect, useState } from "react";
+import PlanoSkeleton from "../Skeleton/PlanSkeleton";
 import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
 import FileUpload from "../ui/FileUpLoad";
 import NumericInput from "../ui/NumericInput";
-import Spinner from "../ui/Spinner";
 
 export default function PlanoComponent() {
   const [showComponents, setShowComponents] = useState<boolean | null>(null);
@@ -111,7 +111,7 @@ export default function PlanoComponent() {
 
 
   // 👉 Spinner antes del return principal
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <PlanoSkeleton />;
 
   return (
     <div className="mx-8 my-6 space-y-6">

@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ObservacionesSkeleton from "./Skeleton/ObservacionesSkeleton";
 
 interface ObservacionesComponentProps {
   onSave: (observations: string) => void;
@@ -14,6 +15,7 @@ export default function ObservacionesComponent({
   initialObservations = "",
 }: ObservacionesComponentProps) {
   const [observations, setObservations] = useState(initialObservations);
+  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -22,6 +24,14 @@ export default function ObservacionesComponent({
         position: "top-right",
         autoClose: 3000,
       });
+    }
+  }, [initialObservations]);
+
+   useEffect(() => {
+    if (initialObservations) {
+      setLoading(true);
+      setObservations(initialObservations); // 🔥 sincroniza con el valor de BD
+      setLoading(false);
     }
   }, [initialObservations]);
 
@@ -39,8 +49,12 @@ export default function ObservacionesComponent({
     }
   };
 
+  if (loading) {
+    <ObservacionesSkeleton/>
+  }
+
   return (
-    <div className="mx-10 my-6 border rounded-2xl shadow-lg">
+    <div className="mx-8 my-6 border rounded-2xl shadow-lg">
       <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
         <div className="flex items-center gap-3">
           <p className="text-sm font-semibold text-gray-700">OBSERVACIONES</p>

@@ -11,6 +11,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import EditLocalModal from "../Modals/EditLocalModal";
+import LocalesPorConstruccionSkeleton from "../Skeleton/LocalesSksleton";
 import ReusableTable from "../Table/TableReutilizable";
 import Check from "../ui/Checkbox";
 import DecimalNumericInput from "../ui/DecimalNumericInput";
@@ -35,6 +36,7 @@ export default function LocalesPorConstruccion() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
+  const [isLoading, setIsLoading] = useState(true);
   const [localesPorConstruccion, setLocalesPorConstruccion] = useState<
     Record<number, LocalesConstruccion[]>
   >({});
@@ -128,6 +130,16 @@ export default function LocalesPorConstruccion() {
 
     if (relevamientoId) fetchLocalesExistentes();
   }, [relevamientoId]);
+
+  useEffect(() => {
+    // Simulamos la carga de datos
+    if (
+      opcionesLocales.length > 0 &&
+      Object.keys(localesPorConstruccion).length > 0
+    ) {
+      setIsLoading(false);
+    }
+  }, [opcionesLocales, localesPorConstruccion]);
 
   const verificarConstruccionExistente = async (numeroConstruccion: number) => {
     if (!relevamientoId) return false;
@@ -479,6 +491,14 @@ export default function LocalesPorConstruccion() {
   );
 
   if (!cantidadConstrucciones) return null;
+
+  if (isLoading) {
+    return (
+      <LocalesPorConstruccionSkeleton
+        cantidadConstrucciones={cantidadConstrucciones}
+      />
+    );
+  }
 
   return (
     <div className="mx-8 my-6 border rounded-2xl">

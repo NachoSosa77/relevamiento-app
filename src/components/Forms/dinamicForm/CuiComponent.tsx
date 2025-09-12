@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import CuiSkeleton from "@/components/Skeleton/CuiSkeleton";
 import NumericInput from "@/components/ui/NumericInput";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useAppDispatch } from "@/redux/hooks";
@@ -64,21 +65,21 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   }, [isReadOnly]);
 
   useEffect(() => {
-  if (!isReadOnly) {
-    if (inputValue === undefined) {
-      setFilteredInstitutions([]);
-      setSelectedInstitutionId(null); // 👈 reset
-      onValidInstitutionSelected?.(false); // 👈 aún no es válido
-    } else {
-      const filtered = instituciones.filter(
-        (inst) => inst.cui === inputValue
-      );
-      setFilteredInstitutions(filtered);
-      setSelectedInstitutionId(null); // 👈 reset cuando cambia el CUI
-      onValidInstitutionSelected?.(false); // 👈 hasta que seleccione
+    if (!isReadOnly) {
+      if (inputValue === undefined) {
+        setFilteredInstitutions([]);
+        setSelectedInstitutionId(null); // 👈 reset
+        onValidInstitutionSelected?.(false); // 👈 aún no es válido
+      } else {
+        const filtered = instituciones.filter(
+          (inst) => inst.cui === inputValue
+        );
+        setFilteredInstitutions(filtered);
+        setSelectedInstitutionId(null); // 👈 reset cuando cambia el CUI
+        onValidInstitutionSelected?.(false); // 👈 hasta que seleccione
+      }
     }
-  }
-}, [inputValue, instituciones, isReadOnly]);
+  }, [inputValue, instituciones, isReadOnly]);
 
   const handleChange = (newValue: number | undefined) => {
     setInputValue(newValue);
@@ -86,19 +87,19 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   };
 
   const handleInstitutionSelect = (
-  event: React.ChangeEvent<HTMLSelectElement>
-) => {
-  const id = Number(event.target.value);
-  setSelectedInstitutionId(id);
-  
-  const selected = filteredInstitutions.find((inst) => inst.id === id);
-  if (selected) {
-    dispatch(setInstitucionSeleccionada(selected.id));
-    onValidInstitutionSelected?.(true); // 👈 habilita botón
-  }else {
-    onValidInstitutionSelected?.(false); // 👈 no hay selección
-  }
-};
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const id = Number(event.target.value);
+    setSelectedInstitutionId(id);
+
+    const selected = filteredInstitutions.find((inst) => inst.id === id);
+    if (selected) {
+      dispatch(setInstitucionSeleccionada(selected.id));
+      onValidInstitutionSelected?.(true); // 👈 habilita botón
+    } else {
+      onValidInstitutionSelected?.(false); // 👈 no hay selección
+    }
+  };
 
   useEffect(() => {
     if (initialCui !== null) {
@@ -107,6 +108,10 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
       setInputValue(undefined);
     }
   }, [initialCui]);
+
+  if (loading && !isReadOnly) {
+    return <CuiSkeleton />;
+  }
 
   if (error && !isReadOnly) {
     return <div>Error: {error}</div>;
@@ -139,20 +144,20 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
         <p className="text-xs text-gray-400">{sublabel}</p>
       </div>
       {!isReadOnly && filteredInstitutions.length > 0 && (
-          <select
-            className="mt-2 p-2 border rounded-lg"
-            onChange={handleInstitutionSelect}
-            value={selectedInstitutionId ?? ""}
-          >
-            <option value="">Selecciona una institución</option>
-            {filteredInstitutions
-              .filter((inst) => inst.id !== institucionActualId) // 👈 oculta la ya seleccionada
-              .map((inst) => (
-                <option key={inst.id} value={inst.id}>
-                  {inst.institucion} ({inst.modalidad_nivel})
-                </option>
-              ))}
-          </select>
+        <select
+          className="mt-2 p-2 border rounded-lg"
+          onChange={handleInstitutionSelect}
+          value={selectedInstitutionId ?? ""}
+        >
+          <option value="">Selecciona una institución</option>
+          {filteredInstitutions
+            .filter((inst) => inst.id !== institucionActualId) // 👈 oculta la ya seleccionada
+            .map((inst) => (
+              <option key={inst.id} value={inst.id}>
+                {inst.institucion} ({inst.modalidad_nivel})
+              </option>
+            ))}
+        </select>
       )}
     </div>
   );

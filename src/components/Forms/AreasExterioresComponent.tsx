@@ -12,6 +12,8 @@ import {
 } from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
 import { useEffect, useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "react-toastify";
 import EditAreaExteriorModal from "../Modals/EditAreaExteriorModal";
 import ReusableTable from "../Table/TableReutilizable";
@@ -37,10 +39,11 @@ export default function AreasExterioresComponent() {
   const cuiNumber = useCuiFromRelevamientoId(relevamientoId);
   const areasExteriores = useAppSelector(
     (state) => state.espacio_escolar.areasExteriores
-  ); // Datos desde Redux
+  );
   const dispatch = useAppDispatch();
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editando, setEditando] = useState(false); // <-- estado para edición
+  const [editando, setEditando] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [areaEditando, setAreaEditando] = useState<AreasExteriores | null>(
@@ -55,7 +58,6 @@ export default function AreasExterioresComponent() {
           await areasExterioresService.getOpcionesAreasExteriores();
         setOpcionesAreas(opciones);
 
-        // 🚨 Obtenemos áreas exteriores del backend si hay relevamiento
         if (relevamientoId) {
           const response =
             await areasExterioresService.getAreasExterioresByRelevamientoId(
@@ -63,11 +65,11 @@ export default function AreasExterioresComponent() {
             );
           const data = response?.areasExteriores || [];
           if (data?.length) {
-            dispatch(resetAreasExteriores()); // Limpiamos el estado antes de agregar nuevos datos
+            dispatch(resetAreasExteriores());
             data.forEach((area: AreasExteriores) =>
               dispatch(addAreasExteriores(area))
             );
-            setEditando(true); // <-- si hay datos, estamos editando
+            setEditando(true);
           } else {
             setEditando(false);
           }
@@ -78,6 +80,13 @@ export default function AreasExterioresComponent() {
     }
     fetchData();
   }, [relevamientoId]);
+
+  // Skeleton loader
+  useEffect(() => {
+    if (opcionesAreas.length > 0 && areasExteriores !== undefined) {
+      setIsLoading(false);
+    }
+  }, [opcionesAreas, areasExteriores]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = Number(event.target.value);
@@ -101,17 +110,12 @@ export default function AreasExterioresComponent() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (
-      !formData.identificacion_plano ||
-      !selectArea ||
-      formData.superficie <= 0
-    ) {
+    if (!formData.identificacion_plano || !selectArea || formData.superficie <= 0) {
       toast.warning("Completá todos los campos antes de agregar un área");
       return;
     }
 
     if (!editando) {
-      // Crear nuevo
       const areaExistente = areasExteriores.some(
         (area) => area.identificacion_plano === formData.identificacion_plano
       );
@@ -130,7 +134,6 @@ export default function AreasExterioresComponent() {
       setAreaEditando(null);
       dispatch(addAreasExteriores(newArea));
     } else {
-      // Editar existente
       const updatedAreas = areasExteriores.map((area) =>
         area.identificacion_plano === editId
           ? {
@@ -141,7 +144,7 @@ export default function AreasExterioresComponent() {
             }
           : area
       );
-      dispatch(resetAreasExteriores()); // limpiar estado
+      dispatch(resetAreasExteriores());
       updatedAreas.forEach((area) => dispatch(addAreasExteriores(area)));
       setEditando(false);
       setEditId(null);
@@ -170,21 +173,19 @@ export default function AreasExterioresComponent() {
     try {
       const payload = areasExteriores.map((area) => ({
         ...area,
-        cui_number: cuiNumber,    
+        cui_number: cuiNumber,
         relevamiento_id: relevamientoId,
       }));
 
       const nuevas = payload.filter((area) => !area.id);
       const existentes = payload.filter((area) => area.id);
 
-      // Crear nuevas
       if (nuevas.length > 0) {
         await areasExterioresService.postAreasExteriores(nuevas);
       }
 
-      // Actualizar existentes (solo si tienen id)
       for (const area of existentes) {
-        if (!area.id) continue; // <-- aquí el guard para evitar error
+        if (!area.id) continue;
         await areasExterioresService.updateAreaExterior(area.id, area);
       }
 
@@ -233,115 +234,126 @@ export default function AreasExterioresComponent() {
 
   return (
     <div className="mx-8 my-6 border rounded-2xl">
-      {editando && (
-        <div className="bg-yellow-100 text-yellow-800 p-2 my-4 mx-4 rounded-2xl">
-          Estás editando áreas exteriores ya existentes.
+      {isLoading ? (
+        <div className="p-4 flex flex-col gap-4">
+          <Skeleton height={30} width={200} /> {/* Título */}
+          <Skeleton height={40} /> {/* Form row */}
+          <Skeleton height={200} /> {/* Tabla */}
+          <Skeleton height={50} width={150} /> {/* Botón */}
         </div>
-      )}
-      <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
-            <p>4</p>
+      ) : (
+        <>
+          {editando && (
+            <div className="bg-yellow-100 text-yellow-800 p-2 my-4 mx-4 rounded-2xl">
+              Estás editando áreas exteriores ya existentes.
+            </div>
+          )}
+          <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
+                <p>4</p>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">
+                ÁREAS EXTERIORES
+              </p>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
+                <thead>
+                  <tr className="bg-custom text-white">
+                    <th className="border p-2 rounded-tl-lg rounded-tr-lg">
+                      Identificación en el plano
+                    </th>
+                    <th className="border p-2">Tipo</th>
+                    <th className="border p-2">Superficie</th>
+                    <th className="border p-2 rounded-tr-lg">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border p-2">
+                      <AlphanumericInput
+                        disabled={false}
+                        subLabel="E"
+                        label=""
+                        value={formData.identificacion_plano}
+                        onChange={(value) =>
+                          handleInputChange("identificacion_plano", Number(value))
+                        }
+                      />
+                    </td>
+                    <td className="border p-2">
+                      <Select
+                        label=""
+                        value={selectArea?.toString() || ""}
+                        options={opcionesAreas.map((opcion) => ({
+                          value: opcion.id,
+                          label: `${opcion.prefijo} - ${opcion.name} `,
+                        }))}
+                        onChange={handleSelectChange}
+                      />
+                    </td>
+                    <td className="border p-2">
+                      <DecimalNumericInput
+                        disabled={false}
+                        subLabel="m²"
+                        label=""
+                        value={formData.superficie}
+                        onChange={(value) =>
+                          handleInputChange("superficie", Number(value))
+                        }
+                      />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <button
+                        type="submit"
+                        className="text-sm bg-custom hover:bg-custom/50 text-white rounded-lg px-4 py-2"
+                      >
+                        + Agregar Área
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </form>
+            <ReusableTable data={areasExteriores} columns={columns} />
+            {areasExteriores.length > 0 && (
+              <div className="flex justify-center mt-4">
+                <button
+                  type="button"
+                  className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
+                  onClick={handleGuardarDatos}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? "Guardando..."
+                    : modoEdicion
+                    ? "Espere, editando información..."
+                    : editando
+                    ? "Actualizar áreas exteriores"
+                    : "Guardar áreas exteriores"}
+                </button>
+              </div>
+            )}
           </div>
-          <p className="text-sm font-semibold text-gray-700">
-            ÁREAS EXTERIORES
-          </p>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
-            <thead>
-              <tr className="bg-custom text-white">
-                <th className="border p-2 rounded-tl-lg rounded-tr-lg">
-                  Identificación en el plano
-                </th>
-                <th className="border p-2">Tipo</th>
-                <th className="border p-2">Superficie</th>
-                <th className="border p-2 rounded-tr-lg">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border p-2">
-                  <AlphanumericInput
-                    disabled={false}
-                    subLabel="E"
-                    label=""
-                    value={formData.identificacion_plano}
-                    onChange={(value) =>
-                      handleInputChange("identificacion_plano", Number(value))
-                    }
-                  />
-                </td>
-                <td className="border p-2">
-                  <Select
-                    label=""
-                    value={selectArea?.toString() || ""}
-                    options={opcionesAreas.map((opcion) => ({
-                      value: opcion.id,
-                      label: `${opcion.prefijo} - ${opcion.name} `,
-                    }))}
-                    onChange={handleSelectChange}
-                  />
-                </td>
-                <td className="border p-2">
-                  <DecimalNumericInput
-                    disabled={false}
-                    subLabel="m²"
-                    label=""
-                    value={formData.superficie}
-                    onChange={(value) =>
-                      handleInputChange("superficie", Number(value))
-                    }
-                  />
-                </td>
-                <td className="border p-2 text-center">
-                  <button
-                    type="submit"
-                    className="text-sm bg-custom hover:bg-custom/50 text-white rounded-lg px-4 py-2"
-                  >
-                    + Agregar Área
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </form>
-        <ReusableTable data={areasExteriores} columns={columns} />
-        {areasExteriores.length > 0 && (
-          <div className="flex justify-center mt-4">
-            <button
-              type="button"
-              className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
-              onClick={handleGuardarDatos}
-              disabled={isSubmitting}
-            >
-              {isSubmitting
-                ? "Guardando..."
-                : modoEdicion
-                ? "Espere, editando información..."
-                : editando
-                ? "Actualizar áreas exteriores"
-                : "Guardar áreas exteriores"}
-            </button>
-          </div>
-        )}
-      </div>
-      {modalVisible && areaEditando && (
-        <EditAreaExteriorModal
-          open={modalVisible}
-          onClose={() => setModalVisible(false)}
-          area={areaEditando}
-          opcionesAreas={opcionesAreas}
-          onSave={(updated) => {
-            const actualizadas = areasExteriores.map((a) =>
-              a.identificacion_plano === updated.identificacion_plano
-                ? updated
-                : a
-            );
-            dispatch(resetAreasExteriores());
-            actualizadas.forEach((a) => dispatch(addAreasExteriores(a)));
-          }}
-        />
+          {modalVisible && areaEditando && (
+            <EditAreaExteriorModal
+              open={modalVisible}
+              onClose={() => setModalVisible(false)}
+              area={areaEditando}
+              opcionesAreas={opcionesAreas}
+              onSave={(updated) => {
+                const actualizadas = areasExteriores.map((a) =>
+                  a.identificacion_plano === updated.identificacion_plano
+                    ? updated
+                    : a
+                );
+                dispatch(resetAreasExteriores());
+                actualizadas.forEach((a) => dispatch(addAreasExteriores(a)));
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -27,7 +27,7 @@ export default function EspaciosEscolaresPage() {
   );
   const selectedEspacioEscolar = useAppSelector(
     (state) => state.espacio_escolar
-  ); // Obtén el estado de espacio_escolar
+  );
   const relevamientoId = useRelevamientoId();
   const selectedCui = useCuiFromRelevamientoId(relevamientoId);
 
@@ -35,15 +35,38 @@ export default function EspaciosEscolaresPage() {
     useState<InstitucionesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [observacionesDB, setObservacionesDB] = useState<string>("");
 
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  useEffect(() => {}, [selectedInstitutionId]);
+  // 🔹 Resetear Redux y traer observaciones guardadas
+  useEffect(() => {
+    dispatch(setObservaciones("")); // reset redux
+    const fetchEspacioEscolar = async () => {
+      try {
+        const res = await fetch(`/api/espacios_escolares/${relevamientoId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.observaciones) {
+            setObservacionesDB(data.observaciones);
+            dispatch(setObservaciones(data.observaciones));
+          }
+        }
+      } catch (err) {
+        console.error("Error cargando espacio escolar:", err);
+      }
+    };
 
-  console.log("selectedInstitutionId", selectedInstitutionId)
+    if (relevamientoId) {
+      fetchEspacioEscolar();
+    }
+  }, [relevamientoId, dispatch]);
 
+  console.log("Observaciones Bd:", observacionesDB);
+
+  // 🔹 Fetch de institución
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
@@ -54,7 +77,7 @@ export default function EspaciosEscolaresPage() {
           throw new Error("No se pudo obtener la institución.");
         }
         const data = await response.json();
-        setSelectedInstitution(data); // Actualiza el estado con la respuesta de la API
+        setSelectedInstitution(data);
         dispatch(setInstitucionId(data.id));
       } catch (error: any) {
         setError(error.message);
@@ -69,54 +92,56 @@ export default function EspaciosEscolaresPage() {
     }
   }, [dispatch, selectedInstitutionId]);
 
-  useEffect(() => {}, [selectedEspacioEscolar]); // Monitorea los cambios en selectedEspacioEscolar
-
   const handleSaveObservacion = (observations: string) => {
     dispatch(setObservaciones(observations));
   };
 
   const enviarDatosEspacioEscolar = async () => {
-    setIsSubmitting(true); // ⬅️ Activa el spinner al iniciar
-    try {
-      const payload = {
-        relevamiento_id: relevamientoId, // <-- este es clave
-        cui: selectedCui,
-        cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
-        superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
-        observaciones: selectedEspacioEscolar.observaciones,
-      };
+  setIsSubmitting(true);
 
-      const response = await fetch("/api/espacios_escolares", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+  const selectedAreaIds = selectedEspacioEscolar.areasExteriores.map(a => a.id);
 
-      if (!response.ok) {
-        throw new Error("Error al guardar los datos del espacio escolar.");
-      }
+  try {
+    const payload = {
+      relevamiento_id: relevamientoId,
+      cui: selectedCui,
+      cantidadConstrucciones: selectedEspacioEscolar.cantidadConstrucciones,
+      superficieTotalPredio: selectedEspacioEscolar.superficieTotalPredio,
+      observaciones: selectedEspacioEscolar.observaciones, // 🔹 siempre de Redux
+      areasExteriores: selectedAreaIds,
+    };
 
-      toast.success("Espacio escolar guardado correctamente 🎉", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setTimeout(() => {
-        router.push("/relevamiento-predio");
-      }, 1000); // 1 segundo de espera
-      // Podés resetear el estado o mostrar confirmación visual acá
-    } catch (error: any) {
-      console.error("Error al enviar datos del espacio escolar:", error);
-      toast.error("Hubo un error al guardar los datos.", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setError(error.message);
-    } finally {
-      setIsSubmitting(false); // ⬅️ Siempre se ejecuta, haya éxito o error
+    // 🔹 Solo usamos POST, que hace crear o actualizar
+    const response = await fetch("/api/espacios_escolares", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al guardar los datos del espacio escolar.");
     }
-  };
+
+    toast.success("Espacio escolar guardado correctamente 🎉", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+    setTimeout(() => {
+      router.push("/relevamiento-predio");
+    }, 1000);
+
+  } catch (error: any) {
+    console.error("Error al enviar datos del espacio escolar:", error);
+    toast.error("Hubo un error al guardar los datos.", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+    setError(error.message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -156,12 +181,12 @@ export default function EspaciosEscolaresPage() {
       <AreasExterioresComponent />
       <ObservacionesComponent
         onSave={handleSaveObservacion}
-        initialObservations={""}
+        initialObservations={
+          observacionesDB || selectedEspacioEscolar.observaciones || ""
+        }
       />
       {Object.keys(selectedEspacioEscolar).length > 0 && (
         <div className="flex justify-center mt-4">
-          {" "}
-          {/* Contenedor flex con justify-center */}
           <button
             onClick={enviarDatosEspacioEscolar}
             className="px-4 py-2 w-80 bg-custom text-white rounded-md hover:bg-custom/50 flex items-center justify-center gap-2 disabled:opacity-60"

@@ -17,7 +17,7 @@ export async function GET(
     const connection = await getConnection();
 
     const [rows]: any = await connection.query(
-      `SELECT cantidad_construcciones, superficie_total_predio
+      `SELECT cantidad_construcciones, superficie_total_predio, observaciones
        FROM espacios_escolares
        WHERE relevamiento_id = ?`,
       [id]

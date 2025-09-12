@@ -8,8 +8,9 @@ import {
   eliminarVisita,
   setVisitas,
 } from "@/redux/slices/espacioEscolarSlice";
-import axios from "axios"; // Importamos axios para enviar la solicitud
+import axios from "axios";
 import { useEffect, useState } from "react";
+import Skeleton from "react-loading-skeleton";
 import Modal from "react-modal";
 import { toast } from "react-toastify";
 import ReusableTable from "../Table/TableReutilizable";
@@ -18,9 +19,10 @@ import ReusableForm from "./ReusableForm";
 export default function VisitasComponent() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingVisita, setEditingVisita] = useState<Visita | null>(null); // Guardamos la visita que estamos editando
+  const [editingVisita, setEditingVisita] = useState<Visita | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const relevamientoId = useRelevamientoId();
   const visitas = useAppSelector((state) => state.espacio_escolar.visitas);
@@ -30,22 +32,23 @@ export default function VisitasComponent() {
       if (!relevamientoId) return;
 
       try {
+        setLoading(true);
         const response = await fetch(
           `/api/visitas?relevamientoId=${relevamientoId}`
         );
 
-        if (!response.ok) {
-          throw new Error("Error al obtener visitas");
-        }
+        if (!response.ok) throw new Error("Error al obtener visitas");
 
         const data = await response.json();
 
         if (Array.isArray(data) && data.length > 0) {
-          dispatch(setVisitas(data)); // <-- guardás en Redux
-          setEditando(true); // <-- mostrás el cartel amarillo
+          dispatch(setVisitas(data));
+          setEditando(true);
         }
       } catch (error) {
-        console.error("Error al cargar visitas desde la base de datos:", error);
+        console.error("Error al cargar visitas:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -53,39 +56,30 @@ export default function VisitasComponent() {
   }, [relevamientoId, dispatch]);
 
   const agregarVisitaModal = () => {
-    setEditingVisita(null); // Limpiar cualquier visita previa al agregar una nueva
+    setEditingVisita(null);
     setIsModalOpen(true);
   };
 
   const cerrarModal = () => {
     setIsModalOpen(false);
-    setEditingVisita(null); // Limpiamos la visita en edición al cerrar el modal
+    setEditingVisita(null);
   };
 
-  // Lógica para agregar visita en Redux
   const manejarEnvio = (nuevaVisita: Visita) => {
     if (!relevamientoId) {
-      console.error("Relevamiento ID no disponible");
       toast.error("❌ Relevamiento ID no disponible.");
       return;
     }
 
-    const { numero_visita, fecha, hora_inicio, hora_finalizacion } =
-      nuevaVisita;
+    const { numero_visita, fecha, hora_inicio, hora_finalizacion } = nuevaVisita;
 
     if (
       numero_visita === undefined ||
-      numero_visita === null ||
       fecha?.trim() === "" ||
       hora_inicio?.trim() === "" ||
       hora_finalizacion?.trim() === ""
     ) {
       toast.warning("Completá todos los campos obligatorios.");
-      return;
-    }
-
-    if (isNaN(Number(numero_visita))) {
-      toast.warning("El número de visita debe ser un número válido.");
       return;
     }
 
@@ -95,76 +89,57 @@ export default function VisitasComponent() {
       return;
     }
 
-    const visitaConRelevamiento = {
-      ...nuevaVisita,
-      relevamiento_id: relevamientoId,
-    };
+    const visitaConRelevamiento = { ...nuevaVisita, relevamiento_id: relevamientoId };
 
-    if (editingVisita) {
-      dispatch(actualizarVisita(visitaConRelevamiento));
-    } else {
-      dispatch(agregarVisita(visitaConRelevamiento));
-    }
+    if (editingVisita) dispatch(actualizarVisita(visitaConRelevamiento));
+    else dispatch(agregarVisita(visitaConRelevamiento));
 
     cerrarModal();
   };
 
-  // Función para eliminar visita
   const handleEliminar = (numero_visita: number) => {
-    if (
-      numero_visita === undefined ||
-      numero_visita === null ||
-      isNaN(numero_visita)
-    ) {
+    if (numero_visita === undefined || isNaN(numero_visita)) {
       toast.error("❌ Número de visita no válido.");
       return;
     }
-
     dispatch(eliminarVisita(numero_visita));
   };
 
-  // Función para enviar todas las visitas a la base de datos
   const enviarVisitasABaseDeDatos = async () => {
-    if (isSubmitting) return; // previene doble click
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     if (!visitas || visitas.length === 0 || !relevamientoId) {
       toast.error("❌ No hay visitas o relevamiento ID no disponible.");
+      setIsSubmitting(false);
       return;
     }
 
     const horaRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
-    const visitasInvalidas = visitas.filter((visita) => {
-      return (
-        visita.numero_visita === undefined ||
-        visita.fecha?.trim() === "" ||
-        visita.hora_inicio?.trim() === "" ||
-        visita.hora_finalizacion?.trim() === "" ||
-        isNaN(Number(visita.numero_visita)) ||
-        !horaRegex.test(visita.hora_inicio) ||
-        !horaRegex.test(visita.hora_finalizacion)
-      );
-    });
+    const visitasInvalidas = visitas.filter(
+      (v) =>
+        v.numero_visita === undefined ||
+        v.fecha?.trim() === "" ||
+        v.hora_inicio?.trim() === "" ||
+        v.hora_finalizacion?.trim() === "" ||
+        isNaN(Number(v.numero_visita)) ||
+        !horaRegex.test(v.hora_inicio) ||
+        !horaRegex.test(v.hora_finalizacion)
+    );
 
     if (visitasInvalidas.length > 0) {
-      toast.warning(
-        "Hay visitas con campos incompletos o incorrectos. Revisá antes de guardar."
-      );
+      toast.warning("Hay visitas con campos incompletos o incorrectos. Revisá antes de guardar.");
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      const visitasConRelevamiento = visitas.map((visita) => ({
-        ...visita,
-        relevamiento_id: relevamientoId,
-      }));
-
+      const visitasConRelevamiento = visitas.map((v) => ({ ...v, relevamiento_id: relevamientoId }));
       const response = await axios.post("/api/visitas", visitasConRelevamiento);
 
-      if (response.status === 200 && response.data.success) {
+      if (response.status === 200 && response.data.success)
         toast.success("Visitas enviadas correctamente a la base de datos");
-      } else {
+      else {
         console.error("Error desde backend:", response.data);
         toast.error("❌ Hubo un problema al guardar las visitas");
       }
@@ -180,28 +155,22 @@ export default function VisitasComponent() {
     Header: string;
     accessor: string;
     inputType?: "number" | "date" | "time" | "text";
-    Cell?: React.FC<{ value?: any; row: { original: Visita; index?: number } }>;
+    Cell?: React.FC<{ value?: any; row: { original: Visita } }>;
   };
 
   const visitasHeader: ColumnType[] = [
     { Header: "N° visita", accessor: "numero_visita", inputType: "number" },
     { Header: "Fecha", accessor: "fecha", inputType: "date" },
     { Header: "Hora inicio", accessor: "hora_inicio", inputType: "time" },
-    {
-      Header: "Hora finalización",
-      accessor: "hora_finalizacion",
-      inputType: "time",
-    },
+    { Header: "Hora finalización", accessor: "hora_finalizacion", inputType: "time" },
     { Header: "Observaciones", accessor: "observaciones", inputType: "text" },
     {
       Header: "Acciones",
       accessor: "acciones",
-      Cell: ({ row }: { row: { original: Visita } }) => (
+      Cell: ({ row }) => (
         <div className="flex space-x-2 justify-center">
           <button
-            onClick={() => {
-              handleEliminar(row.original.numero_visita);
-            }}
+            onClick={() => handleEliminar(row.original.numero_visita)}
             className="bg-red-500 text-white p-1 rounded"
           >
             Eliminar
@@ -215,13 +184,21 @@ export default function VisitasComponent() {
     { Header: "N° visita", accessor: "numero_visita", inputType: "number" },
     { Header: "Fecha", accessor: "fecha", inputType: "date" },
     { Header: "Hora inicio", accessor: "hora_inicio", inputType: "time" },
-    {
-      Header: "Hora finalización",
-      accessor: "hora_finalizacion",
-      inputType: "time",
-    },
+    { Header: "Hora finalización", accessor: "hora_finalizacion", inputType: "time" },
     { Header: "Observaciones", accessor: "observaciones", inputType: "text" },
   ];
+
+  if (loading) {
+    return (
+      <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4 space-y-4">
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-1/4" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
@@ -230,6 +207,7 @@ export default function VisitasComponent() {
           Estás editando un registro ya existente.
         </div>
       )}
+
       <div className="bg-gray-100 border border-gray-300 rounded-xl shadow-sm px-6 py-3 mb-6">
         <p className="text-gray-800 text-sm font-medium text-center">
           VISITAS REALIZADAS PARA COMPLETAR EL CENSO
@@ -237,12 +215,10 @@ export default function VisitasComponent() {
       </div>
 
       <div className="space-y-6">
-        {/* Tabla de visitas */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-md p-2">
           <ReusableTable data={visitas || []} columns={visitasHeader} />
         </div>
 
-        {/* Botones de acción */}
         <div className="flex justify-end gap-4">
           <button
             onClick={agregarVisitaModal}
@@ -254,9 +230,7 @@ export default function VisitasComponent() {
           <button
             onClick={enviarVisitasABaseDeDatos}
             className={`${
-              !visitas.length
-                ? "bg-gray-400"
-                : "bg-green-600 hover:bg-green-700"
+              !visitas.length ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
             disabled={!visitas.length}
           >
@@ -265,7 +239,6 @@ export default function VisitasComponent() {
         </div>
       </div>
 
-      {/* Modal de formulario */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={cerrarModal}

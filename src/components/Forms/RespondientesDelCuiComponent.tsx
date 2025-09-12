@@ -12,6 +12,7 @@ import {
   setRespondientes,
 } from "@/redux/slices/espacioEscolarSlice";
 
+import Skeleton from "react-loading-skeleton";
 import ReusableTable from "../Table/TableReutilizable";
 import ReusableForm from "./ReusableForm";
 
@@ -22,17 +23,18 @@ export default function RespondientesDelCuiComponent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const respondientes = useAppSelector(
     (state) => state.espacio_escolar.respondientes
   );
 
-  // 🔽 Cargar datos desde la DB al montar
   useEffect(() => {
     const cargarRespondientesDesdeDB = async () => {
       if (!relevamientoId) return;
 
       try {
+        setLoading(true);
         const res = await fetch(`/api/respondientes/${relevamientoId}`);
         const data = await res.json();
 
@@ -42,6 +44,8 @@ export default function RespondientesDelCuiComponent() {
         }
       } catch (error) {
         console.error("Error al cargar respondientes:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -91,11 +95,8 @@ export default function RespondientesDelCuiComponent() {
 
       const data = await res.json();
 
-      if (res.ok && data.success) {
-        toast.success("Respondientes guardados correctamente ✅");
-      } else {
-        toast.error("❌ Error al guardar respondientes");
-      }
+      if (res.ok && data.success) toast.success("Respondientes guardados correctamente ✅");
+      else toast.error("❌ Error al guardar respondientes");
     } catch (error) {
       console.error("❌ Error:", error);
       toast.error("❌ Error inesperado al enviar los datos");
@@ -129,9 +130,24 @@ export default function RespondientesDelCuiComponent() {
   const respondientesForm = [
     { Header: "Nombre y apellido", accessor: "nombre_completo" },
     { Header: "Cargo", accessor: "cargo" },
-    { Header: "Denominación del establecimiento educativo", accessor: "establecimiento" },
+    {
+      Header: "Denominación del establecimiento educativo",
+      accessor: "establecimiento",
+    },
     { Header: "Teléfono de contacto", accessor: "telefono" },
   ];
+
+  if (loading) {
+    return (
+      <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4 space-y-4">
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-1/4" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-10 mt-2 border rounded-2xl shadow-sm p-4">
