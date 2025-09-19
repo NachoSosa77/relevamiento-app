@@ -1,8 +1,8 @@
 // lib/server/materialesPredominantesDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface MaterialPredominante extends RowDataPacket {
   id: number;
@@ -15,16 +15,13 @@ export interface MaterialPredominante extends RowDataPacket {
 
 export const getMaterialesPredominantesByRelevamientoId = async (
   relevamientoId: number,
-  localId: number
+  localId: number,
+  connection: PoolConnection
 ): Promise<MaterialPredominante[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<MaterialPredominante[]>(
     `SELECT * FROM materiales_predominantes WHERE relevamiento_id = ? AND local_id = ?`,
     [relevamientoId, localId]
   );
-
-  connection.release();
 
   return rows;
 };

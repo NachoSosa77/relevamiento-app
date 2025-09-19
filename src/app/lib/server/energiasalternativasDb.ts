@@ -1,8 +1,8 @@
 // lib/server/energiasAlternativasDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface EnergiaAlternativa extends RowDataPacket {
   id: number;
@@ -14,16 +14,13 @@ export interface EnergiaAlternativa extends RowDataPacket {
 
 export const getEnergiasAlternativasByConstruccionId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<EnergiaAlternativa[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<EnergiaAlternativa[]>(
     `SELECT * FROM energias_alternativas WHERE relevamiento_id = ? AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
-
-  connection.release();
 
   return rows;
 };

@@ -61,16 +61,36 @@ export async function GET(
         instalacionesBasicas,
         materialesPredominantes,
       ] = await Promise.all([
-        getAberturasByRelevamientoIdAndLocalId(relevamientoId, localId),
-        getAcondicionamientoTermicoByRelevamientoId(relevamientoId, localId),
-        getEquipamientoCocinaOfficesByRelevamientoId(relevamientoId, localId),
-        getEquipamientoSanitariosByRelevamientoId(relevamientoId, localId),
-        getIluminacionVentilacionByRelevamientoId(relevamientoId, localId),
-        getInstalacionesBasicasByRelevamientoId(relevamientoId, localId),
-        getMaterialesPredominantesByRelevamientoId(relevamientoId, localId),
+        getAberturasByRelevamientoIdAndLocalId(relevamientoId, localId, conn),
+        getAcondicionamientoTermicoByRelevamientoId(
+          relevamientoId,
+          localId,
+          conn
+        ),
+        getEquipamientoCocinaOfficesByRelevamientoId(
+          relevamientoId,
+          localId,
+          conn
+        ),
+        getEquipamientoSanitariosByRelevamientoId(
+          relevamientoId,
+          localId,
+          conn
+        ),
+        getIluminacionVentilacionByRelevamientoId(
+          relevamientoId,
+          localId,
+          conn
+        ),
+        getInstalacionesBasicasByRelevamientoId(relevamientoId, localId, conn),
+        getMaterialesPredominantesByRelevamientoId(
+          relevamientoId,
+          localId,
+          conn
+        ),
       ]);
 
-      return NextResponse.json({
+      const responsePayload = {
         local: {
           ...local,
           aberturas,
@@ -81,7 +101,9 @@ export async function GET(
           instalacionesBasicas,
           materialesPredominantes,
         },
-      });
+      };
+
+      return NextResponse.json(responsePayload);
     } finally {
       conn.release();
     }
@@ -134,6 +156,7 @@ export async function PATCH(
     } = body;
 
     const conn = await getConnection();
+
     try {
       await conn.query(
         `UPDATE locales_por_construccion

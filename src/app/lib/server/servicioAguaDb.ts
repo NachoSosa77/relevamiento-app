@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/server/servicioAguaDb.ts
 "use server";
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface ServicioAgua extends RowDataPacket {
   id: number;
@@ -21,13 +21,12 @@ export interface ServicioAgua extends RowDataPacket {
 
 export const getServicioAguaByRelevamientoId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<ServicioAgua[]> => {
-  const connection = await getConnection();
   const [rows] = await connection.execute<ServicioAgua[]>(
     `SELECT * FROM servicio_agua WHERE relevamiento_id = ?  AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
-  connection.release();
   return rows;
 };

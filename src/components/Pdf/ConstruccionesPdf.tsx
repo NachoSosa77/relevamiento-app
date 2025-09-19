@@ -232,49 +232,50 @@ const styles = StyleSheet.create({
 });
 
 export const ConstruccionPdf = ({ data }: { data: any }) => {
-  
   const { relevamiento, construcciones } = data;
 
   // Helper to render arrays of items for locals, e.g. aberturas, acondicionamiento, etc.
 
   return (
     <Document>
-      <Page style={styles.page}>
-        <View style={styles.header}>
-          <Image src={logoUrl} style={styles.logo} />
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerText}>
-              CFI (Consejo Federal de Inversiones).
-            </Text>
-            <Text style={styles.headerText}>
-              Proyecto: Relevamiento de la infraestructura educativa
-            </Text>
-            <Text style={styles.headerText}>
-              Zona 2 - Departamentos: Capital, Toay, Catriló y Atreuco.
-            </Text>
-            <Text style={styles.headerText}>EX-2024-00069131-CFI-GES#DC</Text>
-          </View>
-        </View>
-        {/* Relevamiento */}
-        <View style={styles.section}>
-          <Text style={styles.title}>Resumen del Relevamiento</Text>
-          <View style={styles.tableContainer}>
-            <View style={styles.tableRow}>
-              <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
-              <Text style={styles.tableHeaderCell}>Estado:</Text>
-              <Text style={styles.tableHeaderCell}>Email:</Text>
+      {construcciones?.length > 0 &&
+        construcciones.map((c: any) => (
+          <Page style={styles.page} size="LEGAL" key={c.id}>
+            <View style={styles.header}>
+              <Image src={logoUrl} style={styles.logo} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerText}>
+                  CFI (Consejo Federal de Inversiones).
+                </Text>
+                <Text style={styles.headerText}>
+                  Proyecto: Relevamiento de la infraestructura educativa
+                </Text>
+                <Text style={styles.headerText}>
+                  Zona 2 - Departamentos: Capital, Toay, Catriló y Atreuco.
+                </Text>
+                <Text style={styles.headerText}>
+                  EX-2024-00069131-CFI-GES#DC
+                </Text>
+              </View>
             </View>
-            <View key={relevamiento.id} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{relevamiento?.id}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.email}</Text>
+            {/* Relevamiento */}
+            <View style={styles.section}>
+              <Text style={styles.title}>Resumen del Relevamiento</Text>
+              <View style={styles.tableContainer}>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
+                  <Text style={styles.tableHeaderCell}>Estado:</Text>
+                  <Text style={styles.tableHeaderCell}>Email:</Text>
+                </View>
+                <View key={relevamiento.id} style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{relevamiento?.id}</Text>
+                  <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
+                  <Text style={styles.tableCell}>{relevamiento?.email}</Text>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
 
-        {/* Construcciones y Locales con detalle */}
-        {construcciones?.length > 0 &&
-          construcciones.map((c: any) => (
+            {/* Construcciones y Locales con detalle */}
             <View key={c.id} style={styles.section}>
               <Text style={styles.title}>
                 CUI(Código unico de infraestructura): {relevamiento.cui_id}
@@ -751,8 +752,8 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
               {/* Estado de conservación */}
               <EstadoConservacionDetailComponent c={c.estadoConservacion} />
             </View>
-          ))}
-      </Page>
+          </Page>
+        ))}
     </Document>
   );
 };

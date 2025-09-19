@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface ServicioComedor extends RowDataPacket {
   id: number;
@@ -15,10 +15,9 @@ export interface ServicioComedor extends RowDataPacket {
 
 export const getUsoComedorByRelevamientoId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<ServicioComedor[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<ServicioComedor[]>(
     `
     SELECT 
@@ -33,8 +32,6 @@ export const getUsoComedorByRelevamientoId = async (
     `,
     [relevamientoId, construccionId]
   );
-
-  connection.release();
 
   // Parsear el campo JSON 'tipos_comedor'
   const parsedRows = rows.map((row) => ({

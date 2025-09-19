@@ -1,8 +1,8 @@
 // lib/server/equipamientoCocinaOfficesDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface EquipamientoCocinaOffice extends RowDataPacket {
   id: number;
@@ -16,16 +16,13 @@ export interface EquipamientoCocinaOffice extends RowDataPacket {
 
 export const getEquipamientoCocinaOfficesByRelevamientoId = async (
   relevamientoId: number,
-  localId: number
+  localId: number,
+  connection: PoolConnection
 ): Promise<EquipamientoCocinaOffice[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<EquipamientoCocinaOffice[]>(
     `SELECT * FROM equipamiento_cocina_offices WHERE relevamiento_id = ? AND local_id = ?`,
     [relevamientoId, localId]
   );
-
-  connection.release();
 
   return rows;
 };

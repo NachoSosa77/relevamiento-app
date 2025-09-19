@@ -1,4 +1,5 @@
 // /app/api/relevamientos/[id]/resumen/route.ts
+import { getConnection } from "@/app/lib/db";
 import { getAberturasByRelevamientoIdAndLocalId } from "@/app/lib/server/aberturaDb";
 import { getAcondicionamientoTermicoByRelevamientoId } from "@/app/lib/server/acondicionamientoTermincoDb";
 import { getConstruccionesByRelevamientoId } from "@/app/lib/server/construccionesDb";
@@ -17,6 +18,7 @@ export async function GET(
   { params }: { params: Promise<{ id: number }> }
 ) {
   const id = (await params).id;
+  const conn = await getConnection();
 
   const relevamiento = await getRelevamientoByIdServer(id);
   const construcciones = await getConstruccionesByRelevamientoId(id);
@@ -38,13 +40,13 @@ export async function GET(
             instalacionesBasicas,
             materialesPredominantes,
           ] = await Promise.all([
-            getAberturasByRelevamientoIdAndLocalId(id, local.id),
-            getAcondicionamientoTermicoByRelevamientoId(id, local.id),
-            getEquipamientoCocinaOfficesByRelevamientoId(id, local.id),
-            getEquipamientoSanitariosByRelevamientoId(id, local.id),
-            getIluminacionVentilacionByRelevamientoId(id, local.id),
-            getInstalacionesBasicasByRelevamientoId(id, local.id),
-            getMaterialesPredominantesByRelevamientoId(id, local.id),
+            getAberturasByRelevamientoIdAndLocalId(id, local.id, conn),
+            getAcondicionamientoTermicoByRelevamientoId(id, local.id, conn),
+            getEquipamientoCocinaOfficesByRelevamientoId(id, local.id, conn),
+            getEquipamientoSanitariosByRelevamientoId(id, local.id, conn),
+            getIluminacionVentilacionByRelevamientoId(id, local.id, conn),
+            getInstalacionesBasicasByRelevamientoId(id, local.id, conn),
+            getMaterialesPredominantesByRelevamientoId(id, local.id, conn),
           ]);
 
           return {

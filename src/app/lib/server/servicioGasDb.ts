@@ -1,8 +1,8 @@
 // lib/server/servicioGasDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface ServicioGas extends RowDataPacket {
   id: number;
@@ -14,16 +14,13 @@ export interface ServicioGas extends RowDataPacket {
 
 export const getServicioGasByRelevamientoId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<ServicioGas[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<ServicioGas[]>(
     `SELECT * FROM servicio_gas WHERE relevamiento_id = ? AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
-
-  connection.release();
 
   return rows;
 };

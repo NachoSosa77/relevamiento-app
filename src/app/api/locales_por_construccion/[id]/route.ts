@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -26,12 +26,38 @@ interface LocalPorConstruccion extends RowDataPacket {
   nombre_local?: string;
 }
 
+// Campos permitidos para actualizar
+const allowedFields = [
+  "construccion_id",
+  "identificacion_plano",
+  "numero_planta",
+  "tipo",
+  "local_id",
+  "local_sin_uso",
+  "superficie",
+  "tipo_superficie",
+  "cui_number",
+  "relevamiento_id",
+  "largo_predominante",
+  "ancho_predominante",
+  "diametro",
+  "altura_maxima",
+  "altura_minima",
+  "destino_original",
+  "proteccion_contra_robo",
+  "observaciones",
+  "estado",
+  "numero_construccion",
+];
+
+// Campos permitidos para actualizar en PUT
+const allowedPutFields = ["destino_original", "proteccion_contra_robo"];
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const connection = await getConnection();
     const { id } = await params; // Aquí desestructuramos el id
 
     const idNumber = Number(id); // Convertir el id a número
@@ -43,7 +69,7 @@ export async function GET(
       );
     }
 
-    const [rows] = await connection.query<LocalPorConstruccion[]>(
+    const [rows] = await pool.query<LocalPorConstruccion[]>(
       `
       SELECT 
         lpc.*,
@@ -56,12 +82,10 @@ export async function GET(
       [idNumber]
     );
 
-    connection.release();
-
     const local = rows[0]; // ✅ Obtenemos el primer elemento
 
     // Verificar si se encontró el local
-    if (local.length === 0) {
+    if (!local) {
       return NextResponse.json(
         { message: "Local no encontrado" },
         { status: 404 }
@@ -91,28 +115,30 @@ export async function PUT(
 
   const body = await req.json();
 
-  const allowedFields = ["destino_original", "proteccion_contra_robo"];
-  const fieldsToUpdate = Object.entries(body).filter(([key]) =>
-    allowedFields.includes(key)
-  );
+  // Filtrar solo los campos permitidos
+  const fields: string[] = [];
+  const values: any[] = [];
 
-  if (fieldsToUpdate.length === 0) {
+  for (const key of allowedPutFields) {
+    if (key in body && body[key] !== undefined) {
+      fields.push(`${key} = ?`);
+      values.push(body[key]);
+    }
+  }
+
+  if (fields.length === 0) {
     return NextResponse.json(
       { message: "No se enviaron campos válidos para actualizar" },
       { status: 400 }
     );
   }
 
-  const setClause = fieldsToUpdate.map(([key]) => `${key} = ?`).join(", ");
-  const values = fieldsToUpdate.map(([, value]) => value);
-
-  let connection;
+  values.push(id); // último parámetro es el ID
 
   try {
-    connection = await getConnection();
-    const [result] = await connection.query(
-      `UPDATE locales_por_construccion SET ${setClause} WHERE id = ?`,
-      [...values, id]
+    const [result] = await pool.query(
+      `UPDATE locales_por_construccion SET ${fields.join(", ")} WHERE id = ?`,
+      values
     );
 
     return NextResponse.json({
@@ -120,55 +146,29 @@ export async function PUT(
       result,
     });
   } catch (err: any) {
-    console.error("❌ Error al actualizar el local:", err);
+    console.error("❌ Error al actualizar el local (PUT):", err);
     return NextResponse.json(
       { message: "Error interno", error: err.message },
       { status: 500 }
     );
-  } finally {
-    connection?.release(); // ✅ Liberación garantizada
   }
 }
 
 export async function PATCH(
-  request: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: number }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
-
   if (!id || isNaN(id)) {
     return NextResponse.json({ message: "ID inválido" }, { status: 400 });
   }
 
-  // Campos permitidos
-  const allowedFields = [
-    "construccion_id",
-    "identificacion_plano",
-    "numero_planta",
-    "tipo",
-    "local_id",
-    "local_sin_uso",
-    "superficie",
-    "tipo_superficie",
-    "cui_number",
-    "relevamiento_id",
-    "largo_predominante",
-    "ancho_predominante",
-    "diametro",
-    "altura_maxima",
-    "altura_minima",
-    "destino_original",
-    "proteccion_contra_robo",
-    "observaciones",
-    "estado",
-    "numero_construccion",
-  ];
+  const body = await req.json();
 
-  const fields = [];
-  const values = [];
+  // Filtrar solo campos válidos que vienen en body
+  const fields: string[] = [];
+  const values: any[] = [];
 
-  // Filtramos solo campos que realmente están presentes en el body
   for (const key of allowedFields) {
     if (key in body && body[key] !== undefined) {
       fields.push(`${key} = ?`);
@@ -183,26 +183,23 @@ export async function PATCH(
     );
   }
 
-  values.push(id);
+  values.push(id); // último parámetro es el ID
 
   try {
-    const connection = await getConnection();
-
-    console.time("PATCH locales_por_construccion");
-    const [result] = await connection.query(
+    const [result] = await pool.query(
       `UPDATE locales_por_construccion SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
-    console.timeEnd("PATCH locales_por_construccion");
-
-    connection.release();
 
     return NextResponse.json({
       message: "Local actualizado correctamente",
       updated: result,
     });
-  } catch (error) {
-    console.error("Error al hacer PATCH del local:", error);
-    return new NextResponse("Error al actualizar", { status: 500 });
+  } catch (error: any) {
+    console.error("Error al actualizar el local:", error);
+    return NextResponse.json(
+      { message: "Error interno", error: error.message },
+      { status: 500 }
+    );
   }
 }

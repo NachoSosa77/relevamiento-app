@@ -1,8 +1,8 @@
 // lib/server/instalacionesBasicasDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface InstalacionBasica extends RowDataPacket {
   id: number;
@@ -16,16 +16,13 @@ export interface InstalacionBasica extends RowDataPacket {
 
 export const getInstalacionesBasicasByRelevamientoId = async (
   relevamientoId: number,
-  localId: number
+  localId: number,
+  connection: PoolConnection
 ): Promise<InstalacionBasica[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<InstalacionBasica[]>(
     `SELECT * FROM instalaciones_basicas WHERE relevamiento_id = ?  AND local_id = ?`,
     [relevamientoId, localId]
   );
-
-  connection.release();
 
   return rows;
 };

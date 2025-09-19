@@ -1,8 +1,8 @@
 // lib/server/instalacionesSeguridadIncendioDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface InstalacionSeguridadIncendio extends RowDataPacket {
   id: number;
@@ -17,16 +17,13 @@ export interface InstalacionSeguridadIncendio extends RowDataPacket {
 
 export const getInstalacionesSeguridadIncendioByConstruccionId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<InstalacionSeguridadIncendio[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<InstalacionSeguridadIncendio[]>(
     `SELECT * FROM instalaciones_seguridad_incendio WHERE relevamiento_id = ? AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
-
-  connection.release();
 
   return rows;
 };

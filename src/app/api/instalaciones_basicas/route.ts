@@ -1,7 +1,6 @@
 import { getConnection } from "@/app/lib/db";
 import { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
-import pLimit from "p-limit";
 
 // Tipado del payload
 interface InstalacionBasicaItem {
@@ -37,35 +36,33 @@ export async function POST(req: Request) {
 
     const chunkSize = 100;
     const chunks = chunkArray(data, chunkSize);
-    const limit = pLimit(3);
 
-    await Promise.all(
-      chunks.map((chunk) =>
-        limit(async () => {
-          const values = chunk.map((item) => [
-            item.servicio ?? null,
-            item.tipo_instalacion ?? null,
-            item.funciona ?? null,
-            item.motivo ?? null,
-            item.relevamiento_id,
-            item.local_id,
-          ]);
+    console.time("POST Total");
 
-          const placeholders = values
-            .map(() => "(?, ?, ?, ?, ?, ?)")
-            .join(", ");
-          const flatValues = values.flat();
+    // 🔹 Insert secuencial por chunk
+    for (const [index, chunk] of chunks.entries()) {
+      console.time(`Chunk ${index + 1}`);
+      const values = chunk.map((item) => [
+        item.servicio ?? null,
+        item.tipo_instalacion ?? null,
+        item.funciona ?? null,
+        item.motivo ?? null,
+        item.relevamiento_id,
+        item.local_id,
+      ]);
 
-          const insertQuery = `
-            INSERT INTO instalaciones_basicas 
-            (servicio, tipo_instalacion, funciona, motivo, relevamiento_id, local_id)
-            VALUES ${placeholders}
-          `;
+      const placeholders = values.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
+      const flatValues = values.flat();
 
-          await connection!.execute(insertQuery, flatValues);
-        })
-      )
-    );
+      const insertQuery = `
+        INSERT INTO instalaciones_basicas 
+        (servicio, tipo_instalacion, funciona, motivo, relevamiento_id, local_id)
+        VALUES ${placeholders}
+      `;
+
+      await connection.execute(insertQuery, flatValues);
+      console.timeEnd(`Chunk ${index + 1}`);
+    }
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },
@@ -73,9 +70,7 @@ export async function POST(req: Request) {
     );
   } catch (error: unknown) {
     console.error("❌ Error al insertar instalaciones_basicas:", error);
-
     const details = error instanceof Error ? error.message : String(error);
-
     return NextResponse.json(
       { error: "Error al insertar los datos", details },
       { status: 500 }
@@ -95,10 +90,12 @@ export async function GET(req: NextRequest) {
 
   const connection = await getConnection();
 
+  console.time("GET instalaciones_basicas"); // inicio medición
   const [rows] = await connection.execute<RowDataPacket[]>(
     `SELECT * FROM instalaciones_basicas WHERE local_id = ? AND relevamiento_id = ?`,
     [localId, relevamientoId]
   );
+  console.timeEnd("GET instalaciones_basicas"); // fin medición
 
   return NextResponse.json(rows);
 }
@@ -117,9 +114,8 @@ export async function PUT(req: Request) {
       );
     }
 
-    // 🔹 Actualizamos cada registro
     for (const item of data) {
-      if (!item.id) continue; // si no hay id, lo saltamos
+      if (!item.id) continue;
 
       const updateQuery = `
         UPDATE instalaciones_basicas
@@ -148,7 +144,6 @@ export async function PUT(req: Request) {
   } catch (error: unknown) {
     console.error("❌ Error al actualizar instalaciones_basicas:", error);
     const details = error instanceof Error ? error.message : String(error);
-
     return NextResponse.json(
       { error: "Error al actualizar los datos", details },
       { status: 500 }

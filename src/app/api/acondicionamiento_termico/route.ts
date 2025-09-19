@@ -45,13 +45,9 @@ export async function POST(req: NextRequest) {
       ) VALUES ?
     `;
 
-    console.time("insertTotal");
-
     await Promise.all(
-      chunks.map((chunk, index) =>
+      chunks.map((chunk) =>
         limit(async () => {
-          console.time(`chunk-${index}`);
-
           const values = chunk.map((item) => [
             item.cantidad ?? null,
             item.disponibilidad ?? null,
@@ -62,13 +58,9 @@ export async function POST(req: NextRequest) {
           ]);
 
           await connection!.query<RowDataPacket[]>(insertQuery, [values]);
-
-          console.timeEnd(`chunk-${index}`);
         })
       )
     );
-
-    console.timeEnd("insertTotal");
 
     return NextResponse.json(
       { message: "Datos insertados correctamente" },

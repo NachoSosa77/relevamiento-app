@@ -1,8 +1,8 @@
 // lib/server/condicionesAccesibilidadDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 
 export interface CondicionAccesibilidad extends RowDataPacket {
   id: number;
@@ -17,16 +17,13 @@ export interface CondicionAccesibilidad extends RowDataPacket {
 
 export const getCondicionesAccesibilidadByConstruccionId = async (
   relevamientoId: number,
-  construccionId: number
+  construccionId: number,
+  connection: PoolConnection
 ): Promise<CondicionAccesibilidad[]> => {
-  const connection = await getConnection();
-
   const [rows] = await connection.execute<CondicionAccesibilidad[]>(
     `SELECT * FROM condiciones_accesibilidad WHERE relevamiento_id = ? AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
-
-  connection.release();
 
   return rows;
 };
