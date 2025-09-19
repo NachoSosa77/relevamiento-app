@@ -1,7 +1,0 @@
-ignoredBuiltDependencies:
-  - unrs-resolver
-
-onlyBuiltDependencies:
-  - bcrypt
-  - canvas
-  - sharp
