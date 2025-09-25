@@ -25,6 +25,10 @@ export async function POST(req: Request) {
       INSERT INTO iluminacion_ventilacion (
         condicion, disponibilidad, superficie_iluminacion, superficie_ventilacion, relevamiento_id, local_id
       ) VALUES ?
+      ON DUPLICATE KEY UPDATE
+        disponibilidad = VALUES(disponibilidad),
+        superficie_iluminacion = VALUES(superficie_iluminacion),
+        superficie_ventilacion = VALUES(superficie_ventilacion)
     `;
 
     // Chunk de 100 filas
@@ -45,13 +49,16 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { message: "Datos insertados correctamente" },
+      { message: "Datos insertados/actualizados correctamente" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al insertar iluminacion_ventilacion:", error);
+    console.error(
+      "Error al insertar/actualizar iluminacion_ventilacion:",
+      error
+    );
     return NextResponse.json(
-      { error: "Error al insertar los datos" },
+      { error: "Error al insertar/actualizar los datos" },
       { status: 500 }
     );
   }

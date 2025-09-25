@@ -22,7 +22,7 @@ import ElectricidadServicio from "./components/ElectricidadServicio";
 import EnergiasAlternativas from "./components/EnergiasAlternativas";
 import SeguridadIncendio from "./components/SeguridadIncendio";
 import SeparadorServiciosBasicos, {
-  default as SeparadorReutilizable
+  default as SeparadorReutilizable,
 } from "./components/SeparadorServiciosBasicos";
 import ServiciosReu from "./components/ServiciosReu";
 import { servicioAccesibilidad } from "./config/relevamientoAccesibilidad";
@@ -42,7 +42,7 @@ import { servicioGas } from "./config/relevamientoGas";
 import { seguridadIncendio } from "./config/relevamientoSeguridadIncendio";
 import {
   caracteristicasConstruccion,
-  serviciosBasicosSeparador
+  serviciosBasicosSeparador,
 } from "./config/separadoresServicios";
 // ... otros imports
 
@@ -121,21 +121,19 @@ export default function RelevamientoConstruccionesPage() {
     router.push("/relevamiento-locales");
   };
 
-  console.log(construccionId)
-
   const marcarComoRelevada = (id: number) => {
     if (!relevadas.includes(id)) {
       setRelevadas([...relevadas, id]);
     }
   };
 
-  if (!selectedCui || selectedInstitutions === null) {
-  return (
-    <div className="flex justify-center items-center h-full mt-40">
-      <Spinner />
-    </div>
-  );
-}
+  if (!selectedCui || selectedInstitutions === null || (relevamientoId === undefined)) {
+    return (
+      <div className="flex justify-center items-center h-full mt-40">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-white text-black text-sm mt-28">
@@ -177,7 +175,9 @@ export default function RelevamientoConstruccionesPage() {
             relevamientoId={relevamientoId}
           />
           <CantidadPlantas construccionId={construccionId} />
-          <AntiguedadComponent construccionId={construccionId} />
+          <AntiguedadComponent
+            construccionId={construccionId}
+          />
           <SeparadorServiciosBasicos data={serviciosBasicosSeparador} />
           <AguaFormComponent
             relevamientoId={relevamientoId}
@@ -185,9 +185,9 @@ export default function RelevamientoConstruccionesPage() {
           />
           <ServiciosReu
             id={4}
-            label={"DESAGUES CLOACALES"}
+            label={"DESAGÜES CLOACALES"}
             sub_id={4}
-            sublabel={"DESAGUES CLOACALES"}
+            sublabel={"DESAGÜES CLOACALES"}
             servicios={servicioDesague}
             endpoint="/api/servicio_desague"
             construccionId={construccionId}

@@ -48,45 +48,45 @@ export default function AcondicionamientoTermico({
 
   const tiposConDisponibilidad = ["Aire acondicionado central", "Calefacción central"];
 
-  // 🔹 Cargar datos existentes
+    // 🔹 Función reutilizable para cargar datos
+  const fetchData = async () => {
+    try {
+      const res = await fetch(
+        `/api/acondicionamiento_termico?localId=${localId}&relevamientoId=${relevamientoId}`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.length > 0) {
+        const newResponses: ResponseData = {};
+        data.forEach((item: AcondicionamientoTermicoItem) => {
+          const local = locales.find((l) => l.question === item.temperatura);
+          if (!local) return;
+          const key = String(local.id);
+          if (!newResponses[key]) newResponses[key] = {};
+          newResponses[key][item.tipo] = {
+            cantidad: item.cantidad ?? 0,
+            disponibilidad: item.disponibilidad ?? undefined,
+          };
+        });
+        setResponses(newResponses);
+        setIsEditing(true);
+      } else {
+        setResponses({});
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error("Error cargando acondicionamiento térmico:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🔹 useEffect inicial
   useEffect(() => {
     if (!relevamientoId || isNaN(localId)) return;
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/acondicionamiento_termico?localId=${localId}&relevamientoId=${relevamientoId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-
-        if (isMounted && data.length > 0) {
-          const newResponses: ResponseData = {};
-
-          data.forEach((item: AcondicionamientoTermicoItem) => {
-            const local = locales.find((l) => l.question === item.temperatura);
-            if (!local) return;
-            const key = String(local.id);
-            if (!newResponses[key]) newResponses[key] = {};
-            newResponses[key][item.tipo] = {
-              cantidad: item.cantidad ?? 0,
-              disponibilidad: item.disponibilidad ?? undefined,
-            };
-          });
-
-          setResponses(newResponses);
-          setIsEditing(true);
-        }
-      } catch (err) {
-        console.error("Error cargando acondicionamiento térmico:", err);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
+    setIsLoading(true);
     fetchData();
-    return () => {
-      isMounted = false;
-    };
   }, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
@@ -144,6 +144,8 @@ export default function AcondicionamientoTermico({
           ? "Información actualizada correctamente"
           : "Información guardada correctamente"
       );
+      // 🔹 refrescar datos desde DB
+      fetchData();
       onUpdate?.();
     } catch (error) {
       console.error(error);

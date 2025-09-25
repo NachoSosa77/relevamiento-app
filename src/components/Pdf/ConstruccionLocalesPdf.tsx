@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
 });
 
 export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
-  console.log("ConstruccionLocalesPdf data", data);
   const { relevamiento, construcciones } = data;
 
   // Helper to render arrays of items for locals, e.g. aberturas, acondicionamiento, etc.

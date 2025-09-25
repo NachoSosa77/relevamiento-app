@@ -35,7 +35,6 @@ const IluminacionEditable = ({
 
   useEffect(() => {
     if (data) {
-      console.log("Data cargada desde base:", data);
       const initial: Record<string, Iluminacion> = {};
       data.forEach((item) => {
         initial[item.condicion] = item;
@@ -171,7 +170,6 @@ const IluminacionEditable = ({
                           null,
                       };
 
-                      console.log("Guardando valores:", updated);
 
                       updateData(updated);
 

@@ -52,39 +52,42 @@ export default function TableCantidadReutilizable({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔹 Traer info guardada al cargar
-  useEffect(() => {
+  // 🔹 Extraemos fetchData para reutilizarlo después del POST
+  const fetchData = async () => {
     if (!relevamientoId || locales.length === 0) return;
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `/api/aberturas?localId=${localId}&relevamientoId=${relevamientoId}`
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.length > 0) {
-          const newResponses: ResponseData = {};
-          data.forEach((row: RowData) => {
-            const local = locales.find((l) => l.question === row.abertura);
-            if (!local) return;
-            const key = local.id;
-            newResponses[key] = newResponses[key] || {};
-            newResponses[key][row.tipo] = {
-              cantidad: row.cantidad,
-              estado: row.estado,
-            };
-          });
-          setResponses(newResponses);
-          setIsEditing(true);
-        }
-      } catch (err) {
-        console.error("Error cargando datos existentes:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    try {
+      const res = await fetch(
+        `/api/aberturas?localId=${localId}&relevamientoId=${relevamientoId}`
+      );
+      if (!res.ok) return;
 
+      const data = await res.json();
+      if (data.length > 0) {
+        const newResponses: ResponseData = {};
+        data.forEach((row: RowData) => {
+          const local = locales.find((l) => l.question === row.abertura);
+          if (!local) return;
+          const key = local.id;
+          newResponses[key] = newResponses[key] || {};
+          newResponses[key][row.tipo] = {
+            cantidad: row.cantidad,
+            estado: row.estado,
+          };
+        });
+        setResponses(newResponses);
+        setIsEditing(true);
+      }
+    } catch (err) {
+      console.error("Error cargando datos existentes:", err);
+      toast.error("Error al cargar aberturas");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🔹 Llamamos al cargar
+  useEffect(() => {
     fetchData();
   }, [localId, relevamientoId, locales]);
 
@@ -104,7 +107,7 @@ export default function TableCantidadReutilizable({
   };
 
   const handleGuardar = async () => {
-    const payload = locales.flatMap(({ id, question  }) => {
+    const payload = locales.flatMap(({ id, question }) => {
       const respuesta = responses[id];
       if (!respuesta) return [];
 
@@ -132,17 +135,24 @@ export default function TableCantidadReutilizable({
     setIsSubmitting(true);
 
     try {
-      await fetch("/api/aberturas", {
+      const res = await fetch("/api/aberturas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      toast.success(
-        isEditing
-          ? "Información actualizada correctamente"
-          : "Información guardada correctamente"
-      );
-      onUpdate?.();
+
+      if (res.ok) {
+        toast.success(
+          isEditing
+            ? "Información actualizada correctamente"
+            : "Información guardada correctamente"
+        );
+        // 🔹 Después de guardar, volvemos a cargar
+        await fetchData();
+        onUpdate?.();
+      } else {
+        toast.error("Error al guardar los datos");
+      }
     } catch (error) {
       console.error(error);
       toast.error("Error al guardar los datos");
@@ -159,7 +169,8 @@ export default function TableCantidadReutilizable({
       <div className="flex items-center gap-2 mt-2 p-2 border bg-custom text-white">
         {isEditing && (
           <div className="bg-yellow-100 text-yellow-700 p-2 mb-2 rounded-md text-xs">
-            ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a guardar.
+            ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a
+            guardar.
           </div>
         )}
         <div className="w-6 h-6 rounded-full flex justify-center items-center text-custom bg-white">
@@ -170,7 +181,7 @@ export default function TableCantidadReutilizable({
         </div>
       </div>
 
-      {/* Tabla original */}
+      {/* Tabla */}
       <table className="w-full border text-xs">
         <thead>
           <tr className="bg-custom text-white">
@@ -200,25 +211,25 @@ export default function TableCantidadReutilizable({
                     ))}
               </td>
               <td className="border p-2 text-center">
-                {showCondition && opciones.length > 0
-                  ? opciones.map((tipo) => (
-                      <div key={tipo} className="flex flex-col mt-2">
-                        <NumericInput
-                          value={responses[id]?.[tipo]?.cantidad ?? 0}
-                          onChange={(value) =>
-                            handleResponseChange(id, tipo, "cantidad", value)
-                          }
-                        />
-                      </div>
-                    ))
-                  : (
+                {showCondition && opciones.length > 0 ? (
+                  opciones.map((tipo) => (
+                    <div key={tipo} className="flex flex-col mt-2">
                       <NumericInput
-                        value={responses[id]?.["default"]?.cantidad ?? undefined}
+                        value={responses[id]?.[tipo]?.cantidad ?? 0}
                         onChange={(value) =>
-                          handleResponseChange(id, "default", "cantidad", value)
+                          handleResponseChange(id, tipo, "cantidad", value)
                         }
                       />
-                    )}
+                    </div>
+                  ))
+                ) : (
+                  <NumericInput
+                    value={responses[id]?.["default"]?.cantidad ?? undefined}
+                    onChange={(value) =>
+                      handleResponseChange(id, "default", "cantidad", value)
+                    }
+                  />
+                )}
               </td>
               {id !== "6.1" && id !== "6.2" && (
                 <td className="border p-2 text-center">
@@ -251,9 +262,16 @@ export default function TableCantidadReutilizable({
                             type="radio"
                             name={`estado-${id}-default`}
                             value={estado}
-                            checked={responses[id]?.["default"]?.estado === estado}
+                            checked={
+                              responses[id]?.["default"]?.estado === estado
+                            }
                             onChange={() =>
-                              handleResponseChange(id, "default", "estado", estado)
+                              handleResponseChange(
+                                id,
+                                "default",
+                                "estado",
+                                estado
+                              )
                             }
                             className="mr-1"
                           />

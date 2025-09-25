@@ -68,7 +68,6 @@ export default function VerPdfPage({
     fetchAll();
   }, [relevamientoId]);
 
-  console.log("VerPdfPage data", localesData)
 
   const pdfs = [
     {

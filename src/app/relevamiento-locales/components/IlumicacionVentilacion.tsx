@@ -44,48 +44,48 @@ export default function IluminacionVentilacion({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // 🔹 Cargar datos existentes
- useEffect(() => {
-      if (!relevamientoId || isNaN(localId)) return;
+ // extraer fetchData a función externa del useEffect
+const fetchData = async () => {
+  try {
+    const res = await fetch(
+      `/api/iluminacion_ventilacion?localId=${localId}&relevamientoId=${relevamientoId}`
+    );
+    if (!res.ok) return;
+    const data = await res.json();
 
-  let isMounted = true;
-
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`/api/iluminacion_ventilacion?localId=${localId}&relevamientoId=${relevamientoId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (isMounted && data.length > 0) {
-        const newResponses: ResponseData = {};
-
-        data.forEach((item: InterfaceIluminacionVentilacion) => {
-          // Buscar local correspondiente por condicion
-          const local = locales.find((l) => l.question === item.condicion);
-          if (!local) return;
-          const key = local.id; // usamos id de locales
-          newResponses[key] = {
-            disponibilidad: item.disponibilidad ?? undefined,
-            superficieIluminacion: item.superficie_iluminacion ? Number(item.superficie_iluminacion) : 0,
-            superficieVentilacion: item.superficie_ventilacion ? Number(item.superficie_ventilacion) : 0,
-          };
-        });
-
-        setResponses(newResponses);
-         setIsEditing(true); // activamos modo edición si hay datos
-      }
-    } catch (err) {
-      console.error("Error cargando iluminación y ventilación:", err);
+    if (data.length > 0) {
+      const newResponses: ResponseData = {};
+      data.forEach((item: InterfaceIluminacionVentilacion) => {
+        const local = locales.find((l) => l.question === item.condicion);
+        if (!local) return;
+        newResponses[local.id] = {
+          disponibilidad: item.disponibilidad ?? undefined,
+          superficieIluminacion: item.superficie_iluminacion
+            ? Number(item.superficie_iluminacion)
+            : 0,
+          superficieVentilacion: item.superficie_ventilacion
+            ? Number(item.superficie_ventilacion)
+            : 0,
+        };
+      });
+      setResponses(newResponses);
+      setIsEditing(true); // modo edición
+    } else {
+      setResponses({});
+      setIsEditing(false);
     }
-    finally {
-  if (isMounted) setIsLoading(false);
-}
-  };
+  } catch (err) {
+    console.error("Error cargando iluminación y ventilación:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
+// correr solo una vez al montar
+useEffect(() => {
+  if (!relevamientoId || isNaN(localId)) return;
+  setIsLoading(true);
   fetchData();
-  return () => {
-    isMounted = false;
-  };
 }, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
@@ -138,6 +138,7 @@ export default function IluminacionVentilacion({
           ? "Información actualizada correctamente"
           : "Información guardada correctamente"
       );
+       fetchData();
       onUpdate?.();
     } catch (error) {
       console.error(error);

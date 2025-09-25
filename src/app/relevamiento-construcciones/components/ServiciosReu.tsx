@@ -35,10 +35,14 @@ export default function ServiciosReu({
   const relevamientoId = useRelevamientoId();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [cargandoDatos, setCargandoDatos] = useState(true); // 👈 skeleton
 
-  // Cargar datos existentes para saber si hay registros
+  // Cargar datos existentes
   useEffect(() => {
-    if (!relevamientoId || !construccionId) return;
+    if (!relevamientoId || !construccionId) {
+      setCargandoDatos(false);
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -48,31 +52,28 @@ export default function ServiciosReu({
         if (res.ok) {
           const data = await res.json();
 
-          // Si el backend devuelve un array con datos, activar editando
           if (Array.isArray(data) && data.length > 0) {
             setEditando(true);
 
-            // Opcional: precargar los servicios ya guardados si quieres
-            // Por ahora dejamos vacío para que el usuario elija
-            // Si quieres precargar, descomenta lo siguiente:
-
-            // const precargados = data.map((item: any) => ({
-            //   servicio: item.servicio,
-            //   estado: item.estado || "",
-            // }));
-            // setSelectedServicios(precargados);
+            // Precargar servicios desde backend
+            const precargados = data.map((item: any) => ({
+              servicio: item.servicio,
+              estado: item.estado || "",
+            }));
+            setSelectedServicios(precargados);
           }
         }
       } catch (error) {
         console.error("Error cargando servicios existentes:", error);
+      } finally {
+        setCargandoDatos(false); // 👈 siempre apagamos skeleton
       }
     };
 
     fetchData();
   }, [relevamientoId, construccionId, endpoint]);
 
-  // Manejo de selección y cambio de estado (igual que antes)
-
+  // Selección de servicios
   const handleServicioSelect = (servicioId: string) => {
     const servicio = servicios.find((s) => s.id === servicioId);
     if (!servicio) return;
@@ -87,12 +88,14 @@ export default function ServiciosReu({
     }
   };
 
+  // Cambio de estado
   const handleEstadoChange = (servicioQuestion: string, estado: string) => {
     setSelectedServicios((prev) =>
       prev.map((s) => (s.servicio === servicioQuestion ? { ...s, estado } : s))
     );
   };
 
+  // Guardar
   const handleGuardar = async () => {
     if (selectedServicios.length === 0) {
       toast.warning("Debes seleccionar al menos un servicio antes de guardar.");
@@ -121,7 +124,7 @@ export default function ServiciosReu({
     setIsSubmitting(true);
     try {
       const response = await fetch(endpoint, {
-        method: editando ? "PATCH" : "POST", // Ajusta método si necesitas
+        method: editando ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -143,7 +146,7 @@ export default function ServiciosReu({
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
-      {editando && (
+      {editando && !cargandoDatos && (
         <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
           Estás editando un registro ya existente.
         </div>
@@ -171,67 +174,105 @@ export default function ServiciosReu({
         </div>
       )}
 
-      <table className="w-full border mt-2 text-xs">
-        <thead>
-          <tr className="bg-custom text-white">
-            <th className="border p-2">Servicio</th>
-            <th className="border p-2">Estado (si corresponde)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="border p-2" colSpan={2}>
-              <select
-                onChange={(e) => handleServicioSelect(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Seleccionar servicio</option>
-                {servicios.map((servicio) => (
-                  <option key={servicio.id} value={servicio.id}>
-                    {servicio.question}
-                  </option>
-                ))}
-              </select>
-            </td>
-          </tr>
-          {selectedServicios.map(({ servicio, estado }) => {
-            const currentServicio = servicios.find(
-              (s) => s.question === servicio
-            );
-            return (
-              <tr key={servicio}>
-                <td className="border p-2">{servicio}</td>
-                <td className="border p-2">
-                  {currentServicio?.showCondition ? (
-                    <select
-                      value={estado || ""}
-                      onChange={(e) => handleEstadoChange(servicio, e.target.value)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Seleccionar estado</option>
-                      <option value="Bueno">Bueno</option>
-                      <option value="Regular">Regular</option>
-                      <option value="Malo">Malo</option>
-                    </select>
-                  ) : (
-                    "-"
-                  )}
+      {cargandoDatos ? (
+        // 👇 Skeleton
+        <div className="flex flex-col gap-4 p-4">
+          <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded w-full animate-pulse"></div>
+          <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+        </div>
+      ) : (
+        <>
+          <table className="w-full border mt-2 text-xs">
+            <thead>
+              <tr className="bg-custom text-white">
+                <th className="border p-2">Servicio</th>
+                <th className="border p-2">Estado (si corresponde)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border p-2" colSpan={2}>
+                  <select
+                    onChange={(e) => handleServicioSelect(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Seleccionar servicio</option>
+                    {servicios.map((servicio) => (
+                      <option key={servicio.id} value={servicio.id}>
+                        {servicio.question}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+              {selectedServicios.map(({ servicio, estado }, index) => (
+                <tr key={index}>
+                  <td className="border p-2">
+                    <select
+                      value={servicio}
+                      onChange={(e) => {
+                        const newServicio = servicios.find(
+                          (s) => s.question === e.target.value
+                        )?.question;
+                        setSelectedServicios((prev) =>
+                          prev.map((s, i) =>
+                            i === index
+                              ? { ...s, servicio: newServicio || s.servicio }
+                              : s
+                          )
+                        );
+                      }}
+                      className="w-full p-2 border rounded"
+                    >
+                      {servicios.map((s) => (
+                        <option key={s.id} value={s.question}>
+                          {s.question}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="border p-2">
+                    {servicios.find((s) => s.question === servicio)
+                      ?.showCondition ? (
+                      <select
+                        value={estado || ""}
+                        onChange={(e) =>
+                          handleEstadoChange(servicio, e.target.value)
+                        }
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="">Seleccionar estado</option>
+                        <option value="Bueno">Bueno</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Malo">Malo</option>
+                      </select>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={handleGuardar}
-          disabled={isSubmitting}
-          className="text-sm text-white bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
-        >
-          {isSubmitting ? "Guardando..." : "Guardar información"}
-        </button>
-      </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleGuardar}
+              disabled={isSubmitting}
+              className="text-sm text-white bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
+            >
+              {isSubmitting
+                ? editando
+                  ? "Actualizando..."
+                  : "Guardando..."
+                : editando
+                ? "Actualizar información"
+                : "Guardar información"}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

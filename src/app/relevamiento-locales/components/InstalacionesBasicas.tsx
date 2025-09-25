@@ -47,51 +47,50 @@ export default function ServiciosBasicos({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔹 Cargar datos existentes
+   // 🔹 Función para cargar datos existentes (reusable)
+  const fetchData = async () => {
+    try {
+      const res = await fetch(
+        `/api/instalaciones_basicas?localId=${localId}&relevamientoId=${relevamientoId}`
+      );
+      if (!res.ok) throw new Error("Error al cargar instalaciones básicas");
+      const data = await res.json();
+
+      if (data.length > 0) {
+        setIsEditing(true);
+      }
+
+      const inicial: Record<string, ResponseState> = {};
+      locales.forEach((loc) => {
+        const encontrado = (data as InstalacionBasica[]).find(
+          (d) => d.servicio === loc.question
+        );
+        if (encontrado) {
+          inicial[loc.id] = {
+            id: encontrado.id,
+            disponibilidad:
+              encontrado.tipo_instalacion !== "No"
+                ? encontrado.tipo_instalacion
+                : "No",
+            funciona: encontrado.funciona,
+            motivo: encontrado.motivo || "",
+            otroMotivo:
+              encontrado.motivo === "Otro" ? encontrado.motivo : undefined,
+          };
+        }
+      });
+      setResponses(inicial);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al leer los datos de instalaciones");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🔹 Al montar, traer datos
   useEffect(() => {
     if (!localId || !relevamientoId) return;
-
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `/api/instalaciones_basicas?localId=${localId}&relevamientoId=${relevamientoId}`
-        );
-        if (!res.ok) throw new Error("Error al cargar instalaciones básicas");
-        const data = await res.json();
-
-        if (data.length > 0) {
-          setIsEditing(true);
-        }
-
-        // Mapear la data al formato de responses
-        const inicial: Record<string, ResponseState> = {};
-        locales.forEach((loc) => {
-          const encontrado = (data as InstalacionBasica[]).find(
-            (d) => d.servicio === loc.question
-          );
-          if (encontrado) {
-            inicial[loc.id] = {
-              id: encontrado.id, // 👈 guardamos el ID
-              disponibilidad:
-                encontrado.tipo_instalacion !== "No"
-                  ? encontrado.tipo_instalacion
-                  : "No",
-              funciona: encontrado.funciona,
-              motivo: encontrado.motivo || "",
-              otroMotivo:
-                encontrado.motivo === "Otro" ? encontrado.motivo : undefined,
-            };
-          }
-        });
-        setResponses(inicial);
-      } catch (err) {
-        console.error(err);
-        toast.error("Error al leer los datos de instalaciones");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, [localId, relevamientoId, locales]);
 
@@ -158,11 +157,11 @@ export default function ServiciosBasicos({
     });
 
     const hayAlMenosUnDato = payload.some(
-  (item) =>
-    item.tipo_instalacion !== null ||
-    item.funciona !== null ||
-    (item.motivo && item.motivo.trim() !== "")
-);
+      (item) =>
+        item.tipo_instalacion !== null ||
+        item.funciona !== null ||
+        (item.motivo && item.motivo.trim() !== "")
+    );
 
     if (!hayAlMenosUnDato) {
       toast.warning(
@@ -175,12 +174,18 @@ export default function ServiciosBasicos({
 
     try {
       const response = await fetch("/api/instalaciones_basicas", {
-        method: isEditing ? "PUT" : "POST", // 👈 si edita → PUT
+        method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error("Error al guardar");
+
       toast.success("Información guardada correctamente");
+
+      // 👇 Si fue un POST exitoso, recargamos los datos y pasamos a edición
+      if (!isEditing) {
+        await fetchData();
+      }
     } catch (error) {
       console.error(error);
       toast.error("Error al guardar los datos");

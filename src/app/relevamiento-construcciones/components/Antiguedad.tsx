@@ -12,6 +12,7 @@ interface Props {
 export default function AntiguedadComponent({ construccionId }: Props) {
   const [antiguedad, setAntiguedad] = useState({ ano: "", destino: "" });
   const [loading, setLoading] = useState(false);
+  const [cargandoDatos, setCargandoDatos] = useState(true); // 👈 nuevo para skeleton
   const [editando, setEditando] = useState(false);
   const [construccionEnviada, setConstruccionEnviada] = useState<{
     antiguedad: string;
@@ -21,7 +22,10 @@ export default function AntiguedadComponent({ construccionId }: Props) {
   // Precarga si hay datos guardados
   useEffect(() => {
     const fetchAntiguedad = async () => {
-      if (!construccionId) return;
+      if (!construccionId) {
+        setCargandoDatos(false);
+        return;
+      }
       try {
         const res = await axios.get(`/api/construcciones/${construccionId}`);
         const data = res.data;
@@ -34,12 +38,14 @@ export default function AntiguedadComponent({ construccionId }: Props) {
           setEditando(true);
         } else {
           setAntiguedad({ ano: "", destino: "" });
-          setEditando(false); // 👈 importante
+          setEditando(false);
         }
       } catch (error) {
         console.error("Error al cargar antigüedad:", error);
         setAntiguedad({ ano: "", destino: "" });
-        setEditando(false); // 👈 también en error
+        setEditando(false);
+      } finally {
+        setCargandoDatos(false); // 👈 siempre apagamos skeleton
       }
     };
 
@@ -68,7 +74,6 @@ export default function AntiguedadComponent({ construccionId }: Props) {
           : "Datos guardados correctamente"
       );
       setConstruccionEnviada(payload);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error al guardar los datos:", error);
       toast.error(
@@ -101,59 +106,69 @@ export default function AntiguedadComponent({ construccionId }: Props) {
       )}
 
       <div className="overflow-x-auto">
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div className="flex justify-center items-center p-2 mt-2 text-sm gap-2">
-            <div className="flex gap-2 p-2">
-              <p>2.1</p>
-              <p>¿De qué año data la mayor parte de la construcción?</p>
-            </div>
-            <div>
-              <TextInput
-                sublabel="Año - No sabe"
-                label=""
-                value={antiguedad.ano}
-                onChange={(e) =>
-                  setAntiguedad({ ...antiguedad, ano: e.target.value })
-                }
-              />
-            </div>
-            <div className="flex gap-2 p-2">
-              <p>2.2</p>
-              <p>
-                ¿Para qué destino fue construida originariamente? (Lea todas las
-                opciones de respuesta)
-              </p>
-            </div>
-            <div>
-              <Select
-                label=""
-                value={
-                  antiguedadDestinoOpciones
-                    .find((opt) => opt.name === antiguedad.destino)
-                    ?.id?.toString() ?? ""
-                }
-                options={antiguedadDestinoOpciones.map((option) => ({
-                  value: option.id,
-                  label: option.name,
-                }))}
-                onChange={(e) => {
-                  const selectedOption = antiguedadDestinoOpciones.find(
-                    (option) => option.id === Number(e.target.value)
-                  );
-                  if (selectedOption) {
-                    setAntiguedad({
-                      ...antiguedad,
-                      destino: selectedOption.name,
-                    });
-                  }
-                }}
-              />
-            </div>
+        {cargandoDatos ? (
+          // 👇 Skeleton mientras carga
+          <div className="flex flex-col gap-4 p-4">
+            <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-1/2 animate-pulse"></div>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={(e) => e.preventDefault()}>
+            <div className="flex justify-center items-center p-2 mt-2 text-sm gap-2">
+              <div className="flex gap-2 p-2">
+                <p>2.1</p>
+                <p>¿De qué año data la mayor parte de la construcción?</p>
+              </div>
+              <div>
+                <TextInput
+                  sublabel="Año - No sabe"
+                  label=""
+                  value={antiguedad.ano}
+                  onChange={(e) =>
+                    setAntiguedad({ ...antiguedad, ano: e.target.value })
+                  }
+                />
+              </div>
+              <div className="flex gap-2 p-2">
+                <p>2.2</p>
+                <p>
+                  ¿Para qué destino fue construida originariamente? (Lea todas
+                  las opciones de respuesta)
+                </p>
+              </div>
+              <div>
+                <Select
+                  label=""
+                  value={
+                    antiguedadDestinoOpciones
+                      .find((opt) => opt.name === antiguedad.destino)
+                      ?.id?.toString() ?? ""
+                  }
+                  options={antiguedadDestinoOpciones.map((option) => ({
+                    value: option.id,
+                    label: option.name,
+                  }))}
+                  onChange={(e) => {
+                    const selectedOption = antiguedadDestinoOpciones.find(
+                      (option) => option.id === Number(e.target.value)
+                    );
+                    if (selectedOption) {
+                      setAntiguedad({
+                        ...antiguedad,
+                        destino: selectedOption.name,
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </form>
+        )}
       </div>
 
-      {construccionEnviada && (
+      {construccionEnviada && !cargandoDatos && (
         <div className="mt-4">
           <h3 className="text-lg font-semibold mb-2">Datos enviados:</h3>
           <table className="table-auto w-full text-left bg-white shadow-md rounded-md">
@@ -177,23 +192,25 @@ export default function AntiguedadComponent({ construccionId }: Props) {
         </div>
       )}
 
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={handleGuardarCambios}
-          className={`text-sm font-bold p-2 rounded-lg flex-nowrap ${
-            loading
-              ? "bg-custom cursor-not-allowed"
-              : "text-white bg-custom hover:bg-custom/50"
-          }`}
-          disabled={loading}
-        >
-          {loading
-            ? "Guardando..."
-            : editando
-            ? "Actualizar Información"
-            : "Guardar Información"}
-        </button>
-      </div>
+      {!cargandoDatos && (
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handleGuardarCambios}
+            className={`text-sm font-bold p-2 rounded-lg flex-nowrap ${
+              loading
+                ? "bg-custom cursor-not-allowed"
+                : "text-white bg-custom hover:bg-custom/50"
+            }`}
+            disabled={loading}
+          >
+            {loading
+              ? "Guardando..."
+              : editando
+              ? "Actualizar Información"
+              : "Guardar Información"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -96,7 +96,6 @@ export default function RelevamientoCPage() {
       });
 
       if (res.ok) {
-        console.log("Observaciones guardadas correctamente");
       } else {
         console.error("Error al guardar observaciones");
         toast.error("Observaciones guardadas correctamente");

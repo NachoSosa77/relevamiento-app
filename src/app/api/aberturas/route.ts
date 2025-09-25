@@ -13,54 +13,36 @@ export async function POST(req: Request) {
       );
     }
 
-    const values = [];
-    for (const item of data) {
-      const { abertura, tipo, estado, cantidad, relevamiento_id, local_id } =
-        item;
+    const values = data.map((item) => [
+      item.abertura ?? null,
+      item.tipo ?? null,
+      item.estado ?? null,
+      item.cantidad ?? null,
+      item.relevamiento_id ?? null,
+      item.local_id ?? null,
+    ]);
 
-      if (
-        abertura === undefined ||
-        tipo === undefined ||
-        estado === undefined ||
-        cantidad === undefined ||
-        relevamiento_id === undefined ||
-        local_id === undefined
-      ) {
-        return NextResponse.json(
-          { error: "Faltan campos obligatorios en uno de los elementos" },
-          { status: 400 }
-        );
-      }
-
-      values.push([
-        abertura ?? null,
-        tipo ?? null,
-        estado ?? null,
-        cantidad ?? null,
-        relevamiento_id ?? null,
-        local_id ?? null,
-      ]);
-    }
-
-    // Armar placeholders para todas las filas
     const placeholders = values.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
     const flatValues = values.flat();
 
-    const insertQuery = `
+    const query = `
       INSERT INTO aberturas (abertura, tipo, estado, cantidad, relevamiento_id, local_id)
       VALUES ${placeholders}
+      ON DUPLICATE KEY UPDATE
+        estado = VALUES(estado),
+        cantidad = VALUES(cantidad)
     `;
 
-    await connection.execute(insertQuery, flatValues);
+    await connection.execute(query, flatValues);
 
     return NextResponse.json(
-      { message: "Datos insertados correctamente" },
+      { message: "Insertado o actualizado correctamente" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al insertar aberturas:", error);
+    console.error("Error en POST /aberturas:", error);
     return NextResponse.json(
-      { error: "Error al insertar los datos en aberturas" },
+      { error: "Error al insertar/actualizar aberturas" },
       { status: 500 }
     );
   }

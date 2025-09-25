@@ -3,7 +3,6 @@ import { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
 import pLimit from "p-limit";
 
-// Tipado de cada item del POST
 interface AcondicionamientoItem {
   cantidad?: number;
   disponibilidad?: string;
@@ -37,12 +36,17 @@ export async function POST(req: NextRequest) {
 
     const chunkSize = 50;
     const chunks = chunkArray(data, chunkSize);
+    const limit = pLimit(3);
 
-    const limit = pLimit(3); // máximo 3 chunks en paralelo
     const insertQuery = `
       INSERT INTO acondicionamiento_termico (
         cantidad, disponibilidad, temperatura, tipo, relevamiento_id, local_id
       ) VALUES ?
+      ON DUPLICATE KEY UPDATE
+        cantidad = VALUES(cantidad),
+        disponibilidad = VALUES(disponibilidad),
+        temperatura = VALUES(temperatura),
+        tipo = VALUES(tipo)
     `;
 
     await Promise.all(
@@ -63,16 +67,19 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json(
-      { message: "Datos insertados correctamente" },
+      { message: "Datos insertados/actualizados correctamente" },
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error al insertar acondicionamiento_termico:", error);
+    console.error(
+      "Error al insertar/actualizar acondicionamiento_termico:",
+      error
+    );
 
     const details = error instanceof Error ? error.message : String(error);
 
     return NextResponse.json(
-      { error: "Error al insertar los datos", details },
+      { error: "Error al insertar/actualizar los datos", details },
       { status: 500 }
     );
   } finally {

@@ -45,10 +45,7 @@ export default function EquipamientoCantidad({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // 🔹 Cargar datos existentes
-  useEffect(() => {
-  if (!localId || !relevamientoId) return;
-
+   // 🔹 función reutilizable
   const fetchData = async () => {
     try {
       const res = await fetch(
@@ -60,9 +57,7 @@ export default function EquipamientoCantidad({
       if (data.length > 0) setIsEditing(true);
 
       const mapped: ResponseData = {};
-      
       locales.forEach((loc) => {
-        // Buscar si ya existe en DB
         const dbItem = data.find((d) => d.equipamiento === loc.question);
         mapped[loc.id] = {
           id: dbItem?.id,
@@ -82,9 +77,11 @@ export default function EquipamientoCantidad({
     }
   };
 
-  fetchData();
-}, [localId, relevamientoId, locales]);
-
+  // 🔹 Cargar datos existentes
+  useEffect(() => {
+    if (!localId || !relevamientoId) return;
+    fetchData();
+  }, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
     id: string,
@@ -138,6 +135,10 @@ export default function EquipamientoCantidad({
 
       if (response.ok) {
         toast.success("Información guardada correctamente");
+        // 🔹 Si fue creación, recargar desde DB
+        if (method === "POST") {
+          await fetchData();
+        }
       } else {
         toast.error("Error al guardar los datos");
       }

@@ -46,51 +46,52 @@ export default function EquipamientoCantidadSanitarios({
   const [isEditing, setIsEditing] = useState(false);
   const [otroInput, setOtroInput] = useState<string>("");
 
-  // 🔹 Cargar datos existentes
-  useEffect(() => {
+  // 🔹 Función para cargar datos existentes
+  const fetchData = async () => {
     if (!localId || !relevamientoId) return;
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `/api/equipamiento_sanitarios?localId=${localId}&relevamientoId=${relevamientoId}`
-        );
-        if (!res.ok) throw new Error("Error al cargar equipamiento");
-        const data: EquipamientoSanitario[] = await res.json();
+    try {
+      const res = await fetch(
+        `/api/equipamiento_sanitarios?localId=${localId}&relevamientoId=${relevamientoId}`
+      );
+      if (!res.ok) throw new Error("Error al cargar equipamiento");
+      const data: EquipamientoSanitario[] = await res.json();
 
-        if (data.length > 0) setIsEditing(true);
+      if (data.length > 0) setIsEditing(true);
 
-        const mapped: ResponseData = {};
+      const mapped: ResponseData = {};
 
-        locales.forEach((loc) => {
-          const dbItem =
-            loc.question === "Otro"
-              ? data.find((d) => d.equipamiento === "Otro")
-              : data.find((d) => d.equipamiento === loc.question);
+      locales.forEach((loc) => {
+        const dbItem =
+          loc.question === "Otro"
+            ? data.find((d) => d.equipamiento === "Otro")
+            : data.find((d) => d.equipamiento === loc.question);
 
-          mapped[loc.id] = {
-            id: dbItem?.id,
-            cantidad: dbItem?.cantidad ?? 0,
-            cantidad_funcionamiento: dbItem?.cantidad_funcionamiento ?? 0,
-            estado: dbItem?.estado ?? "",
-            customQuestion:
-              loc.question === "Otro" ? dbItem?.equipamiento ?? "" : undefined,
-          };
+        mapped[loc.id] = {
+          id: dbItem?.id,
+          cantidad: dbItem?.cantidad ?? 0,
+          cantidad_funcionamiento: dbItem?.cantidad_funcionamiento ?? 0,
+          estado: dbItem?.estado ?? "",
+          customQuestion:
+            loc.question === "Otro" ? dbItem?.equipamiento ?? "" : undefined,
+        };
 
-          if (loc.question === "Otro" && dbItem?.equipamiento) {
-            setOtroInput(dbItem.equipamiento);
-          }
-        });
+        if (loc.question === "Otro" && dbItem?.equipamiento) {
+          setOtroInput(dbItem.equipamiento);
+        }
+      });
 
-        setResponses(mapped);
-      } catch (error) {
-        console.error("❌ Error al cargar equipamiento:", error);
-        toast.error("Error al cargar los datos");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setResponses(mapped);
+    } catch (error) {
+      console.error("❌ Error al cargar equipamiento:", error);
+      toast.error("Error al cargar los datos");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // 🔹 Cargar datos iniciales
+  useEffect(() => {
     fetchData();
   }, [localId, relevamientoId, locales]);
 
@@ -149,6 +150,8 @@ export default function EquipamientoCantidadSanitarios({
 
       if (response.ok) {
         toast.success("Información guardada correctamente");
+        // 🔹 Refrescar datos y activar modo edición
+        await fetchData();
       } else {
         toast.error("Error al guardar los datos");
       }

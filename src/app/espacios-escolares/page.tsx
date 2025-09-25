@@ -64,7 +64,6 @@ export default function EspaciosEscolaresPage() {
     }
   }, [relevamientoId, dispatch]);
 
-  console.log("Observaciones Bd:", observacionesDB);
 
   // 🔹 Fetch de institución
   useEffect(() => {

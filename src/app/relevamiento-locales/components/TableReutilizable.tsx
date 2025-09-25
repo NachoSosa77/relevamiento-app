@@ -53,10 +53,10 @@ export default function TableReutilizable({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-  if (!relevamientoId || isNaN(localId)) return;
-
+  // 🔹 Extraemos fetchData para poder llamarlo también después de guardar
   const fetchData = async () => {
+    if (!relevamientoId || isNaN(localId)) return;
+
     try {
       const res = await fetch(
         `/api/materiales_predominantes?localId=${localId}&relevamientoId=${relevamientoId}`
@@ -93,8 +93,9 @@ export default function TableReutilizable({
     }
   };
 
-  fetchData();
-}, [localId, relevamientoId, locales]);
+  useEffect(() => {
+    fetchData();
+  }, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -158,6 +159,10 @@ export default function TableReutilizable({
             ? "Información actualizada correctamente"
             : "Información guardada correctamente"
         );
+
+        // 🔹 Después de guardar, recargamos los datos y activamos isEditing
+        await fetchData();
+
         if (onUpdate) onUpdate();
       } else {
         toast.error("Error al guardar los datos");
@@ -169,9 +174,9 @@ export default function TableReutilizable({
     setIsSubmitting(false);
   };
 
-if (isLoading) {
-  return <TableReutilizableSkeleton filas={locales.length || 3} />;
-}
+  if (isLoading) {
+    return <TableReutilizableSkeleton filas={locales.length || 3} />;
+  }
 
   return (
     <div className="mx-10 text-sm">

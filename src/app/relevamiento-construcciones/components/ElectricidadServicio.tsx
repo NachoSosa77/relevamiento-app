@@ -3,7 +3,7 @@
 import NumericInput from "@/components/ui/NumericInput";
 import Select from "@/components/ui/SelectComponent";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { tipoCombustibleOpciones } from "../config/tipoCombustible";
 
@@ -40,7 +40,7 @@ export default function ElectricidadServicio({
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const relevamientoId = useRelevamientoId();
 
   // Estado para almacenar el tipo de combustible de cada servicio
@@ -54,9 +54,13 @@ export default function ElectricidadServicio({
   }>({});
 
   useEffect(() => {
-  if (!relevamientoId || !construccionId) return;
+    if (!relevamientoId || !construccionId) return;
+    fetchDatos();
+  }, [relevamientoId, construccionId, servicios]);
 
-  async function fetchDatos() {
+  const fetchDatos = useCallback(async () => {
+    if (!relevamientoId || !construccionId) return;
+    setLoading(true);
     try {
       const res = await fetch(
         `/api/servicio_electricidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
@@ -65,14 +69,15 @@ export default function ElectricidadServicio({
 
       const data = await res.json();
       setEditando(data.length > 0);
-      // Transformamos los datos para llenar los estados
       const newResponses: typeof responses = {};
       const newCombustibleOptions: typeof combustibleOptions = {};
       const newPotenciaOptions: typeof potenciaOptions = {};
 
       data.forEach((item: any) => {
-        const servicioId = servicios.find(s => s.question === item.servicio)?.id;
-        if (!servicioId) return; // saltar si no coincide
+        const servicioId = servicios.find(
+          (s) => s.question === item.servicio
+        )?.id;
+        if (!servicioId) return;
 
         newResponses[servicioId] = {
           disponibilidad: item.disponibilidad || "",
@@ -88,13 +93,16 @@ export default function ElectricidadServicio({
       setResponses(newResponses);
       setCombustibleOptions(newCombustibleOptions);
       setPotenciaOptions(newPotenciaOptions);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error cargando datos electricidad:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [relevamientoId, construccionId, servicios]);
 
-  fetchDatos();
-}, [relevamientoId, construccionId, servicios]);
+  useEffect(() => {
+    fetchDatos();
+  }, [fetchDatos]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -145,7 +153,7 @@ export default function ElectricidadServicio({
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/servicio_electricidad", {
-        method: "POST",
+        method: editando ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -156,8 +164,14 @@ export default function ElectricidadServicio({
       }
 
       toast.success("Servicio de electricidad guardado correctamente");
-    } catch (error: any) {
-      toast.error(error.message || "Error al guardar los datos");
+      // 🔄 Volvemos a recargar los datos desde la base
+      await fetchDatos();
+    } catch (error: unknown) {
+      let mensaje = "Error al guardar los datos";
+      if (error instanceof Error) {
+        mensaje = error.message;
+      }
+      toast.error(mensaje);
     }
     setIsSubmitting(false);
   };
@@ -165,10 +179,10 @@ export default function ElectricidadServicio({
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
       {editando && (
-  <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
-    Estás editando un registro ya existente.
-  </div>
-)}
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -189,196 +203,232 @@ export default function ElectricidadServicio({
           </div>
         </div>
       )}
-
-      <table className="w-full border mt-2 text-xs">
-        <thead>
-          <tr className="bg-custom text-white">
-            <th className="border p-2"></th>
-            <th className="border p-2"></th>
-            <th className="border p-2">No</th>
-            <th className="border p-2">Sí</th>
-            {sub_id === 6.2 && <th className="border p-2">NS</th>}
-            {sub_id !== 6.2 && <th className="border p-2">Estado</th>}
-            {sub_id !== 6.2 && <th className="border p-2">Especificaciones</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {servicios.map(({ id, question, showCondition }) => (
-            <tr key={id} className="border">
-              <td className="border p-2 text-center">{id}</td>
-              <td className="border p-2">{question}</td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="No"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "No")
-                  }
-                />
-              </td>
-              <td className="border p-2 text-center">
-                <input
-                  type="radio"
-                  name={`disponibilidad-${id}`}
-                  value="Si"
-                  onChange={() =>
-                    handleResponseChange(id, "disponibilidad", "Si")
-                  }
-                />
-              </td>
-              {id === "6.2.4" || id === "6.2.8" ? (
+      {loading ? (
+        <div className="space-y-2 mt-2">
+          {Array.from({ length: servicios.length }).map((_, i) => (
+            <div
+              key={i}
+              className="animate-pulse flex gap-2 border p-2 rounded-lg bg-gray-200 h-10"
+            ></div>
+          ))}
+        </div>
+      ) : (
+        <table className="w-full border mt-2 text-xs">
+          <thead>
+            <tr className="bg-custom text-white">
+              <th className="border p-2"></th>
+              <th className="border p-2"></th>
+              <th className="border p-2">No</th>
+              <th className="border p-2">Sí</th>
+              {sub_id === 6.2 && <th className="border p-2">NS</th>}
+              {sub_id !== 6.2 && <th className="border p-2">Estado</th>}
+              {sub_id !== 6.2 && (
+                <th className="border p-2">Especificaciones</th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {servicios.map(({ id, question, showCondition }) => (
+              <tr key={id} className="border">
+                <td className="border p-2 text-center">{id}</td>
+                <td className="border p-2">{question}</td>
                 <td className="border p-2 text-center">
                   <input
-                    type="radio"
+                    type="checkbox"
                     name={`disponibilidad-${id}`}
-                    value="NS"
-                    onChange={() =>
-                      handleResponseChange(id, "disponibilidad", "NS")
+                    value="No"
+                    checked={responses[id]?.disponibilidad === "No"}
+                    onChange={(e) =>
+                      handleResponseChange(
+                        id,
+                        "disponibilidad",
+                        e.target.checked ? "No" : ""
+                      )
                     }
                   />
                 </td>
-              ) : null}
-              {sub_id !== 6.2 && (
-                <td
-                  className={`border p-2 text-center ${
-                    !showCondition ? " text-slate-400" : ""
-                  }`}
-                >
-                  {!showCondition ? (
-                    "No corresponde"
-                  ) : (
-                    <div className="flex gap-2 items-center justify-center">
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Bueno"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Bueno")
-                          }
-                          className="mr-1"
-                        />
-                        B
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Regular"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Regular")
-                          }
-                          className="mr-1"
-                        />
-                        R
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${id}`}
-                          value="Malo"
-                          onChange={() =>
-                            handleResponseChange(id, "estado", "Malo")
-                          }
-                          className="mr-1"
-                        />
-                        M
-                      </label>
-                    </div>
-                  )}
+                <td className="border p-2 text-center">
+                  <input
+                    type="checkbox"
+                    name={`disponibilidad-${id}`}
+                    value="Si"
+                    checked={responses[id]?.disponibilidad === "Si"}
+                    onChange={(e) =>
+                      handleResponseChange(
+                        id,
+                        "disponibilidad",
+                        e.target.checked ? "Si" : ""
+                      )
+                    }
+                  />
                 </td>
-              )}
-              {sub_id !== 6.2 && (
-                <td
-                  className={`border p-2 text-center ${
-                    !showCondition ? " text-slate-400" : ""
-                  }`}
-                >
-                  {!showCondition ? (
-                    "No corresponde"
-                  ) : (
-                    <div className="flex gap-2 items-center justify-center">
-                      {id === "6.1.2" || id === "6.1.4" ? (
-                        <p className="mr-2 font-bold whitespace-nowrap">
-                          Potencia
-                        </p>
-                      ) : (
-                        <p className="mr-2 font-bold whitespace-nowrap">
-                          Potencia (Vp panel x N paneles)
-                        </p>
-                      )}
-                      <NumericInput
-                        subLabel=""
-                        disabled={false}
-                        label=""
-                        value={potenciaOptions[id] || 0} // Aquí usamos el id de cada servicio
-                        onChange={(value: number | undefined) => {
-                          setPotenciaOptions({
-                            ...potenciaOptions,
-                            [id]: value ?? 0, // Usamos el id de cada servicio para almacenar potencia
-                          });
-                        }}
-                      />
-                      {id === "6.1.2" && (
-                        <label className="flex items-center">
-                          <p className="mr-2 font-bold">Tipo de combustible:</p>
-                          <Select
-                            label=""
-                            value={combustibleOptions[id] || ""} // Aquí usamos el 'question' como valor
-                            onChange={(e) =>
-                              setCombustibleOptions({
-                                ...combustibleOptions,
-                                [id]: e.target.value, // Guardamos el 'question' seleccionado en lugar del 'id'
-                              })
+                {id === "6.2.4" || id === "6.2.8" ? (
+                  <td className="border p-2 text-center">
+                    <input
+                      type="checkbox"
+                      name={`disponibilidad-${id}`}
+                      value="NS"
+                      checked={responses[id]?.disponibilidad === "NS"}
+                      onChange={(e) =>
+                        handleResponseChange(
+                          id,
+                          "disponibilidad",
+                          e.target.checked ? "NS" : ""
+                        )
+                      }
+                    />
+                  </td>
+                ) : null}
+                {sub_id !== 6.2 && (
+                  <td
+                    className={`border p-2 text-center ${
+                      !showCondition ? " text-slate-400" : ""
+                    }`}
+                  >
+                    {!showCondition ? (
+                      "No corresponde"
+                    ) : (
+                      <div className="flex gap-2 items-center justify-center">
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${id}`}
+                            value="Bueno"
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Bueno")
                             }
-                            options={tipoCombustibleOpciones.map((option) => ({
-                              value: option.question, // 'question' como el valor
-                              label: option.question, // 'question' como la etiqueta también
-                            }))}
+                            className="mr-1"
                           />
+                          B
                         </label>
-                      )}
-                      {/* Select solo para 6.1.3 y 6.1.4 */}
-                      {(id === "6.1.3" || id === "6.1.4") && (
-                        <div className="flex items-center">
-                          <p className="mr-2 font-bold whitespace-nowrap">
-                            Estado de la batería:
-                          </p>
-                          <Select
-                            label=""
-                            value={responses[id]?.estado_bateria || ""}
-                            onChange={(e) =>
-                              handleResponseChange(
-                                id,
-                                "estado_bateria",
-                                e.target.value
-                              )
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${id}`}
+                            value="Regular"
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Regular")
                             }
-                            options={[
-                              { value: "Bueno", label: "Bueno" },
-                              { value: "Regular", label: "Regular" },
-                              { value: "Malo", label: "Malo" },
-                            ]}
+                            className="mr-1"
                           />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
+                          R
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${id}`}
+                            value="Malo"
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Malo")
+                            }
+                            className="mr-1"
+                          />
+                          M
+                        </label>
+                      </div>
+                    )}
+                  </td>
+                )}
+                {sub_id !== 6.2 && (
+                  <td
+                    className={`border p-2 text-center ${
+                      !showCondition ? " text-slate-400" : ""
+                    }`}
+                  >
+                    {!showCondition ? (
+                      "No corresponde"
+                    ) : (
+                      <div className="flex gap-2 items-center justify-center">
+                        {id === "6.1.2" || id === "6.1.4" ? (
+                          <p className="mr-2 font-bold whitespace-nowrap">
+                            Potencia
+                          </p>
+                        ) : (
+                          <p className="mr-2 font-bold whitespace-nowrap">
+                            Potencia (Vp panel x N paneles)
+                          </p>
+                        )}
+                        <NumericInput
+                          subLabel=""
+                          disabled={false}
+                          label=""
+                          value={potenciaOptions[id] || 0} // Aquí usamos el id de cada servicio
+                          onChange={(value: number | undefined) => {
+                            setPotenciaOptions({
+                              ...potenciaOptions,
+                              [id]: value ?? 0, // Usamos el id de cada servicio para almacenar potencia
+                            });
+                          }}
+                        />
+                        {id === "6.1.2" && (
+                          <label className="flex items-center">
+                            <p className="mr-2 font-bold">
+                              Tipo de combustible:
+                            </p>
+                            <Select
+                              label=""
+                              value={combustibleOptions[id] || ""} // Aquí usamos el 'question' como valor
+                              onChange={(e) =>
+                                setCombustibleOptions({
+                                  ...combustibleOptions,
+                                  [id]: e.target.value, // Guardamos el 'question' seleccionado en lugar del 'id'
+                                })
+                              }
+                              options={tipoCombustibleOpciones.map(
+                                (option) => ({
+                                  value: option.question, // 'question' como el valor
+                                  label: option.question, // 'question' como la etiqueta también
+                                })
+                              )}
+                            />
+                          </label>
+                        )}
+                        {/* Select solo para 6.1.3 y 6.1.4 */}
+                        {(id === "6.1.3" || id === "6.1.4") && (
+                          <div className="flex items-center">
+                            <p className="mr-2 font-bold whitespace-nowrap">
+                              Estado de la batería:
+                            </p>
+                            <Select
+                              label=""
+                              value={responses[id]?.estado_bateria || ""}
+                              onChange={(e) =>
+                                handleResponseChange(
+                                  id,
+                                  "estado_bateria",
+                                  e.target.value
+                                )
+                              }
+                              options={[
+                                { value: "Bueno", label: "Bueno" },
+                                { value: "Regular", label: "Regular" },
+                                { value: "Malo", label: "Malo" },
+                              ]}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       <div className="mt-4 flex justify-end">
         <button
           disabled={isSubmitting}
           onClick={handleGuardar}
           className="text-white text-sm bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
         >
-          {isSubmitting ? "Guardando..." : "Guardar información"}
+          {isSubmitting
+            ? editando
+              ? "Actualizando..."
+              : "Guardando..."
+            : editando
+            ? "Actualizar información"
+            : "Guardar información"}
         </button>
       </div>
     </div>
