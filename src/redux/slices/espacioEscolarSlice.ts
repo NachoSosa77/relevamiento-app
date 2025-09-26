@@ -24,8 +24,8 @@ const initialState: EspacioEscolarState = {
   cui: undefined,
   institucion: undefined,
   institucionesSeleccionadas: [],
-  cantidadConstrucciones: undefined,
-  superficieTotalPredio: undefined,
+  cantidadConstrucciones: 0, // 🔹 inicializado en 0
+  superficieTotalPredio: 0, // 🔹 inicializado en 0
   plano: null,
   observaciones: null,
   locales: [],

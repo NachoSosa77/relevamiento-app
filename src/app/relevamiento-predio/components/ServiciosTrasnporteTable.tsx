@@ -1,10 +1,11 @@
+import ServiciosTransporteSkeleton from "@/components/Skeleton/ServiciosTransporteSkeleton";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import {
   Column,
   ServiciosTransporteComunicaciones,
 } from "@/interfaces/ServiciosTransporteComunicaciones";
 import { setServicios } from "@/redux/slices/serviciosTransporteSlice";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
@@ -19,30 +20,88 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
 }) => {
   const dispatch = useDispatch();
   const relevamientoId = useRelevamientoId();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [servicios, setServiciosLocal] =
     useState<ServiciosTransporteComunicaciones[]>(serviciosData);
+  // arriba del componente
+const normalizeYesNo = (v?: string | null) => {
+  if (v === null || v === undefined) return "";
+  const t = String(v).trim().toLowerCase();
+  if (t === "sí" || t === "si" || t === "s") return "Si";
+  if (t === "no" || t === "n") return "No";
+  return String(v).trim();
+};
+
+
+
+  // Cargar datos existentes desde DB
+  useEffect(() => {
+    const fetchServicios = async () => {
+      if (!relevamientoId) return;
+      try {
+        const res = await fetch(
+          `/api/servicios_transporte_comunicaciones/${relevamientoId}`
+        );
+        const data = await res.json();
+
+        const serviciosNormalizados = (data.servicios || []).map(
+  (s: ServiciosTransporteComunicaciones) => ({
+    ...s,
+    disponibilidad: normalizeYesNo(s.disponibilidad),
+    en_predio: s.en_predio ? String(s.en_predio).trim() : "",
+    distancia: s.distancia ?? "",
+  })
+);
+
+
+        setServiciosLocal(serviciosNormalizados);
+        dispatch(setServicios(serviciosNormalizados));
+        setEditando(serviciosNormalizados.length > 0);
+      } catch (error) {
+        console.error("Error al cargar servicios:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServicios();
+  }, [relevamientoId, dispatch]);
 
   const handleChange = (
-    index: number,
-    field: keyof ServiciosTransporteComunicaciones,
-    value: string
-  ) => {
-    const updatedServicios = [...servicios];
-    updatedServicios[index] = { ...updatedServicios[index], [field]: value };
-    setServiciosLocal(updatedServicios); // Actualizamos el estado local con los nuevos valores
-  };
+  index: number,
+  field: keyof ServiciosTransporteComunicaciones,
+  rawValue: string
+) => {
+  const updatedServicios = [...servicios];
+  // Si es campo de Si/No normalizamos
+  const value =
+    field === "disponibilidad" ? normalizeYesNo(rawValue) : rawValue;
 
-  // Función para manejar el envío del formulario
+  updatedServicios[index] = { ...updatedServicios[index], [field]: value };
+
+  // Si cambiamos disponibilidad y ahora es "Si", limpiamos distancia
+  if (field === "disponibilidad") {
+    const v = String(value).trim().toLowerCase();
+    if (v === "si") {
+      updatedServicios[index] = {
+        ...updatedServicios[index],
+        distancia: "", // limpiar la distancia si ahora hay disponibilidad
+      };
+    }
+    // si es "no", dejamos distancia como está (usuario la puede completar)
+  }
+
+  setServiciosLocal(updatedServicios);
+};
+
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
-  // Validar si al menos un campo (que no sea de tipo texto) fue modificado
   const alMenosUnServicioValido = servicios.some((servicio) =>
     columnsConfig.some((column) => {
-      if (column.type === "text") return false; // ignorar columnas visuales
+      if (column.type === "text") return false;
       const valor = servicio[column.key];
       return valor !== undefined && valor !== null && valor !== "";
     })
@@ -53,36 +112,73 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
     return;
   }
 
-  const serviciosConRelevamiento = servicios.map((servicio) => ({
-    ...servicio,
+  const serviciosConRelevamiento = servicios.map((s) => ({
+    ...s,
     relevamiento_id: relevamientoId,
   }));
+
   setIsSubmitting(true);
   try {
-    const response = await fetch("/api/servicios_transporte_comunicaciones", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(serviciosConRelevamiento),
-    });
+    const response = await fetch(
+      editando
+        ? `/api/servicios_transporte_comunicaciones/${relevamientoId}` // PATCH
+        : "/api/servicios_transporte_comunicaciones", // POST
+      {
+        method: editando ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviciosTransporte: serviciosConRelevamiento }),
+      }
+    );
 
     if (response.ok) {
-      dispatch(setServicios(serviciosConRelevamiento));
-      toast.success("Servicios cargados correctamente!");
+      toast.success(
+        editando
+          ? "Servicios actualizados correctamente!"
+          : "Servicios cargados correctamente!"
+      );
+
+      // Refrescar datos desde DB
+      const refreshRes = await fetch(
+        `/api/servicios_transporte_comunicaciones/${relevamientoId}`
+      );
+      if (refreshRes.ok) {
+        const refreshedData = await refreshRes.json();
+        const serviciosNormalizados = (refreshedData.servicios || []).map(
+          (s: ServiciosTransporteComunicaciones) => ({
+            ...s,
+            disponibilidad: s.disponibilidad ?? "",
+            en_predio: s.en_predio?.trim() || "",
+            distancia: s.distancia ?? "",
+          })
+        );
+        setServiciosLocal(serviciosNormalizados);
+        dispatch(setServicios(serviciosNormalizados));
+        setEditando(serviciosNormalizados.length > 0);
+      }
     } else {
       toast.error("Error al cargar los servicios.");
     }
   } catch (error) {
-    toast.error("Error de red o del servidor.");
+    toast.error("Error inesperado al enviar los datos.");
     console.error(error);
+  } finally {
+    setIsSubmitting(false);
   }
-  setIsSubmitting(false);
 };
 
 
+  if (loading) return <ServiciosTransporteSkeleton/>;
+
   return (
-    <form onSubmit={handleSubmit} className="p-2 mx-10 mt-4 bg-white rounded-lg border shadow-lg">
+    <form
+      onSubmit={handleSubmit}
+      className="p-2 mx-10 mt-4 bg-white rounded-lg border shadow-lg"
+    >
+      {editando && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 mb-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-custom text-white text-center">
@@ -108,7 +204,7 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
                 >
                   {column.type === "select" && (
                     <select
-                      value={servicio[column.key]}
+                      value={servicio[column.key] || ""}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                         handleChange(index, column.key, e.target.value)
                       }
@@ -134,7 +230,7 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
                   {column.type === "input" && (
                     <input
                       type="text"
-                      value={servicio[column.key]}
+                      value={servicio[column.key] || ""}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         handleChange(index, column.key, e.target.value)
                       }
@@ -157,7 +253,11 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
           className="text-sm font-bold bg-custom hover:bg-custom/50 text-white p-2 rounded-lg"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Guardando..." : "Guardar información"}
+          {isSubmitting
+            ? "Guardando..."
+            : editando
+            ? "Actualizar información"
+            : "Guardar información"}
         </button>
       </div>
     </form>

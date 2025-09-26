@@ -36,17 +36,17 @@ export default function VisitasComponent() {
         const response = await fetch(
           `/api/visitas?relevamientoId=${relevamientoId}`
         );
-
         if (!response.ok) throw new Error("Error al obtener visitas");
 
         const data = await response.json();
 
-        if (Array.isArray(data) && data.length > 0) {
-          dispatch(setVisitas(data));
-          setEditando(true);
-        }
+        // Siempre seteamos el estado, aunque esté vacío
+        dispatch(setVisitas(data));
+
+        setEditando(data.length > 0);
       } catch (error) {
         console.error("Error al cargar visitas:", error);
+        dispatch(setVisitas([])); // asegurar que no quede nada en Redux
       } finally {
         setLoading(false);
       }
@@ -71,7 +71,8 @@ export default function VisitasComponent() {
       return;
     }
 
-    const { numero_visita, fecha, hora_inicio, hora_finalizacion } = nuevaVisita;
+    const { numero_visita, fecha, hora_inicio, hora_finalizacion } =
+      nuevaVisita;
 
     if (
       numero_visita === undefined ||
@@ -89,7 +90,10 @@ export default function VisitasComponent() {
       return;
     }
 
-    const visitaConRelevamiento = { ...nuevaVisita, relevamiento_id: relevamientoId };
+    const visitaConRelevamiento = {
+      ...nuevaVisita,
+      relevamiento_id: relevamientoId,
+    };
 
     if (editingVisita) dispatch(actualizarVisita(visitaConRelevamiento));
     else dispatch(agregarVisita(visitaConRelevamiento));
@@ -128,18 +132,33 @@ export default function VisitasComponent() {
     );
 
     if (visitasInvalidas.length > 0) {
-      toast.warning("Hay visitas con campos incompletos o incorrectos. Revisá antes de guardar.");
+      toast.warning(
+        "Hay visitas con campos incompletos o incorrectos. Revisá antes de guardar."
+      );
       setIsSubmitting(false);
       return;
     }
 
     try {
-      const visitasConRelevamiento = visitas.map((v) => ({ ...v, relevamiento_id: relevamientoId }));
+      const visitasConRelevamiento = visitas.map((v) => ({
+        ...v,
+        relevamiento_id: relevamientoId,
+      }));
       const response = await axios.post("/api/visitas", visitasConRelevamiento);
 
-      if (response.status === 200 && response.data.success)
+      if (response.status === 200 && response.data.success) {
         toast.success("Visitas enviadas correctamente a la base de datos");
-      else {
+
+        // Refrescar datos desde la DB
+        const refreshRes = await fetch(
+          `/api/visitas?relevamientoId=${relevamientoId}`
+        );
+        if (refreshRes.ok) {
+          const refreshedData = await refreshRes.json();
+          dispatch(setVisitas(refreshedData));
+          setEditando(refreshedData.length > 0);
+        }
+      } else {
         console.error("Error desde backend:", response.data);
         toast.error("❌ Hubo un problema al guardar las visitas");
       }
@@ -162,7 +181,11 @@ export default function VisitasComponent() {
     { Header: "N° visita", accessor: "numero_visita", inputType: "number" },
     { Header: "Fecha", accessor: "fecha", inputType: "date" },
     { Header: "Hora inicio", accessor: "hora_inicio", inputType: "time" },
-    { Header: "Hora finalización", accessor: "hora_finalizacion", inputType: "time" },
+    {
+      Header: "Hora finalización",
+      accessor: "hora_finalizacion",
+      inputType: "time",
+    },
     { Header: "Observaciones", accessor: "observaciones", inputType: "text" },
     {
       Header: "Acciones",
@@ -184,7 +207,11 @@ export default function VisitasComponent() {
     { Header: "N° visita", accessor: "numero_visita", inputType: "number" },
     { Header: "Fecha", accessor: "fecha", inputType: "date" },
     { Header: "Hora inicio", accessor: "hora_inicio", inputType: "time" },
-    { Header: "Hora finalización", accessor: "hora_finalizacion", inputType: "time" },
+    {
+      Header: "Hora finalización",
+      accessor: "hora_finalizacion",
+      inputType: "time",
+    },
     { Header: "Observaciones", accessor: "observaciones", inputType: "text" },
   ];
 
@@ -230,11 +257,17 @@ export default function VisitasComponent() {
           <button
             onClick={enviarVisitasABaseDeDatos}
             className={`${
-              !visitas.length ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+              !visitas.length
+                ? "bg-gray-400"
+                : "bg-green-600 hover:bg-green-700"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl transition duration-200 disabled:opacity-50`}
             disabled={!visitas.length}
           >
-            {isSubmitting ? "Guardando..." : "Guardar información"}
+            {isSubmitting
+              ? "Guardando..."
+              : editando
+              ? "Actualizar información"
+              : "Guardar información"}
           </button>
         </div>
       </div>

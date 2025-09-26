@@ -38,12 +38,15 @@ export default function RespondientesDelCuiComponent() {
         const res = await fetch(`/api/respondientes/${relevamientoId}`);
         const data = await res.json();
 
-        if (res.ok && Array.isArray(data) && data.length > 0) {
-          dispatch(setRespondientes(data));
-          setEditando(true);
-        }
+        // Siempre seteamos el estado, aunque esté vacío
+        dispatch(setRespondientes(data));
+
+        // Banner de edición solo si hay datos
+        setEditando(data.length > 0);
       } catch (error) {
         console.error("Error al cargar respondientes:", error);
+        dispatch(setRespondientes([])); // asegurar que no quede nada en Redux
+        setEditando(false);
       } finally {
         setLoading(false);
       }
@@ -95,8 +98,14 @@ export default function RespondientesDelCuiComponent() {
 
       const data = await res.json();
 
-      if (res.ok && data.success) toast.success("Respondientes guardados correctamente ✅");
-      else toast.error("❌ Error al guardar respondientes");
+      if (res.ok && data.success) {
+        toast.success("Respondientes guardados correctamente ✅");
+        // Refrescar datos desde la DB
+        const refreshRes = await fetch(`/api/respondientes/${relevamientoId}`);
+        const refreshedData = await refreshRes.json();
+        dispatch(setRespondientes(refreshedData));
+        setEditando(refreshedData.length > 0);
+      } else toast.error("❌ Error al guardar respondientes");
     } catch (error) {
       console.error("❌ Error:", error);
       toast.error("❌ Error inesperado al enviar los datos");
@@ -181,7 +190,11 @@ export default function RespondientesDelCuiComponent() {
                 : "bg-green-600 hover:bg-green-700"
             } text-white text-sm font-semibold py-2 px-4 rounded-xl disabled:opacity-50`}
           >
-            {isSubmitting ? "Guardando..." : "Guardar información"}
+            {isSubmitting
+              ? "Guardando..."
+              : editando
+              ? "Actualizar información"
+              : "Guardar información"}
           </button>
         </div>
       </div>

@@ -82,9 +82,9 @@ const EstablecimientosComponent: React.FC = () => {
 
     setInstituciones((prev) => {
       if (prev.some((inst) => inst.id === data.id)) return prev;
-      toast.success("¡Institución agregada!");
       return [...prev, data];
     });
+    toast.success("¡Institución agregada!");
   };
 
   // 5️⃣ Manejar click guardar del modal

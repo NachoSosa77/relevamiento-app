@@ -23,7 +23,7 @@ export const serviciosColumns: Column[] = [
     type: "input",
     conditional: (servicio) =>
       servicio.en_predio === "No" &&
-      servicio.disponibilidad === "Sí" &&
+      servicio.disponibilidad === "No" &&
       servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
   },
   {
@@ -31,7 +31,10 @@ export const serviciosColumns: Column[] = [
     key: "prestadores",
     type: "input",
     conditional: (servicio) =>
-      (servicio.en_predio === "Sí" || servicio.disponibilidad === "Sí") &&
+      (servicio.en_predio === "Sí" ||
+        servicio.disponibilidad === "Sí" ||
+        servicio.en_predio === "No" ||
+        servicio.disponibilidad === "No") &&
       servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
   },
 ];

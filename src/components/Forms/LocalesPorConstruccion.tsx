@@ -55,91 +55,85 @@ export default function LocalesPorConstruccion() {
   const [localEnEdicion, setLocalEnEdicion] =
     useState<LocalesConstruccion | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  console.log("Cantidad construcciones en componente:", cantidadConstrucciones);
+  // Inicializar formValues cuando se tiene cantidadConstrucciones
+useEffect(() => {
+  if (cantidadConstrucciones === undefined) return;
 
-  useEffect(() => {
-    localesService.getOpcionesLocales().then(setOpcionesLocales);
-  }, []);
+  const initialValues: Record<number, LocalesConstruccion> = {};
+  for (let i = 0; i < cantidadConstrucciones; i++) {
+    initialValues[i] = {
+      identificacion_plano: 0,
+      numero_planta: 0,
+      tipo: "",
+      local_id: 0,
+      tipo_superficie: "",
+      local_sin_uso: "No",
+      superficie: 0,
+    };
+  }
+  setFormValues(initialValues);
+}, [cantidadConstrucciones]);
 
-  useEffect(() => {
-    if (cantidadConstrucciones === undefined) return;
-    const initialValues: Record<number, LocalesConstruccion> = {};
-    for (let i = 0; i < cantidadConstrucciones; i++) {
-      initialValues[i] = {
-        identificacion_plano: 0,
-        numero_planta: 0,
-        tipo: "",
-        local_id: 0,
-        tipo_superficie: "",
-        local_sin_uso: "No",
-        superficie: 0,
-      };
-    }
-    setFormValues(initialValues);
-  }, [cantidadConstrucciones]);
+// Cargar opciones de locales
+useEffect(() => {
+  localesService.getOpcionesLocales().then(setOpcionesLocales);
+}, []);
 
-  useEffect(() => {
-    const nuevasSuperficies: typeof superficiesPorConstruccion = {};
-    Object.entries(localesPorConstruccion).forEach(([idxStr, locales]) => {
-      const idx = parseInt(idxStr);
-      let cubierta = 0;
-      let semicubierta = 0;
-      for (const local of locales) {
-        const superficie =
-          parseFloat(local.superficie as unknown as string) || 0;
-        if (local.tipo_superficie === "Cubierta") cubierta += superficie;
-        else if (local.tipo_superficie === "Semicubierta")
-          semicubierta += superficie;
+// Cargar locales existentes si hay relevamientoId
+useEffect(() => {
+  async function fetchLocalesExistentes() {
+    if (typeof relevamientoId !== "number") return;
+    try {
+      const respuesta = await localesService.getLocalesPorRelevamiento(
+        relevamientoId
+      );
+      if (respuesta && respuesta.length > 0) {
+        const agrupados = respuesta.reduce((acc: any, local: any) => {
+          const idx = (local.numero_construccion || 1) - 1;
+          if (!acc[idx]) acc[idx] = [];
+          acc[idx].push(local);
+          return acc;
+        }, {});
+
+        const construcciones = respuesta.reduce((acc: any, local: any) => {
+          const idx = (local.numero_construccion || 1) - 1;
+          acc[idx] = local.construccion_id;
+          return acc;
+        }, {});
+
+        setLocalesPorConstruccion(agrupados);
+        setConstruccionesExistentes(construcciones);
+        setEditando(true);
       }
-      nuevasSuperficies[idx] = {
-        cubierta: parseFloat(cubierta.toFixed(2)),
-        semicubierta: parseFloat(semicubierta.toFixed(2)),
-        total: parseFloat((cubierta + semicubierta).toFixed(2)),
-      };
-    });
-    setSuperficiesPorConstruccion(nuevasSuperficies);
-  }, [localesPorConstruccion]);
-
-  useEffect(() => {
-    async function fetchLocalesExistentes() {
-      if (typeof relevamientoId !== "number") return;
-      try {
-        const respuesta = await localesService.getLocalesPorRelevamiento(
-          relevamientoId
-        );
-        if (respuesta && respuesta.length > 0) {
-          const agrupados = respuesta.reduce((acc: any, local: any) => {
-            const idx = (local.numero_construccion || 1) - 1;
-            if (!acc[idx]) acc[idx] = [];
-            acc[idx].push(local);
-            return acc;
-          }, {});
-
-          const construcciones = respuesta.reduce((acc: any, local: any) => {
-            const idx = (local.numero_construccion || 1) - 1;
-            acc[idx] = local.construccion_id; // 👈 guardamos id
-            return acc;
-          }, {});
-          setLocalesPorConstruccion(agrupados);
-          setConstruccionesExistentes(construcciones);
-          setEditando(true);
-        }
-      } catch (error) {
-        console.error("Error al cargar locales previos:", error);
-      }
+    } catch (error) {
+      console.error("Error al cargar locales previos:", error);
     }
+  }
 
-    if (relevamientoId) fetchLocalesExistentes();
-  }, [relevamientoId]);
+  if (relevamientoId) fetchLocalesExistentes();
+}, [relevamientoId]);
 
-  useEffect(() => {
-    // Simulamos la carga de datos
-    if (
-      opcionesLocales.length > 0 &&
-      Object.keys(localesPorConstruccion).length > 0
-    ) {
-      setIsLoading(false);
-    }
-  }, [opcionesLocales, localesPorConstruccion]);
+// CONTROL DE isLoading 🔥
+useEffect(() => {
+  // Carga lista cuando:
+  // 1. Opciones de locales ya están
+  // 2. formValues ya está inicializado según cantidadConstrucciones
+  const formReady =
+    cantidadConstrucciones !== undefined &&
+    Object.keys(formValues).length === cantidadConstrucciones;
+
+  // Si no hay locales existentes, no es necesario esperar más
+  const localesReady =
+    Object.keys(localesPorConstruccion).length === 0 ||
+    Object.keys(localesPorConstruccion).length > 0;
+
+  if (opcionesLocales.length > 0 && formReady && localesReady) {
+    setIsLoading(false);
+  } else {
+    setIsLoading(true);
+  }
+}, [opcionesLocales, formValues, localesPorConstruccion, cantidadConstrucciones]);
 
   const verificarConstruccionExistente = async (numeroConstruccion: number) => {
     if (!relevamientoId) return false;

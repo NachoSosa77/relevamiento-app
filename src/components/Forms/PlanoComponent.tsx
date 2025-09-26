@@ -27,6 +27,8 @@ export default function PlanoComponent() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
+  console.log("cantidadConstrucciones:", cantidadConstrucciones);
+  console.log("superficieTotalPredio:", superficieTotalPredio);
   const relevamientoId = useRelevamientoId();
 
   const handleSiChange = (checked: boolean) => {
@@ -180,7 +182,7 @@ export default function PlanoComponent() {
             </div>
             <DecimalNumericInput
               label=""
-              value={superficieTotalPredio}
+              value={superficieTotalPredio ?? 0}
               subLabel="m2 O-NS"
               onChange={handleSuperficieTotalPredioChange}
               disabled={false}
@@ -198,7 +200,7 @@ export default function PlanoComponent() {
             </div>
             <NumericInput
               label=""
-              value={cantidadConstrucciones}
+              value={cantidadConstrucciones ?? 0}
               subLabel=""
               onChange={handleCantidadConstruccionesChange}
               disabled={false}

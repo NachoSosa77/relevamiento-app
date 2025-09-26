@@ -38,8 +38,8 @@ export const serviciosTransporteComunicaciones: Column[] = [
     type: "input",
     conditional: (servicio) =>
       servicio.en_predio === "No" &&
-      servicio.disponibilidad === "Sí" &&
-      servicio.id_servicio != "2.6", // Solo habilitado si en_predio y disponibilidad son "Sí"
+      servicio.disponibilidad === "No" &&
+      servicio.id_servicio != "2.6",
   },
 ];
 

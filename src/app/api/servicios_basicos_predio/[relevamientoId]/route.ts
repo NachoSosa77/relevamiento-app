@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
-import { RowDataPacket } from "mysql2";
+import { OkPacket, RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
 interface ServiciosBasicos extends RowDataPacket {
@@ -39,6 +39,49 @@ export async function GET(
     return NextResponse.json({ serviciosBasicos });
   } catch (err: any) {
     console.error("Error al obtener áreas exteriores:", err);
+    return NextResponse.json(
+      { message: "Error interno", error: err.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const connection = await getConnection();
+    const body = await req.json();
+
+    const servicios: ServiciosBasicos[] = body.serviciosBasicos;
+
+    if (!servicios || servicios.length === 0) {
+      return NextResponse.json(
+        { message: "No hay servicios para actualizar" },
+        { status: 400 }
+      );
+    }
+
+    // Hacemos update por cada servicio usando el id
+    for (const s of servicios) {
+      await connection.query<OkPacket>(
+        `UPDATE servicios_basicos_predio 
+         SET disponibilidad = ?, distancia = ?, en_predio = ?, prestadores = ?
+         WHERE id = ?`,
+        [
+          s.disponibilidad ?? null,
+          s.distancia ?? null,
+          s.en_predio,
+          s.prestadores ?? null,
+          s.id,
+        ]
+      );
+    }
+
+    connection.release();
+    return NextResponse.json({
+      message: "Servicios actualizados correctamente",
+    });
+  } catch (err: any) {
+    console.error("Error al actualizar servicios:", err);
     return NextResponse.json(
       { message: "Error interno", error: err.message },
       { status: 500 }
