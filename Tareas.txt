@@ -2,4 +2,7 @@
 
 09-09-2025 // 1- Corrección nombres de archivos. ✔
               2- Corrección edición carga Instalaciones Básicas. ✔
-              3- Duplicado de muestras en archivo final pdf.     
+              3- Duplicado de muestras en archivo final pdf. ✔
+
+29-09-2025 // 1- Aplicación detalle instituciones relacionadas al relevamiento. ✔
+              2- Corrección pool de conexión base de datos. ✔                     

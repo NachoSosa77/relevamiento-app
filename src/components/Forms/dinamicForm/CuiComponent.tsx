@@ -117,7 +117,7 @@ const CuiComponent: React.FC<CuiComponentProps> = ({
   }
 
   return (
-    <div className="mx-10">
+    <div className="p-2">
       <p className="text-sm">{label}</p>
       <div className="flex mt-2 p-2 border items-center rounded-2xl shadow-lg bg-white text-black">
         <div className="w-6 h-6 flex justify-center items-center bg-custom rounded-full text-white">

@@ -164,6 +164,7 @@ export default function EspaciosEscolaresPage() {
           <Spinner />
         </div>
       )}
+      <div className="mx-10">
 
       <CuiComponent
         label="COMPLETE UNA PLANILLA POR CADA PREDIO"
@@ -173,6 +174,7 @@ export default function EspaciosEscolaresPage() {
         sublabel=""
         institucionActualId={selectedInstitutionId}
       />
+      </div>
 
       <EstablecimientosComponent />
       <PlanoComponent />

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { getConnection, pool } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -49,8 +49,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const connection = await getConnection();
-
   const { searchParams } = new URL(req.url);
   const relevamiento_id = searchParams.get("relevamiento_id");
   const construccion_id = searchParams.get("construccion_id");
@@ -63,17 +61,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [rows] = await connection.query(
+    const [rows] = await pool.query(
       `SELECT institucion_id FROM instituciones_por_construccion 
        WHERE relevamiento_id = ? AND construccion_id = ?`,
       [relevamiento_id, construccion_id]
     );
 
-    connection.release();
     return NextResponse.json(rows);
   } catch (error: any) {
     console.error("Error al obtener instituciones:", error);
-    connection.release();
     return NextResponse.json(
       { message: "Error interno", error: error.message },
       { status: 500 }

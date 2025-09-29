@@ -1,5 +1,6 @@
 // /app/api/relevamientos/[id]/resumen/route.ts
 import { getEspaciosEscolaresByRelevamientonId } from "@/app/lib/server/espaciosescolaresDb";
+import { getInstitucionesRelacionadasByRelevamientoId } from "@/app/lib/server/institucionesRelevamiento";
 import { getPrediosByRelevamientoId } from "@/app/lib/server/predioDb";
 import { getRelevamientoByIdServer } from "@/app/lib/server/relevamientoDb";
 import { getRespondientesByRelevamientoId } from "@/app/lib/server/respondientesDb";
@@ -18,6 +19,7 @@ export async function GET(
   const respondientes = await getRespondientesByRelevamientoId(id);
   const predio = await getPrediosByRelevamientoId(id);
   const espacioEscolar = await getEspaciosEscolaresByRelevamientonId(id);
+  const instituciones = await getInstitucionesRelacionadasByRelevamientoId(id);
 
   // ...otros fetchs
 
@@ -27,6 +29,7 @@ export async function GET(
     respondientes,
     predio,
     espacioEscolar,
+    instituciones,
     // ...
   });
 }

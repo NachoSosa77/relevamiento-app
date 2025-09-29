@@ -54,7 +54,7 @@ export async function GET(
             construccion.id,
             conn
           ),
-          getInstitucionesPorConstruccion(id, construccion.id, conn),
+          getInstitucionesPorConstruccion(id, construccion.id),
           getPlantasPorConstruccion(id, construccion.id, conn),
           getServicioAguaByRelevamientoId(id, construccion.id, conn),
           getServicioDesagueByRelevamientoId(id, construccion.id, conn),

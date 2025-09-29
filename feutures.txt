@@ -1,5 +1,0 @@
-dispatch(clearRelevamientoId());
-sessionStorage.removeItem("relevamientoId");
-
-
-

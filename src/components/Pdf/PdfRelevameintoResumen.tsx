@@ -236,7 +236,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
 
   
   
-  const { relevamiento, respondientes, visitas, espacioEscolar } = data;
+  const { relevamiento, respondientes, visitas, espacioEscolar, instituciones } = data;
 
   return (
     <Document>
@@ -272,6 +272,30 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
             </View>
           </View>
         </View>
+
+                {/* instituciones */}
+        {instituciones?.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.title}>Instituciones</Text>
+            <View style={styles.tableContainer}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableHeaderCell}>Institución</Text>
+                <Text style={styles.tableHeaderCell}>Cue</Text>
+                <Text style={styles.tableHeaderCell}>Modalidad/Nivel</Text>
+                <Text style={styles.tableHeaderCell}>Localidad</Text>
+              </View>
+              {instituciones.map((v: any) => (
+                <View key={v.id} style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{v.institucion}</Text>
+                  <Text style={styles.tableCell}>{v.cue}</Text>
+                  <Text style={styles.tableCell}>{v.modalidad_nivel}</Text>
+                  <Text style={styles.tableCell}>{v.localidad}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
 
         {/* Visitas */}
         {visitas?.length > 0 && (
