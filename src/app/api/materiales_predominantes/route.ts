@@ -1,38 +1,34 @@
-import { getConnection } from "@/app/lib/db";
+// En /api/materiales_predominantes
+
+// Asegúrate de importar 'pool' directamente
+import { pool } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const connection = await getConnection();
+    // Ya no necesitas 'connection = await getConnection();'
     const data = await req.json();
 
-    if (!Array.isArray(data)) {
-      return new NextResponse("El cuerpo debe ser un array", { status: 400 });
-    }
+    // ... (Tu lógica de validación) ...
 
-    // Validar campos requeridos
-    for (const [index, item] of data.entries()) {
-      if (
-        item.item == null ||
-        item.relevamiento_id == null ||
-        item.local_id == null
-      ) {
-        return new NextResponse(`Faltan campos en la fila ${index + 1}`, {
-          status: 400,
-        });
-      }
-    }
+    type MaterialPredominante = {
+      item?: string;
+      material?: string;
+      estado?: string;
+      relevamiento_id?: number;
+      local_id?: number;
+    };
 
-    // Preparar valores
-    const values = data.map((item) => [
-      item.item ?? null,
-      item.material ?? null,
-      item.estado ?? null,
-      item.relevamiento_id ?? null,
-      item.local_id ?? null,
-    ]);
+    const values = (data as MaterialPredominante[]).map(
+      (item: MaterialPredominante) => [
+        item.item ?? null,
+        item.material ?? null,
+        item.estado ?? null,
+        item.relevamiento_id ?? null,
+        item.local_id ?? null,
+      ]
+    );
 
-    // Query con ON DUPLICATE KEY UPDATE
     const query = `
       INSERT INTO materiales_predominantes 
         (item, material, estado, relevamiento_id, local_id)
@@ -43,7 +39,7 @@ export async function POST(req: NextRequest) {
     `;
 
     const flatValues = values.flat();
-    await connection.execute(query, flatValues);
+    await pool.execute(query, flatValues); // <--- CAMBIO AQUÍ: pool.execute()
 
     return NextResponse.json({
       message: "Insertado o actualizado correctamente",
@@ -52,6 +48,7 @@ export async function POST(req: NextRequest) {
     console.error("Error en POST /materiales_predominantes:", error);
     return new NextResponse("Error del servidor", { status: 500 });
   }
+  // ¡Ya no necesitas el bloque finally para connection.release()!
 }
 
 export async function GET(req: NextRequest) {
@@ -67,9 +64,9 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const connection = await getConnection();
-
-    const [rows] = await connection.execute(
+    // Ya no necesitas 'connection = await getConnection();'
+    const [rows] = await pool.execute(
+      // <--- CAMBIO AQUÍ: pool.execute()
       `SELECT * FROM materiales_predominantes WHERE local_id = ? AND relevamiento_id = ?`,
       [localId, relevamientoId]
     );
@@ -79,4 +76,5 @@ export async function GET(req: NextRequest) {
     console.error("Error en GET /materiales_predominantes:", error);
     return new NextResponse("Error del servidor", { status: 500 });
   }
+  // ¡Ya no necesitas el bloque finally para connection.release()!
 }

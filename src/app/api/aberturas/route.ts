@@ -1,9 +1,12 @@
-import { getConnection } from "@/app/lib/db";
+// En /api/aberturas
+
+// Asegúrate de importar 'pool' directamente
+import { pool } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const connection = await getConnection();
+    // Ya no necesitas 'connection = await getConnection();'
     const data = await req.json();
 
     if (!Array.isArray(data)) {
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
         cantidad = VALUES(cantidad)
     `;
 
-    await connection.execute(query, flatValues);
+    await pool.execute(query, flatValues); // <--- Usa pool.execute() directamente
 
     return NextResponse.json(
       { message: "Insertado o actualizado correctamente" },
@@ -46,22 +49,36 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+  // ¡No se necesita finally para release() aquí!
 }
 
 export async function GET(req: NextRequest) {
-  const localId = Number(req.nextUrl.searchParams.get("localId"));
-  const relevamientoId = Number(req.nextUrl.searchParams.get("relevamientoId"));
+  try {
+    // Añade un try-catch para un manejo consistente de errores
+    const localId = Number(req.nextUrl.searchParams.get("localId"));
+    const relevamientoId = Number(
+      req.nextUrl.searchParams.get("relevamientoId")
+    );
 
-  if (!localId || !relevamientoId) {
-    return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+    if (!localId || !relevamientoId) {
+      return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+    }
+
+    // Ya no necesitas 'connection = await getConnection();'
+    const [rows] = await pool.execute(
+      // <--- Usa pool.execute() directamente
+      `SELECT * FROM aberturas WHERE local_id = ? AND relevamiento_id = ?`,
+      [localId, relevamientoId]
+    );
+
+    return NextResponse.json(rows);
+  } catch (error) {
+    // Manejo de errores para GET
+    console.error("Error en GET /aberturas:", error);
+    return NextResponse.json(
+      { error: "Error al obtener aberturas" },
+      { status: 500 }
+    );
   }
-
-  const connection = await getConnection();
-
-  const [rows] = await connection.execute(
-    `SELECT * FROM aberturas WHERE local_id = ? AND relevamiento_id = ?`,
-    [localId, relevamientoId]
-  );
-
-  return NextResponse.json(rows);
+  // ¡No se necesita finally para release() aquí!
 }

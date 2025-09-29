@@ -2,7 +2,7 @@
 "use server";
 
 import { RowDataPacket } from "mysql2";
-import { PoolConnection } from "mysql2/promise";
+import { pool } from "../db";
 
 export interface IluminacionVentilacion extends RowDataPacket {
   id: number;
@@ -16,10 +16,9 @@ export interface IluminacionVentilacion extends RowDataPacket {
 
 export const getIluminacionVentilacionByRelevamientoId = async (
   relevamientoId: number,
-  localId: number,
-  connection: PoolConnection
+  localId: number
 ): Promise<IluminacionVentilacion[]> => {
-  const [rows] = await connection.execute<IluminacionVentilacion[]>(
+  const [rows] = await pool.execute<IluminacionVentilacion[]>(
     `SELECT * FROM iluminacion_ventilacion WHERE relevamiento_id = ?  AND local_id = ?`,
     [relevamientoId, localId]
   );

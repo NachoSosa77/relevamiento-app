@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
@@ -8,8 +8,6 @@ function fileToBuffer(file: File): Promise<Buffer> {
 }
 
 export async function POST(req: Request) {
-  const connection = await getConnection();
-
   const formData = await req.formData();
   const files = formData.getAll("files") as File[];
   const relevamientoId = formData.get("relevamientoId");
@@ -38,7 +36,7 @@ export async function POST(req: Request) {
 
       const tipo_archivo = file.type.includes("pdf") ? "pdf" : "imagen";
 
-      await connection.execute(
+      await pool.execute(
         `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, nombre_archivo, fecha_subida)
          VALUES (?, ?, ?, ?, NOW())`,
         [relevamientoId, blob.url, tipo_archivo, file.name]
@@ -79,8 +77,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const connection = await getConnection();
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       `SELECT archivo_url, tipo_archivo, nombre_archivo 
        FROM archivos 
        WHERE relevamiento_id = ?`,

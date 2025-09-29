@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const cui = searchParams.get("cui");
   try {
-    const connection = await getConnection();
     let query = "SELECT * FROM instituciones";
     const values: string[] = [];
 
@@ -30,11 +29,7 @@ export async function GET(req: NextRequest) {
       values.push(cui);
     }
 
-    const [instituciones] = await connection.query<Institucion[]>(
-      query,
-      values
-    );
-    connection.release();
+    const [instituciones] = await pool.query<Institucion[]>(query, values);
 
     if (cui && instituciones.length === 0) {
       return NextResponse.json(
@@ -55,7 +50,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const connection = await getConnection();
     const data = await req.json();
     const {
       departamento,
@@ -71,7 +65,7 @@ export async function POST(req: NextRequest) {
       provincia,
     } = data;
 
-    await connection.query(
+    await pool.query(
       "INSERT INTO instituciones (departamento, localidad, modalidad_nivel, institucion, cue, cui, matricula, calle, calle_numero, referencia, provincia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         departamento,
@@ -87,7 +81,6 @@ export async function POST(req: NextRequest) {
         provincia,
       ]
     );
-    connection.release();
 
     return NextResponse.json(
       { message: "Establecimiento insertado correctamente" },

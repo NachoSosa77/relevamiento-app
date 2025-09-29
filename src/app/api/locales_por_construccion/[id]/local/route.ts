@@ -1,4 +1,4 @@
-import { getConnection } from "@/app/lib/db";
+import { getConnection, pool } from "@/app/lib/db";
 import { getAberturasByRelevamientoIdAndLocalId } from "@/app/lib/server/aberturaDb";
 import { getAcondicionamientoTermicoByRelevamientoId } from "@/app/lib/server/acondicionamientoTermincoDb";
 import { getEquipamientoCocinaOfficesByRelevamientoId } from "@/app/lib/server/equipamientoOfficeDb";
@@ -33,9 +33,8 @@ export async function GET(
       );
     }
 
-    const conn = await getConnection();
     try {
-      const [rows] = await conn.query(
+      const [rows] = await pool.query(
         `SELECT l.*, o.name AS nombre_local
          FROM locales_por_construccion l
          LEFT JOIN opciones_locales o ON o.id = l.local_id
@@ -61,33 +60,13 @@ export async function GET(
         instalacionesBasicas,
         materialesPredominantes,
       ] = await Promise.all([
-        getAberturasByRelevamientoIdAndLocalId(relevamientoId, localId, conn),
-        getAcondicionamientoTermicoByRelevamientoId(
-          relevamientoId,
-          localId,
-          conn
-        ),
-        getEquipamientoCocinaOfficesByRelevamientoId(
-          relevamientoId,
-          localId,
-          conn
-        ),
-        getEquipamientoSanitariosByRelevamientoId(
-          relevamientoId,
-          localId,
-          conn
-        ),
-        getIluminacionVentilacionByRelevamientoId(
-          relevamientoId,
-          localId,
-          conn
-        ),
-        getInstalacionesBasicasByRelevamientoId(relevamientoId, localId, conn),
-        getMaterialesPredominantesByRelevamientoId(
-          relevamientoId,
-          localId,
-          conn
-        ),
+        getAberturasByRelevamientoIdAndLocalId(relevamientoId, localId),
+        getAcondicionamientoTermicoByRelevamientoId(relevamientoId, localId),
+        getEquipamientoCocinaOfficesByRelevamientoId(relevamientoId, localId),
+        getEquipamientoSanitariosByRelevamientoId(relevamientoId, localId),
+        getIluminacionVentilacionByRelevamientoId(relevamientoId, localId),
+        getInstalacionesBasicasByRelevamientoId(relevamientoId, localId),
+        getMaterialesPredominantesByRelevamientoId(relevamientoId, localId),
       ]);
 
       const responsePayload = {
@@ -105,7 +84,6 @@ export async function GET(
 
       return NextResponse.json(responsePayload);
     } finally {
-      conn.release();
     }
   } catch (error: unknown) {
     console.error("Error en GET local detalle:", error);

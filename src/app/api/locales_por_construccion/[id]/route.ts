@@ -68,7 +68,6 @@ export async function GET(
         { status: 400 }
       );
     }
-
     const [rows] = await pool.query<LocalPorConstruccion[]>(
       `
       SELECT 
@@ -81,7 +80,6 @@ export async function GET(
       `,
       [idNumber]
     );
-
     const local = rows[0]; // ✅ Obtenemos el primer elemento
 
     // Verificar si se encontró el local
@@ -91,7 +89,7 @@ export async function GET(
         { status: 404 }
       );
     }
-
+    console.timeEnd("GET_Request_Total");
     return NextResponse.json({ local });
   } catch (err: any) {
     console.error("Error al obtener el local:", err);

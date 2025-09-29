@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db"; // <-- Usamos pool directamente
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -27,9 +27,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ relevamientoId: string }> }
 ) {
+  let relevamientoId: string | undefined; // Inicializamos o usamos undefined
   try {
-    const connection = await getConnection();
-    const { relevamientoId } = await params; // <-- mantenemos el await por el bug
+    // Desestructuramos el ID del parámetro
+    const awaitedParams = await params;
+    relevamientoId = awaitedParams.relevamientoId;
 
     if (!relevamientoId) {
       return NextResponse.json(
@@ -38,9 +40,12 @@ export async function GET(
       );
     }
 
-    const [localesPorRelevamiento] = await connection.query<
-      LocalPorConstruccion[]
-    >(
+    // Convertimos a número fuera de la consulta para mejor claridad
+    const idNumber = Number(relevamientoId);
+
+    // ✅ Uso pool.query() directamente: más eficiente para Serverless,
+    // gestiona la conexión y liberación automáticamente.
+    const [localesPorRelevamiento] = await pool.query<LocalPorConstruccion[]>(
       `
         SELECT 
           lpc.id,
@@ -63,17 +68,18 @@ export async function GET(
         FROM locales_por_construccion lpc
         JOIN opciones_locales loc ON lpc.local_id = loc.id
         WHERE lpc.relevamiento_id = ? 
+        -- NOTA: Se recomienda encarecidamente crear un índice en lpc.relevamiento_id para velocidad
       `,
-      [Number(relevamientoId)]
+      [idNumber]
     );
-
-    connection.release();
 
     return NextResponse.json({ locales: localesPorRelevamiento });
   } catch (err: any) {
-    console.error("Error al obtener locales:", err);
+    // Usamos el operador de encadenamiento opcional (?) para evitar un error de TS
+    console.error(`Error al obtener locales para ID ${relevamientoId}:`, err);
+    // Si el error es un timeout de conexión, se capturará aquí (y será rápido si connectTimeout está bajo)
     return NextResponse.json(
-      { message: "Error interno", error: err.message },
+      { message: "Error interno al consultar locales", error: err.message },
       { status: 500 }
     );
   }

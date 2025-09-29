@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import jwt from "jsonwebtoken";
 import { FieldPacket, RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
@@ -30,15 +30,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Token inválido" }, { status: 401 });
     }
 
-    const connection = await getConnection();
-
     const [rows, _fields]: [Relevamiento[] & RowDataPacket[], FieldPacket[]] =
-      await connection.query(
+      await pool.query(
         "SELECT * FROM relevamientos WHERE created_by = ? ORDER BY created_at DESC",
         [email]
       );
-
-    connection.release();
 
     return NextResponse.json(rows);
   } catch (error: any) {

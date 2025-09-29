@@ -1,7 +1,7 @@
 // lib/server/localesPorConstruccionDb.ts
 "use server";
 
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 
 interface LocalPorConstruccion extends RowDataPacket {
@@ -21,27 +21,21 @@ export const getLocalesByConstruccionAndRelevamiento = async (
   relevamientoId: number,
   construccionId: number
 ): Promise<LocalPorConstruccion[]> => {
-  const connection = await getConnection();
-
-  const [rows] = await connection.execute<LocalPorConstruccion[]>(
+  const [rows] = await pool.execute<LocalPorConstruccion[]>(
     `SELECT * FROM locales_por_construccion WHERE relevamiento_id = ? AND construccion_id = ?`,
     [relevamientoId, construccionId]
   );
 
-  connection.release();
   return rows;
 };
 
 export const getLocalById = async (
   localId: number
 ): Promise<LocalPorConstruccion | null> => {
-  const connection = await getConnection();
-
-  const [rows] = await connection.execute<LocalPorConstruccion[]>(
+  const [rows] = await pool.execute<LocalPorConstruccion[]>(
     `SELECT * FROM locales_por_construccion WHERE id = ?`,
     [localId]
   );
 
-  connection.release();
   return rows[0] || null;
 };

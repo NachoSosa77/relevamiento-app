@@ -1,7 +1,8 @@
 "use server";
 
-import { getConnection } from "@/app/lib/db";
-import { RowDataPacket } from "mysql2";
+// 🔹 MODIFICACIÓN CLAVE: Importamos 'pool' en lugar de 'getConnection'
+import { pool } from "@/app/lib/db";
+import { RowDataPacket } from "mysql2/promise"; // Actualizado a mysql2/promise
 
 interface Relevamiento extends RowDataPacket {
   id: number;
@@ -17,14 +18,15 @@ interface Relevamiento extends RowDataPacket {
 export const getRelevamientoByIdServer = async (
   id: number
 ): Promise<Relevamiento | null> => {
-  const connection = await getConnection();
+  // 🔹 Eliminamos const connection = await getConnection();
 
-  const [rows] = await connection.execute<Relevamiento[]>(
+  const [rows] = await pool.execute<Relevamiento[]>( // 🔹 USAMOS pool.execute() directamente
     `SELECT * FROM relevamientos WHERE id = ?`,
     [id]
   );
 
-  connection.release();
+  // 🔹 Eliminamos connection.release();
 
+  // Aseguramos que el resultado sea del tipo Relevamiento esperado
   return rows.length > 0 ? rows[0] : null;
 };

@@ -9,9 +9,9 @@ export const pool = mysql.createPool({
   password: dbPassword,
   database: dbName,
   waitForConnections: true,
-  connectionLimit: 10, // ajustable según carga
+  connectionLimit: 5, // Ajustado para un mejor comportamiento serverless
   queueLimit: 0,
-  connectTimeout: 20000, // 20s
+  connectTimeout: 5000, // 5 segundos: Falla más rápido si la DB no responde
 });
 
 // Función legacy para obtener conexión individual

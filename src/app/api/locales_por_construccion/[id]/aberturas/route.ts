@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,8 +18,7 @@ export async function GET(
       return NextResponse.json({ message: "IDs inválidos" }, { status: 400 });
     }
 
-    const connection = await getConnection();
-    const [rows] = await connection.query<RowDataPacket[]>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT id, abertura, tipo, cantidad, estado, local_id, relevamiento_id
       FROM aberturas
@@ -27,7 +26,6 @@ export async function GET(
       `,
       [localId, relevamientoId]
     );
-    connection.release();
 
     // Por esto:
     if (rows.length === 0) {
@@ -79,12 +77,10 @@ export async function PATCH(
   values.push(aberturaId);
 
   try {
-    const connection = await getConnection();
-    const [result] = await connection.query(
+    const [result] = await pool.query(
       `UPDATE aberturas SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
-    connection.release();
 
     return NextResponse.json({
       message: "Dimensiones actualizadas correctamente",

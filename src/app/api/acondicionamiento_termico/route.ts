@@ -1,5 +1,8 @@
-import { getConnection } from "@/app/lib/db";
-import { PoolConnection, RowDataPacket } from "mysql2/promise";
+// En /api/acondicionamiento_basicas
+
+// 🔹 MODIFICACIÓN CLAVE: Importar 'pool' en lugar de 'getConnection'
+import { pool } from "@/app/lib/db";
+import { RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
 import pLimit from "p-limit";
 
@@ -21,10 +24,10 @@ const chunkArray = <T>(arr: T[], size: number): T[][] => {
 };
 
 export async function POST(req: NextRequest) {
-  let connection: PoolConnection | undefined;
+  // 🔹 Se eliminó: let connection: PoolConnection | undefined;
 
   try {
-    connection = await getConnection();
+    // 🔹 Se eliminó: connection = await getConnection();
     const data: AcondicionamientoItem[] = await req.json();
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -61,7 +64,9 @@ export async function POST(req: NextRequest) {
             item.local_id,
           ]);
 
-          await connection!.query<RowDataPacket[]>(insertQuery, [values]);
+          // 🔹 MODIFICACIÓN CLAVE: Usamos pool.query() para el batch insert
+          // NOTA: pool.query() es necesario para el placeholder '?' (multi-row insert)
+          await pool.query<RowDataPacket[]>(insertQuery, [values]);
         })
       )
     );
@@ -82,25 +87,35 @@ export async function POST(req: NextRequest) {
       { error: "Error al insertar/actualizar los datos", details },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
+  // 🔹 Se eliminó: finally { if (connection) connection.release(); }
 }
 
 export async function GET(req: NextRequest) {
-  const localId = Number(req.nextUrl.searchParams.get("localId"));
-  const relevamientoId = Number(req.nextUrl.searchParams.get("relevamientoId"));
+  try {
+    const localId = Number(req.nextUrl.searchParams.get("localId"));
+    const relevamientoId = Number(
+      req.nextUrl.searchParams.get("relevamientoId")
+    );
 
-  if (!localId || !relevamientoId) {
-    return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+    if (!localId || !relevamientoId) {
+      return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+    }
+
+    // 🔹 MODIFICACIÓN CLAVE: Usamos pool.execute() directamente
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT * FROM acondicionamiento_termico WHERE local_id = ? AND relevamiento_id = ?`,
+      [localId, relevamientoId]
+    );
+
+    return NextResponse.json(rows);
+  } catch (error: unknown) {
+    console.error("Error al obtener acondicionamiento_termico:", error);
+    const details = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: "Error al obtener los datos", details },
+      { status: 500 }
+    );
   }
-
-  const connection = await getConnection();
-
-  const [rows] = await connection.execute<RowDataPacket[]>(
-    `SELECT * FROM acondicionamiento_termico WHERE local_id = ? AND relevamiento_id = ?`,
-    [localId, relevamientoId]
-  );
-
-  return NextResponse.json(rows);
+  // 🔹 Se eliminó: No se necesita bloque finally para GET/pool.execute
 }
