@@ -55,7 +55,6 @@ export default function LocalesPorConstruccion() {
   const [localEnEdicion, setLocalEnEdicion] =
     useState<LocalesConstruccion | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  console.log("Cantidad construcciones en componente:", cantidadConstrucciones);
   // Inicializar formValues cuando se tiene cantidadConstrucciones
 useEffect(() => {
   if (cantidadConstrucciones === undefined) return;

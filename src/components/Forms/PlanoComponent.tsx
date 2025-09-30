@@ -27,8 +27,6 @@ export default function PlanoComponent() {
   const cantidadConstrucciones = useAppSelector(
     (state) => state.espacio_escolar.cantidadConstrucciones
   );
-  console.log("cantidadConstrucciones:", cantidadConstrucciones);
-  console.log("superficieTotalPredio:", superficieTotalPredio);
   const relevamientoId = useRelevamientoId();
 
   const handleSiChange = (checked: boolean) => {

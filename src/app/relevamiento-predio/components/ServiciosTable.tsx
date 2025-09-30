@@ -15,7 +15,6 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   serviciosData,
   columnsConfig,
 }) => {
-  console.log("1. PROP serviciosData:", serviciosData);
   const dispatch = useAppDispatch();
   const relevamientoId = useRelevamientoId();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +23,6 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosBasicos[]>(serviciosData);
-  console.log("2. ESTADO INICIAL servicios:", servicios);
   // Cargar datos existentes desde la DB
   useEffect(() => {
     // Si cargas desde la DB
