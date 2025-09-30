@@ -15,6 +15,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   serviciosData,
   columnsConfig,
 }) => {
+  console.log("1. PROP serviciosData:", serviciosData);
   const dispatch = useAppDispatch();
   const relevamientoId = useRelevamientoId();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +24,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
 
   const [servicios, setServiciosLocal] =
     useState<ServiciosBasicos[]>(serviciosData);
-
+  console.log("2. ESTADO INICIAL servicios:", servicios);
   // Cargar datos existentes desde la DB
   useEffect(() => {
     // Si cargas desde la DB
@@ -45,8 +46,15 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
           })
         );
 
-        setServiciosLocal(serviciosNormalizados);
-        dispatch(setServicios(serviciosNormalizados));
+        let datosParaMostrar = serviciosNormalizados;
+
+        if (serviciosNormalizados.length === 0) {
+          // Si la API no trajo nada, usamos los 8 servicios iniciales de la prop
+          datosParaMostrar = serviciosData;
+        }
+
+        setServiciosLocal(datosParaMostrar);
+        dispatch(setServicios(datosParaMostrar));
         setEditando(serviciosNormalizados.length > 0);
       } catch (error) {
         console.error("Error al cargar servicios:", error);
@@ -56,7 +64,7 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
     };
 
     fetchServicios();
-  }, [relevamientoId, dispatch]);
+  }, [relevamientoId, dispatch, serviciosData]);
 
   const handleChange = (
     index: number,
@@ -69,89 +77,105 @@ const ServiciosBasicosForm: React.FC<ServiciosBasicosFormProps> = ({
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault();
 
-    // Validar al menos un campo modificable completo
-    const alMenosUnServicioValido = servicios.some((servicio) =>
-      columnsConfig.some((column) => {
-        if (column.type === "text") return false;
-        const valor = servicio[column.key];
-        return valor !== undefined && valor !== null && valor !== "";
-      })
-    );
+    // Validar al menos un campo modificable completo
+    const alMenosUnServicioValido = servicios.some((servicio) =>
+      columnsConfig.some((column) => {
+        if (column.type === "text") return false;
+        const valor = servicio[column.key];
+        return valor !== undefined && valor !== null && valor !== "";
+      })
+    );
 
-    if (!alMenosUnServicioValido) {
-      toast.warning("Por favor, completá al menos un campo antes de enviar.");
-      return;
-    }
+    if (!alMenosUnServicioValido) {
+      toast.warning("Por favor, completá al menos un campo antes de enviar.");
+      return;
+    }
 
-    // Evitar duplicados exactos
-    const serviciosUnicos = servicios.filter(
-      (s, i, self) =>
-        i ===
-        self.findIndex((t) =>
-          columnsConfig.every((col) => s[col.key] === t[col.key])
-        )
-    );
+    // Evitar duplicados exactos
+    const serviciosUnicos = servicios.filter(
+      (s, i, self) =>
+        i ===
+        self.findIndex((t) =>
+          columnsConfig.every((col) => s[col.key] === t[col.key])
+        )
+    );
 
-    const serviciosConRelevamiento = serviciosUnicos.map((s) => ({
-      ...s,
-      relevamiento_id: relevamientoId,
-    }));
+    const serviciosConRelevamiento = serviciosUnicos.map((s) => ({
+      ...s,
+      relevamiento_id: relevamientoId,
+    }));
+    
+    // Preparar el cuerpo con el wrapper solo si es PATCH
+    const bodyContent = editando 
+        ? { serviciosBasicos: serviciosConRelevamiento } 
+        : serviciosConRelevamiento;
 
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(
-        editando
-          ? `/api/servicios_basicos_predio/${relevamientoId}` // PATCH
-          : "/api/servicios_basicos_predio", // POST
-        {
-          method: editando ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ serviciosBasicos: serviciosConRelevamiento }),
-        }
-      );
+    setIsSubmitting(true);
+    try {
+      const url = editando
+        ? `/api/servicios_basicos_predio/${relevamientoId}` // PATCH a ruta dinámica
+        : "/api/servicios_basicos_predio"; // POST a ruta base
 
-      if (response.ok) {
-        toast.success(
+      const method = editando ? "PATCH" : "POST";
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(
           editando
-            ? "Servicios actualizados correctamente!"
-            : "Servicios cargados correctamente!"
-        );
+            ? { serviciosBasicos: serviciosConRelevamiento } // PATCH
+            : serviciosConRelevamiento // POST
+        ),
+      });
 
-        // Refrescar datos desde DB para mantener consistencia
-        const refreshRes = await fetch(
-          `/api/servicios_basicos_predio/${relevamientoId}`
-        );
+      if (response.ok) {
+        toast.success(
+          editando
+            ? "Servicios actualizados correctamente!"
+            : "Servicios cargados correctamente!"
+        );
 
-        if (refreshRes.ok) {
-          const data = await refreshRes.json();
+        // Refrescar datos desde DB para mantener consistencia
+        const refreshRes = await fetch(
+          `/api/servicios_basicos_predio/${relevamientoId}`
+        );
 
-          // Normalizar siempre a array y limpiar null/undefined
-          const refreshedServicios = (data.serviciosBasicos || []).map(
-            (s: ServiciosBasicos) => ({
-              ...s,
-              disponibilidad: s.disponibilidad ?? "",
-              distancia: s.distancia ?? "",
-              prestadores: s.prestadores ?? "",
-              en_predio: s.en_predio?.trim() || "",
-            })
-          );
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
 
-          setServiciosLocal(refreshedServicios);
-          dispatch(setServicios(refreshedServicios));
-          setEditando(refreshedServicios.length > 0);
-        }
-      } else {
-        toast.error("Error al cargar los servicios.");
-      }
-    } catch (error) {
-      toast.error("Error inesperado al enviar los datos.");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+          // Normalizar siempre a array y limpiar null/undefined
+          const refreshedServicios = (data.serviciosBasicos || []).map(
+            (s: ServiciosBasicos) => ({
+              ...s,
+              disponibilidad: s.disponibilidad ?? "",
+              distancia: s.distancia ?? "",
+              prestadores: s.prestadores ?? "",
+              en_predio: s.en_predio?.trim() || "",
+            })
+          );
+
+          let datosRefrescados = refreshedServicios;
+          if (refreshedServicios.length === 0) {
+              datosRefrescados = serviciosData; 
+          }
+
+          setServiciosLocal(datosRefrescados);
+          dispatch(setServicios(datosRefrescados));
+          setEditando(datosRefrescados.length > 0); // Si hay datos, estamos editando
+
+        }
+      } else {
+        // Aquí caíamos si el POST/PATCH fallaba (ej: 400 del servidor)
+        toast.error("Error al guardar los servicios básicos. Verificá tu conexión o los datos enviados.");
+      }
+    } catch (error) {
+      toast.error("Error inesperado al enviar los datos.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return <ServiciosSkeleton columnsConfig={columnsConfig} />;

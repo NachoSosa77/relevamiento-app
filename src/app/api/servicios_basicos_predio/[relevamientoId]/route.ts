@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
     const connection = await getConnection();
     const body = await req.json();
 
-    const servicios: ServiciosBasicos[] = body.serviciosBasicos;
+    const servicios = body.serviciosBasicos;
 
     if (!servicios || servicios.length === 0) {
       return NextResponse.json(

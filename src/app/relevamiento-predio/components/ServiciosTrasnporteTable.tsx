@@ -14,6 +14,31 @@ interface ServiciosTransporteFormProps {
   columnsConfig: Column[];
 }
 
+// arriba del componente
+const normalizeYesNo = (v?: string | null) => {
+  if (v === null || v === undefined) return "";
+  const t = String(v).trim().toLowerCase();
+  if (t === "sí" || t === "si" || t === "s") return "Si";
+  if (t === "no" || t === "n") return "No";
+  return String(v).trim();
+};
+
+const normalizeServicios = (
+  dataArray: any[]
+): ServiciosTransporteComunicaciones[] => {
+  return dataArray.map(
+    (s) =>
+      ({
+        ...s,
+        disponibilidad: normalizeYesNo(s.disponibilidad),
+        en_predio: s.en_predio ? String(s.en_predio).trim() : "",
+        distancia: s.distancia ?? "",
+        prestadores: s.prestadores ?? "",
+        // Añadir más campos si es necesario
+      } as ServiciosTransporteComunicaciones)
+  );
+};
+
 const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
   serviciosData,
   columnsConfig,
@@ -25,16 +50,6 @@ const ServiciosTransporteForm: React.FC<ServiciosTransporteFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [servicios, setServiciosLocal] =
     useState<ServiciosTransporteComunicaciones[]>(serviciosData);
-  // arriba del componente
-const normalizeYesNo = (v?: string | null) => {
-  if (v === null || v === undefined) return "";
-  const t = String(v).trim().toLowerCase();
-  if (t === "sí" || t === "si" || t === "s") return "Si";
-  if (t === "no" || t === "n") return "No";
-  return String(v).trim();
-};
-
-
 
   // Cargar datos existentes desde DB
   useEffect(() => {
@@ -47,18 +62,24 @@ const normalizeYesNo = (v?: string | null) => {
         const data = await res.json();
 
         const serviciosNormalizados = (data.servicios || []).map(
-  (s: ServiciosTransporteComunicaciones) => ({
-    ...s,
-    disponibilidad: normalizeYesNo(s.disponibilidad),
-    en_predio: s.en_predio ? String(s.en_predio).trim() : "",
-    distancia: s.distancia ?? "",
-  })
-);
+          (s: ServiciosTransporteComunicaciones) => ({
+            ...s,
+            disponibilidad: normalizeYesNo(s.disponibilidad),
+            en_predio: s.en_predio ? String(s.en_predio).trim() : "",
+            distancia: s.distancia ?? "",
+          })
+        );
 
+        let datosParaMostrar = serviciosNormalizados;
 
-        setServiciosLocal(serviciosNormalizados);
-        dispatch(setServicios(serviciosNormalizados));
-        setEditando(serviciosNormalizados.length > 0);
+        if (serviciosNormalizados.length === 0) {
+          // Si la API no trajo nada, usamos los servicios iniciales
+          datosParaMostrar = serviciosData;
+        }
+
+        setServiciosLocal(datosParaMostrar);
+        dispatch(setServicios(datosParaMostrar));
+        setEditando(datosParaMostrar.length > 0);
       } catch (error) {
         console.error("Error al cargar servicios:", error);
       } finally {
@@ -66,108 +87,113 @@ const normalizeYesNo = (v?: string | null) => {
       }
     };
     fetchServicios();
-  }, [relevamientoId, dispatch]);
+  }, [relevamientoId, dispatch, serviciosData]);
 
   const handleChange = (
-  index: number,
-  field: keyof ServiciosTransporteComunicaciones,
-  rawValue: string
-) => {
-  const updatedServicios = [...servicios];
-  // Si es campo de Si/No normalizamos
-  const value =
-    field === "disponibilidad" ? normalizeYesNo(rawValue) : rawValue;
+    index: number,
+    field: keyof ServiciosTransporteComunicaciones,
+    rawValue: string
+  ) => {
+    const updatedServicios = [...servicios]; // Si es campo de Si/No normalizamos, si no, usamos el valor crudo.
+    const value =
+      field === "disponibilidad" ? normalizeYesNo(rawValue) : rawValue;
 
-  updatedServicios[index] = { ...updatedServicios[index], [field]: value };
+    updatedServicios[index] = { ...updatedServicios[index], [field]: value }; // Lógica condicional: Si cambiamos disponibilidad a "Sí", limpiamos distancia
 
-  // Si cambiamos disponibilidad y ahora es "Si", limpiamos distancia
-  if (field === "disponibilidad") {
-    const v = String(value).trim().toLowerCase();
-    if (v === "si") {
-      updatedServicios[index] = {
-        ...updatedServicios[index],
-        distancia: "", // limpiar la distancia si ahora hay disponibilidad
-      };
+    if (field === "disponibilidad") {
+      const v = String(value).trim().toLowerCase();
+      if (v === "sí" || v === "si") {
+        updatedServicios[index] = {
+          ...updatedServicios[index],
+          distancia: "",
+        };
+      }
     }
-    // si es "no", dejamos distancia como está (usuario la puede completar)
-  }
 
-  setServiciosLocal(updatedServicios);
-};
-
+    setServiciosLocal(updatedServicios);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const alMenosUnServicioValido = servicios.some((servicio) =>
-    columnsConfig.some((column) => {
-      if (column.type === "text") return false;
-      const valor = servicio[column.key];
-      return valor !== undefined && valor !== null && valor !== "";
-    })
-  );
-
-  if (!alMenosUnServicioValido) {
-    toast.warning("Por favor, completá al menos un campo antes de enviar.");
-    return;
-  }
-
-  const serviciosConRelevamiento = servicios.map((s) => ({
-    ...s,
-    relevamiento_id: relevamientoId,
-  }));
-
-  setIsSubmitting(true);
-  try {
-    const response = await fetch(
-      editando
-        ? `/api/servicios_transporte_comunicaciones/${relevamientoId}` // PATCH
-        : "/api/servicios_transporte_comunicaciones", // POST
-      {
-        method: editando ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviciosTransporte: serviciosConRelevamiento }),
-      }
+    const alMenosUnServicioValido = servicios.some((servicio) =>
+      columnsConfig.some((column) => {
+        if (column.type === "text") return false;
+        const valor = servicio[column.key];
+        return valor !== undefined && valor !== null && valor !== "";
+      })
     );
 
-    if (response.ok) {
-      toast.success(
-        editando
-          ? "Servicios actualizados correctamente!"
-          : "Servicios cargados correctamente!"
-      );
+    if (!alMenosUnServicioValido) {
+      toast.warning("Por favor, completá al menos un campo antes de enviar.");
+      return;
+    } // Preparamos los datos para el envío
 
-      // Refrescar datos desde DB
-      const refreshRes = await fetch(
-        `/api/servicios_transporte_comunicaciones/${relevamientoId}`
-      );
-      if (refreshRes.ok) {
-        const refreshedData = await refreshRes.json();
-        const serviciosNormalizados = (refreshedData.servicios || []).map(
-          (s: ServiciosTransporteComunicaciones) => ({
-            ...s,
-            disponibilidad: s.disponibilidad ?? "",
-            en_predio: s.en_predio?.trim() || "",
-            distancia: s.distancia ?? "",
-          })
+    const serviciosConRelevamiento = servicios.map((s) => {
+      // Solo necesitamos el ID para el PATCH (actualización) si está en modo edición
+      return {
+        ...s,
+        relevamiento_id: relevamientoId,
+      };
+    });
+
+    setIsSubmitting(true);
+    try {
+      // Lógica condicional para decidir la URL y el método
+      const method = editando ? "PATCH" : "POST";
+      // Si es POST (creación), asumimos que va a la ruta base /api/servicios_transporte_comunicaciones
+      // Si es PATCH (actualización), debe ir a la ruta dinámica con el ID
+      const url = editando
+        ? `/api/servicios_transporte_comunicaciones/${relevamientoId}`
+        : `/api/servicios_transporte_comunicaciones`;
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" }, // Usamos la clave serviciosTransporte en el body si es PATCH (esperado por tu backend)
+        body: JSON.stringify(
+          editando
+            ? { serviciosTransporte: serviciosConRelevamiento } // PATCH
+            : serviciosConRelevamiento // POST
+        ),
+      });
+
+      if (response.ok) {
+        toast.success(
+          editando
+            ? "Servicios actualizados correctamente!"
+            : "Servicios cargados correctamente!"
+        ); // Refrescar datos desde DB
+
+        const refreshRes = await fetch(
+          `/api/servicios_transporte_comunicaciones/${relevamientoId}`
         );
-        setServiciosLocal(serviciosNormalizados);
-        dispatch(setServicios(serviciosNormalizados));
-        setEditando(serviciosNormalizados.length > 0);
+        if (refreshRes.ok) {
+          const refreshedData = await refreshRes.json();
+          const serviciosRefrescados = normalizeServicios(
+            refreshedData.servicios || []
+          );
+
+          setServiciosLocal(serviciosRefrescados);
+          dispatch(setServicios(serviciosRefrescados)); // Si hay datos refrescados, activamos modo edición
+          setEditando(serviciosRefrescados.length > 0);
+        } else {
+          toast.warning(
+            "Datos guardados, pero falló la actualización del formulario."
+          );
+        }
+      } else {
+        console.error("Error en la respuesta del servidor:", response.status);
+        toast.error("Error al guardar los servicios de transporte.");
       }
-    } else {
-      toast.error("Error al cargar los servicios.");
+    } catch (error) {
+      toast.error("Error inesperado al enviar los datos.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    toast.error("Error inesperado al enviar los datos.");
-    console.error(error);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
-
-  if (loading) return <ServiciosTransporteSkeleton/>;
+  if (loading) return <ServiciosTransporteSkeleton />;
 
   return (
     <form
