@@ -5,4 +5,7 @@
               3- Duplicado de muestras en archivo final pdf. ✔
 
 29-09-2025 // 1- Aplicación detalle instituciones relacionadas al relevamiento. ✔
-              2- Corrección pool de conexión base de datos. ✔                     
+              2- Corrección pool de conexión base de datos. ✔ 
+
+01-10-2025 // 1- Corrección pool de conexión base de datos. ✔
+              2- Pdf-Imagenes correción nombre archivo implementación eliminar de a 1 o selección de varios. ✔                                    

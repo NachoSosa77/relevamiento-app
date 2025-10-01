@@ -26,10 +26,10 @@ export async function POST(req: Request) {
     try {
       const fileBuffer = await fileToBuffer(file);
 
-      // 👇 nombre único = relevamientoId + "_" + nombre original
-      const uniqueName = `${relevamientoId}_${file.name}`;
+      // Nombre único que usamos para el blob y para la base de datos
+      const nombreArchivo = `${relevamientoId}_${file.name}`;
 
-      const blob = await put(uniqueName, fileBuffer, {
+      const blob = await put(nombreArchivo, fileBuffer, {
         access: "public",
         contentType: file.type,
       });
@@ -39,14 +39,14 @@ export async function POST(req: Request) {
       await pool.execute(
         `INSERT INTO archivos (relevamiento_id, archivo_url, tipo_archivo, nombre_archivo, fecha_subida)
          VALUES (?, ?, ?, ?, NOW())`,
-        [relevamientoId, blob.url, tipo_archivo, file.name] // 👈 acá guardamos solo el nombre original
+        [relevamientoId, blob.url, tipo_archivo, nombreArchivo]
       );
 
       archivosSubidos.push({
         archivo_url: blob.url,
         tipo_archivo,
         relevamiento_id: relevamientoId,
-        nombre_archivo: file.name, // mostramos el original
+        nombre_archivo: nombreArchivo,
       });
     } catch (err: any) {
       console.error(`❌ Error al subir archivo ${file.name}:`, err);
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
         nombre: file.name,
         mensaje: err.message || "Error desconocido",
       });
-      continue;
     }
   }
 
