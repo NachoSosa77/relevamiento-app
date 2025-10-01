@@ -89,7 +89,6 @@ export async function GET(
         { status: 404 }
       );
     }
-    console.timeEnd("GET_Request_Total");
     return NextResponse.json({ local });
   } catch (err: any) {
     console.error("Error al obtener el local:", err);

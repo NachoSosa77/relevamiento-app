@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { OkPacket, RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,7 +19,6 @@ export async function GET(
   { params }: { params: Promise<{ relevamientoId: string }> }
 ) {
   try {
-    const connection = await getConnection();
     const relevamientoId = (await params).relevamientoId;
 
     if (!relevamientoId) {
@@ -29,12 +28,10 @@ export async function GET(
       );
     }
 
-    const [serviciosBasicos] = await connection.query<ServiciosBasicos[]>(
+    const [serviciosBasicos] = await pool.query<ServiciosBasicos[]>(
       "SELECT * FROM servicios_basicos_predio WHERE relevamiento_id = ?",
       [Number(relevamientoId)]
     );
-
-    connection.release();
 
     return NextResponse.json({ serviciosBasicos });
   } catch (err: any) {
@@ -48,7 +45,6 @@ export async function GET(
 
 export async function PATCH(req: NextRequest) {
   try {
-    const connection = await getConnection();
     const body = await req.json();
 
     const servicios = body.serviciosBasicos;
@@ -62,7 +58,7 @@ export async function PATCH(req: NextRequest) {
 
     // Hacemos update por cada servicio usando el id
     for (const s of servicios) {
-      await connection.query<OkPacket>(
+      await pool.query<OkPacket>(
         `UPDATE servicios_basicos_predio 
          SET disponibilidad = ?, distancia = ?, en_predio = ?, prestadores = ?
          WHERE id = ?`,
@@ -76,7 +72,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    connection.release();
     return NextResponse.json({
       message: "Servicios actualizados correctamente",
     });

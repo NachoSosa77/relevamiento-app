@@ -1,6 +1,5 @@
 // En /api/acondicionamiento_basicas
 
-// 🔹 MODIFICACIÓN CLAVE: Importar 'pool' en lugar de 'getConnection'
 import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,7 +26,6 @@ export async function POST(req: NextRequest) {
   // 🔹 Se eliminó: let connection: PoolConnection | undefined;
 
   try {
-    // 🔹 Se eliminó: connection = await getConnection();
     const data: AcondicionamientoItem[] = await req.json();
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -88,7 +86,6 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-  // 🔹 Se eliminó: finally { if (connection) connection.release(); }
 }
 
 export async function GET(req: NextRequest) {

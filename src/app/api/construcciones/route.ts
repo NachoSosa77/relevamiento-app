@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { ResultSetHeader } from "mysql2";
 import { NextResponse } from "next/server";
 
@@ -28,16 +28,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const connection = await getConnection();
-
     // 🔒 Verificación de duplicado
-    const [existing] = await connection.query(
+    const [existing] = await pool.query(
       `SELECT id FROM construcciones WHERE relevamiento_id = ? AND numero_construccion = ?`,
       [relevamiento_id, numero_construccion]
     );
 
     if ((existing as any[]).length > 0) {
-      connection.release();
       return NextResponse.json(
         {
           message:
@@ -47,7 +44,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const [result] = await connection.query<ResultSetHeader>(
+    const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO construcciones (
         relevamiento_id,
         numero_construccion,
@@ -63,7 +60,6 @@ export async function POST(req: Request) {
         superficie_total,
       ]
     );
-    connection.release();
 
     return NextResponse.json(
       {
@@ -97,14 +93,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const connection = await getConnection();
-
-    const [rows] = await connection.query(
+    const [rows] = await pool.query(
       `SELECT * FROM construcciones WHERE relevamiento_id = ? ORDER BY numero_construccion ASC`,
       [relevamientoId]
     );
-
-    connection.release();
 
     return NextResponse.json(rows, { status: 200 });
   } catch (err: any) {

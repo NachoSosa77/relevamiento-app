@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,7 +19,6 @@ export async function GET(
   { params }: { params: Promise<{ relevamientoId: string }> }
 ) {
   try {
-    const connection = await getConnection();
     const relevamientoId = (await params).relevamientoId;
 
     if (!relevamientoId) {
@@ -29,12 +28,10 @@ export async function GET(
       );
     }
 
-    const [areasExteriores] = await connection.query<AreaExterior[]>(
+    const [areasExteriores] = await pool.query<AreaExterior[]>(
       "SELECT * FROM areas_exteriores WHERE relevamiento_id = ?",
       [Number(relevamientoId)]
     );
-
-    connection.release();
 
     return NextResponse.json({ areasExteriores });
   } catch (err: any) {

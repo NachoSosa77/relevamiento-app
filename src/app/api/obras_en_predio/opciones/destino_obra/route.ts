@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 
@@ -11,11 +11,9 @@ interface OpcionObraEnpredio extends RowDataPacket {
 
 export async function GET() {
   try {
-    const connection = await getConnection();
-    const [opciones] = await connection.query<OpcionObraEnpredio[]>(
+    const [opciones] = await pool.query<OpcionObraEnpredio[]>(
       "SELECT * FROM destino_obra"
     );
-    connection.release();
 
     return NextResponse.json(opciones);
   } catch (err: any) {

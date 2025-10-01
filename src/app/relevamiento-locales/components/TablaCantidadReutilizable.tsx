@@ -134,6 +134,11 @@ export default function TableCantidadReutilizable({
     if (isSubmitting) return;
     setIsSubmitting(true);
 
+    if (!relevamientoId || !localId) {
+      toast.error("Faltan IDs válidos para guardar");
+      return;
+    }
+
     try {
       const res = await fetch("/api/aberturas", {
         method: "POST",
@@ -245,9 +250,16 @@ export default function TableCantidadReutilizable({
                                 type="radio"
                                 name={`estado-${id}-${tipo}`}
                                 value={estado}
-                                checked={responses[id]?.[tipo]?.estado === estado}
+                                checked={
+                                  responses[id]?.[tipo]?.estado === estado
+                                }
                                 onChange={() =>
-                                  handleResponseChange(id, tipo, "estado", estado)
+                                  handleResponseChange(
+                                    id,
+                                    tipo,
+                                    "estado",
+                                    estado
+                                  )
                                 }
                                 className="mr-1 mt-4"
                               />

@@ -2,80 +2,95 @@ import { pool } from "@/app/lib/db"; // 🔹 MODIFICACIÓN CLAVE: Importamos 'po
 import { RowDataPacket } from "mysql2/promise"; // Necesario para tipado
 import { NextRequest, NextResponse } from "next/server";
 
-// Definición de la interfaz
-interface IluminacionVentilacionItem {
-  id?: number;
-  condicion?: string;
-  disponibilidad?: string;
-  superficie_iluminacion?: number;
-  superficie_ventilacion?: number;
-  relevamiento_id: number;
-  local_id: number;
-}
-
-const chunkArray = <T>(arr: T[], size: number): T[][] => {
-  const result: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size));
-  }
-  return result;
-};
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // 🔹 Eliminada la llamada a getConnection()
-    const data: IluminacionVentilacionItem[] = await req.json();
+    const body = await req.json();
+    const { localId, relevamientoId, payload } = body;
 
-    if (!Array.isArray(data) || data.length === 0) {
+    if (!localId || !relevamientoId || !Array.isArray(payload)) {
       return NextResponse.json(
-        { error: "Payload debe ser un array no vacío" },
+        { error: "Datos inválidos en la request" },
         { status: 400 }
       );
     }
 
+    const values = payload.map((item: any) => [
+      localId,
+      relevamientoId,
+      item.condicion,
+      item.disponibilidad ?? null,
+      item.superficie_iluminacion ?? null,
+      item.superficie_ventilacion ?? null,
+    ]);
+
     const insertQuery = `
-      INSERT INTO iluminacion_ventilacion (
-        condicion, disponibilidad, superficie_iluminacion, superficie_ventilacion, relevamiento_id, local_id
-      ) VALUES ?
+      INSERT INTO iluminacion_ventilacion 
+        (local_id, relevamiento_id, condicion, disponibilidad, superficie_iluminacion, superficie_ventilacion)
+      VALUES ?
       ON DUPLICATE KEY UPDATE
-        condicion = VALUES(condicion),
         disponibilidad = VALUES(disponibilidad),
         superficie_iluminacion = VALUES(superficie_iluminacion),
         superficie_ventilacion = VALUES(superficie_ventilacion)
     `;
 
-    // Chunk de 100 filas
-    const chunkSize = 100;
-    const chunks = chunkArray(data, chunkSize);
+    console.time("Insert chunk");
+    await pool.query(insertQuery, [values]);
+    console.timeEnd("Insert chunk");
 
-    for (const chunk of chunks) {
-      const values = chunk.map((item) => [
-        item.condicion ?? null,
-        item.disponibilidad ?? null,
-        item.superficie_iluminacion ?? null,
-        item.superficie_ventilacion ?? null,
-        item.relevamiento_id,
-        item.local_id,
-      ]);
+    return NextResponse.json({ success: true, rows: values.length });
+  } catch (error: any) {
+    console.error("Error en POST iluminacion_ventilacion:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
 
-      // 🔹 MODIFICACIÓN CLAVE: Usamos pool.query() para el batch insert
-      await pool.query(insertQuery, [values]);
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      id,
+      condicion,
+      disponibilidad,
+      superficie_iluminacion,
+      superficie_ventilacion,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Falta el campo id en el body" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(
-      { message: "Datos insertados/actualizados correctamente" },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    console.error(
-      "Error al insertar/actualizar iluminacion_ventilacion:",
-      error
-    );
-    const details = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Error al insertar/actualizar los datos", details },
-      { status: 500 }
-    );
+    const updateQuery = `
+      UPDATE iluminacion_ventilacion
+      SET
+        condicion = COALESCE(?, condicion),
+        disponibilidad = COALESCE(?, disponibilidad),
+        superficie_iluminacion = COALESCE(?, superficie_iluminacion),
+        superficie_ventilacion = COALESCE(?, superficie_ventilacion)
+      WHERE id = ?
+    `;
+
+    const [result]: any = await pool.query(updateQuery, [
+      condicion ?? null,
+      disponibilidad ?? null,
+      superficie_iluminacion ?? null,
+      superficie_ventilacion ?? null,
+      id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { error: "No se encontró registro para actualizar" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, updated: result.affectedRows });
+  } catch (error: any) {
+    console.error("Error en PATCH iluminacion_ventilacion:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 

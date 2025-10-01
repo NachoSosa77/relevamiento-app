@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import type { ResultSetHeader } from "mysql2";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const connection = await getConnection();
-
   try {
     const body = await req.json();
     const { relevamiento_id, servicios, construccion_id } = body;
@@ -22,7 +20,7 @@ export async function POST(req: Request) {
         item;
 
       // Verificamos si ya existe un registro con mismo servicio, relevamiento y construcción
-      const [rows] = await connection.query<any[]>(
+      const [rows] = await pool.query<any[]>(
         `SELECT id FROM condiciones_accesibilidad
          WHERE servicio = ? AND relevamiento_id = ? AND construccion_id = ?`,
         [servicio, relevamiento_id, construccion_id]
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
 
       if (rows.length > 0) {
         // Ya existe: hacer UPDATE
-        await connection.query(
+        await pool.query(
           `UPDATE condiciones_accesibilidad SET
             disponibilidad = ?,
             estado = ?,
@@ -41,7 +39,7 @@ export async function POST(req: Request) {
         );
       } else {
         // No existe: hacer INSERT
-        await connection.query(
+        await pool.query(
           `INSERT INTO condiciones_accesibilidad (
             servicio,
             disponibilidad,
@@ -70,14 +68,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error al guardar condiciones_accesibilidad:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }
 
 export async function PATCH(req: Request) {
-  const connection = await getConnection();
-
   try {
     const body = await req.json();
 
@@ -102,7 +96,7 @@ export async function PATCH(req: Request) {
 
       if (!id) {
         // Si no hay id, insertamos nuevo registro (opcional)
-        await connection.query<ResultSetHeader>(
+        await pool.query<ResultSetHeader>(
           `INSERT INTO condiciones_accesibilidad (
             servicio,
             disponibilidad,
@@ -124,7 +118,7 @@ export async function PATCH(req: Request) {
         );
       } else {
         // Actualizamos registro existente
-        await connection.query<ResultSetHeader>(
+        await pool.query<ResultSetHeader>(
           `UPDATE condiciones_accesibilidad SET
             servicio = ?,
             disponibilidad = ?,
@@ -153,14 +147,10 @@ export async function PATCH(req: Request) {
   } catch (error) {
     console.error("Error al actualizar relevamiento:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }
 
 export async function GET(req: Request) {
-  const connection = await getConnection();
-
   try {
     const url = new URL(req.url);
     const relevamiento_id = url.searchParams.get("relevamiento_id");
@@ -173,7 +163,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const [rows] = await connection.query(
+    const [rows] = await pool.query(
       `SELECT id, servicio, disponibilidad, estado, mantenimiento, cantidad 
        FROM condiciones_accesibilidad 
        WHERE relevamiento_id = ? AND construccion_id = ?`,
@@ -184,7 +174,5 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("Error al obtener condiciones accesibilidad:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }

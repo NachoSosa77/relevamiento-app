@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,8 +18,7 @@ export async function GET(
       return NextResponse.json({ message: "IDs inválidos" }, { status: 400 });
     }
 
-    const connection = await getConnection();
-    const [rows] = await connection.query<RowDataPacket[]>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT id, servicio, tipo_instalacion, funciona, motivo, local_id, relevamiento_id
       FROM instalaciones_basicas
@@ -27,7 +26,6 @@ export async function GET(
       `,
       [localId, relevamientoId]
     );
-    connection.release();
 
     return NextResponse.json(rows); // devolvemos un array
   } catch (err: any) {
@@ -72,12 +70,10 @@ export async function PATCH(
   values.push(materialId);
 
   try {
-    const connection = await getConnection();
-    const [result] = await connection.query(
+    const [result] = await pool.query(
       `UPDATE instalaciones_basicas SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
-    connection.release();
 
     return NextResponse.json({
       message: "Instalaciones actualizadas correctamente",

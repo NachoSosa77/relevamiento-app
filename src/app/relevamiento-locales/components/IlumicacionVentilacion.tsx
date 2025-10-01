@@ -10,6 +10,7 @@ import IluminacionVentilacionSkeleton from "./skeletons/IluminacionVentilacionSk
 
 interface ResponseData {
   [id: string]: {
+    id?: number; // 🔹 este es el id de la fila en la base
     disponibilidad?: string;
     superficieIluminacion?: number;
     superficieVentilacion?: number;
@@ -44,49 +45,50 @@ export default function IluminacionVentilacion({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
- // extraer fetchData a función externa del useEffect
-const fetchData = async () => {
-  try {
-    const res = await fetch(
-      `/api/iluminacion_ventilacion?localId=${localId}&relevamientoId=${relevamientoId}`
-    );
-    if (!res.ok) return;
-    const data = await res.json();
+  // extraer fetchData a función externa del useEffect
+  const fetchData = async () => {
+    try {
+      const res = await fetch(
+        `/api/iluminacion_ventilacion?localId=${localId}&relevamientoId=${relevamientoId}`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
 
-    if (data.length > 0) {
-      const newResponses: ResponseData = {};
-      data.forEach((item: InterfaceIluminacionVentilacion) => {
-        const local = locales.find((l) => l.question === item.condicion);
-        if (!local) return;
-        newResponses[local.id] = {
-          disponibilidad: item.disponibilidad ?? undefined,
-          superficieIluminacion: item.superficie_iluminacion
-            ? Number(item.superficie_iluminacion)
-            : 0,
-          superficieVentilacion: item.superficie_ventilacion
-            ? Number(item.superficie_ventilacion)
-            : 0,
-        };
-      });
-      setResponses(newResponses);
-      setIsEditing(true); // modo edición
-    } else {
-      setResponses({});
-      setIsEditing(false);
+      if (data.length > 0) {
+        const newResponses: ResponseData = {};
+        data.forEach((item: InterfaceIluminacionVentilacion) => {
+          const local = locales.find((l) => l.question === item.condicion);
+          if (!local) return;
+          newResponses[local.id] = {
+            id: item.id, // 🔹 importante para PATCH
+            disponibilidad: item.disponibilidad ?? undefined,
+            superficieIluminacion: item.superficie_iluminacion
+              ? Number(item.superficie_iluminacion)
+              : undefined,
+            superficieVentilacion: item.superficie_ventilacion
+              ? Number(item.superficie_ventilacion)
+              : undefined,
+          };
+        });
+        setResponses(newResponses);
+        setIsEditing(data.length > 0); // modo edición
+      } else {
+        setResponses({});
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error("Error cargando iluminación y ventilación:", err);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (err) {
-    console.error("Error cargando iluminación y ventilación:", err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-// correr solo una vez al montar
-useEffect(() => {
-  if (!relevamientoId || isNaN(localId)) return;
-  setIsLoading(true);
-  fetchData();
-}, [localId, relevamientoId, locales]);
+  // correr solo una vez al montar
+  useEffect(() => {
+    if (!relevamientoId || isNaN(localId)) return;
+    setIsLoading(true);
+    fetchData();
+  }, [localId, relevamientoId, locales]);
 
   const handleResponseChange = (
     id: string,
@@ -102,63 +104,67 @@ useEffect(() => {
     }));
   };
 
-  const handleGuardar = async () => {
-    const payload = locales.map(({ id, question }) => ({
-      condicion: question,
-      disponibilidad: responses[id]?.disponibilidad,
-      superficie_iluminacion: responses[id]?.superficieIluminacion,
-      superficie_ventilacion: responses[id]?.superficieVentilacion,
-      relevamiento_id: relevamientoId,
-      local_id: localId,
-    }));
+const handleGuardar = async () => {
+  if (!relevamientoId || !localId) return;
 
-    const hayDatos = payload.some(
-      (item) =>
-        item.disponibilidad ||
-        item.superficie_iluminacion ||
-        item.superficie_ventilacion
-    );
+  setIsSubmitting(true);
 
-    if (!hayDatos) {
-      toast.warning("Por favor, completá al menos un dato antes de guardar.");
-      return;
+  try {
+    for (const { id, question } of locales) {
+      const resp = responses[id];
+      if (!resp) continue;
+
+      const payload = {
+        id: resp.id ?? null, // si existe, vamos a PATCH
+        condicion: question,
+        disponibilidad: resp.disponibilidad ?? null,
+        superficie_iluminacion: resp.superficieIluminacion ?? null,
+        superficie_ventilacion: resp.superficieVentilacion ?? null,
+        relevamiento_id: relevamientoId,
+        local_id: localId,
+      };
+
+      if (resp.id) {
+        // 🔹 Actualizamos registro existente
+        await fetch("/api/iluminacion_ventilacion", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // 🔹 Insertamos nuevo registro
+        await fetch("/api/iluminacion_ventilacion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify([payload]), // POST espera un array
+        });
+      }
     }
-    if (isSubmitting) return;
 
-    setIsSubmitting(true);
+    toast.success("Información guardada correctamente");
+    fetchData();
+    onUpdate?.();
+  } catch (err) {
+    console.error(err);
+    toast.error("Error al guardar los datos");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    try {
-      await fetch("/api/iluminacion_ventilacion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      toast.success(
-        isEditing
-          ? "Información actualizada correctamente"
-          : "Información guardada correctamente"
-      );
-       fetchData();
-      onUpdate?.();
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al guardar los datos");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+
 
   if (isLoading) return <IluminacionVentilacionSkeleton />;
 
   return (
     <div className="mx-10 text-sm">
-
       <div className="flex items-center gap-2 mt-2 p-2 border bg-custom text-white">
-      {isEditing && (
-        <div className="bg-yellow-100 text-yellow-700 p-2 mb-2 rounded-md text-xs">
-          ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a guardar.
-        </div>
-      )}
+        {isEditing && (
+          <div className="bg-yellow-100 text-yellow-700 p-2 mb-2 rounded-md text-xs">
+            ⚠️ Estás viendo datos ya guardados. Podés editarlos y volver a
+            guardar.
+          </div>
+        )}
         <div className="w-6 h-6 rounded-full flex justify-center items-center text-custom bg-white">
           <p>{id}</p>
         </div>
@@ -246,7 +252,11 @@ useEffect(() => {
           disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          {isSubmitting ? "Guardando..." : isEditing ? "Actualizar Información" : "Guardar Información"}
+          {isSubmitting
+            ? "Guardando..."
+            : isEditing
+            ? "Actualizar Información"
+            : "Guardar Información"}
         </button>
       </div>
     </div>

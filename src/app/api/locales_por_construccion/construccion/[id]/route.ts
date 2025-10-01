@@ -1,4 +1,4 @@
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -7,14 +7,11 @@ export async function GET(
 ) {
   try {
     const construccionId = (await params).id;
-    const connection = await getConnection();
 
-    const [rows] = await connection.query(
+    const [rows] = await pool.query(
       `SELECT * FROM locales_por_construccion WHERE construccion_id = ?`,
       [construccionId]
     );
-
-    connection.release();
 
     return NextResponse.json(rows);
   } catch (error) {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 
@@ -11,11 +11,9 @@ interface OpcionObraEnpredio extends RowDataPacket {
 
 export async function GET() {
   try {
-    const connection = await getConnection();
-    const [opciones] = await connection.query<OpcionObraEnpredio[]>(
+    const [opciones] = await pool.query<OpcionObraEnpredio[]>(
       "SELECT * FROM obras_en_predio"
     );
-    connection.release();
 
     return NextResponse.json(opciones);
   } catch (err: any) {
@@ -58,8 +56,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const connection = await getConnection();
-    const [result] = await connection.query<ResultSetHeader>(
+    const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO obras_en_predio (tipo_obra, estado, financiamiento, destino, superficie_total, relevamiento_id) 
        VALUES (?, ?, ?, JSON_ARRAY(?), ?, ?)`,
       [
@@ -71,7 +68,6 @@ export async function POST(req: Request) {
         relevamiento_id,
       ]
     );
-    connection.release();
 
     return NextResponse.json(
       { message: "Obra creada correctamente", id: result.insertId },

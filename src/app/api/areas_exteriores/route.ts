@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,7 +16,6 @@ interface AreaExterior extends RowDataPacket {
 
 export async function POST(req: NextRequest) {
   try {
-    const connection = await getConnection();
     const body = await req.json();
 
     if (!Array.isArray(body)) {
@@ -30,13 +29,12 @@ export async function POST(req: NextRequest) {
 
     for (const area of body) {
       // Validar duplicado
-      const [existingAreas] = await connection.query<AreaExterior[]>(
+      const [existingAreas] = await pool.query<AreaExterior[]>(
         `SELECT * FROM areas_exteriores WHERE relevamiento_id = ? AND identificacion_plano = ?`,
         [area.relevamiento_id, area.identificacion_plano]
       );
 
       if (existingAreas.length > 0) {
-        connection.release();
         return NextResponse.json(
           {
             message: `Ya existe un área con identificación "${area.identificacion_plano}" para este relevamiento.`,
@@ -46,7 +44,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Si no existe, insertar
-      const [result] = await connection.query<ResultSetHeader>(
+      const [result] = await pool.query<ResultSetHeader>(
         `INSERT INTO areas_exteriores (cui_number, relevamiento_id, identificacion_plano, tipo, superficie) VALUES (?, ?, ?, ?, ?)`,
         [
           area.cui_number,
@@ -58,8 +56,6 @@ export async function POST(req: NextRequest) {
       );
       insertResults.push({ id: result.insertId, ...area });
     }
-
-    connection.release();
 
     return NextResponse.json({
       message: "Áreas exteriores guardadas correctamente",
@@ -76,7 +72,6 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const connection = await getConnection();
     const relevamientoId = req.url.split("/").pop(); // Obtener el último segmento de la URL como relevamientoId
 
     let query = "SELECT * FROM areas_exteriores";
@@ -87,11 +82,7 @@ export async function GET(req: NextRequest) {
       params.push(Number(relevamientoId));
     }
 
-    const [areasExteriores] = await connection.query<AreaExterior[]>(
-      query,
-      params
-    );
-    connection.release();
+    const [areasExteriores] = await pool.query<AreaExterior[]>(query, params);
 
     return NextResponse.json({ areasExteriores });
   } catch (err: any) {

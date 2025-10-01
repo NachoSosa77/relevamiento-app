@@ -6,16 +6,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    // Ya no necesitas 'connection = await getConnection();'
     const data = await req.json();
+    if (!Array.isArray(data) || data.length === 0)
+      return NextResponse.json({ error: "Payload vacío" }, { status: 400 });
 
-    if (!Array.isArray(data)) {
-      return NextResponse.json(
-        { error: "Payload debe ser un array" },
-        { status: 400 }
-      );
-    }
+    const insertQuery = `
+      INSERT INTO aberturas (abertura, tipo, estado, cantidad, relevamiento_id, local_id)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE
+        estado = VALUES(estado),
+        cantidad = VALUES(cantidad)
+    `;
 
+    // convertir cada objeto a array
     const values = data.map((item) => [
       item.abertura ?? null,
       item.tipo ?? null,
@@ -25,31 +28,16 @@ export async function POST(req: Request) {
       item.local_id ?? null,
     ]);
 
-    const placeholders = values.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
-    const flatValues = values.flat();
+    // un solo query, pool.query con array de arrays funciona bien
+    await pool.query(insertQuery, [values]);
 
-    const query = `
-      INSERT INTO aberturas (abertura, tipo, estado, cantidad, relevamiento_id, local_id)
-      VALUES ${placeholders}
-      ON DUPLICATE KEY UPDATE
-        estado = VALUES(estado),
-        cantidad = VALUES(cantidad)
-    `;
-
-    await pool.execute(query, flatValues); // <--- Usa pool.execute() directamente
-
-    return NextResponse.json(
-      { message: "Insertado o actualizado correctamente" },
-      { status: 200 }
-    );
-  } catch (error) {
+    return NextResponse.json({
+      message: "Insertado o actualizado correctamente",
+    });
+  } catch (error: any) {
     console.error("Error en POST /aberturas:", error);
-    return NextResponse.json(
-      { error: "Error al insertar/actualizar aberturas" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  // ¡No se necesita finally para release() aquí!
 }
 
 export async function GET(req: NextRequest) {
@@ -64,7 +52,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
     }
 
-    // Ya no necesitas 'connection = await getConnection();'
     const [rows] = await pool.execute(
       // <--- Usa pool.execute() directamente
       `SELECT * FROM aberturas WHERE local_id = ? AND relevamiento_id = ?`,

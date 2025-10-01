@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -14,16 +14,12 @@ export async function GET(
   }
 
   try {
-    const connection = await getConnection();
-
-    const [rows]: any = await connection.query(
+    const [rows]: any = await pool.query(
       `SELECT cantidad_construcciones, superficie_total_predio, observaciones
        FROM espacios_escolares
        WHERE relevamiento_id = ?`,
       [id]
     );
-
-    connection.release();
 
     if (!rows.length) {
       return NextResponse.json(null); // No hay datos aún
@@ -52,16 +48,12 @@ export async function PATCH(
   }
 
   try {
-    const connection = await getConnection();
-
-    const [result]: any = await connection.query(
+    const [result]: any = await pool.query(
       `UPDATE espacios_escolares
        SET predio_id = ?
        WHERE relevamiento_id = ?`,
       [predio_id, relevamientoId]
     );
-
-    connection.release();
 
     return NextResponse.json({
       success: true,

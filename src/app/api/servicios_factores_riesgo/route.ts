@@ -1,13 +1,11 @@
 // app/api/factores_riesgo_ambiental/route.ts
 
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
 // Método POST
 export async function POST(req: NextRequest) {
-  const connection = await getConnection();
-
   try {
     const body = await req.json();
 
@@ -36,7 +34,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await connection.beginTransaction();
+    await pool.beginTransaction();
 
     const query = `
       INSERT INTO factores_riesgo_ambiental
@@ -54,15 +52,14 @@ export async function POST(req: NextRequest) {
       f.relevamiento_id,
     ]);
 
-    await connection.query<ResultSetHeader>(query, [data]);
+    await pool.query<ResultSetHeader>(query, [data]);
 
-    await connection.commit();
+    await pool.commit();
     return NextResponse.json({ success: true });
   } catch (error) {
-    await connection.rollback();
+    await pool.rollback();
     console.error("❌ Error insertando factores de riesgo ambiental:", error);
     return NextResponse.json({ success: false, error });
   } finally {
-    connection.release();
   }
 }

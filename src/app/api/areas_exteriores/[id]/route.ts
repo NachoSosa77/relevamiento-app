@@ -1,52 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
-
-/* export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const connection = await getConnection();
-    const id = (await params).id;
-
-    if (!id) {
-      return NextResponse.json(
-        { message: "ID no proporcionado" },
-        { status: 400 }
-      );
-    }
-
-    const [result] = await connection.query<RowDataPacket[]>(
-      "SELECT * FROM areas_exteriores WHERE id = ?",
-      [id]
-    );
-    connection.release();
-
-    if (result.length === 0) {
-      return NextResponse.json(
-        { message: "Área exterior no encontrada" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(result[0]); // ✅ Devolver solo un objeto en lugar de un array
-  } catch (err: any) {
-    console.error("Error al obtener el área exterior:", err);
-    return NextResponse.json(
-      { message: "Error interno", error: err.message },
-      { status: 500 }
-    );
-  }
-} */
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const connection = await getConnection();
     const id = (await params).id;
     const body = await req.json(); // 👀 Leer el cuerpo de la petición
 
@@ -58,7 +19,7 @@ export async function PUT(
     }
 
     // ✅ Actualizar la base de datos
-    const [result] = await connection.query<ResultSetHeader>(
+    const [result] = await pool.query<ResultSetHeader>(
       `UPDATE areas_exteriores 
    SET identificacion_plano = ?, superficie = ?, terminacion_piso = ?, estado_conservacion = ?, tipo = ?, predio_id = ?
    WHERE id = ?`,
@@ -72,8 +33,6 @@ export async function PUT(
         id,
       ]
     );
-
-    connection.release();
 
     if (result.affectedRows === 0) {
       return NextResponse.json(
@@ -99,7 +58,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const connection = await getConnection();
     const id = (await params).id;
     const body = await req.json();
 
@@ -142,9 +100,7 @@ export async function PATCH(
       ", "
     )} WHERE id = ?`;
 
-    const [result] = await connection.query<ResultSetHeader>(query, values);
-
-    connection.release();
+    const [result] = await pool.query<ResultSetHeader>(query, values);
 
     if (result.affectedRows === 0) {
       return NextResponse.json(
