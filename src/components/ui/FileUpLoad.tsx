@@ -55,10 +55,9 @@ const FileUpload: React.FC<Props> = ({ relevamientoId, onUploadSuccess }) => {
       return;
     }
 
-    const loteSize = 20; // cantidad de archivos por lote
+    const loteSize = 10; // cantidad de archivos por lote
     const totalLotes = Math.ceil(archivos.length / loteSize); // total de lotes a subir
     let subidosTotal: any[] = [];
-
     setIsUploading(true);
     setUploadProgress(0); // resetear barra
 
