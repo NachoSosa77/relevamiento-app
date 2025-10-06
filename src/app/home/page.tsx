@@ -9,6 +9,7 @@ import { Relevamiento } from "@/interfaces/Relevamiento";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { resetArchivos } from "@/redux/slices/archivoSlice";
 import {
+  resetAreasExteriores,
   setCui,
   setInstitucionId,
   setRelevamientoId,
@@ -49,7 +50,7 @@ export default function HomePage() {
       // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
       dispatch(resetArchivos());
-
+      dispatch(resetAreasExteriores());
       toast.success("Relevamiento creado correctamente");
       dispatch(setRelevamientoId(nuevoRelevamientoId));
       sessionStorage.setItem("relevamientoId", String(nuevoRelevamientoId));

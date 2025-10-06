@@ -104,54 +104,78 @@ export default function IluminacionVentilacion({
     }));
   };
 
-const handleGuardar = async () => {
+  const handleGuardar = async () => {
   if (!relevamientoId || !localId) return;
 
   setIsSubmitting(true);
 
   try {
+    // 🔹 Armamos arrays separados para nuevos registros y existentes
+    const nuevos: any[] = [];
+    const existentes: any[] = [];
+
     for (const { id, question } of locales) {
       const resp = responses[id];
       if (!resp) continue;
 
-      const payload = {
-        id: resp.id ?? null, // si existe, vamos a PATCH
+      const registro = {
         condicion: question,
         disponibilidad: resp.disponibilidad ?? null,
         superficie_iluminacion: resp.superficieIluminacion ?? null,
         superficie_ventilacion: resp.superficieVentilacion ?? null,
-        relevamiento_id: relevamientoId,
-        local_id: localId,
       };
 
       if (resp.id) {
-        // 🔹 Actualizamos registro existente
-        await fetch("/api/iluminacion_ventilacion", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        // ya existe → PATCH individual
+        existentes.push({ ...registro, id: resp.id });
       } else {
-        // 🔹 Insertamos nuevo registro
-        await fetch("/api/iluminacion_ventilacion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify([payload]), // POST espera un array
-        });
+        // nuevo → se inserta en bloque
+        nuevos.push(registro);
       }
     }
 
+    // 🔹 Ejecutar todos los PATCH en paralelo (si hay)
+    if (existentes.length > 0) {
+      await Promise.all(
+        existentes.map((item) =>
+          fetch("/api/iluminacion_ventilacion", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: item.id,
+              condicion: item.condicion,
+              disponibilidad: item.disponibilidad,
+              superficie_iluminacion: item.superficie_iluminacion,
+              superficie_ventilacion: item.superficie_ventilacion,
+            }),
+          })
+        )
+      );
+    }
+
+    // 🔹 Enviar un solo POST para todos los nuevos registros
+    if (nuevos.length > 0) {
+      await fetch("/api/iluminacion_ventilacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          localId,
+          relevamientoId,
+          payload: nuevos,
+        }),
+      });
+    }
+
     toast.success("Información guardada correctamente");
-    fetchData();
+    await fetchData();
     onUpdate?.();
   } catch (err) {
-    console.error(err);
+    console.error("Error al guardar iluminación y ventilación:", err);
     toast.error("Error al guardar los datos");
   } finally {
     setIsSubmitting(false);
   }
 };
-
 
 
   if (isLoading) return <IluminacionVentilacionSkeleton />;
