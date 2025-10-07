@@ -1,15 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  Document,
-  Image,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import { Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import EstadoConservacionDetailComponent from "./EstadoConservacionPdf";
-const logoUrl = "/img/logo-ministerio.png";
 
 const styles = StyleSheet.create({
   page: {
@@ -19,14 +11,6 @@ const styles = StyleSheet.create({
     color: "#1A202C",
     backgroundColor: "#FAFAFA",
   },
-  containerBox: {
-    marginTop: 8,
-    backgroundColor: "#fff",
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
   tabla: {
     width: "auto",
     borderStyle: "solid",
@@ -34,40 +18,6 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderBottomWidth: 1,
     marginTop: 6,
-  },
-  detailRow: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  detailLabel: {
-    fontSize: 10,
-    fontWeight: "bold",
-    width: "50%",
-  },
-  detailValue: {
-    fontSize: 10,
-    width: "50%",
-    textAlign: "right",
-  },
-  fila: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    borderBottomWidth: 0.5,
-    borderColor: "#CBD5E0",
-  },
-  celda: {
-    borderWidth: 0.5,
-    borderColor: "#CBD5E0",
-    padding: 6,
-    fontSize: 9,
-    flex: 1,
-    textAlign: "left",
-  },
-  encabezado: {
-    backgroundColor: "#eee",
-    fontWeight: "bold",
   },
   header: {
     flexDirection: "row",
@@ -112,14 +62,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginBottom: 6,
   },
-  label: {
-    fontWeight: "bold",
-    width: "40%",
-    color: "#2D3748",
-  },
-  value: {
-    width: "60%",
-  },
   tableContainer: {
     marginTop: 6,
     border: "1pt solid #CBD5E0",
@@ -154,31 +96,13 @@ const styles = StyleSheet.create({
     width: "45%",
     color: "#333",
   },
-
   valueCell: {
     paddingVertical: 4,
     justifyContent: "center",
-
     fontSize: 10,
     width: "55%",
     textAlign: "right",
     color: "#000",
-  },
-  imageGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  imageContainer: {
-    width: "48%",
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  image: {
-    width: "100%",
-    height: 120,
-    objectFit: "cover",
-    marginBottom: 4,
   },
   subSectionTitle: {
     marginTop: 8,
@@ -199,37 +123,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
     textAlign: "center",
   },
-  localContainer: {
-    marginBottom: 12,
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: "#FFFFFF",
-    border: "1pt solid #CBD5E0",
-  },
-  localHeader: {
-    fontWeight: "bold",
-    fontSize: 11,
-    marginBottom: 6,
-    color: "#2D3748",
-  },
-  localDetailsRow: {
-    marginBottom: 2,
-  },
-  localDetailsLabel: {
-    fontWeight: "bold",
-    width: "40%",
-    color: "#2D3748",
-  },
-  localDetailsValue: {
-    width: "60%",
-  },
-  localSubListContainer: {
-    marginBottom: 4,
-  },
-  localSubItem: {
-    marginBottom: 2,
-  },
 });
+
+// 🔧 MODIFICADA: se ocultan id, relevamiento_id y construccion_id
+const renderCamposConValor = (
+  obj: Record<string, any>,
+  etiquetas?: Record<string, string>
+) => {
+  const ocultarCampos = ["id", "relevamiento_id", "construccion_id"];
+
+  const visibles = Object.entries(obj).filter(([key, valor]) => {
+    if (ocultarCampos.includes(key)) return false;
+    if (valor === null || valor === undefined) return false;
+    if (typeof valor === "string" && valor.trim() === "") return false;
+    if (typeof valor === "number" && valor === 0) return false;
+    return true;
+  });
+
+  return visibles.map(([key, value]) => (
+    <View key={key} style={styles.tableRow}>
+      <Text style={styles.labelCell}>
+        {etiquetas?.[key] ?? key.replace(/_/g, " ")}:
+      </Text>
+      <Text style={styles.valueCell}>{String(value)}</Text>
+    </View>
+  ));
+};
 
 export const ConstruccionPdf = ({ data }: { data: any }) => {
   const { relevamiento, construcciones } = data;
@@ -237,11 +156,11 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
   // Helper to render arrays of items for locals, e.g. aberturas, acondicionamiento, etc.
 
   return (
-    <Document>
+    <>
       {construcciones?.length > 0 &&
         construcciones.map((c: any) => (
-          <Page style={styles.page} size="LEGAL" key={c.id}>
-            <View style={styles.header}>
+          <Page style={styles.page} key={c.id}>
+            {/* <View style={styles.header}>
               <Image src={logoUrl} style={styles.logo} />
               <View style={styles.headerTextContainer}>
                 <Text style={styles.headerText}>
@@ -258,7 +177,7 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                 </Text>
               </View>
             </View>
-            {/* Relevamiento */}
+
             <View style={styles.section}>
               <Text style={styles.title}>Resumen del Relevamiento</Text>
               <View style={styles.tableContainer}>
@@ -273,9 +192,12 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                   <Text style={styles.tableCell}>{relevamiento?.email}</Text>
                 </View>
               </View>
+            </View> */}
+
+            <View style={styles.section}>
+              <Text style={styles.title}>Construcciones</Text>
             </View>
 
-            {/* Construcciones y Locales con detalle */}
             <View key={c.id} style={styles.section}>
               <Text style={styles.title}>
                 CUI(Código unico de infraestructura): {relevamiento.cui_id}
@@ -366,91 +288,88 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                 </View>
               )}
 
-              <View style={{ marginTop: 8 }} break>
+              <View style={{ marginTop: 8 }}>
                 <Text style={styles.subTitle}>SERVICIOS BÁSICOS</Text>
               </View>
               {/* Servicio Agua */}
-              {c.servicioAgua?.length > 0 && (
-                <View
-                  style={{
-                    marginTop: 8,
-                    backgroundColor: "#fff",
-                    padding: 6,
-                    borderRadius: 4,
-                  }}
-                >
-                  <Text style={styles.subSectionTitle}>AGUA</Text>
+              {/* Servicio Agua */}
+{c.servicioAgua?.length > 0 && (
+  <View
+    style={{
+      marginTop: 8,
+      backgroundColor: "#fff",
+      padding: 6,
+      borderRadius: 4,
+    }}
+  >
+    <Text style={styles.subSectionTitle}>AGUA</Text>
 
-                  {c.servicioAgua.map((cond: any, i: number) => (
-                    <View key={i} style={{ marginBottom: 8 }}>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Provisión:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_provision ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Estado de provisión:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_provision_estado ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Tipo de almacenamiento:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_almacenamiento ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Estado del almacenamiento:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_almacenamiento_estado ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Alcance:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.alcance ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Tratamiento potabilizador:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tratamiento ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Tipo de tratamiento:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_tratamiento ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Control sanitario:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.control_sanitario ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Cantidad de veces:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.cantidad_veces ?? "-"}
-                        </Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
+    {c.servicioAgua.map((cond: any, i: number) => (
+      <View key={i} style={{ marginBottom: 8 }}>
+        {/* Provisión */}
+        {cond.tipo_provision?.map((prov: string, idx: number) => (
+          <View key={idx} style={styles.tableRow}>
+            <Text style={styles.labelCell}>Provisión:</Text>
+            <Text style={styles.valueCell}>{prov ?? "-"}</Text>
+          </View>
+        ))}
+
+        {/* Estado de provisión */}
+        {cond.tipo_provision_estado?.map((estado: string, idx: number) => (
+          <View key={idx} style={styles.tableRow}>
+            <Text style={styles.labelCell}>Estado de provisión:</Text>
+            <Text style={styles.valueCell}>{estado || "-"}</Text>
+          </View>
+        ))}
+
+        {/* Tipo de almacenamiento + su estado */}
+        {cond.tipo_almacenamiento?.map((tipo: string, idx: number) => (
+          <View key={idx} style={{ marginBottom: 4 }}>
+            <View style={styles.tableRow}>
+              <Text style={styles.labelCell}>Tipo de almacenamiento:</Text>
+              <Text style={styles.valueCell}>{tipo ?? "-"}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.labelCell}>Estado del almacenamiento:</Text>
+              <Text style={styles.valueCell}>
+                {cond.tipo_almacenamiento_estado?.[idx] ?? "-"}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        {/* Alcance (queda tal como está) */}
+        {cond.alcance?.length > 0 && (
+          <View style={styles.tableRow}>
+            <Text style={styles.labelCell}>Alcance:</Text>
+            <Text style={styles.valueCell}>
+              {cond.alcance.join(", ")}
+            </Text>
+          </View>
+        )}
+
+        {/* Otros campos */}
+        <View style={styles.tableRow}>
+          <Text style={styles.labelCell}>Tratamiento potabilizador:</Text>
+          <Text style={styles.valueCell}>{cond.tratamiento ?? "-"}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.labelCell}>Tipo de tratamiento:</Text>
+          <Text style={styles.valueCell}>{cond.tipo_tratamiento ?? "-"}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.labelCell}>Control sanitario:</Text>
+          <Text style={styles.valueCell}>{cond.control_sanitario ?? "-"}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.labelCell}>Cantidad de veces:</Text>
+          <Text style={styles.valueCell}>{cond.cantidad_veces ?? "-"}</Text>
+        </View>
+      </View>
+    ))}
+  </View>
+)}
+
 
               {/* Servicio Desagues Cloacales */}
               {c.servicioDesague?.length > 0 && (
@@ -525,48 +444,23 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
+                  break
                 >
                   <Text style={styles.subSectionTitle}>
                     INSTALACIONES DE SEGURIDAD Y CONTRA INCENDIOS
                   </Text>
 
                   {c.instalacionesSeguridadIncendio.map(
-                    (ins: any, i: number) => (
+                    (cond: any, i: number) => (
                       <View key={i} style={{ marginBottom: 8 }}>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>Servicio:</Text>
-                          <Text style={styles.valueCell}>
-                            {ins.servicio ?? "-"}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>Disponibilidad:</Text>
-                          <Text style={styles.valueCell}>
-                            {ins.disponibilidad ?? "-"}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>Cantidad:</Text>
-                          <Text style={styles.valueCell}>
-                            {ins.cantidad ?? "-"}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>
-                            Carga anual matafuegos:
-                          </Text>
-                          <Text style={styles.valueCell}>
-                            {ins.carga_anual_matafuegos ?? "-"}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>
-                            Simulacros de evacuación:
-                          </Text>
-                          <Text style={styles.valueCell}>
-                            {ins.simulacros_evacuación ?? "-"}
-                          </Text>
-                        </View>
+                        {renderCamposConValor(cond, {
+                          servicio: "Servicio",
+                          estado: "Estado",
+                          disponibilidad: "Disponibilidad",
+                          cantidad: "Cantidad",
+                          carga_anual_matafuegos: "Carga anual de matafuegos",
+                          simulacros_evacuacion: "Simulacros de evacuación",
+                        })}
                       </View>
                     )
                   )}
@@ -589,41 +483,19 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
 
                   {c.condicionesAccesibilidad.map((cond: any, i: number) => (
                     <View key={i} style={{ marginBottom: 8 }}>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Servicio</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.servicio ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Disponibilidad</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.disponibilidad ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Cantidad</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.cantidad ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Estado</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.estado ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Mantenimiento</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.mantenimiento ?? "-"}
-                        </Text>
-                      </View>
+                      {renderCamposConValor(cond, {
+                        servicio: "Servicio",
+                        disponibilidad: "Disponibilidad",
+                        estado: "Estado",
+                        cantidad: "Cantidad",
+                        mantenimiento: "Mantenimiento",
+                      })}
                     </View>
                   ))}
                 </View>
               )}
 
+              {/* Servicio Electricidad */}
               {/* Servicio Electricidad */}
               {c.servicioElectricidad?.length > 0 && (
                 <View
@@ -638,46 +510,14 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
 
                   {c.servicioElectricidad.map((cond: any, i: number) => (
                     <View key={i} style={{ marginBottom: 8 }}>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Tipo de provisión:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.servicio ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Estado:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.estado ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Disponibilidad:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.disponibilidad ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Potencia:</Text>
-                        <Text style={styles.valueCell}>
-                          {cond.potencia ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Estado de la bateria:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.estado_bateria ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>
-                          Tipo de combustible:
-                        </Text>
-                        <Text style={styles.valueCell}>
-                          {cond.tipo_combustible ?? "-"}
-                        </Text>
-                      </View>
+                      {renderCamposConValor(cond, {
+                        servicio: "Servicio",
+                        estado: "Estado",
+                        disponibilidad: "Disponibilidad",
+                        potencia: "Potencia (kW)",
+                        estado_bateria: "Estado de la batería",
+                        tipo_combustible: "Tipo de combustible",
+                      })}
                     </View>
                   ))}
                 </View>
@@ -692,30 +532,17 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                     padding: 6,
                     borderRadius: 4,
                   }}
+                  break
                 >
                   <Text style={styles.subSectionTitle}>USO DEL COMEDOR</Text>
 
-                  {c.servicioComedor.map((ea: any, i: number) => (
+                  {c.servicioComedor.map((cond: any, i: number) => (
                     <View key={i} style={{ marginBottom: 8 }}>
-                      {/*                       <View style={styles.tableRow}>
-                          <Text style={styles.labelCell}>Servicio</Text>
-                          <Text style={styles.valueCell}>
-                            {ea.servicio ?? "-"}
-                          </Text>
-                        </View>
-  */}
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Disponibilidad</Text>
-                        <Text style={styles.valueCell}>
-                          {ea.disponibilidad ?? "-"}
-                        </Text>
-                      </View>
-                      <View style={styles.tableRow}>
-                        <Text style={styles.labelCell}>Locación</Text>
-                        <Text style={styles.valueCell}>
-                          {ea.tipos_comedor ?? "-"}
-                        </Text>
-                      </View>
+                      {renderCamposConValor(cond, {
+                        servicio: "Servicio",
+                        disponibilidad: "Disponibilidad",
+                        tipo_comedor: "Estado",
+                      })}
                     </View>
                   ))}
                 </View>
@@ -754,6 +581,6 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
             </View>
           </Page>
         ))}
-    </Document>
+    </>
   );
 };

@@ -7,10 +7,7 @@ import { getResumenRelevamiento } from "@/app/lib/client/getResumenRelevamiento"
 import { PDFViewer } from "@react-pdf/renderer";
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
-import { ArchivosDelRelevamiento } from "./ArchivosDelRelevamientoPdf";
-import { ConstruccionPdf } from "./ConstruccionesPdf";
-import { ConstruccionLocalesPdf } from "./ConstruccionLocalesPdf";
-import { PdfRelevamientoResumen } from "./PdfRelevameintoResumen";
+import { DocumentoCompletoRelevamiento } from "./DocumentoCompletoRelevamientoPdf";
 
 interface Archivo {
   id: number;
@@ -68,75 +65,32 @@ export default function VerPdfPage({
     fetchAll();
   }, [relevamientoId]);
 
-
-  const pdfs = [
-    {
-      title: "Resumen del relevamiento",
-      component: <PdfRelevamientoResumen data={resumenData} />,
-    },
-    {
-      title: "Construcciones",
-      component: <ConstruccionPdf data={construccionesData} />,
-    },
-    {
-      title: "Construcción y locales",
-      component: <ConstruccionLocalesPdf data={localesData} />,
-    },
-    {
-      title: "Archivos del relevamiento",
-      component: <ArchivosDelRelevamiento data={archivosData!} />,
-    },
-  ];
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-gray-600">
         <ClipLoader size={40} color="#3B82F6" />
-        <p className="text-sm mt-4">Cargando PDFs...</p>
+        <p className="text-sm mt-4">Cargando...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 justify-center flex-wrap">
-        {pdfs.map((pdf, index) => (
-          <button
-            key={index}
-            onClick={() => setSelectedPdfIndex(index)}
-            className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-              selectedPdfIndex === index
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            {pdf.title}
-          </button>
-        ))}
-      </div>
-
-      {/* PDFViewer con el PDF seleccionado */}
-      <div className="flex justify-center">
-        <div className="bg-white shadow-lg rounded-2xl">
-          <div className="bg-gray-100 px-4 py-2 rounded-t-2xl border-b border-gray-200 text-center">
-            <h2 className="text-lg font-medium text-gray-800">
-              {pdfs[selectedPdfIndex].title}
-            </h2>
-          </div>
-
-          <PDFViewer
-            key={selectedPdfIndex} // 👈 fuerza el remount
-            width={600}
-            height={800}
-            style={{
-              borderBottomLeftRadius: "1rem",
-              borderBottomRightRadius: "1rem",
-            }}
-          >
-            {pdfs[selectedPdfIndex].component}
-          </PDFViewer>
+        <div className="flex justify-center p-6">
+      <div className="bg-white shadow-lg rounded-2xl">
+        <div className="bg-gray-100 px-4 py-2 rounded-t-2xl border-b border-gray-200 text-center">
+          <h2 className="text-lg font-medium text-gray-800">
+            Documento completo del relevamiento
+          </h2>
         </div>
+
+        <PDFViewer width={800} height={1000} style={{ borderBottomLeftRadius: "1rem", borderBottomRightRadius: "1rem" }}>
+          <DocumentoCompletoRelevamiento
+            resumenData={resumenData}
+            construccionesData={construccionesData}
+            localesData={localesData}
+            archivosData={archivosData}
+          />
+        </PDFViewer>
       </div>
     </div>
   );

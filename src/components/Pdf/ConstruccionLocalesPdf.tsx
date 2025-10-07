@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Document,
   Image,
   Page,
   StyleSheet,
   Text,
-  View,
+  View
 } from "@react-pdf/renderer";
 import { JSX } from "react";
 const logoUrl = "/img/logo-ministerio.png";
@@ -271,10 +270,10 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
   };
 
   return (
-    <Document>
+    <>
       {construcciones?.map((c: any) =>
         c.locales?.map((l: any) => (
-          <Page key={l.id} style={styles.page} size="LEGAL">
+          <Page key={l.id} style={styles.page}>
             <View style={styles.header}>
               <Image src={logoUrl} style={styles.logo} />
               <View style={styles.headerTextContainer}>
@@ -292,22 +291,10 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
                 </Text>
               </View>
             </View>
-            {/* Relevamiento */}
-            <View style={styles.section}>
-              <Text style={styles.title}>Resumen del Relevamiento</Text>
-              <View style={styles.tableContainer}>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
-                  <Text style={styles.tableHeaderCell}>Estado:</Text>
-                  <Text style={styles.tableHeaderCell}>Email:</Text>
-                </View>
-                <View key={relevamiento.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{relevamiento?.id}</Text>
-                  <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
-                  <Text style={styles.tableCell}>{relevamiento?.email}</Text>
-                </View>
-              </View>
-            </View>
+
+              <View style={styles.section}>
+                          <Text style={styles.title}>Construcciones y locales</Text>
+                        </View>
 
             {/* Construcciones y Locales con detalle */}
             <View style={styles.section}>
@@ -606,6 +593,6 @@ export const ConstruccionLocalesPdf = ({ data }: { data: any }) => {
           </Page>
         ))
       )}
-    </Document>
+    </>
   );
 };

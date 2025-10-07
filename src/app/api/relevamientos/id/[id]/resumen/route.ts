@@ -1,4 +1,5 @@
 // /app/api/relevamientos/[id]/resumen/route.ts
+import { getAreasExterioresByRelevamiento } from "@/app/lib/server/areasExteriores";
 import { getEspaciosEscolaresByRelevamientonId } from "@/app/lib/server/espaciosescolaresDb";
 import { getInstitucionesRelacionadasByRelevamientoId } from "@/app/lib/server/institucionesRelevamiento";
 import { getPrediosByRelevamientoId } from "@/app/lib/server/predioDb";
@@ -20,6 +21,7 @@ export async function GET(
   const predio = await getPrediosByRelevamientoId(id);
   const espacioEscolar = await getEspaciosEscolaresByRelevamientonId(id);
   const instituciones = await getInstitucionesRelacionadasByRelevamientoId(id);
+  const areasExteriores = await getAreasExterioresByRelevamiento(id);
 
   // ...otros fetchs
 
@@ -30,6 +32,7 @@ export async function GET(
     predio,
     espacioEscolar,
     instituciones,
+    areasExteriores,
     // ...
   });
 }

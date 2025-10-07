@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Document,
   Image,
   Page,
   StyleSheet,
   Text,
-  View,
+  View
 } from "@react-pdf/renderer";
 const logoUrl = "/img/logo-ministerio.png";
 
@@ -231,15 +230,18 @@ const styles = StyleSheet.create({
   },
 });
 
-
 export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
-
-  
-  
-  const { relevamiento, respondientes, visitas, espacioEscolar, instituciones } = data;
+  const {
+    relevamiento,
+    respondientes,
+    visitas,
+    espacioEscolar,
+    instituciones,
+    areasExteriores,
+  } = data;
 
   return (
-    <Document>
+    <>
       <Page style={styles.page}>
         <View style={styles.header}>
           <Image src={logoUrl} style={styles.logo} />
@@ -273,7 +275,7 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
           </View>
         </View>
 
-                {/* instituciones */}
+        {/* instituciones */}
         {instituciones?.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.title}>Instituciones</Text>
@@ -295,7 +297,6 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
             </View>
           </View>
         )}
-
 
         {/* Visitas */}
         {visitas?.length > 0 && (
@@ -343,21 +344,29 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
           </View>
         )}
 
-         {/* Respondientes */}
+        {/* Construcciones */}
         {espacioEscolar?.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.section} wrap={false}>
             <Text style={styles.title}>Predio</Text>
             <View style={styles.tableContainer}>
               <View style={styles.tableRow}>
-                <Text style={styles.tableHeaderCell}>Cantidad de construcciones</Text>
-                <Text style={styles.tableHeaderCell}>Superficie total del predio</Text>
+                <Text style={styles.tableHeaderCell}>
+                  Cantidad de construcciones
+                </Text>
+                <Text style={styles.tableHeaderCell}>
+                  Superficie total del predio
+                </Text>
                 <Text style={styles.tableHeaderCell}>Cui</Text>
                 <Text style={styles.tableHeaderCell}>Observaciones</Text>
               </View>
               {espacioEscolar.map((r: any) => (
                 <View key={r.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{r.cantidad_construcciones}</Text>
-                  <Text style={styles.tableCell}>{r.superficie_total_predio}</Text>
+                  <Text style={styles.tableCell}>
+                    {r.cantidad_construcciones}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {r.superficie_total_predio}
+                  </Text>
                   <Text style={styles.tableCell}>{r.cui}</Text>
                   <Text style={styles.tableCell}>{r.observaciones}</Text>
                 </View>
@@ -366,7 +375,31 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
           </View>
         )}
 
+        {/* Areas Exteriores */}
+        {areasExteriores?.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.title}>Áreas Exteriores</Text>
+            <View style={styles.tableContainer}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableHeaderCell}>Id Plano</Text>
+                <Text style={styles.tableHeaderCell}>Tipo</Text>
+                <Text style={styles.tableHeaderCell}>Superficie</Text>
+                <Text style={styles.tableHeaderCell}>Terminación Piso</Text>
+                <Text style={styles.tableHeaderCell}>Estado</Text>
+              </View>
+              {areasExteriores.map((r: any) => (
+                <View key={r.id} style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{r.identificacion_plano}</Text>
+                  <Text style={styles.tableCell}>{r.tipo}</Text>
+                  <Text style={styles.tableCell}>{r.superficie}</Text>
+                  <Text style={styles.tableCell}>{r.terminacion_piso}</Text>
+                  <Text style={styles.tableCell}>{r.estado_conservacion}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </Page>
-    </Document>
+    </>
   );
 };

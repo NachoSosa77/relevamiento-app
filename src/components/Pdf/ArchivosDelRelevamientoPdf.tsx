@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/alt-text */
 import {
-  Document,
   Image,
   Link,
   Page,
   StyleSheet,
   Text,
-  View,
+  View
 } from "@react-pdf/renderer";
 const logoUrl = "/img/logo-ministerio.png";
 
@@ -255,7 +254,7 @@ export const ArchivosDelRelevamiento = ({ data }: ArchivosDelRelevamientoProps) 
   const { relevamiento, archivos } = data;
 
   return (
-    <Document>
+    <>
       <Page style={styles.page}>
         <View style={styles.header}>
           <Image src={logoUrl} style={styles.logo} />
@@ -270,23 +269,6 @@ export const ArchivosDelRelevamiento = ({ data }: ArchivosDelRelevamientoProps) 
               Zona 2 - Departamentos: Capital, Toay, Catriló y Atreuco.
             </Text>
             <Text style={styles.headerText}>EX-2024-00069131-CFI-GES#DC</Text>
-          </View>
-        </View>
-
-        {/* Relevamiento */}
-        <View style={styles.section}>
-          <Text style={styles.title}>Resumen del Relevamiento</Text>
-          <View style={styles.tableContainer}>
-            <View style={styles.tableRow}>
-              <Text style={styles.tableHeaderCell}>N°: Relevamiento</Text>
-              <Text style={styles.tableHeaderCell}>Estado:</Text>
-              <Text style={styles.tableHeaderCell}>Email:</Text>
-            </View>
-            <View key={relevamiento.id} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{relevamiento?.id}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.estado}</Text>
-              <Text style={styles.tableCell}>{relevamiento?.email}</Text>
-            </View>
           </View>
         </View>
 
@@ -329,7 +311,7 @@ export const ArchivosDelRelevamiento = ({ data }: ArchivosDelRelevamientoProps) 
           </View>
         )}
       </Page>
-    </Document>
+    </>
   );
 };
 
