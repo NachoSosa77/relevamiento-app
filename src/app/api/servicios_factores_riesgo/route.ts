@@ -1,18 +1,15 @@
-// app/api/factores_riesgo_ambiental/route.ts
-
 import { pool } from "@/app/lib/db";
 import { ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
-// Método POST
 export async function POST(req: NextRequest) {
+  let connection; // importante para poder liberar la conexión
   try {
     const body = await req.json();
 
-    const factoresRiesgo = body; // Datos enviados
+    const factoresRiesgo = body;
 
     if (!Array.isArray(factoresRiesgo)) {
-      console.error("❌ Formato inválido, no es un array.");
       return NextResponse.json({
         success: false,
         error:
@@ -21,20 +18,21 @@ export async function POST(req: NextRequest) {
     }
 
     const factoresValidos = factoresRiesgo.filter((f) => {
-      return (
-        f.id_servicio && f.relevamiento_id // Verificación mínima
-      );
+      return f.id_servicio && f.relevamiento_id;
     });
 
     if (factoresValidos.length !== factoresRiesgo.length) {
-      console.warn("❌ Algunos factores tienen campos faltantes.");
       return NextResponse.json({
         success: false,
         error: "Algunos factores de riesgo ambiental tienen campos faltantes.",
       });
     }
 
-    await pool.beginTransaction();
+    // ✅ Obtener conexión del pool
+    connection = await pool.getConnection();
+
+    // ✅ Iniciar transacción
+    await connection.beginTransaction();
 
     const query = `
       INSERT INTO factores_riesgo_ambiental
@@ -48,18 +46,22 @@ export async function POST(req: NextRequest) {
       f.respuesta || null,
       f.mitigacion || null,
       f.descripcion || null,
-      f.descripcionOtro || null,
+      f.descripcion_otro || null, // 👈 Ojo: aquí debe coincidir con el nombre en la DB
       f.relevamiento_id,
     ]);
 
-    await pool.query<ResultSetHeader>(query, [data]);
+    await connection.query<ResultSetHeader>(query, [data]);
 
-    await pool.commit();
+    await connection.commit();
     return NextResponse.json({ success: true });
-  } catch (error) {
-    await pool.rollback();
+  } catch (error: any) {
     console.error("❌ Error insertando factores de riesgo ambiental:", error);
-    return NextResponse.json({ success: false, error });
+    if (connection) await connection.rollback();
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   } finally {
+    if (connection) connection.release(); // ✅ Liberar conexión
   }
 }
