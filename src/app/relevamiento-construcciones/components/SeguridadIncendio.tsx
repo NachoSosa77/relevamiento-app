@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Servicio {
-  id: string;
-  question: string;
+  id: string;           // ej "7.2"
+  question: string;     // texto visible
   showCondition: boolean;
 }
 
@@ -22,15 +21,6 @@ interface ServiciosReuProps {
   construccionId: number | null;
 }
 
-interface EspecificacionesSeguridadIncendio {
-  id?: number;
-  servicio: string;
-  disponibilidad: string;
-  cantidad: number;
-  carga_anual_matafuegos: string;
-  simulacros_evacuacion: string;
-}
-
 export default function SeguridadIncendio({
   id,
   label,
@@ -39,14 +29,16 @@ export default function SeguridadIncendio({
   servicios,
   construccionId,
 }: ServiciosReuProps) {
+  const relevamientoId = useRelevamientoId();
+
   const [responses, setResponses] = useState<
     Record<
       string,
       {
-        disponibilidad: string;
-        cantidad: number;
-        carga_anual_matafuegos: string;
-        simulacros_evacuacion: string;
+        disponibilidad?: string;
+        cantidad?: number;
+        carga_anual_matafuegos?: string;
+        simulacros_evacuacion?: string;
       }
     >
   >({});
@@ -54,54 +46,93 @@ export default function SeguridadIncendio({
     {}
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const relevamientoId = useRelevamientoId();
+  const [isLoading, setIsLoading] = useState(true);
   const [editando, setEditando] = useState(false);
 
-  useEffect(() => {
+  // Mapa id -> pregunta y pregunta -> id (para matchear con la API que devuelve "servicio" como texto)
+  const preguntasById = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const s of servicios) m[s.id] = s.question;
+    return m;
+  }, [servicios]);
+
+  const idByPregunta = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const s of servicios) m[s.question] = s.id;
+    return m;
+  }, [servicios]);
+
+  const norm = (v?: string | null) => {
+    if (!v) return "";
+    const t = v.trim().toLowerCase();
+    if (t === "sí" || t === "si") return "Si";
+    if (t === "no" || t === "n") return "No";
+    if (t === "nc" || t === "ns") return t.toUpperCase();
+    // valores especiales de tu formulario
+    if (t === "en todas") return "En todas";
+    if (t === "en algunas") return "En algunas";
+    if (t === "en ninguna") return "En ninguna";
+    if (t === "en todos") return "En todos";
+    if (t === "sólo pb" || t === "solo pb") return "Sólo PB";
+    return v.trim();
+  };
+
+  // GET inicial
+  const fetchData = useCallback(async () => {
     if (!relevamientoId || !construccionId) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/instalaciones_seguridad_incendio?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `/api/instalaciones_seguridad_incendio?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const initialResponses: typeof responses = {};
-            const initialCantidades: typeof cantidadOptions = {};
-
-            data.forEach((item: any) => {
-              const servicioId = item.servicio_id || item.id || item.servicio;
-              if (!servicioId) return;
-
-              initialResponses[servicioId] = {
-                disponibilidad: item.disponibilidad || "",
-                cantidad: item.cantidad || 0,
-                carga_anual_matafuegos: item.carga_anual_matafuegos || "",
-                simulacros_evacuacion: item.simulacros_evacuacion || "",
-              };
-
-              initialCantidades[servicioId] = item.cantidad || 0;
-            });
-
-            setResponses(initialResponses);
-            setCantidadOptions(initialCantidades);
-            setEditando(true);
-          } else {
-            // Si no hay datos, limpiar estados
-            setResponses({});
-            setCantidadOptions({});
-            setEditando(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando datos existentes de seguridad incendio:", error);
+      if (res.status === 404) {
+        setResponses({});
+        setCantidadOptions({});
+        setEditando(false);
+        return;
       }
-    };
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      const rows: any[] = await res.json(); // <-- array con { id, servicio, disponibilidad, cantidad, ... }
+
+      const nextResp: typeof responses = {};
+      const nextCant: typeof cantidadOptions = {};
+      let matches = 0;
+
+      for (const row of rows) {
+        const sid = idByPregunta[row.servicio]; // match por texto exacto
+        if (!sid) {
+          // Si no hay match exacto, podés loguear para revisar textos divergentes
+          // console.warn("No match para servicio API:", row.servicio);
+          continue;
+        }
+        matches++;
+        nextResp[sid] = {
+          disponibilidad: norm(row.disponibilidad),
+          cantidad: Number(row.cantidad ?? 0),
+          carga_anual_matafuegos: norm(row.carga_anual_matafuegos),
+          simulacros_evacuacion: norm(row.simulacros_evacuacion),
+        };
+        nextCant[sid] = Number(row.cantidad ?? 0);
+      }
+
+      setResponses(nextResp);
+      setCantidadOptions(nextCant);
+      setEditando(matches > 0);
+    } catch (e) {
+      console.error("Error GET seguridad/incendio:", e);
+      setResponses({});
+      setCantidadOptions({});
+      setEditando(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [relevamientoId, construccionId, idByPregunta]);
+
+  useEffect(() => {
     fetchData();
-  }, [relevamientoId, construccionId]);
+  }, [fetchData]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -119,73 +150,78 @@ export default function SeguridadIncendio({
   };
 
   const handleGuardar = async () => {
-    // Filtrar solo servicios con datos válidos
-    const serviciosValidos = Object.keys(responses).filter((key) => {
-      const r = responses[key];
-      const cantidad = cantidadOptions[key] ?? 0;
+    if (!relevamientoId || !construccionId) return;
+    if (isSubmitting) return;
 
+    const serviciosValidos = Object.keys(responses).filter((sid) => {
+      const r = responses[sid] || {};
+      const cant = cantidadOptions[sid] ?? r.cantidad ?? 0;
       return (
-        (r?.disponibilidad && r.disponibilidad.trim() !== "") ||
-        cantidad > 0 ||
-        (r?.carga_anual_matafuegos && r.carga_anual_matafuegos.trim() !== "") ||
-        (r?.simulacros_evacuacion && r.simulacros_evacuacion.trim() !== "")
+        (r.disponibilidad && r.disponibilidad.trim() !== "") ||
+        (r.carga_anual_matafuegos &&
+          r.carga_anual_matafuegos.trim() !== "") ||
+        (r.simulacros_evacuacion &&
+          r.simulacros_evacuacion.trim() !== "") ||
+        Number(cant) > 0
       );
     });
 
     if (serviciosValidos.length === 0) {
-      toast.warning(
-        "Debe completar al menos un servicio con datos antes de guardar"
-      );
+      toast.warning("Completá al menos un dato antes de guardar.");
       return;
     }
 
     const payload = {
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
-      servicios: serviciosValidos.map((key) => ({
-        servicio:
-          servicios.find((servicio) => servicio.id === key)?.question ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        carga_anual_matafuegos: responses[key]?.carga_anual_matafuegos || "",
-        cantidad: cantidadOptions[key] || 0,
-        simulacros_evacuacion: responses[key]?.simulacros_evacuacion || "",
+      servicios: serviciosValidos.map((sid) => ({
+        servicio_id: sid,                       // útil para backend
+        servicio: preguntasById[sid] || "Unknown",
+        disponibilidad: responses[sid]?.disponibilidad || "",
+        carga_anual_matafuegos:
+          responses[sid]?.carga_anual_matafuegos || "",
+        cantidad: cantidadOptions[sid] ?? responses[sid]?.cantidad ?? 0,
+        simulacros_evacuacion:
+          responses[sid]?.simulacros_evacuacion || "",
       })),
     };
 
     setIsSubmitting(true);
-
     try {
-      const response = await fetch("/api/instalaciones_seguridad_incendio", {
+      const res = await fetch("/api/instalaciones_seguridad_incendio", {
         method: editando ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || `HTTP ${res.status}`);
       }
 
       toast.success(
-        "Relevamiento instalaciones de seguridad e incendio guardado correctamente"
+        editando ? "Datos actualizados correctamente" : "Datos guardados correctamente"
       );
-    } catch (error: any) {
-      console.error("Error al enviar los datos:", error);
-      toast.error(error.message || "Error al guardar los datos");
+
+      // refresco para que el usuario vea lo que quedó
+      await fetchData();
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Error al guardar los datos");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
     <div className="mx-10 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-sm">
-      {editando && (
+      {/* Banner edición sólo cuando ya cargó y hay datos */}
+      {!isLoading && editando && (
         <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
           Estás editando un registro ya existente.
         </div>
       )}
+
       {id !== 0 && (
         <div className="flex items-center gap-2 mt-2 p-2 border rounded-2xl shadow-lg bg-white text-black">
           <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom">
@@ -196,8 +232,9 @@ export default function SeguridadIncendio({
           </div>
         </div>
       )}
+
       {sub_id !== id && (
-        <div className="flex items-center gap-2 mt-2 p-2 border  ">
+        <div className="flex items-center gap-2 mt-2 p-2 border">
           <div className="w-6 h-6 flex justify-center text-black font-bold">
             <p>{sub_id}</p>
           </div>
@@ -230,8 +267,11 @@ export default function SeguridadIncendio({
                   type="radio"
                   name={`disponibilidad-${id}`}
                   value="No"
-                  checked={responses[id]?.disponibilidad === "No"}
-                  onChange={() => handleResponseChange(id, "disponibilidad", "No")}
+                  checked={(responses[id]?.disponibilidad || "") === "No"}
+                  onChange={() =>
+                    handleResponseChange(id, "disponibilidad", "No")
+                  }
+                  disabled={isLoading || isSubmitting}
                 />
               </td>
 
@@ -241,12 +281,15 @@ export default function SeguridadIncendio({
                   type="radio"
                   name={`disponibilidad-${id}`}
                   value="Si"
-                  checked={responses[id]?.disponibilidad === "Si"}
-                  onChange={() => handleResponseChange(id, "disponibilidad", "Si")}
+                  checked={(responses[id]?.disponibilidad || "") === "Si"}
+                  onChange={() =>
+                    handleResponseChange(id, "disponibilidad", "Si")
+                  }
+                  disabled={isLoading || isSubmitting}
                 />
               </td>
 
-              {/* Radio NC solo si sub_id === 7 */}
+              {/* Radio NC sólo si aplica */}
               {sub_id === 7 && (
                 <td className="border p-2 text-center">
                   {id === "7.2" && (
@@ -254,8 +297,11 @@ export default function SeguridadIncendio({
                       type="radio"
                       name={`disponibilidad-${id}`}
                       value="NC"
-                      checked={responses[id]?.disponibilidad === "NC"}
-                      onChange={() => handleResponseChange(id, "disponibilidad", "NC")}
+                      checked={(responses[id]?.disponibilidad || "") === "NC"}
+                      onChange={() =>
+                        handleResponseChange(id, "disponibilidad", "NC")
+                      }
+                      disabled={isLoading || isSubmitting}
                     />
                   )}
                 </td>
@@ -274,7 +320,7 @@ export default function SeguridadIncendio({
                     {/* NumericInput para 7.2 y 7.7 */}
                     {(id === "7.2" || id === "7.7") && (
                       <NumericInput
-                        disabled={false}
+                        disabled={isLoading || isSubmitting}
                         label={
                           id === "7.2"
                             ? "Cantidad de bocas de incendio"
@@ -282,12 +328,12 @@ export default function SeguridadIncendio({
                         }
                         subLabel=""
                         value={cantidadOptions[id] || 0}
-                        onChange={(value: number | undefined) => {
-                          setCantidadOptions({
-                            ...cantidadOptions,
+                        onChange={(value: number | undefined) =>
+                          setCantidadOptions((prev) => ({
+                            ...prev,
                             [id]: value ?? 0,
-                          });
-                        }}
+                          }))
+                        }
                       />
                     )}
 
@@ -298,265 +344,151 @@ export default function SeguridadIncendio({
                       id === "7.6") && (
                       <div className="flex gap-2 items-center justify-center">
                         <NumericInput
-                          disabled={false}
+                          disabled={isLoading || isSubmitting}
                           label="Cantidad"
                           subLabel=""
                           value={cantidadOptions[id] || 0}
-                          onChange={(value: number | undefined) => {
-                            setCantidadOptions({
-                              ...cantidadOptions,
+                          onChange={(value: number | undefined) =>
+                            setCantidadOptions((prev) => ({
+                              ...prev,
                               [id]: value ?? 0,
-                            });
-                          }}
+                            }))
+                          }
                         />
                         <div className="flex gap-2 items-center justify-center">
                           ¿Se realiza carga anual de los matafuegos?{" "}
-                          <label>
-                            <input
-                              type="radio"
-                              name={`carga-anual-${id}`}
-                              value="No"
-                              checked={responses[id]?.carga_anual_matafuegos === "No"}
-                              onChange={() =>
-                                handleResponseChange(
-                                  id,
-                                  "carga_anual_matafuegos",
-                                  "No"
-                                )
-                              }
-                              className="mr-1"
-                            />
-                            No
-                          </label>
-                          <label>
-                            <input
-                              type="radio"
-                              name={`carga-anual-${id}`}
-                              value="No sabe"
-                              checked={responses[id]?.carga_anual_matafuegos === "No sabe"}
-                              onChange={() =>
-                                handleResponseChange(
-                                  id,
-                                  "carga_anual_matafuegos",
-                                  "No sabe"
-                                )
-                              }
-                              className="mr-1"
-                            />
-                            NS
-                          </label>
-                          <label>
-                            <input
-                              type="radio"
-                              name={`carga-anual-${id}`}
-                              value="Si"
-                              checked={responses[id]?.carga_anual_matafuegos === "Si"}
-                              onChange={() =>
-                                handleResponseChange(
-                                  id,
-                                  "carga_anual_matafuegos",
-                                  "Si"
-                                )
-                              }
-                              className="mr-1"
-                            />
-                            Si
-                          </label>
+                          {["No", "No sabe", "Si"].map((opt) => (
+                            <label key={opt}>
+                              <input
+                                type="radio"
+                                name={`carga-anual-${id}`}
+                                value={opt}
+                                checked={
+                                  (responses[id]?.carga_anual_matafuegos ||
+                                    "") === opt
+                                }
+                                onChange={() =>
+                                  handleResponseChange(
+                                    id,
+                                    "carga_anual_matafuegos",
+                                    opt
+                                  )
+                                }
+                                className="mr-1"
+                                disabled={isLoading || isSubmitting}
+                              />
+                              {opt === "No sabe" ? "NS" : opt}
+                            </label>
+                          ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Opciones especiales para 7.8 */}
+                    {/* Opciones especiales 7.8 */}
                     {id === "7.8" && (
                       <div className="flex gap-4 items-center justify-center">
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En todas"
-                            checked={responses[id]?.disponibilidad === "En todas"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En todas")
-                            }
-                            className="mr-1"
-                          />
-                          En todas
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En algunas"
-                            checked={responses[id]?.disponibilidad === "En algunas"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En algunas")
-                            }
-                            className="mr-1"
-                          />
-                          En algunas
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En ninguna"
-                            checked={responses[id]?.disponibilidad === "En ninguna"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En ninguna")
-                            }
-                            className="mr-1"
-                          />
-                          En ninguna
-                        </label>
+                        {["En todas", "En algunas", "En ninguna"].map((opt) => (
+                          <label key={opt}>
+                            <input
+                              type="radio"
+                              name={`disponibilidad-${id}`}
+                              value={opt}
+                              checked={
+                                (responses[id]?.disponibilidad || "") === opt
+                              }
+                              onChange={() =>
+                                handleResponseChange(id, "disponibilidad", opt)
+                              }
+                              className="mr-1"
+                              disabled={isLoading || isSubmitting}
+                            />
+                            {opt}
+                          </label>
+                        ))}
                       </div>
                     )}
 
-                    {/* Simulacros para 7.10 */}
+                    {/* Simulacros 7.10 */}
                     {id === "7.10" && (
                       <div className="flex gap-2 items-center justify-center">
                         ¿Se realizan simulacros de evacuación?{" "}
-                        <label>
-                          <input
-                            type="radio"
-                            name={`simulacros_evacuacion-${id}`}
-                            value="No"
-                            checked={responses[id]?.simulacros_evacuacion === "No"}
-                            onChange={() =>
-                              handleResponseChange(id, "simulacros_evacuacion", "No")
-                            }
-                            className="mr-1"
-                          />
-                          No
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`simulacros_evacuacion-${id}`}
-                            value="No sabe"
-                            checked={responses[id]?.simulacros_evacuacion === "No sabe"}
-                            onChange={() =>
-                              handleResponseChange(id, "simulacros_evacuacion", "No sabe")
-                            }
-                            className="mr-1"
-                          />
-                          NS
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`simulacros_evacuacion-${id}`}
-                            value="Si"
-                            checked={responses[id]?.simulacros_evacuacion === "Si"}
-                            onChange={() =>
-                              handleResponseChange(id, "simulacros_evacuacion", "Si")
-                            }
-                            className="mr-1"
-                          />
-                          Si
-                        </label>
+                        {["No", "No sabe", "Si"].map((opt) => (
+                          <label key={opt}>
+                            <input
+                              type="radio"
+                              name={`simulacros_evacuacion-${id}`}
+                              value={opt}
+                              checked={
+                                (responses[id]?.simulacros_evacuacion || "") ===
+                                opt
+                              }
+                              onChange={() =>
+                                handleResponseChange(
+                                  id,
+                                  "simulacros_evacuacion",
+                                  opt
+                                )
+                              }
+                              className="mr-1"
+                              disabled={isLoading || isSubmitting}
+                            />
+                            {opt === "No sabe" ? "NS" : opt}
+                          </label>
+                        ))}
                       </div>
                     )}
 
-                    {/* Opciones especiales para 7.11 */}
+                    {/* 7.11 */}
                     {id === "7.11" && (
                       <div className="flex gap-4 items-center justify-center">
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En todos"
-                            checked={responses[id]?.disponibilidad === "En todos"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En todos")
-                            }
-                            className="mr-1"
-                          />
-                          En todos
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="Sólo PB"
-                            checked={responses[id]?.disponibilidad === "Sólo PB"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "Sólo PB")
-                            }
-                            className="mr-1"
-                          />
-                          Sólo PB
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En ninguno"
-                            checked={responses[id]?.disponibilidad === "En ninguno"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En ninguno")
-                            }
-                            className="mr-1"
-                          />
-                          En ninguno
-                        </label>
+                        {["En todos", "Sólo PB", "En ninguno"].map((opt) => (
+                          <label key={opt}>
+                            <input
+                              type="radio"
+                              name={`disponibilidad-${id}`}
+                              value={opt}
+                              checked={
+                                (responses[id]?.disponibilidad || "") === opt
+                              }
+                              onChange={() =>
+                                handleResponseChange(id, "disponibilidad", opt)
+                              }
+                              className="mr-1"
+                              disabled={isLoading || isSubmitting}
+                            />
+                            {opt}
+                          </label>
+                        ))}
                       </div>
                     )}
 
-                    {/* Opciones especiales para 7.15 */}
+                    {/* 7.15 */}
                     {id === "7.15" && (
                       <div className="flex gap-4 items-center justify-center">
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En todos"
-                            checked={responses[id]?.disponibilidad === "En todos"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En todos")
-                            }
-                            className="mr-1"
-                          />
-                          En todos
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En algunos"
-                            checked={responses[id]?.disponibilidad === "En algunos"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En algunos")
-                            }
-                            className="mr-1"
-                          />
-                          En algunos
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="En ninguno"
-                            checked={responses[id]?.disponibilidad === "En ninguno"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "En ninguno")
-                            }
-                            className="mr-1"
-                          />
-                          En ninguno
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`disponibilidad-${id}`}
-                            value="Ns"
-                            checked={responses[id]?.disponibilidad === "Ns"}
-                            onChange={() =>
-                              handleResponseChange(id, "disponibilidad", "Ns")
-                            }
-                            className="mr-1"
-                          />
-                          NS
-                        </label>
+                        {["En todos", "En algunos", "En ninguno", "Ns"].map(
+                          (opt) => (
+                            <label key={opt}>
+                              <input
+                                type="radio"
+                                name={`disponibilidad-${id}`}
+                                value={opt}
+                                checked={
+                                  (responses[id]?.disponibilidad || "") === opt
+                                }
+                                onChange={() =>
+                                  handleResponseChange(
+                                    id,
+                                    "disponibilidad",
+                                    opt
+                                  )
+                                }
+                                className="mr-1"
+                                disabled={isLoading || isSubmitting}
+                              />
+                              {opt === "Ns" ? "NS" : opt}
+                            </label>
+                          )
+                        )}
                       </div>
                     )}
                   </div>
@@ -566,13 +498,23 @@ export default function SeguridadIncendio({
           ))}
         </tbody>
       </table>
+
+      {/* Botón guardar/actualizar */}
       <div className="mt-4 flex justify-end">
         <button
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoading}
           onClick={handleGuardar}
-          className="text-white text-sm bg-custom hover:bg-custom/50 font-bold p-2 rounded-lg"
+          className={`text-white text-sm font-bold p-2 rounded-lg ${
+            isSubmitting || isLoading
+              ? "bg-gray-400 cursor-wait"
+              : "bg-custom hover:bg-custom/50"
+          }`}
         >
-          {isSubmitting ? "Guardando..." : "Guardar información"}
+          {isSubmitting
+            ? "Guardando..."
+            : editando
+            ? "Actualizar información"
+            : "Guardar información"}
         </button>
       </div>
     </div>

@@ -2,7 +2,6 @@
 "use client";
 
 import { Construccion } from "@/interfaces/Locales";
-import { predioService } from "@/services/Predio/predioService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -17,10 +16,12 @@ interface Props {
 }
 
 interface Predio {
-  cantidad_construcciones: number;
-  superficie_total_predio: string;
-  plano: string;
-  observaciones: string;
+  cantidadConstrucciones: number | null;
+  superficieTotalPredio: number | null;
+  observaciones: string | null;
+  cui: number;
+  relevamientoId: number;
+  predioId: number | null;
 }
 
 export const PredioDetalle = ({ relevamientoId }: Props) => {
@@ -37,26 +38,53 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
   const handleEditarConstruccion = () => {
     sessionStorage.setItem("relevamientoId", String(relevamientoId));
     router.push("/relevamiento-construcciones"); // o la ruta que uses
-  }
+  };
 
   useEffect(() => {
     const fetchPredioYConstrucciones = async () => {
       try {
-        const [predioData, construccionesData] = await Promise.all([
-          predioService.getPredioByRelevamientoId(relevamientoId),
-          fetch(`/api/construcciones?relevamiento_id=${relevamientoId}`).then(
-            (res) => res.json()
-          ),
+        const [espaciosRes, construccionesRes] = await Promise.all([
+          fetch(`/api/espacios_escolares/${relevamientoId}`),
+          fetch(`/api/construcciones?relevamiento_id=${relevamientoId}`),
         ]);
 
-        if (predioData.length > 0) {
-          setPredio(predioData[0]);
+        // espacios_escolares
+        if (espaciosRes.ok) {
+          const ee = await espaciosRes.json();
+          setPredio({
+            cantidadConstrucciones: ee.cantidad_construcciones ?? 0,
+            superficieTotalPredio: Number(ee.superficie_total_predio ?? 0),
+            observaciones: ee.observaciones ?? "",
+            cui: ee.cui,
+            relevamientoId: ee.relevamiento_id, // map DB -> FE
+            predioId: ee.predio_id, // map DB -> FE
+          });
+        } else if (espaciosRes.status === 404) {
+          // No hay espacios_escolares cargado aún
+          setPredio({
+            cantidadConstrucciones: 0,
+            superficieTotalPredio: 0,
+            observaciones: "",
+            cui: 0,
+            relevamientoId,
+            predioId: null,
+          });
+          toast.info(
+            "No hay datos de espacios escolares para este relevamiento"
+          );
         } else {
-          toast.info("No hay datos del predio para este relevamiento");
+          throw new Error(`HTTP ${espaciosRes.status}`);
         }
 
-        setConstrucciones(construccionesData || []);
+        // construcciones
+        const construccionesData = construccionesRes.ok
+          ? await construccionesRes.json()
+          : [];
+        setConstrucciones(
+          Array.isArray(construccionesData) ? construccionesData : []
+        );
       } catch (err) {
+        console.error(err);
         toast.error("Error al cargar los datos del predio o construcciones");
       } finally {
         setLoading(false);
@@ -65,6 +93,9 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
 
     fetchPredioYConstrucciones();
   }, [relevamientoId]);
+
+  console.log("Construcciones", construcciones);
+  console.log("Predio", predio);
 
   if (loading) {
     return (
@@ -90,11 +121,10 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
         </div>
         <p>
           <strong>Cantidad de construcciones:</strong>{" "}
-          {predio?.cantidad_construcciones}
+          {predio?.cantidadConstrucciones}
         </p>
         <p>
-          <strong>Superficie total:</strong> {predio?.superficie_total_predio}{" "}
-          m²
+          <strong>Superficie total:</strong> {predio?.superficieTotalPredio} m²
         </p>
         {predio?.observaciones && (
           <ObservacionesDetailComponent observaciones={predio.observaciones} />
@@ -104,10 +134,10 @@ export const PredioDetalle = ({ relevamientoId }: Props) => {
         <AreaExternaTable relevamientoId={relevamientoId} />
       </div>
 
-      {(predio?.cantidad_construcciones ?? 0) > 0 && (
+      {(predio?.cantidadConstrucciones ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-md font-semibold">Construcciones relevadas</h3>
-                    <button
+          <button
             onClick={handleEditarConstruccion}
             className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
           >

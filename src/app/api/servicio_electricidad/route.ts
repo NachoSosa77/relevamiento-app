@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getConnection } from "@/app/lib/db";
-import type { ResultSetHeader } from "mysql2";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -33,10 +32,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const connection = await getConnection();
-
   try {
     const body = await req.json();
-
     const { relevamiento_id, servicios, construccion_id } = body;
 
     if (!Array.isArray(servicios) || servicios.length === 0) {
@@ -48,12 +45,6 @@ export async function POST(req: Request) {
 
     await connection.beginTransaction();
 
-    // Borrar previos para evitar duplicados
-    await connection.query(
-      `DELETE FROM servicio_electricidad WHERE relevamiento_id = ? AND construccion_id = ?`,
-      [relevamiento_id, construccion_id]
-    );
-
     for (const item of servicios) {
       const {
         servicio,
@@ -64,34 +55,47 @@ export async function POST(req: Request) {
         disponibilidad,
       } = item;
 
-      await connection.query<ResultSetHeader>(
-        `INSERT INTO servicio_electricidad (
-          servicio,
-          estado,
-          potencia,
-          estado_bateria,
-          tipo_combustible,        
-          disponibilidad,
-          relevamiento_id,
-          construccion_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      // Intentar UPDATE por (relevamiento, construccion, servicio)
+      const [result]: any = await connection.query(
+        `UPDATE servicio_electricidad
+           SET estado = ?, potencia = ?, estado_bateria = ?, tipo_combustible = ?, disponibilidad = ?
+         WHERE relevamiento_id = ? AND construccion_id = ? AND servicio = ?`,
         [
-          servicio,
-          estado,
-          potencia,
-          estado_bateria,
-          tipo_combustible,
-          disponibilidad,
+          estado ?? null,
+          potencia ?? null,
+          estado_bateria ?? null,
+          tipo_combustible ?? null,
+          disponibilidad ?? null,
           relevamiento_id,
           construccion_id,
+          servicio,
         ]
       );
+
+      // Si no existía, INSERT
+      if (result.affectedRows === 0) {
+        await connection.query(
+          `INSERT INTO servicio_electricidad (
+             servicio, estado, potencia, estado_bateria, tipo_combustible, disponibilidad,
+             relevamiento_id, construccion_id
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            servicio,
+            estado ?? null,
+            potencia ?? null,
+            estado_bateria ?? null,
+            tipo_combustible ?? null,
+            disponibilidad ?? null,
+            relevamiento_id,
+            construccion_id,
+          ]
+        );
+      }
     }
 
     await connection.commit();
-
     return NextResponse.json({
-      message: "Servicios de electricidad guardados correctamente",
+      message: "Servicios de electricidad guardados/actualizados correctamente",
     });
   } catch (error) {
     console.error("Error al guardar servicio electricidad:", error);

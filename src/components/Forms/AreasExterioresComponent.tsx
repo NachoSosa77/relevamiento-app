@@ -11,7 +11,7 @@ import {
   resetAreasExteriores,
 } from "@/redux/slices/espacioEscolarSlice";
 import { areasExterioresService } from "@/services/areasExterioresService";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "react-toastify";
@@ -41,6 +41,7 @@ export default function AreasExterioresComponent() {
     (state) => state.espacio_escolar.areasExteriores
   );
   const dispatch = useAppDispatch();
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
@@ -51,35 +52,40 @@ export default function AreasExterioresComponent() {
   );
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const opciones =
-          await areasExterioresService.getOpcionesAreasExteriores();
-        setOpcionesAreas(opciones);
+  // 1) Fetch unificado para usar en montaje y post-guardado
+  const fetchAreas = useCallback(async () => {
+    if (!relevamientoId) return;
+    try {
+      setIsLoading(true);
+      const opciones =
+        await areasExterioresService.getOpcionesAreasExteriores();
+      setOpcionesAreas(opciones);
 
-        if (relevamientoId) {
-          const response =
-            await areasExterioresService.getAreasExterioresByRelevamientoId(
-              relevamientoId
-            );
-          const data = response?.areasExteriores || [];
-          if (data?.length) {
-            dispatch(resetAreasExteriores());
-            data.forEach((area: AreasExteriores) =>
-              dispatch(addAreasExteriores(area))
-            );
-            setEditando(true);
-          } else {
-            setEditando(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error al obtener datos:", error);
-      }
+      const response =
+        await areasExterioresService.getAreasExterioresByRelevamientoId(
+          relevamientoId
+        );
+
+      const data = response?.areasExteriores || [];
+      dispatch(resetAreasExteriores());
+      data.forEach((area: AreasExteriores) =>
+        dispatch(addAreasExteriores(area))
+      );
+      setEditando(data.length > 0); // ← enciende el banner si hay datos
+    } catch (error) {
+      console.error("Error al obtener datos:", error);
+      // si falla, mantenemos sin datos
+      setEditando(false);
+      dispatch(resetAreasExteriores());
+    } finally {
+      setIsLoading(false);
     }
-    fetchData();
-  }, [relevamientoId]);
+  }, [relevamientoId, dispatch]);
+
+  // Montaje
+  useEffect(() => {
+    fetchAreas();
+  }, [fetchAreas]);
 
   // Skeleton loader
   useEffect(() => {
@@ -110,7 +116,11 @@ export default function AreasExterioresComponent() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!formData.identificacion_plano || !selectArea || formData.superficie <= 0) {
+    if (
+      !formData.identificacion_plano ||
+      !selectArea ||
+      formData.superficie <= 0
+    ) {
       toast.warning("Completá todos los campos antes de agregar un área");
       return;
     }
@@ -182,6 +192,7 @@ export default function AreasExterioresComponent() {
 
       if (nuevas.length > 0) {
         await areasExterioresService.postAreasExteriores(nuevas);
+        setEditando(true); // ← aparece el banner inmediatamente tras el primer POST
       }
 
       for (const area of existentes) {
@@ -189,13 +200,16 @@ export default function AreasExterioresComponent() {
         await areasExterioresService.updateAreaExterior(area.id, area);
       }
 
+      // 2) Refrescar desde la base para mostrar exactamente lo persistido
+      await fetchAreas();
+
       toast.success("Datos guardados correctamente");
     } catch (error: any) {
-      if (error.status === 409) {
+      if (error?.status === 409) {
         toast.error(error.message || "Ya existe un área duplicada.");
       } else {
         toast.error("Error al guardar los datos. Intentá nuevamente.");
-        console.error("Error al guardar los datos en la base:", error);
+        console.error("Error al guardar los datos:", error);
       }
     } finally {
       setIsSubmitting(false);
@@ -236,10 +250,10 @@ export default function AreasExterioresComponent() {
     <div className="mx-8 my-6 border rounded-2xl">
       {isLoading ? (
         <div className="p-4 flex flex-col gap-4">
-          <Skeleton height={30} width={200} /> {/* Título */}
-          <Skeleton height={40} /> {/* Form row */}
-          <Skeleton height={200} /> {/* Tabla */}
-          <Skeleton height={50} width={150} /> {/* Botón */}
+          <Skeleton height={30} width={200} />
+          <Skeleton height={40} />
+          <Skeleton height={200} />
+          <Skeleton height={50} width={150} />
         </div>
       ) : (
         <>
@@ -248,6 +262,7 @@ export default function AreasExterioresComponent() {
               Estás editando áreas exteriores ya existentes.
             </div>
           )}
+
           <div className="bg-white p-4 rounded-2xl border shadow-md flex flex-col gap-4 w-full">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full flex justify-center items-center text-white bg-custom text-sm font-semibold">
@@ -257,6 +272,7 @@ export default function AreasExterioresComponent() {
                 ÁREAS EXTERIORES
               </p>
             </div>
+
             <form onSubmit={handleSubmit}>
               <table className="w-full text-sm text-center rounded-xl border border-gray-200 overflow-hidden">
                 <thead>
@@ -273,12 +289,15 @@ export default function AreasExterioresComponent() {
                   <tr>
                     <td className="border p-2">
                       <AlphanumericInput
-                        disabled={false}
+                        disabled={isSubmitting}
                         subLabel="E"
                         label=""
                         value={formData.identificacion_plano}
                         onChange={(value) =>
-                          handleInputChange("identificacion_plano", Number(value))
+                          handleInputChange(
+                            "identificacion_plano",
+                            Number(value)
+                          )
                         }
                       />
                     </td>
@@ -295,7 +314,7 @@ export default function AreasExterioresComponent() {
                     </td>
                     <td className="border p-2">
                       <DecimalNumericInput
-                        disabled={false}
+                        disabled={isSubmitting}
                         subLabel="m²"
                         label=""
                         value={formData.superficie}
@@ -308,6 +327,7 @@ export default function AreasExterioresComponent() {
                       <button
                         type="submit"
                         className="text-sm bg-custom hover:bg-custom/50 text-white rounded-lg px-4 py-2"
+                        disabled={isSubmitting} // ← evita sumar filas durante el guardado
                       >
                         + Agregar Área
                       </button>
@@ -316,19 +336,19 @@ export default function AreasExterioresComponent() {
                 </tbody>
               </table>
             </form>
+
             <ReusableTable data={areasExteriores} columns={columns} />
+
             {areasExteriores.length > 0 && (
               <div className="flex justify-center mt-4">
                 <button
                   type="button"
                   className="bg-green-600 hover:bg-green-800 text-white px-6 py-2 rounded-lg"
                   onClick={handleGuardarDatos}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting} // ← ya lo tenías, se mantiene
                 >
                   {isSubmitting
                     ? "Guardando..."
-                    : modoEdicion
-                    ? "Espere, editando información..."
                     : editando
                     ? "Actualizar áreas exteriores"
                     : "Guardar áreas exteriores"}
@@ -336,6 +356,7 @@ export default function AreasExterioresComponent() {
               </div>
             )}
           </div>
+
           {modalVisible && areaEditando && (
             <EditAreaExteriorModal
               open={modalVisible}

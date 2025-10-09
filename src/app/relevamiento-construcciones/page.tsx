@@ -55,6 +55,7 @@ export default function RelevamientoConstruccionesPage() {
   const [relevadas, setRelevadas] = useState<number[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const todasRelevadas = !!construccionId;
+  const [initialObs, setInitialObs] = useState<string>("");     // ⬅️ nuevo
 
   const relevamientoId = useRelevamientoId();
   const selectedCui = useCuiFromRelevamientoId(relevamientoId);
@@ -91,6 +92,33 @@ export default function RelevamientoConstruccionesPage() {
 
     fetchInstitucionesRelacionadas();
   }, [relevamientoId]);
+
+  useEffect(() => {
+    const fetchObs = async () => {
+      if (!relevamientoId || !construccionId) return;
+      try {
+        // Endpoint sugerido (ajustá al tuyo si difiere)
+        const res = await fetch(
+          `/api/construcciones/${construccionId}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // esperá un objeto con { observaciones: string } o null
+          setInitialObs(data?.observaciones ?? "");
+        } else if (res.status === 404) {
+          setInitialObs("");
+        } else {
+          console.error("GET observaciones HTTP", res.status);
+          setInitialObs("");
+        }
+      } catch (e) {
+        console.error("Error al traer observaciones:", e);
+        setInitialObs("");
+      } 
+    };
+
+    fetchObs();
+  }, [relevamientoId, construccionId]);
 
   const handleSaveObservaciones = async (obs: string) => {
     if (!construccionId || !obs.trim()) return;
@@ -167,7 +195,7 @@ export default function RelevamientoConstruccionesPage() {
           <Spinner />
         </div>
       ) : (
-        <>
+          <div key={construccionId}>
           {" "}
           {/* Este debajo para gestionar las instituciones asociadas */}
           <ConstruccionInstituciones
@@ -269,7 +297,7 @@ export default function RelevamientoConstruccionesPage() {
             estructuras={energiasAlternativas}
             construccionId={construccionId}
           />
-          <ObservacionesComponent onSave={handleSaveObservaciones} />
+          <ObservacionesComponent onSave={handleSaveObservaciones} initialObservations={initialObs}/>
           <div className="flex justify-center mt-4">
             <button
               onClick={() => setShowConfirmModal(true)}
@@ -283,7 +311,7 @@ export default function RelevamientoConstruccionesPage() {
               Guardar construcción
             </button>
           </div>
-        </>
+        </div >
       )}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

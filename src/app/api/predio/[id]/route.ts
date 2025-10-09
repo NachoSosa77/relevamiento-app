@@ -1,81 +1,70 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
-import { NextRequest, NextResponse } from "next/server";
-
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const connection = await getConnection();
-  const { id: relevamiento_id } = await params;
-
-  if (!relevamiento_id) {
-    return NextResponse.json(
-      { message: "Falta el parámetro relevamiento_id" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const [rows] = await connection.query(
-      `SELECT 
-  id,
-  cantidad_construcciones,
-  superficie_total_predio,
-  cui,
-  observaciones,
-  relevamiento_id
-FROM espacios_escolares
-WHERE relevamiento_id = ?`,
-      [relevamiento_id]
-    );
-
-    connection.release();
-    return NextResponse.json(rows);
-  } catch (error: any) {
-    console.error("Error al obtener instituciones:", error);
-    connection.release();
-    return NextResponse.json(
-      { message: "Error interno", error: error.message },
-      { status: 500 }
-    );
-  }
-}
+import { pool } from "@/app/lib/db";
+import { NextResponse } from "next/server";
 
 export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
-  const connection = await getConnection();
-  const { id } = await Promise.resolve(context.params); // ✅ solución segura
+  const id = Number(params.id);
+  if (!id || Number.isNaN(id)) {
+    return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+  }
 
   try {
     const body = await req.json();
-    const { observaciones } = body;
+    const {
+      situacion,
+      otra_situacion,
+      situacion_juicio,
+      observaciones,
+      edificio_no_escolar_privado, // por si más adelante lo usás
+    } = body;
 
-    if (!observaciones) {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (body.hasOwnProperty("situacion")) {
+      fields.push("situacion = ?");
+      values.push(situacion ?? null);
+    }
+    if (body.hasOwnProperty("otra_situacion")) {
+      fields.push("otra_situacion = ?");
+      values.push(otra_situacion ?? null);
+    }
+    if (body.hasOwnProperty("situacion_juicio")) {
+      fields.push("situacion_juicio = ?");
+      values.push(situacion_juicio ?? null);
+    }
+    if (body.hasOwnProperty("observaciones")) {
+      fields.push("observaciones = ?");
+      values.push(observaciones ?? null);
+    }
+    if (body.hasOwnProperty("edificio_no_escolar_privado")) {
+      fields.push("edificio_no_escolar_privado = ?");
+      values.push(edificio_no_escolar_privado ?? null);
+    }
+
+    if (!fields.length) {
       return NextResponse.json(
-        { message: "Falta el campo 'observaciones'" },
+        { message: "No hay campos para actualizar" },
         { status: 400 }
       );
     }
 
-    const [result] = await connection.query(
-      `UPDATE predio SET observaciones = ? WHERE id = ?`,
-      [observaciones, id]
-    );
+    const sql = `UPDATE predio SET ${fields.join(", ")} WHERE id = ?`;
+    values.push(id);
 
-    connection.release();
+    const [result]: any = await pool.execute(sql, values);
+    if (result.affectedRows === 0) {
+      return NextResponse.json({ message: "not_found" }, { status: 404 });
+    }
 
-    return NextResponse.json({
-      message: "Observaciones actualizadas correctamente",
-      result,
-    });
+    return NextResponse.json({ updated: true }, { status: 200 });
   } catch (error: any) {
-    console.error("Error al actualizar observaciones:", error);
-    connection.release();
+    console.error("Error actualizando predio:", error);
     return NextResponse.json(
-      { message: "Error interno", error: error.message },
+      { message: "Error actualizando predio", error: error.message },
       { status: 500 }
     );
   }

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection, pool } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const connection = await getConnection();
   const body = await req.json();
 
   const { relevamiento_id, construccion_id, instituciones } = body;
@@ -17,14 +16,14 @@ export async function POST(req: NextRequest) {
 
   try {
     // Borra las relaciones existentes primero (opcional)
-    await connection.query(
+    await pool.query(
       `DELETE FROM instituciones_por_construccion WHERE construccion_id = ?`,
       [construccion_id]
     );
 
     // Inserta nuevas relaciones
     for (const institucion_id of instituciones) {
-      await connection.query(
+      await pool.query(
         `INSERT INTO instituciones_por_construccion (
           relevamiento_id,
           construccion_id,
@@ -34,13 +33,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    connection.release();
     return NextResponse.json({
       message: "Relaciones guardadas correctamente",
     });
   } catch (error: any) {
     console.error("Error al guardar relaciones:", error);
-    connection.release();
     return NextResponse.json(
       { message: "Error interno", error: error.message },
       { status: 500 }

@@ -1,10 +1,8 @@
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import type { ResultSetHeader } from "mysql2";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const connection = await getConnection();
-
   try {
     const body = await req.json();
 
@@ -26,7 +24,7 @@ export async function POST(req: Request) {
         cantidad,
       } = item;
 
-      await connection.query<ResultSetHeader>(
+      await pool.query<ResultSetHeader>(
         `INSERT INTO instalaciones_seguridad_incendio (
           servicio,
           disponibilidad,
@@ -55,14 +53,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error al guardar relevamiento:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }
 
 export async function GET(req: Request) {
-  const connection = await getConnection();
-
   const { searchParams } = new URL(req.url);
   const relevamiento_id = searchParams.get("relevamiento_id");
   const construccion_id = searchParams.get("construccion_id");
@@ -75,7 +69,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const [rows] = await connection.query(
+    const [rows] = await pool.query(
       `SELECT * FROM instalaciones_seguridad_incendio
        WHERE relevamiento_id = ? AND construccion_id = ?`,
       [relevamiento_id, construccion_id]
@@ -85,14 +79,10 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("Error en GET seguridad incendio:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }
 
 export async function PATCH(req: Request) {
-  const connection = await getConnection();
-
   try {
     const body = await req.json();
     const { relevamiento_id, construccion_id, servicios } = body;
@@ -105,7 +95,7 @@ export async function PATCH(req: Request) {
     }
 
     // Eliminar los anteriores (simplificado)
-    await connection.query(
+    await pool.query(
       `DELETE FROM instalaciones_seguridad_incendio
        WHERE relevamiento_id = ? AND construccion_id = ?`,
       [relevamiento_id, construccion_id]
@@ -121,7 +111,7 @@ export async function PATCH(req: Request) {
         cantidad,
       } = item;
 
-      await connection.query<ResultSetHeader>(
+      await pool.query<ResultSetHeader>(
         `INSERT INTO instalaciones_seguridad_incendio (
           servicio,
           disponibilidad,
@@ -150,7 +140,5 @@ export async function PATCH(req: Request) {
   } catch (error) {
     console.error("Error en PATCH seguridad incendio:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  } finally {
-    connection.release();
   }
 }

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getConnection } from "@/app/lib/db";
+import { pool } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const connection = await getConnection();
   try {
     const body = await req.json();
     const { relevamiento_id, situacion, otra_situacion, situacion_juicio } =
@@ -22,7 +21,7 @@ export async function POST(req: Request) {
     `;
 
     // 👇 Capturar el resultado de la inserción
-    const [result]: any = await connection.execute(query, [
+    const [result]: any = await pool.execute(query, [
       relevamiento_id,
       situacion || "",
       otra_situacion || "",
@@ -45,6 +44,39 @@ export async function POST(req: Request) {
         message: "Error guardando datos en predio",
         error: error.message,
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const relevamiento_id = searchParams.get("relevamiento_id");
+
+  if (!relevamiento_id) {
+    return NextResponse.json(
+      { message: "El parámetro relevamiento_id es obligatorio" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const [rows]: any = await pool.execute(
+      `SELECT id, relevamiento_id, situacion, otra_situacion, situacion_juicio, observaciones, created_at, updated_at
+       FROM predio
+       WHERE relevamiento_id = ? LIMIT 1`,
+      [relevamiento_id]
+    );
+
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({ message: "not_found" }, { status: 404 });
+    }
+
+    return NextResponse.json(rows[0], { status: 200 });
+  } catch (error: any) {
+    console.error("Error buscando predio:", error);
+    return NextResponse.json(
+      { message: "Error buscando predio", error: error.message },
       { status: 500 }
     );
   }

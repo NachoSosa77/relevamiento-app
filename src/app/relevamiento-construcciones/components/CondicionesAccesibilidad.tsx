@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
 "use client";
 
 import NumericInput from "@/components/ui/NumericInput";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Servicio {
@@ -30,6 +29,16 @@ interface RespuestaAccesibilidad {
   mantenimiento: string;
 }
 
+// --- helpers ---
+const normalizeText = (s: string) =>
+  (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*\/\s*/g, "/")
+    .trim()
+    .toLowerCase();
+
 export default function CondicionesAccesibilidad({
   id,
   label,
@@ -40,50 +49,75 @@ export default function CondicionesAccesibilidad({
 }: ServiciosReuProps) {
   const relevamientoId = useRelevamientoId();
 
-  const [responses, setResponses] = useState<Record<string, RespuestaAccesibilidad>>({});
+  const [responses, setResponses] = useState<
+    Record<string, RespuestaAccesibilidad>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
 
+  // Mapa question normalizada -> id ("8.x")
+  const questionToId = useMemo(() => {
+    const map = new Map<string, string>();
+    servicios.forEach((s) => map.set(normalizeText(s.question || ""), s.id));
+    return map;
+  }, [servicios]);
+
+  // Guarda el texto exacto de "servicio" que viene de DB por cada key ("8.x")
+  const dbServiceTextByKeyRef = useRef<Record<string, string>>({});
+
   // Cargar datos existentes para editar
   useEffect(() => {
-  if (!relevamientoId || !construccionId) return;
+    if (!relevamientoId || !construccionId) return;
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch(
-        `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
-      );
-      if (res.ok) {
-        const data = await res.json();
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+        );
 
-        if (Array.isArray(data) && data.length > 0) {
-          const initialResponses: Record<string, RespuestaAccesibilidad> = {};
-          data.forEach((item: any) => {
-            const servicioId = item.servicio_id || item.servicio || item.id?.toString() || "";
-            initialResponses[servicioId] = {
-              id: item.id,
-              disponibilidad: item.disponibilidad || "",
-              estado: item.estado || "",
-              cantidad: item.cantidad || 0,
-              mantenimiento: item.mantenimiento || "",
-            };
-          });
-          setResponses(initialResponses);
-          setEditando(true);
-        } else {
-          // 👇 FIX ACÁ
+        if (!res.ok) {
           setResponses({});
           setEditando(false);
+          return;
         }
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const next: Record<string, RespuestaAccesibilidad> = {};
+          const dbMap: Record<string, string> = {};
+
+          for (const row of data) {
+            const key = questionToId.get(normalizeText(row.servicio || ""));
+            if (!key) continue;
+
+            next[key] = {
+              id: row.id,
+              disponibilidad: row.disponibilidad ?? "",
+              estado: row.estado ?? "",
+              cantidad: Number(row.cantidad ?? 0),
+              mantenimiento: row.mantenimiento ?? "",
+            };
+            dbMap[key] = row.servicio || "";
+          }
+
+          setResponses(next);
+          dbServiceTextByKeyRef.current = dbMap;
+          setEditando(Object.keys(next).length > 0);
+        } else {
+          setResponses({});
+          dbServiceTextByKeyRef.current = {};
+          setEditando(false);
+        }
+      } catch (error) {
+        console.error("Error al cargar condiciones accesibilidad:", error);
+        setResponses({});
+        dbServiceTextByKeyRef.current = {};
+        setEditando(false);
       }
-    } catch (error) {
-      console.error("Error al cargar condiciones accesibilidad:", error);
-    }
-  };
+    };
 
-  fetchData();
-}, [relevamientoId, construccionId]);
-
+    fetchData();
+  }, [relevamientoId, construccionId, questionToId]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -92,7 +126,7 @@ export default function CondicionesAccesibilidad({
   ) => {
     setResponses((prev) => ({
       ...prev,
-      [servicioId]: { ...prev[servicioId], [field]: value },
+      [servicioId]: { ...prev[servicioId], [field]: value as any },
     }));
   };
 
@@ -101,44 +135,46 @@ export default function CondicionesAccesibilidad({
     const serviciosValidos = Object.keys(responses).filter((key) => {
       const r = responses[key];
       return (
-        r?.disponibilidad.trim() !== "" ||
-        r?.estado.trim() !== "" ||
-        r?.cantidad > 0 ||
-        r?.mantenimiento.trim() !== ""
+        (r?.disponibilidad?.trim?.() || "") !== "" ||
+        (r?.estado?.trim?.() || "") !== "" ||
+        (r?.mantenimiento?.trim?.() || "") !== "" ||
+        Number(r?.cantidad || 0) > 0
       );
     });
 
     if (serviciosValidos.length === 0) {
-      toast.warning("Debe completar al menos un servicio con datos antes de guardar");
+      toast.warning(
+        "Debe completar al menos un servicio con datos antes de guardar"
+      );
       return;
     }
 
-    // Armar payload con id si editando para PATCH
     const payload = {
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
       servicios: serviciosValidos.map((key) => ({
-        id: responses[key].id, // puede ser undefined para POST
-        servicio: servicios.find((servicio) => servicio.id === key)?.question || "Unknown",
-        disponibilidad: responses[key].disponibilidad,
-        estado: responses[key].estado,
-        cantidad: responses[key].cantidad,
-        mantenimiento: responses[key].mantenimiento,
+        id: responses[key].id, // si existe, PATCH lo usará
+        servicio:
+          dbServiceTextByKeyRef.current[key] ||
+          (servicios.find((s) => s.id === key)?.question ?? "Unknown"),
+        disponibilidad: responses[key].disponibilidad || "",
+        estado: responses[key].estado || "",
+        cantidad: Number(responses[key].cantidad || 0),
+        mantenimiento: responses[key].mantenimiento || "",
       })),
     };
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/condiciones_accesibilidad", {
+      const resp = await fetch("/api/condiciones_accesibilidad", {
         method: editando ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Error al guardar los datos");
-      }
+      const result = await resp.json();
+      if (!resp.ok)
+        throw new Error(result?.error || "Error al guardar los datos");
 
       toast.success(
         editando
@@ -146,13 +182,38 @@ export default function CondicionesAccesibilidad({
           : "Datos de condiciones accesibilidad guardados correctamente"
       );
 
-      // Si se guardó nuevo, ahora estamos editando
-      if (!editando) setEditando(true);
+      // 🔁 Refrescar desde DB para mostrar lo persistido y activar banner
+      const refresco = await fetch(
+        `/api/condiciones_accesibilidad?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
+      );
+      if (refresco.ok) {
+        const data = await refresco.json();
+        const next: Record<string, RespuestaAccesibilidad> = {};
+        const dbMap: Record<string, string> = {};
+
+        for (const row of data) {
+          const key = questionToId.get(normalizeText(row.servicio || ""));
+          if (!key) continue;
+          next[key] = {
+            id: row.id,
+            disponibilidad: row.disponibilidad ?? "",
+            estado: row.estado ?? "",
+            cantidad: Number(row.cantidad ?? 0),
+            mantenimiento: row.mantenimiento ?? "",
+          };
+          dbMap[key] = row.servicio || "";
+        }
+
+        setResponses(next);
+        dbServiceTextByKeyRef.current = dbMap;
+        setEditando(Object.keys(next).length > 0);
+      }
     } catch (error: any) {
       console.error("Error al enviar los datos:", error);
       toast.error(error.message || "Error al guardar los datos");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -211,7 +272,9 @@ export default function CondicionesAccesibilidad({
                     name={`disponibilidad-${id}`}
                     value="No"
                     checked={r.disponibilidad === "No"}
-                    onChange={() => handleResponseChange(id, "disponibilidad", "No")}
+                    onChange={() =>
+                      handleResponseChange(id, "disponibilidad", "No")
+                    }
                   />
                 </td>
                 <td className="border p-2 text-center">
@@ -220,7 +283,9 @@ export default function CondicionesAccesibilidad({
                     name={`disponibilidad-${id}`}
                     value="Si"
                     checked={r.disponibilidad === "Si"}
-                    onChange={() => handleResponseChange(id, "disponibilidad", "Si")}
+                    onChange={() =>
+                      handleResponseChange(id, "disponibilidad", "Si")
+                    }
                   />
                 </td>
 
@@ -233,7 +298,6 @@ export default function CondicionesAccesibilidad({
                     "No corresponde"
                   ) : (
                     <div className="flex gap-2 items-center justify-center">
-                      {/* Radios B, R, M */}
                       <div className="flex gap-2 items-center justify-center">
                         <label>
                           <input
@@ -241,7 +305,9 @@ export default function CondicionesAccesibilidad({
                             name={`estado-${id}`}
                             value="Bueno"
                             checked={r.estado === "Bueno"}
-                            onChange={() => handleResponseChange(id, "estado", "Bueno")}
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Bueno")
+                            }
                             className="mr-1"
                           />
                           B
@@ -252,7 +318,9 @@ export default function CondicionesAccesibilidad({
                             name={`estado-${id}`}
                             value="Regular"
                             checked={r.estado === "Regular"}
-                            onChange={() => handleResponseChange(id, "estado", "Regular")}
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Regular")
+                            }
                             className="mr-1"
                           />
                           R
@@ -263,14 +331,15 @@ export default function CondicionesAccesibilidad({
                             name={`estado-${id}`}
                             value="Malo"
                             checked={r.estado === "Malo"}
-                            onChange={() => handleResponseChange(id, "estado", "Malo")}
+                            onChange={() =>
+                              handleResponseChange(id, "estado", "Malo")
+                            }
                             className="mr-1"
                           />
                           M
                         </label>
                       </div>
 
-                      {/* NumericInput para cantidades */}
                       {(id === "8.1" || id === "8.2" || id === "8.3") && (
                         <div className="flex gap-2 items-center justify-center">
                           <p className="text-xs font-bold">Cantidad</p>
@@ -286,17 +355,20 @@ export default function CondicionesAccesibilidad({
                         </div>
                       )}
 
-                      {/* Mantenimiento */}
                       {(id === "8.1" || id === "8.2") && (
                         <div className="flex gap-2 items-center justify-center">
-                          <p className="text-xs font-bold">¿Se realiza mantenimiento?</p>
+                          <p className="text-xs font-bold">
+                            ¿Se realiza mantenimiento?
+                          </p>
                           <label>
                             <input
                               type="radio"
                               name={`mantenimiento-${id}`}
                               value="No"
                               checked={r.mantenimiento === "No"}
-                              onChange={() => handleResponseChange(id, "mantenimiento", "No")}
+                              onChange={() =>
+                                handleResponseChange(id, "mantenimiento", "No")
+                              }
                               className="mr-1"
                             />
                             No
@@ -307,7 +379,9 @@ export default function CondicionesAccesibilidad({
                               name={`mantenimiento-${id}`}
                               value="Si"
                               checked={r.mantenimiento === "Si"}
-                              onChange={() => handleResponseChange(id, "mantenimiento", "Si")}
+                              onChange={() =>
+                                handleResponseChange(id, "mantenimiento", "Si")
+                              }
                               className="mr-1"
                             />
                             Sí
@@ -327,9 +401,13 @@ export default function CondicionesAccesibilidad({
         <button
           onClick={handleGuardar}
           disabled={isSubmitting}
-          className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
+          className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md disabled:opacity-60"
         >
-          {isSubmitting ? "Guardando..." : "Guardar información"}
+          {isSubmitting
+            ? "Guardando..."
+            : editando
+            ? "Actualizar información"
+            : "Guardar información"}
         </button>
       </div>
     </div>

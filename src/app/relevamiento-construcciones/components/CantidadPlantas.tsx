@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useRelevamientoId } from "@/hooks/useRelevamientoId";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface Plantas {
@@ -28,9 +30,7 @@ interface CantidadPlantasProps {
   construccionId: number | null;
 }
 
-export default function CantidadPlantas({
-  construccionId,
-}: CantidadPlantasProps) {
+export default function CantidadPlantas({ construccionId }: CantidadPlantasProps) {
   const relevamientoId = useRelevamientoId();
   const [isSaving, setIsSaving] = useState(false);
   const [plantas, setPlantas] = useState<Plantas>({
@@ -39,24 +39,23 @@ export default function CantidadPlantas({
     pisos_superiores: undefined,
     total_plantas: undefined,
   });
-  const [plantaIdExistente, setPlantaIdExistente] = useState<number | null>(
-    null
-  );
+  const [plantaIdExistente, setPlantaIdExistente] = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [onConfirmCallback, setOnConfirmCallback] = useState<() => void>(
-    () => {}
-  );
+  const [onConfirmCallback, setOnConfirmCallback] = useState<() => void>(() => {});
 
- useEffect(() => {
-  const fetchPlantas = async () => {
+  const calcularTotal = (datos: Plantas) =>
+    Math.abs(datos.subsuelo || 0) +
+    Math.abs(datos.pb || 0) +
+    Math.abs(datos.pisos_superiores || 0);
+
+  // ✅ 1) fetchPlantas definido con useCallback (estable y reutilizable)
+  const fetchPlantas = useCallback(async () => {
     if (!relevamientoId || !construccionId) return;
 
     try {
       const res = await fetch("/api/plantas/check", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           relevamiento_id: relevamientoId,
           construccion_id: construccionId,
@@ -77,7 +76,7 @@ export default function CantidadPlantas({
             Math.abs(data.pisos_superiores ?? 0),
         });
       } else {
-        setPlantaIdExistente(null);  // muy importante resetear si no existe registro
+        setPlantaIdExistente(null);
         setPlantas({
           subsuelo: undefined,
           pb: undefined,
@@ -89,19 +88,14 @@ export default function CantidadPlantas({
       console.error("Error al verificar existencia de plantas", error);
       setPlantaIdExistente(null);
     }
-  };
+  }, [relevamientoId, construccionId]);
 
-  fetchPlantas();
-}, [relevamientoId, construccionId]);
-
-
-  const calcularTotal = (datos: Plantas) =>
-    Math.abs(datos.subsuelo || 0) +
-    Math.abs(datos.pb || 0) +
-    Math.abs(datos.pisos_superiores || 0);
+  // ✅ 2) llamada inicial dentro de un useEffect
+  useEffect(() => {
+    fetchPlantas();
+  }, [fetchPlantas]);
 
   const handleUpdateField = (field: keyof Plantas, value: number) => {
-    // Permitir que el campo quede vacío para edición
     if (!isNaN(value)) {
       if (field !== "subsuelo" && value < 0) {
         toast.warning("No se permiten valores negativos en este campo");
@@ -110,14 +104,12 @@ export default function CantidadPlantas({
     }
 
     setPlantas((prev) => {
-      const nuevoEstado = {
-        ...prev,
-        [field]: isNaN(value) ? undefined : value,
-      };
+      const nuevoEstado = { ...prev, [field]: isNaN(value) ? undefined : value };
       return { ...nuevoEstado, total_plantas: calcularTotal(nuevoEstado) };
     });
   };
 
+  // ✅ 3) Guardar y luego refrescar con fetchPlantas()
   const handleGuardarCambios = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -129,6 +121,7 @@ export default function CantidadPlantas({
         plantas.pisos_superiores === undefined
       ) {
         toast.warning("Por favor, complete todos los campos.");
+        setIsSaving(false);
         return;
       }
 
@@ -144,6 +137,7 @@ export default function CantidadPlantas({
 
       const data = await response.json();
 
+      // Ya existe registro → confirmar actualización (PATCH)
       if (data.exists && data.planta_id) {
         setPlantaIdExistente(data.planta_id);
 
@@ -169,28 +163,20 @@ export default function CantidadPlantas({
             if (!patchRes.ok) throw new Error("Error al actualizar los datos");
 
             toast.success("Datos actualizados correctamente");
-            setPlantas({
-              subsuelo: undefined,
-              pb: undefined,
-              pisos_superiores: undefined,
-              total_plantas: undefined,
-            });
+            await fetchPlantas(); // ⬅️ refresco UI con datos de la base
           } catch (error) {
             toast.error("Hubo un error al actualizar los datos.");
           } finally {
             setIsSaving(false);
+            setShowConfirm(false);
           }
         });
 
         setShowConfirm(true);
       } else {
+        // Insert nuevo OK
         toast.success("Datos guardados correctamente");
-        setPlantas({
-          subsuelo: undefined,
-          pb: undefined,
-          pisos_superiores: undefined,
-          total_plantas: undefined,
-        });
+        await fetchPlantas(); // ⬅️ refresco para que muestre lo guardado y el banner
         setIsSaving(false);
       }
     } catch (error) {
@@ -218,10 +204,10 @@ export default function CantidadPlantas({
       </div>
 
       {plantaIdExistente && (
-  <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
-    Estás editando un registro ya existente.
-  </div>
-)}
+        <div className="bg-yellow-100 text-yellow-800 p-2 mt-2 rounded">
+          Estás editando un registro ya existente.
+        </div>
+      )}
 
       {/* tabla */}
       <div className="mt-2 overflow-x-auto">
@@ -245,10 +231,7 @@ export default function CantidadPlantas({
                       value={plantas[column.key] ?? ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        handleUpdateField(
-                          column.key,
-                          val === "" ? NaN : Number(val)
-                        );
+                        handleUpdateField(column.key, val === "" ? NaN : Number(val));
                       }}
                       className="border p-2 rounded-lg"
                     />
@@ -268,21 +251,22 @@ export default function CantidadPlantas({
           onClick={handleGuardarCambios}
           disabled={isSaving}
           className={`text-sm font-bold p-2 rounded-lg flex items-center gap-2 ${
-            isSaving
-              ? "bg-gray-400 cursor-wait"
-              : "bg-custom hover:bg-custom/50 text-white"
+            isSaving ? "bg-gray-400 cursor-wait" : "bg-custom hover:bg-custom/50 text-white"
           }`}
         >
           {isSaving && (
             <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
           )}
           {plantaIdExistente
-            ? "Actualizar Información"
+            ? isSaving
+              ? "Guardando..."
+              : "Actualizar Información"
             : isSaving
             ? "Guardando..."
             : "Guardar Información"}
         </button>
       </div>
+
       <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
