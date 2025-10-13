@@ -25,7 +25,7 @@ export async function GET(
       [relId]
     );
 
-    // @ts-ignore
+    // @ts-expect-error <explicá brevemente por qué es esperado>
     if (!rows || rows.length === 0) {
       return NextResponse.json({ message: "not_found" }, { status: 404 });
     }

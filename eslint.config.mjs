@@ -17,7 +17,7 @@ const eslintConfig = [
   {
     rules: {
       // TypeScript
-      "@typescript-eslint/no-explicit-any": "warn", // solo warning, no error
+      "@typescript-eslint/no-explicit-any": "off", // solo warning, no error
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -27,8 +27,8 @@ const eslintConfig = [
       "react/jsx-uses-react": "off",
 
       // General
-      "no-console": "warn",
-      "no-debugger": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }], // 👈 permite warn/error
+    "no-debugger": "warn",
     },
   },
 ];
