@@ -258,7 +258,12 @@ export const LocalDetalleModal = ({ local, onClose, isOpen }: Props) => {
                         relevamientoId={local.relevamiento_id}
                       />
                     </AccordionItem>
+
                     {(local.tipo === "Sanitarios Alumnos" ||
+                      local.tipo === "Servicio" ||
+                      local.tipo === "Sala de nivel inicial" ||
+                      local.tipo === "Laboratorio" ||
+                      local.tipo === "Aula especial" ||
                       local.tipo === "Sanitarios Docentes/Personal") && (
                       <AccordionItem
                         title="Equipamiento Sanitario"

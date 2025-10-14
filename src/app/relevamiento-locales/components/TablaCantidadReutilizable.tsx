@@ -11,7 +11,7 @@ interface ResponseData {
   [id: string]: {
     [tipo: string]: {
       cantidad: number;
-      estado: string;
+      estado: string; // usamos "" cuando está deseleccionado
     };
   };
 }
@@ -101,9 +101,24 @@ export default function TableCantidadReutilizable({
       ...prev,
       [id]: {
         ...prev[id],
-        [tipo]: { ...prev[id]?.[tipo], [field]: value },
+        [tipo]: { ...prev[id]?.[tipo], [field]: value as any },
       },
     }));
+  };
+
+  // ✅ NUEVO: toggle con checkbox (si estaba seleccionado, lo desmarca dejando "")
+  const toggleEstado = (id: string, tipo: string, estado: string) => {
+    setResponses((prev) => {
+      const actual = prev[id]?.[tipo]?.estado || "";
+      const next = actual === estado ? "" : estado;
+      return {
+        ...prev,
+        [id]: {
+          ...prev[id],
+          [tipo]: { ...prev[id]?.[tipo], estado: next },
+        },
+      };
+    });
   };
 
   const handleGuardar = async () => {
@@ -246,21 +261,11 @@ export default function TableCantidadReutilizable({
                         >
                           {["Bueno", "Regular", "Malo"].map((estado) => (
                             <label key={estado}>
+                              {/* ✅ ahora checkbox con toggle */}
                               <input
-                                type="radio"
-                                name={`estado-${id}-${tipo}`}
-                                value={estado}
-                                checked={
-                                  responses[id]?.[tipo]?.estado === estado
-                                }
-                                onChange={() =>
-                                  handleResponseChange(
-                                    id,
-                                    tipo,
-                                    "estado",
-                                    estado
-                                  )
-                                }
+                                type="checkbox"
+                                checked={responses[id]?.[tipo]?.estado === estado}
+                                onChange={() => toggleEstado(id, tipo, estado)}
                                 className="mr-1 mt-4"
                               />
                               {estado}
@@ -270,21 +275,11 @@ export default function TableCantidadReutilizable({
                       ))
                     : ["Bueno", "Regular", "Malo"].map((estado) => (
                         <label key={estado} className="mr-2">
+                          {/* ✅ ahora checkbox con toggle */}
                           <input
-                            type="radio"
-                            name={`estado-${id}-default`}
-                            value={estado}
-                            checked={
-                              responses[id]?.["default"]?.estado === estado
-                            }
-                            onChange={() =>
-                              handleResponseChange(
-                                id,
-                                "default",
-                                "estado",
-                                estado
-                              )
-                            }
+                            type="checkbox"
+                            checked={responses[id]?.["default"]?.estado === estado}
+                            onChange={() => toggleEstado(id, "default", estado)}
                             className="mr-1"
                           />
                           {estado}
@@ -296,6 +291,7 @@ export default function TableCantidadReutilizable({
           ))}
         </tbody>
       </table>
+
 
       <div className="flex justify-end mt-4">
         <button

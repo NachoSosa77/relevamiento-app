@@ -332,7 +332,11 @@ export default function ServiciosBasicos({
           disabled={isSubmitting}
           className="bg-custom hover:bg-custom/50 text-white text-sm font-bold px-4 py-2 rounded-md"
         >
-          {isSubmitting ? "Guardando..." : "Guardar Información"}
+          {isSubmitting
+            ? "Guardando..."
+            : isEditing
+            ? "Actualizar Información"
+            : "Guardar Información"}
         </button>
       </div>
     </div>

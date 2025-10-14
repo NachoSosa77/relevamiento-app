@@ -79,37 +79,45 @@ useEffect(() => {
   };
 
   const handleGuardar = async () => {
-    const { ...payload } = dimensiones;
+  const { ...payload } = dimensiones;
 
-    const hayDatos = Object.values(payload).some(
-      (v) => v !== null && v !== undefined && v !== 0
+  const hayDatos = Object.values(payload).some(
+    (v) => v !== null && v !== undefined && v !== 0
+  );
+
+  if (!hayDatos) {
+    toast.warning("Por favor, completá al menos un dato antes de guardar.");
+    return;
+  }
+
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+
+  try {
+    await localesService.updateDimensionesById(localId, payload);
+
+    // ✅ si era la primera vez, pasamos a modo edición para mostrar la banda amarilla
+    if (!isEditing) setIsEditing(true);
+
+    toast.success(
+      isEditing
+        ? "Dimensiones actualizadas correctamente."
+        : "Dimensiones guardadas correctamente."
     );
 
-    if (!hayDatos) {
-      toast.warning("Por favor, completá al menos un dato antes de guardar.");
-      return;
-    }
+    // Opcional: sincronizar el estado local con lo que se envió
+    setDimensiones((prev) => ({ ...prev, ...payload }));
 
-    if (isSubmitting) return;
+    onUpdate?.();
+  } catch (err: unknown) {
+    console.error("Error al guardar dimensiones:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    toast.error(message ?? "Ocurrió un error al guardar.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    setIsSubmitting(true);
-
-    try {
-      await localesService.updateDimensionesById(localId, payload);
-      toast.success(
-        isEditing
-          ? "Dimensiones actualizadas correctamente."
-          : "Dimensiones guardadas correctamente."
-      );
-      onUpdate?.();
-    } catch (err: unknown) {
-      console.error("Error al guardar dimensiones:", err);
-      const message = err instanceof Error ? err.message : String(err);
-      toast.error(message ?? "Ocurrió un error al guardar.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // 🔹 Skeleton mientras carga
   if (isLoading) return <DimensionesSkeleton />;

@@ -127,16 +127,10 @@ const EditarLocalPage = () => {
         relevamientoId={relevamientoId!}
       />
 
-      {(local.nombre_local === "Sanitarios Alumnos" ||
-        local.nombre_local === "Sanitarios docentes/personal" ||
-        local.nombre_local === "Sala de nivel inicial" ||
-        local.nombre_local === "Laboratorio" ||
-        local.nombre_local === "Aula especial") && (
-        <EquipamientoSanitarioEditable
-          localId={localNumericId}
-          relevamientoId={relevamientoId!}
-        />
-      )}
+      <EquipamientoSanitarioEditable
+        localId={localNumericId}
+        relevamientoId={relevamientoId!}
+      />
     </div>
   );
 };
