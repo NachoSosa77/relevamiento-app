@@ -18,6 +18,43 @@ import DecimalNumericInput from "../ui/DecimalNumericInput";
 import NumericInput from "../ui/NumericInput";
 import Select from "../ui/SelectComponent";
 
+// 🔽 Agregá estos helpers arriba del componente o dentro (antes de los useEffect)
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+const tipoKey = (t?: string) => (t ?? "").trim().toLowerCase(); // "cubierta" | "semicubierta"
+
+function computeSuperficies(
+  localesPorConstruccion: Record<number, LocalesConstruccion[]>,
+  cantidadConstrucciones: number
+): Record<number, { cubierta: number; semicubierta: number; total: number }> {
+  const result: Record<
+    number,
+    { cubierta: number; semicubierta: number; total: number }
+  > = {};
+
+  for (let idx = 0; idx < (cantidadConstrucciones ?? 0); idx++) {
+    const arr = localesPorConstruccion[idx] ?? [];
+    let cubierta = 0;
+    let semicubierta = 0;
+
+    for (const l of arr) {
+      const sup = Number(l?.superficie) || 0;
+      const tk = tipoKey(l?.tipo_superficie);
+      if (tk === "cubierta") cubierta += sup;
+      else if (tk === "semicubierta") semicubierta += sup;
+      // Si en el futuro aparece otro tipo, no se suma.
+    }
+
+    const total = cubierta + semicubierta;
+    result[idx] = {
+      cubierta: round2(cubierta),
+      semicubierta: round2(semicubierta),
+      total: round2(total),
+    };
+  }
+
+  return result;
+}
+
 export default function LocalesPorConstruccion() {
   const [construccionIdEnProceso, setConstruccionIdEnProceso] = useState<
     Record<number, number | null>
@@ -56,83 +93,88 @@ export default function LocalesPorConstruccion() {
     useState<LocalesConstruccion | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   // Inicializar formValues cuando se tiene cantidadConstrucciones
-useEffect(() => {
-  if (cantidadConstrucciones === undefined) return;
+  useEffect(() => {
+    if (cantidadConstrucciones === undefined) return;
 
-  const initialValues: Record<number, LocalesConstruccion> = {};
-  for (let i = 0; i < cantidadConstrucciones; i++) {
-    initialValues[i] = {
-      identificacion_plano: 0,
-      numero_planta: 0,
-      tipo: "",
-      local_id: 0,
-      tipo_superficie: "",
-      local_sin_uso: "No",
-      superficie: 0,
-    };
-  }
-  setFormValues(initialValues);
-}, [cantidadConstrucciones]);
-
-// Cargar opciones de locales
-useEffect(() => {
-  localesService.getOpcionesLocales().then(setOpcionesLocales);
-}, []);
-
-// Cargar locales existentes si hay relevamientoId
-useEffect(() => {
-  async function fetchLocalesExistentes() {
-    if (typeof relevamientoId !== "number") return;
-    try {
-      const respuesta = await localesService.getLocalesPorRelevamiento(
-        relevamientoId
-      );
-      if (respuesta && respuesta.length > 0) {
-        const agrupados = respuesta.reduce((acc: any, local: any) => {
-          const idx = (local.numero_construccion || 1) - 1;
-          if (!acc[idx]) acc[idx] = [];
-          acc[idx].push(local);
-          return acc;
-        }, {});
-
-        const construcciones = respuesta.reduce((acc: any, local: any) => {
-          const idx = (local.numero_construccion || 1) - 1;
-          acc[idx] = local.construccion_id;
-          return acc;
-        }, {});
-
-        setLocalesPorConstruccion(agrupados);
-        setConstruccionesExistentes(construcciones);
-        setEditando(true);
-      }
-    } catch (error) {
-      console.error("Error al cargar locales previos:", error);
+    const initialValues: Record<number, LocalesConstruccion> = {};
+    for (let i = 0; i < cantidadConstrucciones; i++) {
+      initialValues[i] = {
+        identificacion_plano: 0,
+        numero_planta: 0,
+        tipo: "",
+        local_id: 0,
+        tipo_superficie: "",
+        local_sin_uso: "No",
+        superficie: 0,
+      };
     }
-  }
+    setFormValues(initialValues);
+  }, [cantidadConstrucciones]);
 
-  if (relevamientoId) fetchLocalesExistentes();
-}, [relevamientoId]);
+  // Cargar opciones de locales
+  useEffect(() => {
+    localesService.getOpcionesLocales().then(setOpcionesLocales);
+  }, []);
 
-// CONTROL DE isLoading 🔥
-useEffect(() => {
-  // Carga lista cuando:
-  // 1. Opciones de locales ya están
-  // 2. formValues ya está inicializado según cantidadConstrucciones
-  const formReady =
-    cantidadConstrucciones !== undefined &&
-    Object.keys(formValues).length === cantidadConstrucciones;
+  // Cargar locales existentes si hay relevamientoId
+  useEffect(() => {
+    async function fetchLocalesExistentes() {
+      if (typeof relevamientoId !== "number") return;
+      try {
+        const respuesta = await localesService.getLocalesPorRelevamiento(
+          relevamientoId
+        );
+        if (respuesta && respuesta.length > 0) {
+          const agrupados = respuesta.reduce((acc: any, local: any) => {
+            const idx = (local.numero_construccion || 1) - 1;
+            if (!acc[idx]) acc[idx] = [];
+            acc[idx].push(local);
+            return acc;
+          }, {});
 
-  // Si no hay locales existentes, no es necesario esperar más
-  const localesReady =
-    Object.keys(localesPorConstruccion).length === 0 ||
-    Object.keys(localesPorConstruccion).length > 0;
+          const construcciones = respuesta.reduce((acc: any, local: any) => {
+            const idx = (local.numero_construccion || 1) - 1;
+            acc[idx] = local.construccion_id;
+            return acc;
+          }, {});
 
-  if (opcionesLocales.length > 0 && formReady && localesReady) {
-    setIsLoading(false);
-  } else {
-    setIsLoading(true);
-  }
-}, [opcionesLocales, formValues, localesPorConstruccion, cantidadConstrucciones]);
+          setLocalesPorConstruccion(agrupados);
+          setConstruccionesExistentes(construcciones);
+          setEditando(true);
+        }
+      } catch (error) {
+        console.error("Error al cargar locales previos:", error);
+      }
+    }
+
+    if (relevamientoId) fetchLocalesExistentes();
+  }, [relevamientoId]);
+
+  // CONTROL DE isLoading 🔥
+  useEffect(() => {
+    // Carga lista cuando:
+    // 1. Opciones de locales ya están
+    // 2. formValues ya está inicializado según cantidadConstrucciones
+    const formReady =
+      cantidadConstrucciones !== undefined &&
+      Object.keys(formValues).length === cantidadConstrucciones;
+
+    // Si no hay locales existentes, no es necesario esperar más
+    const localesReady =
+      Object.keys(localesPorConstruccion).length === 0 ||
+      Object.keys(localesPorConstruccion).length > 0;
+
+    if (opcionesLocales.length > 0 && formReady && localesReady) {
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+  }, [
+    opcionesLocales,
+    formValues,
+    localesPorConstruccion,
+    cantidadConstrucciones,
+  ]);
 
   const verificarConstruccionExistente = async (numeroConstruccion: number) => {
     if (!relevamientoId) return false;
@@ -164,6 +206,17 @@ useEffect(() => {
       return null;
     }
   };
+
+  // ♻️ Recalcular superficies cada vez que cambien los locales o la cantidad de construcciones
+  useEffect(() => {
+    if (cantidadConstrucciones === undefined) return;
+
+    const calc = computeSuperficies(
+      localesPorConstruccion,
+      cantidadConstrucciones
+    );
+    setSuperficiesPorConstruccion(calc);
+  }, [localesPorConstruccion, cantidadConstrucciones]);
 
   const handleFormChange = (
     construccionIndex: number,
