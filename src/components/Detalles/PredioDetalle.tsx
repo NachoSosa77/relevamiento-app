@@ -2,6 +2,8 @@
 "use client";
 
 import { Construccion } from "@/interfaces/Locales";
+import { useAppDispatch } from "@/redux/hooks";
+import { setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -26,17 +28,18 @@ interface Predio {
 
 export const PredioDetalle = ({ relevamientoId }: Props) => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
   const [predio, setPredio] = useState<Predio>();
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
 
   const handleEditar = () => {
-    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    dispatch(setRelevamientoId(relevamientoId));
     router.push("/espacios-escolares"); // o la ruta que uses
   };
 
   const handleEditarConstruccion = () => {
-    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    dispatch(setRelevamientoId(relevamientoId));
     router.push("/relevamiento-construcciones"); // o la ruta que uses
   };
 

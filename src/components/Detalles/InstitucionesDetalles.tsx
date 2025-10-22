@@ -1,6 +1,8 @@
 "use client";
 
 import Spinner from "@/components/ui/Spinner"; // ✅ importación
+import { useAppDispatch } from "@/redux/hooks";
+import { setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { institucionesService } from "@/services/institucionesService";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,12 +23,13 @@ interface Props {
 
 const InstitucionesDetalle = ({ relevamientoId }: Props) => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const [instituciones, setInstituciones] = useState<Institucion[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handleEditar = () => {
-    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    dispatch(setRelevamientoId(relevamientoId));
     router.push("/espacios-escolares");
   };
 

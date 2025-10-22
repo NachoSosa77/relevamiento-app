@@ -2,6 +2,8 @@
 "use client";
 
 import { Construccion, LocalesConstruccion } from "@/interfaces/Locales";
+import { useAppDispatch } from "@/redux/hooks";
+import { setRelevamientoId } from "@/redux/slices/espacioEscolarSlice";
 import { localesService } from "@/services/localesServices";
 import {
   AlertTriangle,
@@ -16,12 +18,15 @@ import { LocalDetalleModal } from "./LocalesConstruccion";
 
 interface Props {
   construccion: Construccion;
-  relevamientoId: number
+  relevamientoId: number;
 }
 
-export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: Props) => {
-    const router = useRouter();
-  
+export const ConstruccionDetalleAccordion = ({
+  construccion,
+  relevamientoId,
+}: Props) => {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [locales, setLocales] = useState<LocalesConstruccion[]>([]);
   const [localSeleccionado, setLocalSeleccionado] =
     useState<LocalesConstruccion | null>(null);
@@ -35,9 +40,9 @@ export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: P
   };
 
   const handleEditarLocales = () => {
-    sessionStorage.setItem("relevamientoId", String(relevamientoId));
+    dispatch(setRelevamientoId(relevamientoId));
     router.push("/relevamiento-locales"); // o la ruta que uses
-  }
+  };
 
   const toggleLocales = async () => {
     if (!showLocales && locales.length === 0 && construccion.id) {
@@ -63,7 +68,8 @@ export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: P
       >
         <div className="flex items-center gap-2">
           <span className="font-semibold">
-            N° de construcción {construccion.numero_construccion ?? construccion.id}
+            N° de construcción{" "}
+            {construccion.numero_construccion ?? construccion.id}
           </span>
           {construccion ? (
             <CheckCircle className="text-green-500 w-4 h-4 font-bold" />
@@ -98,12 +104,12 @@ export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: P
 
           {showLocales && (
             <div className="mt-4">
-               <button
-            onClick={handleEditarLocales}
-            className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
-          >
-            Editar Locales
-          </button>
+              <button
+                onClick={handleEditarLocales}
+                className="bg-yellow-600 text-white px-4 py-1 rounded hover:bg-yellow-600/50"
+              >
+                Editar Locales
+              </button>
               {locales.length === 0 ? (
                 <p className="text-gray-500">
                   No hay locales cargados para esta construcción.
@@ -128,11 +134,15 @@ export const ConstruccionDetalleAccordion = ({ construccion, relevamientoId }: P
                             {local.identificacion_plano}
                           </td>
                           <td className="px-3 py-2">{local.superficie}</td>
-                          <td className={`font-semibold px-3 py-2 ${
-                        local.estado === "completo"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}>{local.estado}</td>
+                          <td
+                            className={`font-semibold px-3 py-2 ${
+                              local.estado === "completo"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {local.estado}
+                          </td>
                           <td className="px-3 py-2">
                             <button
                               onClick={() => openModal(local)}
