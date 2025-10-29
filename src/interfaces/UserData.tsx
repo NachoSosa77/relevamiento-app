@@ -1,8 +1,8 @@
 export interface UserData {
-    id: number;
-    nombre: string;
-    apellido: string;
-    email: string;
-    dni:number;
-    role: string;
+  id: number;
+  email: string;
+  nombre: string | null;
+  apellido: string | null;
+  dni: string | null;
+  roles?: string[]; // <- nuevo
 }

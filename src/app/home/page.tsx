@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
 "use client";
 
 import CuiComponent from "@/components/Forms/dinamicForm/CuiComponent";
@@ -15,14 +14,13 @@ import {
   setRelevamientoId,
 } from "@/redux/slices/espacioEscolarSlice";
 import { relevamientoService } from "@/services/relevamientoService";
+import Link from "next/link"; // 👈 para los accesos admin
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
 export default function HomePage() {
-  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(
-    undefined
-  );
+  const [cuiInputValue, setCuiInputValue] = useState<number | undefined>(undefined);
   const [relevamientos, setRelevamientos] = useState<Relevamiento[]>([]);
   const [botonCrearHabilitado, setBotonCrearHabilitado] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +45,6 @@ export default function HomePage() {
         email: user.email,
       });
 
-      // Acá accedés directamente a lo que devolvés en el endpoint
       const nuevoRelevamientoId = data.inserted.id;
       dispatch(resetArchivos());
       dispatch(resetAreasExteriores());
@@ -66,14 +63,33 @@ export default function HomePage() {
 
   if (error) return <div>Error: {error}</div>;
 
+  // 👇 comprobamos si el usuario tiene rol ADMIN
+  const isAdmin = user?.roles?.includes("ADMIN");
+
   return (
     <div className="h-full mt-8 overflow-hidden bg-white text-black text-sm">
-      <div className="flex justify-center mt-20 mb-8 mx-4">
-        <div className="flex flex-col items-center">
-          <h1 className="font-bold text-custom">
-            FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO
-          </h1>
-        </div>
+      <div className="flex flex-col items-center mt-20 mb-8 mx-4">
+        <h1 className="font-bold text-custom text-center">
+          FORMULARIO GENERAL DE RELEVAMIENTO PEDAGÓGICO
+        </h1>
+
+        {/* 👇 bloque visible solo para ADMIN */}
+        {isAdmin && (
+          <div className="flex flex-wrap gap-4 justify-center mt-6">
+            <Link
+              href="/admin/relevamientos"
+              className="bg-slate-900 hover:bg-slate-800 text-white rounded-md px-4 py-2 transition-colors"
+            >
+              📋 Ver todos los relevamientos
+            </Link>
+            <Link
+              href="/admin/dashboard"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md px-4 py-2 transition-colors"
+            >
+              📊 Ir al Dashboard
+            </Link>
+          </div>
+        )}
       </div>
 
       <CuiComponent
@@ -88,7 +104,7 @@ export default function HomePage() {
       <button
         className="bg-green-600 hover:bg-green-700 text-white rounded-md ml-10 px-4 py-2 mt-4 disabled:bg-gray-400 disabled:hover:bg-gray-400"
         disabled={!botonCrearHabilitado}
-        onClick={handleNuevoRelevamiento} // Función para crear un nuevo relevamiento
+        onClick={handleNuevoRelevamiento}
       >
         Nuevo Relevamiento
       </button>

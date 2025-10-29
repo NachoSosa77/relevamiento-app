@@ -102,7 +102,7 @@ export default function TablaRelevamientos() {
                 ) : r.estado === "completo" ? (
                   <span className="text-green-600 font-semibold">Completo</span>
                 ) : (
-                  <span className="text-red-600 font-semibold">Pendiente</span>
+                  <span className="text-red-600 font-semibold">Cancelado</span>
                 )}
               </td>
               <td className="px-4 py-2 text-center flex justify-center gap-2">
