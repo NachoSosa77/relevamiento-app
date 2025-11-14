@@ -1,4 +1,5 @@
 import { getConnection } from "@/app/lib/db";
+import { recomputeEstadoConstruccion } from "@/app/lib/recompute-estado"; // 👈 importa el helper
 import type { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -49,12 +50,13 @@ export async function POST(req: Request) {
         disponibilidad,
         estado,
         tipo,
+        sub_tipo, // 👈 si más adelante lo usas, ya está previsto
       } = item;
 
       const [rows] = await connection.execute<RowDataPacket[]>(
         `SELECT COUNT(*) as count 
-     FROM estado_conservacion 
-     WHERE relevamiento_id = ? AND construccion_id = ? AND estructura = ?`,
+         FROM estado_conservacion 
+         WHERE relevamiento_id = ? AND construccion_id = ? AND estructura = ?`,
         [relevamiento_id, construccion_id, estructura]
       );
 
@@ -72,22 +74,28 @@ export async function POST(req: Request) {
       }
 
       await connection.execute(
-        `INSERT INTO estado_conservacion (estructura, disponibilidad, estado, relevamiento_id, construccion_id, tipo)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO estado_conservacion (estructura, disponibilidad, estado, relevamiento_id, construccion_id, tipo, sub_tipo)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           estructura ?? null,
           disponibilidad ?? null,
           estado ?? null,
           relevamiento_id,
           construccion_id,
-          tipo,
+          tipo ?? null,
+          sub_tipo ?? null,
         ]
       );
     }
 
+    // 🔹 Nuevo paso: recalcular snapshot del estado general
+    const relId = Number(data[0].relevamiento_id);
+    const constId = Number(data[0].construccion_id);
+    await recomputeEstadoConstruccion(relId, constId);
+
     connection.release();
     return NextResponse.json(
-      { message: "Datos insertados correctamente" },
+      { message: "Datos insertados y snapshot actualizado correctamente" },
       { status: 200 }
     );
   } catch (error) {
@@ -120,16 +128,18 @@ export async function PATCH(req: Request) {
         relevamiento_id,
         construccion_id,
         tipo,
+        sub_tipo,
       } = item;
 
       await connection.execute(
         `UPDATE estado_conservacion 
-         SET disponibilidad = ?, estado = ?, tipo = ? 
+         SET disponibilidad = ?, estado = ?, tipo = ?, sub_tipo = ?
          WHERE relevamiento_id = ? AND construccion_id = ? AND estructura = ?`,
         [
           disponibilidad ?? null,
           estado ?? null,
           tipo ?? null,
+          sub_tipo ?? null,
           relevamiento_id,
           construccion_id,
           estructura,
@@ -137,9 +147,14 @@ export async function PATCH(req: Request) {
       );
     }
 
+    // 🔹 Nuevo paso: recalcular snapshot después del update
+    const relId = Number(data[0].relevamiento_id);
+    const constId = Number(data[0].construccion_id);
+    await recomputeEstadoConstruccion(relId, constId);
+
     connection.release();
     return NextResponse.json(
-      { message: "Datos actualizados correctamente" },
+      { message: "Datos actualizados y snapshot recalculado correctamente" },
       { status: 200 }
     );
   } catch (error) {

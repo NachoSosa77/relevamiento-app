@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest) {
     const [rows]: any[] = await pool.query(
       `SELECT DISTINCT i.localidad
        FROM instituciones i
-       WHERE UPPER(i.provincia) = 'LA PAMPA'
+       WHERE i.provincia = 'La Pampa'
          AND i.localidad IS NOT NULL
        ORDER BY i.localidad`
     );

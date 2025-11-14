@@ -1,8 +1,23 @@
-export const estructuraResistente = [
+interface Opcion {
+  id: number;
+  prefijo: string;
+  name: string;
+}
+
+interface Estructura {
+  id: string; // ej: "13.2", "13.3", "13.1"
+  question: string;
+  showCondition: boolean; // true: tiene estado B/R/M; false: “No corresponde” (última col)
+  opciones: Opcion[];
+  sub_tipo?: "estructura" | "cubierta" | "materiales" | "terminaciones" | "n/a"; // 👈 nuevo        // catálogo para el <Select /> (excepto 13.1 que es Si/No)
+}
+
+export const estructuraResistente: Estructura[] = [
   {
     id: "10.1",
     question: "Tipo de estructura",
     showCondition: true,
+    sub_tipo: "estructura", // ⬅️ NUEVO
     opciones: [
       {
         id: 1,
@@ -38,11 +53,12 @@ export const estructuraResistente = [
   },
 ];
 
-export const estructuraTecho = [
+export const estructuraTecho: Estructura[] = [
   {
     id: "11.1",
     question: "Estructura",
     showCondition: true,
+    sub_tipo: "estructura", // ⬅️ NUEVO
     opciones: [
       {
         id: 1,
@@ -80,6 +96,7 @@ export const estructuraTecho = [
     id: "11.2",
     question: "Cubierta",
     showCondition: true,
+    sub_tipo: "cubierta", // ⬅️ NUEVO
     opciones: [
       {
         id: 1,
@@ -130,11 +147,12 @@ export const estructuraTecho = [
   },
 ];
 
-export const paredesCerramientos = [
+export const paredesCerramientos: Estructura[] = [
   {
     id: "12.1",
     question: "Materiales",
     showCondition: true,
+    sub_tipo: "materiales", // ⬅️ NUEVO
     opciones: [
       {
         id: 1,
@@ -177,6 +195,8 @@ export const paredesCerramientos = [
     id: "12.2",
     question: "Terminaciones",
     showCondition: true,
+    sub_tipo: "terminaciones", // ⬅️ NUEVO
+
     opciones: [
       {
         id: 1,

@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
           SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1)       AS localidad,
           SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel
         FROM instituciones i
-        WHERE UPPER(i.provincia) = 'LA PAMPA'
+        WHERE i.provincia = 'La Pampa'
         GROUP BY i.cui
       ) inst                         ON inst.cui = r.cui_id
       JOIN construcciones c          ON c.relevamiento_id = r.id

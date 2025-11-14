@@ -9,9 +9,13 @@ export const pool = mysql.createPool({
   password: dbPassword,
   database: dbName,
   waitForConnections: true,
-  connectionLimit: 5, // Ajustado para un mejor comportamiento serverless
+  connectionLimit: 10, // Ajustado para un mejor comportamiento serverless
   queueLimit: 0,
-  connectTimeout: 5000, // 5 segundos: Falla más rápido si la DB no responde
+  connectTimeout: 10000, // 🔧 10 segundos más razonable
+  maxIdle: 2, // 🔧 Agrega esto: cierra conexiones idle
+  idleTimeout: 60000, // 🔧 1 minuto
+  enableKeepAlive: true, // 🔧 Mantiene conexión viva
+  keepAliveInitialDelay: 0,
 });
 
 // Función legacy para obtener conexión individual

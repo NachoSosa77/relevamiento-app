@@ -16,10 +16,11 @@ interface Opcion {
 }
 
 interface Estructura {
-  id: string;                 // ej: "13.2", "13.3", "13.1"
+  id: string; // ej: "13.2", "13.3", "13.1"
   question: string;
-  showCondition: boolean;     // true: tiene estado B/R/M; false: “No corresponde” (última col)
-  opciones: Opcion[];         // catálogo para el <Select /> (excepto 13.1 que es Si/No)
+  showCondition: boolean; // true: tiene estado B/R/M; false: “No corresponde” (última col)
+  opciones: Opcion[];
+  sub_tipo?: "estructura" | "cubierta" | "materiales" | "terminaciones" | "n/a"; // 👈 nuevo        // catálogo para el <Select /> (excepto 13.1 que es Si/No)
 }
 
 interface EstructuraReuProps {
@@ -40,7 +41,6 @@ export default function CaracteristicasConservacion({
   tipo,
 }: EstructuraReuProps) {
   const relevamientoId = useRelevamientoId();
-
   const [responses, setResponses] = useState<Record<string, Resp>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
@@ -60,28 +60,39 @@ export default function CaracteristicasConservacion({
         if (Array.isArray(data) && data.length > 0) {
           const next: Record<string, Resp> = {};
 
+          // lookup sub_tipo -> id para este bloque
+          const ID_BY_SUBTIPO: Record<string, string> = {};
+          for (const e of estructuras) {
+            if (e.sub_tipo) ID_BY_SUBTIPO[e.sub_tipo.toLowerCase()] = e.id;
+          }
+
           for (const row of data) {
-            // row.estructura es el NOMBRE (texto) guardado en DB
+            // filtrar por este "tipo" (prop)
+            if ((row.tipo || "").toLowerCase() !== tipo.toLowerCase()) continue;
+
             const estructuraText: string = row.estructura ?? "";
+            const subTipo: string = (row.sub_tipo || "").toLowerCase();
             let keyId: string | null = null;
 
-            // Caso especial 13.1: no usa opciones, sólo Si/No en disponibilidad
-            if (estructuras.some(e => e.id === "13.1") && !estructuraText) {
-              keyId = "13.1";
+            if (subTipo && ID_BY_SUBTIPO[subTipo]) {
+              keyId = ID_BY_SUBTIPO[subTipo];
             }
 
-            // Para el resto, buscamos qué estructura (por id) contiene esa opción por nombre
             if (!keyId) {
-              for (const e of estructuras) {
-                if (e.id === "13.1") continue; // 13.1 no tiene opciones
-                if (e.opciones?.some(op => op.name === estructuraText)) {
-                  keyId = e.id;
-                  break;
+              if (estructuras.some((e) => e.id === "13.1") && !estructuraText) {
+                keyId = "13.1";
+              }
+              if (!keyId) {
+                for (const e of estructuras) {
+                  if (e.id === "13.1") continue;
+                  if (e.opciones?.some((op) => op.name === estructuraText)) {
+                    keyId = e.id;
+                    break;
+                  }
                 }
               }
             }
 
-            // Si no logramos mapear, skip
             if (!keyId) continue;
 
             next[keyId] = {
@@ -112,7 +123,7 @@ export default function CaracteristicasConservacion({
     field: "disponibilidad" | "estado" | "estructura",
     value: string
   ) => {
-    setResponses(prev => ({
+    setResponses((prev) => ({
       ...prev,
       [servicioId]: { ...prev[servicioId], [field]: value },
     }));
@@ -121,7 +132,11 @@ export default function CaracteristicasConservacion({
   // ---- Validación simple
   const validar = () => {
     for (const e of estructuras) {
-      const r = responses[e.id] || { disponibilidad: "", estado: "", estructura: "" };
+      const r = responses[e.id] || {
+        disponibilidad: "",
+        estado: "",
+        estructura: "",
+      };
 
       if (e.id === "13.1") {
         // 13.1 sólo necesita disponibilidad Si/No
@@ -143,7 +158,9 @@ export default function CaracteristicasConservacion({
 
   const handleGuardar = async () => {
     if (!validar()) {
-      toast.warning("Por favor, completá todas las respuestas antes de guardar.");
+      toast.warning(
+        "Por favor, completá todas las respuestas antes de guardar."
+      );
       return;
     }
 
@@ -156,20 +173,26 @@ export default function CaracteristicasConservacion({
 
   // ---- POST/PATCH + refresco
   const enviarDatos = async (esUpdate: boolean) => {
-    // Armamos payload como ARRAY (un registro por estructura)
-    const payload = estructuras.map(e => {
-      const r = responses[e.id] || { disponibilidad: "", estado: "", estructura: "" };
+    const payload = estructuras.map((e) => {
+      const r = responses[e.id] || {
+        disponibilidad: "",
+        estado: "",
+        estructura: "",
+      };
 
-      // Para 13.1 guardamos solo disp. (estructura puede ir vacío)
       return {
         estructura: e.id === "13.1" ? "" : r.estructura || "",
-        disponibilidad: e.id === "13.1" ? (r.disponibilidad || "") : (r.disponibilidad || ""),
-        estado: e.id === "13.1" ? "" : (r.estado || ""),
+        disponibilidad: r.disponibilidad || "",
+        estado: e.id === "13.1" ? "" : r.estado || "",
         relevamiento_id: relevamientoId,
         construccion_id: construccionId,
-        tipo,
+        tipo, // viene por prop
+        sub_tipo: e.sub_tipo ?? null, // ⬅️ asegúrate que venga en los items
       };
     });
+
+    // debug rápido: verificá que sub_tipo esté saliendo
+    console.log("payload estado_conservacion:", payload);
 
     setIsSubmitting(true);
     try {
@@ -180,11 +203,16 @@ export default function CaracteristicasConservacion({
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result?.error || "Error al guardar los datos");
+      if (!response.ok)
+        throw new Error(result?.error || "Error al guardar los datos");
 
-      toast.success(editando ? "Datos actualizados correctamente" : "Datos guardados correctamente");
+      toast.success(
+        editando
+          ? "Datos actualizados correctamente"
+          : "Datos guardados correctamente"
+      );
 
-      // 🔄 Re-fetch para ver lo persistido y asegurar banner
+      // Re-fetch para ver lo persistido
       try {
         const ref = await fetch(
           `/api/estado_conservacion?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
@@ -192,22 +220,42 @@ export default function CaracteristicasConservacion({
         const data: any[] = ref.ok ? await ref.json() : [];
         if (Array.isArray(data) && data.length > 0) {
           const next: Record<string, Resp> = {};
+
+          // build lookup sub_tipo -> id para este bloque
+          const ID_BY_SUBTIPO: Record<string, string> = {};
+          for (const e of estructuras) {
+            if (e.sub_tipo) ID_BY_SUBTIPO[e.sub_tipo.toLowerCase()] = e.id;
+          }
+
           for (const row of data) {
+            // solo filas de este bloque (por si GET trae varias categorías)
+            if ((row.tipo || "").toLowerCase() !== tipo.toLowerCase()) continue;
+
             const estructuraText: string = row.estructura ?? "";
+            const subTipo: string = (row.sub_tipo || "").toLowerCase();
             let keyId: string | null = null;
 
-            if (estructuras.some(e => e.id === "13.1") && !estructuraText) {
-              keyId = "13.1";
+            // 1) priorizar mapeo por sub_tipo
+            if (subTipo && ID_BY_SUBTIPO[subTipo]) {
+              keyId = ID_BY_SUBTIPO[subTipo];
             }
+
+            // 2) fallback por texto (como ya hacías)
             if (!keyId) {
-              for (const e of estructuras) {
-                if (e.id === "13.1") continue;
-                if (e.opciones?.some(op => op.name === estructuraText)) {
-                  keyId = e.id;
-                  break;
+              if (estructuras.some((e) => e.id === "13.1") && !estructuraText) {
+                keyId = "13.1";
+              }
+              if (!keyId) {
+                for (const e of estructuras) {
+                  if (e.id === "13.1") continue;
+                  if (e.opciones?.some((op) => op.name === estructuraText)) {
+                    keyId = e.id;
+                    break;
+                  }
                 }
               }
             }
+
             if (!keyId) continue;
 
             next[keyId] = {
@@ -216,11 +264,13 @@ export default function CaracteristicasConservacion({
               estructura: estructuraText ?? "",
             };
           }
+
           setResponses(next);
           setEditando(true);
         }
-      } catch { /* ignore re-fetch errors, ya guardado */ }
-
+      } catch {
+        /* ignore re-fetch errors */
+      }
     } catch (error: any) {
       console.error("Error al enviar los datos:", error);
       toast.error(error.message || "Error al guardar los datos");
@@ -243,14 +293,26 @@ export default function CaracteristicasConservacion({
           <tr className="bg-custom text-white">
             <th className="border p-2 text-white">{id}</th>
             <th className="border p-2">{label}</th>
-            {id !== 13 ? <th className="border p-2">Descripción</th> : <th className="border p-2">No</th>}
-            {id !== 13 ? <th className="border p-2">Estado de conservación</th> : <th className="border p-2">Si</th>}
+            {id !== 13 ? (
+              <th className="border p-2">Descripción</th>
+            ) : (
+              <th className="border p-2">No</th>
+            )}
+            {id !== 13 ? (
+              <th className="border p-2">Estado de conservación</th>
+            ) : (
+              <th className="border p-2">Si</th>
+            )}
             {id === 13 && <th className="border p-2"></th>}
           </tr>
         </thead>
         <tbody>
           {estructuras.map(({ id, question, showCondition, opciones }) => {
-            const r = responses[id] || { disponibilidad: "", estado: "", estructura: "" };
+            const r = responses[id] || {
+              disponibilidad: "",
+              estado: "",
+              estructura: "",
+            };
 
             return (
               <tr className="border" key={id}>
@@ -263,7 +325,9 @@ export default function CaracteristicasConservacion({
                     <Select
                       label=""
                       value={r.estructura || ""}
-                      onChange={(e) => handleResponseChange(id, "estructura", e.target.value)}
+                      onChange={(e) =>
+                        handleResponseChange(id, "estructura", e.target.value)
+                      }
                       options={opciones.map((option) => ({
                         value: option.name,
                         label: `${option.prefijo} ${option.name}`,
@@ -276,7 +340,9 @@ export default function CaracteristicasConservacion({
                         name={`disp-${id}`}
                         value="No"
                         checked={r.disponibilidad === "No"}
-                        onChange={() => handleResponseChange(id, "disponibilidad", "No")}
+                        onChange={() =>
+                          handleResponseChange(id, "disponibilidad", "No")
+                        }
                       />
                     </label>
                   )}
@@ -292,7 +358,9 @@ export default function CaracteristicasConservacion({
                           name={`estado-${id}`}
                           value="Bueno"
                           checked={r.estado === "Bueno"}
-                          onChange={() => handleResponseChange(id, "estado", "Bueno")}
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Bueno")
+                          }
                           className="mr-1"
                         />
                         B
@@ -303,7 +371,9 @@ export default function CaracteristicasConservacion({
                           name={`estado-${id}`}
                           value="Regular"
                           checked={r.estado === "Regular"}
-                          onChange={() => handleResponseChange(id, "estado", "Regular")}
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Regular")
+                          }
                           className="mr-1"
                         />
                         R
@@ -314,7 +384,9 @@ export default function CaracteristicasConservacion({
                           name={`estado-${id}`}
                           value="Malo"
                           checked={r.estado === "Malo"}
-                          onChange={() => handleResponseChange(id, "estado", "Malo")}
+                          onChange={() =>
+                            handleResponseChange(id, "estado", "Malo")
+                          }
                           className="mr-1"
                         />
                         M
@@ -327,7 +399,9 @@ export default function CaracteristicasConservacion({
                         name={`disp-${id}`}
                         value="Si"
                         checked={r.disponibilidad === "Si"}
-                        onChange={() => handleResponseChange(id, "disponibilidad", "Si")}
+                        onChange={() =>
+                          handleResponseChange(id, "disponibilidad", "Si")
+                        }
                       />
                     </label>
                   )}
@@ -339,8 +413,8 @@ export default function CaracteristicasConservacion({
                     <TextInput
                       label="Indique cuales"
                       sublabel=""
-                      value=""             // aún no definido en modelo de DB; placeholder
-                      onChange={() => {}}  // pendiente si decides persistir este campo
+                      value="" // aún no definido en modelo de DB; placeholder
+                      onChange={() => {}} // pendiente si decides persistir este campo
                     />
                   </td>
                 )}
@@ -355,10 +429,16 @@ export default function CaracteristicasConservacion({
           onClick={handleGuardar}
           disabled={isSubmitting}
           className={`text-sm font-bold p-2 rounded-lg ${
-            isSubmitting ? "bg-gray-400 cursor-wait text-white" : "bg-custom hover:bg-custom/50 text-white"
+            isSubmitting
+              ? "bg-gray-400 cursor-wait text-white"
+              : "bg-custom hover:bg-custom/50 text-white"
           }`}
         >
-          {isSubmitting ? "Guardando..." : editando ? "Actualizar información" : "Guardar información"}
+          {isSubmitting
+            ? "Guardando..."
+            : editando
+            ? "Actualizar información"
+            : "Guardar información"}
         </button>
       </div>
 
