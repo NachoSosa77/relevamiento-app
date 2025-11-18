@@ -56,6 +56,14 @@ const TooltipContent = ({ active, payload, label }: TooltipContentProps) => {
   );
 };
 
+type Bloque2Row = {
+  construccion_id?: number; // 👈 NUEVO
+  tipo: string;
+  sub_tipo: string;
+  categoria: string;
+  estado: "Bueno" | "Regular" | "Malo" | null;
+};
+
 type ItemKpi = {
   nivel: string;
   edificios?: number;
@@ -78,22 +86,134 @@ type ResumenEstInfo = {
   localidad: string;
   modalidad_nivel: string | null;
   instituciones: { id: number; nombre: string }[];
+  relevamiento_id: number;
 };
 type ResumenEst = {
   info: ResumenEstInfo;
-  bloque2: {
-    tipo: string;
-    sub_tipo: string;
-    categoria: string;
-    estado: "Bueno" | "Regular" | "Malo";
-  }[];
+  bloque2: Bloque2Row[];
   bloque3: {
     tipo_local: string;
     identificacion: string;
     estado_local: "Bueno" | "Regular" | "Malo" | null;
     observaciones: string | null;
+    score_local?: number;
+    tieneCriticoMalo?: boolean;
   }[];
 };
+
+const estadoPillClass = (estado: string | null) => {
+  if (estado === "Bueno") return "bg-green-100 text-green-700";
+  if (estado === "Regular") return "bg-amber-100 text-amber-700";
+  if (estado === "Malo") return "bg-red-100 text-red-700";
+  return "bg-gray-100 text-gray-500";
+};
+
+const labelSubtipo = (tipo: string, sub: string) => {
+  // Podés tunear estos labels a gusto
+  if (tipo === "servicio_agua") {
+    if (sub === "provisión de agua") return "Provisión";
+    if (sub === "almacenamiento agua") return "Almacenamiento";
+  }
+  if (tipo === "servicio_desague") return "Desagüe";
+  if (tipo === "servicio_gas") return "Gas";
+  if (tipo === "servicio_electricidad") return "Electricidad";
+  if (tipo === "estructura_resistente") return `Estructura · ${sub}`;
+  if (tipo === "techo") return `Techo · ${sub}`;
+  if (tipo === "paredes_cerramientos") return `Paredes · ${sub}`;
+  return sub || tipo;
+};
+
+function TablaServicio({
+  titulo,
+  rows,
+  mostrarConteo = true, // 👈 por defecto true, pero por construcción lo vamos a usar en false
+}: {
+  titulo: string;
+  rows: Bloque2Row[];
+  mostrarConteo?: boolean;
+}) {
+  if (!rows || rows.length === 0) return null;
+
+  // Agrupamos por tipo + sub_tipo + categoria + estado
+  const grouped = (() => {
+    const map = new Map<string, { row: Bloque2Row; count: number }>();
+
+    for (const r of rows) {
+      const key = [
+        r.tipo || "",
+        r.sub_tipo || "",
+        r.categoria || "",
+        r.estado || "",
+      ].join("||");
+
+      const current = map.get(key);
+      if (current) {
+        current.count += 1;
+      } else {
+        map.set(key, { row: r, count: 1 });
+      }
+    }
+
+    return Array.from(map.values());
+  })();
+
+  return (
+    <div className="rounded-lg border bg-white">
+      <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+        {titulo}
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-xs">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                Aspecto
+              </th>
+              <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                Categoría
+              </th>
+              <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                Estado
+              </th>
+              {mostrarConteo && (
+                <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                  Construcciones
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {grouped.map(({ row, count }, idx) => (
+              <tr key={idx} className="border-t">
+                <td className="px-3 py-2">
+                  {labelSubtipo(row.tipo, row.sub_tipo || "")}
+                </td>
+                <td className="px-3 py-2">{row.categoria || "—"}</td>
+                <td className="px-3 py-2">
+                  {row.estado ? (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${estadoPillClass(
+                        row.estado
+                      )}`}
+                    >
+                      {row.estado}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-gray-500">
+                      No aplica / sin dato
+                    </span>
+                  )}
+                </td>
+                {mostrarConteo && <td className="px-3 py-2">{count}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
   const { user, loading } = useUser();
@@ -101,7 +221,6 @@ export default function AdminDashboardPage() {
 
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [localidad, setLocalidad] = useState<string>("");
-
   const [edificios, setEdificios] = useState<ItemKpi[]>([]);
   const [aulas, setAulas] = useState<ItemKpi[]>([]);
   const [m2, setM2] = useState<ItemKpi[]>([]);
@@ -279,6 +398,62 @@ export default function AdminDashboardPage() {
     });
     return [base];
   }, [conservacionConstrucciones]);
+
+  const bloque2PorServicio = useMemo(() => {
+    if (!resumen) return null;
+    const rows = resumen.bloque2 || [];
+
+    // Agrupamos TODOS los rows por construcción
+    const map = new Map<
+      number,
+      {
+        construccion_id: number;
+        conservacion: Bloque2Row[];
+        agua: Bloque2Row[];
+        desague: Bloque2Row[];
+        gas: Bloque2Row[];
+        electricidad: Bloque2Row[];
+      }
+    >();
+
+    for (const r of rows) {
+      const id = r.construccion_id ?? 0;
+      if (!id) continue; // si viniera algún row sin construccion_id, lo ignoramos
+
+      const current = map.get(id) || {
+        construccion_id: id,
+        conservacion: [],
+        agua: [],
+        desague: [],
+        gas: [],
+        electricidad: [],
+      };
+
+      if (
+        ["estructura_resistente", "techo", "paredes_cerramientos"].includes(
+          r.tipo
+        )
+      ) {
+        current.conservacion.push(r);
+      } else if (r.tipo === "servicio_agua") {
+        current.agua.push(r);
+      } else if (r.tipo === "servicio_desague") {
+        current.desague.push(r);
+      } else if (r.tipo === "servicio_gas") {
+        current.gas.push(r);
+      } else if (r.tipo === "servicio_electricidad") {
+        current.electricidad.push(r);
+      }
+
+      map.set(id, current);
+    }
+
+    const porConstruccion = Array.from(map.values()).sort(
+      (a, b) => a.construccion_id - b.construccion_id
+    );
+
+    return { porConstruccion };
+  }, [resumen]);
 
   return (
     <div className="min-h-screen bg-gray-50 mt-8">
@@ -593,6 +768,14 @@ export default function AdminDashboardPage() {
                         <div className="rounded-lg border p-4">
                           <div className="grid grid-cols-2 gap-3 text-sm">
                             <div>
+                              <span className="text-gray-500">
+                                Relevamiento ID:
+                              </span>{" "}
+                              <span className="font-medium">
+                                {resumen.info.relevamiento_id}
+                              </span>
+                            </div>
+                            <div>
                               <span className="text-gray-500">CUI:</span>{" "}
                               <span className="font-medium">
                                 {resumen.info.cui}
@@ -631,55 +814,67 @@ export default function AdminDashboardPage() {
                         <h4 className="mb-2 text-sm font-semibold text-gray-700">
                           Bloque 2 · Preguntas 3–6
                         </h4>
-                        <div className="overflow-hidden rounded-lg border">
-                          <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                  Tipo
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                  Categoría
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                  Estado
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {resumen.bloque2.length === 0 ? (
-                                <tr>
-                                  <td
-                                    className="px-3 py-2 text-gray-500"
-                                    colSpan={4}
-                                  >
-                                    Sin datos
-                                  </td>
-                                </tr>
-                              ) : (
-                                resumen.bloque2.map((r, idx) => (
-                                  <tr key={idx} className="border-t">
-                                    <td className="px-3 py-2">{r.sub_tipo}</td>
-                                    <td className="px-3 py-2">{r.categoria}</td>
-                                    <td className="px-3 py-2">
-                                      <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                          r.estado === "Bueno"
-                                            ? "bg-green-100 text-green-700"
-                                            : r.estado === "Regular"
-                                            ? "bg-amber-100 text-amber-700"
-                                            : "bg-red-100 text-red-700"
-                                        }`}
-                                      >
-                                        {r.estado}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+
+                        {!bloque2PorServicio ||
+                        bloque2PorServicio.porConstruccion.length === 0 ? (
+                          <div className="text-xs text-gray-500">Sin datos</div>
+                        ) : (
+                          <div className="space-y-6">
+                            {bloque2PorServicio.porConstruccion.map((c) => (
+                              <div
+                                key={c.construccion_id}
+                                className="rounded-xl border border-gray-200 bg-gray-50/60 p-3"
+                              >
+                                <div className="mb-2 text-xs font-semibold text-gray-700">
+                                  Construcción #{c.construccion_id}
+                                </div>
+
+                                <div className="space-y-3">
+                                  {/* Conservación */}
+                                  {c.conservacion.length > 0 && (
+                                    <TablaServicio
+                                      titulo="Conservación de la construcción"
+                                      rows={c.conservacion}
+                                      mostrarConteo={false} // 👈 por construcción, no mostramos "Construcciones"
+                                    />
+                                  )}
+
+                                  {/* Servicios de esta construcción */}
+                                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                    {c.agua.length > 0 && (
+                                      <TablaServicio
+                                        titulo="Agua"
+                                        rows={c.agua}
+                                        mostrarConteo={false}
+                                      />
+                                    )}
+                                    {c.desague.length > 0 && (
+                                      <TablaServicio
+                                        titulo="Desagües cloacales"
+                                        rows={c.desague}
+                                        mostrarConteo={false}
+                                      />
+                                    )}
+                                    {c.gas.length > 0 && (
+                                      <TablaServicio
+                                        titulo="Gas"
+                                        rows={c.gas}
+                                        mostrarConteo={false}
+                                      />
+                                    )}
+                                    {c.electricidad.length > 0 && (
+                                      <TablaServicio
+                                        titulo="Electricidad"
+                                        rows={c.electricidad}
+                                        mostrarConteo={false}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </section>
 
                       {/* Bloque 3 */}
@@ -731,7 +926,9 @@ export default function AdminDashboardPage() {
                                         {r.identificacion}
                                       </td>
                                       <td className="px-3 py-2">
-                                        {r.estado_local ? (
+                                        {r.estado_local === "Bueno" ||
+                                        r.estado_local === "Regular" ||
+                                        r.estado_local === "Malo" ? (
                                           <span
                                             className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                                               r.estado_local === "Bueno"
@@ -744,8 +941,8 @@ export default function AdminDashboardPage() {
                                             {r.estado_local}
                                           </span>
                                         ) : (
-                                          <span className="text-xs text-gray-500">
-                                            —
+                                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                            Sin datos
                                           </span>
                                         )}
                                       </td>

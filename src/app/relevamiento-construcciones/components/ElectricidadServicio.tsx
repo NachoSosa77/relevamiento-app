@@ -22,6 +22,17 @@ interface ServiciosReuProps {
   construccionId: number | null;
 }
 
+/** Normaliza texto para comparar: sin may/min, sin tildes, trim */
+function normalizarTexto(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export default function ElectricidadServicio({
   id,
   label,
@@ -50,13 +61,8 @@ export default function ElectricidadServicio({
 
   // Estado para almacenar la potencia de cada servicio
   const [potenciaOptions, setPotenciaOptions] = useState<{
-    [key: string]: number; // Cambiado para ser string porque los IDs de los servicios son strings
+    [key: string]: number;
   }>({});
-
-  useEffect(() => {
-    if (!relevamientoId || !construccionId) return;
-    fetchDatos();
-  }, [relevamientoId, construccionId, servicios]);
 
   const fetchDatos = useCallback(async () => {
     if (!relevamientoId || !construccionId) return;
@@ -68,16 +74,73 @@ export default function ElectricidadServicio({
       if (!res.ok) throw new Error("Error al cargar datos");
 
       const data = await res.json();
-      setEditando(data.length > 0);
+
+      console.log("[ElectricidadServicio] Datos crudos desde API:", data);
+      console.log(
+        "[ElectricidadServicio] Servicios configurados:",
+        servicios
+      );
+
+      setEditando(Array.isArray(data) && data.length > 0);
+
       const newResponses: typeof responses = {};
       const newCombustibleOptions: typeof combustibleOptions = {};
       const newPotenciaOptions: typeof potenciaOptions = {};
 
+      // contador de ocurrencias por texto normalizado
+      const ocurrenciasPorTexto: Record<string, number> = {};
+
       data.forEach((item: any) => {
-        const servicioId = servicios.find(
-          (s) => s.question === item.servicio
-        )?.id;
-        if (!servicioId) return;
+        const rawQuestion: string = item.servicio;
+        const normalizedRaw = normalizarTexto(rawQuestion);
+
+        const prevCount = ocurrenciasPorTexto[normalizedRaw] ?? 0;
+        const currentCount = prevCount + 1;
+        ocurrenciasPorTexto[normalizedRaw] = currentCount;
+
+        // candidatos con la misma pregunta (normalizada)
+        const candidatos = servicios.filter(
+          (s) => normalizarTexto(s.question) === normalizedRaw
+        );
+
+        if (candidatos.length === 0) {
+          console.warn(
+            "[ElectricidadServicio] No se encontró servicio para la pregunta de BD:",
+            rawQuestion
+          );
+          return;
+        }
+
+        let servicioMatch: Servicio;
+
+        if (candidatos.length === 1) {
+          // caso simple: solo un servicio con ese texto
+          servicioMatch = candidatos[0];
+        } else {
+          // caso con duplicados: ordenamos por id numérico y usamos la ocurrencia 1,2,...
+          const ordenados = [...candidatos].sort((a, b) => {
+            const na = parseFloat(a.id);
+            const nb = parseFloat(b.id);
+            if (isNaN(na) || isNaN(nb)) {
+              return a.id.localeCompare(b.id);
+            }
+            return na - nb;
+          });
+
+          // currentCount es 1 para la primera vez que aparece ese texto, 2 para la segunda, etc.
+          servicioMatch = ordenados[currentCount - 1] ?? ordenados[0];
+
+          console.log(
+            "[ElectricidadServicio] Texto duplicado:",
+            rawQuestion,
+            "ocurrencia:",
+            currentCount,
+            "asignado a id:",
+            servicioMatch.id
+          );
+        }
+
+        const servicioId = servicioMatch.id;
 
         newResponses[servicioId] = {
           disponibilidad: item.disponibilidad || "",
@@ -90,6 +153,11 @@ export default function ElectricidadServicio({
         newPotenciaOptions[servicioId] = Number(item.potencia) || 0;
       });
 
+      console.log(
+        "[ElectricidadServicio] newResponses mapeado:",
+        newResponses
+      );
+
       setResponses(newResponses);
       setCombustibleOptions(newCombustibleOptions);
       setPotenciaOptions(newPotenciaOptions);
@@ -101,8 +169,9 @@ export default function ElectricidadServicio({
   }, [relevamientoId, construccionId, servicios]);
 
   useEffect(() => {
+    if (!relevamientoId || !construccionId) return;
     fetchDatos();
-  }, [fetchDatos]);
+  }, [relevamientoId, construccionId, fetchDatos]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -118,16 +187,16 @@ export default function ElectricidadServicio({
   const handleGuardar = async () => {
     // Verificamos si hay al menos un servicio con algún dato no vacío
     const hayAlgunDato = servicios.some((servicio) => {
-      const id = servicio.id;
-      const respuesta = responses[id];
+      const serviceId = servicio.id;
+      const respuesta = responses[serviceId];
 
-      // Revisamos si cualquiera de los campos tiene valor significativo
       return (
         (respuesta?.disponibilidad && respuesta.disponibilidad.trim() !== "") ||
         (respuesta?.estado && respuesta.estado.trim() !== "") ||
         (respuesta?.estado_bateria && respuesta.estado_bateria.trim() !== "") ||
-        (combustibleOptions[id] && combustibleOptions[id].trim() !== "") ||
-        (potenciaOptions[id] && potenciaOptions[id] !== 0)
+        (combustibleOptions[serviceId] &&
+          combustibleOptions[serviceId].trim() !== "") ||
+        (potenciaOptions[serviceId] && potenciaOptions[serviceId] !== 0)
       );
     });
 
@@ -139,17 +208,19 @@ export default function ElectricidadServicio({
     const payload = {
       relevamiento_id: relevamientoId,
       construccion_id: construccionId,
-      servicios: Object.keys(responses).map((key) => ({
-        servicio:
-          servicios.find((servicio) => servicio.id === key)?.question ||
-          "Unknown",
-        disponibilidad: responses[key]?.disponibilidad || "",
-        estado: responses[key]?.estado || "",
-        estado_bateria: responses[key]?.estado_bateria || "",
-        tipo_combustible: combustibleOptions[key] || "",
-        potencia: potenciaOptions[key] || 0,
-      })),
+      servicios: servicios.map((servicio) => {
+        const resp = responses[servicio.id] || {};
+        return {
+          servicio: servicio.question,
+          disponibilidad: resp.disponibilidad || "",
+          estado: resp.estado || "",
+          estado_bateria: resp.estado_bateria || "",
+          tipo_combustible: combustibleOptions[servicio.id] || "",
+          potencia: potenciaOptions[servicio.id] || 0,
+        };
+      }),
     };
+
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/servicio_electricidad", {
@@ -164,7 +235,6 @@ export default function ElectricidadServicio({
       }
 
       toast.success("Servicio de electricidad guardado correctamente");
-      // 🔄 Volvemos a recargar los datos desde la base
       await fetchDatos();
     } catch (error: unknown) {
       let mensaje = "Error al guardar los datos";
@@ -228,19 +298,19 @@ export default function ElectricidadServicio({
             </tr>
           </thead>
           <tbody>
-            {servicios.map(({ id, question, showCondition }) => (
-              <tr key={id} className="border">
-                <td className="border p-2 text-center">{id}</td>
+            {servicios.map(({ id: serviceId, question, showCondition }) => (
+              <tr key={serviceId} className="border">
+                <td className="border p-2 text-center">{serviceId}</td>
                 <td className="border p-2">{question}</td>
                 <td className="border p-2 text-center">
                   <input
                     type="checkbox"
-                    name={`disponibilidad-${id}`}
+                    name={`disponibilidad-${serviceId}`}
                     value="No"
-                    checked={responses[id]?.disponibilidad === "No"}
+                    checked={responses[serviceId]?.disponibilidad === "No"}
                     onChange={(e) =>
                       handleResponseChange(
-                        id,
+                        serviceId,
                         "disponibilidad",
                         e.target.checked ? "No" : ""
                       )
@@ -250,28 +320,28 @@ export default function ElectricidadServicio({
                 <td className="border p-2 text-center">
                   <input
                     type="checkbox"
-                    name={`disponibilidad-${id}`}
+                    name={`disponibilidad-${serviceId}`}
                     value="Si"
-                    checked={responses[id]?.disponibilidad === "Si"}
+                    checked={responses[serviceId]?.disponibilidad === "Si"}
                     onChange={(e) =>
                       handleResponseChange(
-                        id,
+                        serviceId,
                         "disponibilidad",
                         e.target.checked ? "Si" : ""
                       )
                     }
                   />
                 </td>
-                {id === "6.2.4" || id === "6.2.8" ? (
+                {serviceId === "6.2.4" || serviceId === "6.2.8" ? (
                   <td className="border p-2 text-center">
                     <input
                       type="checkbox"
-                      name={`disponibilidad-${id}`}
+                      name={`disponibilidad-${serviceId}`}
                       value="NS"
-                      checked={responses[id]?.disponibilidad === "NS"}
+                      checked={responses[serviceId]?.disponibilidad === "NS"}
                       onChange={(e) =>
                         handleResponseChange(
-                          id,
+                          serviceId,
                           "disponibilidad",
                           e.target.checked ? "NS" : ""
                         )
@@ -292,10 +362,11 @@ export default function ElectricidadServicio({
                         <label>
                           <input
                             type="radio"
-                            name={`estado-${id}`}
+                            name={`estado-${serviceId}`}
                             value="Bueno"
+                            checked={responses[serviceId]?.estado === "Bueno"}
                             onChange={() =>
-                              handleResponseChange(id, "estado", "Bueno")
+                              handleResponseChange(serviceId, "estado", "Bueno")
                             }
                             className="mr-1"
                           />
@@ -304,10 +375,17 @@ export default function ElectricidadServicio({
                         <label>
                           <input
                             type="radio"
-                            name={`estado-${id}`}
+                            name={`estado-${serviceId}`}
                             value="Regular"
+                            checked={
+                              responses[serviceId]?.estado === "Regular"
+                            }
                             onChange={() =>
-                              handleResponseChange(id, "estado", "Regular")
+                              handleResponseChange(
+                                serviceId,
+                                "estado",
+                                "Regular"
+                              )
                             }
                             className="mr-1"
                           />
@@ -316,10 +394,11 @@ export default function ElectricidadServicio({
                         <label>
                           <input
                             type="radio"
-                            name={`estado-${id}`}
+                            name={`estado-${serviceId}`}
                             value="Malo"
+                            checked={responses[serviceId]?.estado === "Malo"}
                             onChange={() =>
-                              handleResponseChange(id, "estado", "Malo")
+                              handleResponseChange(serviceId, "estado", "Malo")
                             }
                             className="mr-1"
                           />
@@ -339,7 +418,7 @@ export default function ElectricidadServicio({
                       "No corresponde"
                     ) : (
                       <div className="flex gap-2 items-center justify-center">
-                        {id === "6.1.2" || id === "6.1.4" ? (
+                        {serviceId === "6.1.2" || serviceId === "6.1.4" ? (
                           <p className="mr-2 font-bold whitespace-nowrap">
                             Potencia
                           </p>
@@ -352,49 +431,48 @@ export default function ElectricidadServicio({
                           subLabel=""
                           disabled={false}
                           label=""
-                          value={potenciaOptions[id] || 0} // Aquí usamos el id de cada servicio
+                          value={potenciaOptions[serviceId] || 0}
                           onChange={(value: number | undefined) => {
-                            setPotenciaOptions({
-                              ...potenciaOptions,
-                              [id]: value ?? 0, // Usamos el id de cada servicio para almacenar potencia
-                            });
+                            setPotenciaOptions((prev) => ({
+                              ...prev,
+                              [serviceId]: value ?? 0,
+                            }));
                           }}
                         />
-                        {id === "6.1.2" && (
+                        {serviceId === "6.1.2" && (
                           <label className="flex items-center">
                             <p className="mr-2 font-bold">
                               Tipo de combustible:
                             </p>
                             <Select
                               label=""
-                              value={combustibleOptions[id] || ""} // Aquí usamos el 'question' como valor
+                              value={combustibleOptions[serviceId] || ""}
                               onChange={(e) =>
-                                setCombustibleOptions({
-                                  ...combustibleOptions,
-                                  [id]: e.target.value, // Guardamos el 'question' seleccionado en lugar del 'id'
-                                })
+                                setCombustibleOptions((prev) => ({
+                                  ...prev,
+                                  [serviceId]: e.target.value,
+                                }))
                               }
                               options={tipoCombustibleOpciones.map(
                                 (option) => ({
-                                  value: option.question, // 'question' como el valor
-                                  label: option.question, // 'question' como la etiqueta también
+                                  value: option.question,
+                                  label: option.question,
                                 })
                               )}
                             />
                           </label>
                         )}
-                        {/* Select solo para 6.1.3 y 6.1.4 */}
-                        {(id === "6.1.3" || id === "6.1.4") && (
+                        {(serviceId === "6.1.3" || serviceId === "6.1.4") && (
                           <div className="flex items-center">
                             <p className="mr-2 font-bold whitespace-nowrap">
                               Estado de la batería:
                             </p>
                             <Select
                               label=""
-                              value={responses[id]?.estado_bateria || ""}
+                              value={responses[serviceId]?.estado_bateria || ""}
                               onChange={(e) =>
                                 handleResponseChange(
-                                  id,
+                                  serviceId,
                                   "estado_bateria",
                                   e.target.value
                                 )

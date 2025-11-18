@@ -47,29 +47,31 @@ export async function GET(
     // gestiona la conexión y liberación automáticamente.
     const [localesPorRelevamiento] = await pool.query<LocalPorConstruccion[]>(
       `
-        SELECT 
-          lpc.id,
-          lpc.local_id,
-          lpc.relevamiento_id,
-          lpc.cui_number,
-          lpc.numero_construccion,
-          lpc.numero_planta,
-          loc.tipo,
-          identificacion_plano,
-          estado,
-          superficie,
-          tipo_superficie,
-          lpc.largo_predominante,
-          lpc.ancho_predominante,
-          lpc.diametro,
-          lpc.altura_maxima,
-          lpc.altura_minima,
-          loc.name AS nombre_local
-        FROM locales_por_construccion lpc
-        JOIN opciones_locales loc ON lpc.local_id = loc.id
-        WHERE lpc.relevamiento_id = ? 
-        -- NOTA: Se recomienda encarecidamente crear un índice en lpc.relevamiento_id para velocidad
-      `,
+    SELECT 
+      lpc.id,
+      lpc.local_id,
+      lpc.relevamiento_id,
+      lpc.cui_number,
+      lpc.numero_construccion,
+      lpc.numero_planta,
+      loc.tipo,
+      identificacion_plano,
+      estado,
+      superficie,
+      tipo_superficie,
+      lpc.largo_predominante,
+      lpc.ancho_predominante,
+      lpc.diametro,
+      lpc.altura_maxima,
+      lpc.altura_minima,
+      loc.name AS nombre_local
+    FROM locales_por_construccion lpc
+    JOIN opciones_locales loc ON lpc.local_id = loc.id
+    WHERE lpc.relevamiento_id = ?
+    ORDER BY 
+      lpc.numero_construccion ASC,
+      lpc.identificacion_plano ASC
+  `,
       [idNumber]
     );
 
