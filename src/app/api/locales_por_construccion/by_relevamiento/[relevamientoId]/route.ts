@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pool } from "@/app/lib/db"; // <-- Usamos pool directamente
+import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -20,16 +20,15 @@ interface LocalPorConstruccion extends RowDataPacket {
   altura_maxima?: number | null;
   altura_minima?: number | null;
   superficie?: number | null;
-  tipo_superficie?: string | null; // "Cubierta", "Semicubierta", etc.
+  tipo_superficie?: string | null;
 }
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ relevamientoId: string }> }
 ) {
-  let relevamientoId: string | undefined; // Inicializamos o usamos undefined
+  let relevamientoId: string | undefined;
   try {
-    // Desestructuramos el ID del parámetro
     const awaitedParams = await params;
     relevamientoId = awaitedParams.relevamientoId;
 
@@ -40,46 +39,46 @@ export async function GET(
       );
     }
 
-    // Convertimos a número fuera de la consulta para mejor claridad
     const idNumber = Number(relevamientoId);
 
-    // ✅ Uso pool.query() directamente: más eficiente para Serverless,
-    // gestiona la conexión y liberación automáticamente.
     const [localesPorRelevamiento] = await pool.query<LocalPorConstruccion[]>(
       `
-    SELECT 
-      lpc.id,
-      lpc.local_id,
-      lpc.relevamiento_id,
-      lpc.cui_number,
-      lpc.numero_construccion,
-      lpc.numero_planta,
-      loc.tipo,
-      identificacion_plano,
-      estado,
-      superficie,
-      tipo_superficie,
-      lpc.largo_predominante,
-      lpc.ancho_predominante,
-      lpc.diametro,
-      lpc.altura_maxima,
-      lpc.altura_minima,
-      loc.name AS nombre_local
-    FROM locales_por_construccion lpc
-    JOIN opciones_locales loc ON lpc.local_id = loc.id
-    WHERE lpc.relevamiento_id = ?
-    ORDER BY 
-      lpc.numero_construccion ASC,
-      lpc.identificacion_plano ASC
-  `,
+      SELECT 
+        lpc.id,
+        lpc.local_id,
+        lpc.relevamiento_id,
+        lpc.cui_number,
+        lpc.numero_construccion,
+        lpc.numero_planta,
+        loc.tipo,
+        identificacion_plano,
+        estado,
+        superficie,
+        tipo_superficie,
+        lpc.largo_predominante,
+        lpc.ancho_predominante,
+        lpc.diametro,
+        lpc.altura_maxima,
+        lpc.altura_minima,
+        loc.name AS nombre_local
+      FROM locales_por_construccion lpc
+      JOIN opciones_locales loc ON lpc.local_id = loc.id
+      WHERE lpc.relevamiento_id = ?
+      ORDER BY 
+        lpc.numero_construccion ASC,
+        CASE 
+          WHEN lpc.estado = 'completo' THEN 1
+          WHEN lpc.estado = 'incompleto' THEN 2
+          ELSE 3
+        END ASC,
+        lpc.identificacion_plano ASC
+      `,
       [idNumber]
     );
 
     return NextResponse.json({ locales: localesPorRelevamiento });
   } catch (err: any) {
-    // Usamos el operador de encadenamiento opcional (?) para evitar un error de TS
     console.error(`Error al obtener locales para ID ${relevamientoId}:`, err);
-    // Si el error es un timeout de conexión, se capturará aquí (y será rápido si connectTimeout está bajo)
     return NextResponse.json(
       { message: "Error interno al consultar locales", error: err.message },
       { status: 500 }
