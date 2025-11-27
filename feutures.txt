@@ -1,0 +1,15 @@
+-- censo_local.estado_construccion_snapshot definition
+
+CREATE TABLE `estado_construccion_snapshot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `relevamiento_id` int(11) NOT NULL,
+  `construccion_id` int(11) NOT NULL,
+  `clasificacion` enum('Bueno','Regular','Malo') NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_snapshot_relevamiento` (`relevamiento_id`),
+  KEY `fk_snapshot_construccion` (`construccion_id`),
+  CONSTRAINT `fk_snapshot_construccion` FOREIGN KEY (`construccion_id`) REFERENCES `construcciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_snapshot_relevamiento` FOREIGN KEY (`relevamiento_id`) REFERENCES `relevamientos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
