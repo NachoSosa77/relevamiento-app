@@ -23,7 +23,5 @@ export const getEstadoConservacionByRelevamientoId = async (
     [relevamientoId, construccionId]
   );
 
-  connection.release();
-
   return rows;
 };

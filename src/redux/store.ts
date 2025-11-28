@@ -10,7 +10,10 @@ import {
   REGISTER,
   REHYDRATE,
 } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+// ❌ NO usar más esto:
+// import storage from "redux-persist/lib/storage";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
+
 import { relevamientoStorageMiddleware } from "./middlewares/relevamientoStorageMiddleware";
 import archivoReducer from "./slices/archivoSlice";
 import construccionesReducer from "./slices/construccionesSlice";
@@ -21,7 +24,10 @@ import servicioAguaReducer from "./slices/servicioAguaSlice";
 import serviciosFactoresReducer from "./slices/serviciosFactoresSlice";
 import serviciosReducer from "./slices/serviciosSlice";
 import serviciosTransporteReducer from "./slices/serviciosTransporteSlice";
-// Combinar los reducers
+
+// ----------------------
+// 1) Root reducer
+// ----------------------
 const rootReducer = combineReducers({
   espacio_escolar: espacioEscolarReducer,
   institucion: institucionReducer,
@@ -34,6 +40,9 @@ const rootReducer = combineReducers({
   predio: predioReducer,
 });
 
+// ----------------------
+// 2) Storage seguro para SSR
+// ----------------------
 function createNoopStorage() {
   return {
     getItem(_key: string) {
@@ -48,15 +57,26 @@ function createNoopStorage() {
   };
 }
 
+const storage =
+  typeof window === "undefined"
+    ? createNoopStorage()
+    : createWebStorage("local");
+
+// ----------------------
+// 3) Persist config
+// ----------------------
 const persistConfig = {
   key: "root",
-  storage: typeof window !== "undefined" ? storage : createNoopStorage(),
+  storage,
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
+// ----------------------
+// 4) Store + persistor
+// ----------------------
 export const store = configureStore({
-  reducer: persistedReducer, // Cambiado para usar persistedReducer directamente
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

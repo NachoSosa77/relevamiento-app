@@ -18,9 +18,9 @@ interface Opcion {
 interface Estructura {
   id: string; // ej: "13.2", "13.3", "13.1"
   question: string;
-  showCondition: boolean; // true: tiene estado B/R/M; false: “No corresponde” (última col)
+  showCondition: boolean;
   opciones: Opcion[];
-  sub_tipo?: "estructura" | "cubierta" | "materiales" | "terminaciones" | "n/a"; // 👈 nuevo        // catálogo para el <Select /> (excepto 13.1 que es Si/No)
+  sub_tipo?: "estructura" | "cubierta" | "materiales" | "terminaciones" | "n/a";
 }
 
 interface EstructuraReuProps {
@@ -31,7 +31,13 @@ interface EstructuraReuProps {
   tipo: string;
 }
 
-type Resp = { disponibilidad: string; estado: string; estructura: string };
+// 👈 Ahora guardamos también el id de la fila en DB
+type Resp = {
+  idDb?: number | null;
+  disponibilidad: string;
+  estado: string;
+  estructura: string;
+};
 
 export default function CaracteristicasConservacion({
   id,
@@ -67,17 +73,22 @@ export default function CaracteristicasConservacion({
           }
 
           for (const row of data) {
-            // filtrar por este "tipo" (prop)
-            if ((row.tipo || "").toLowerCase() !== tipo.toLowerCase()) continue;
+            const rowTipo = (row.tipo || "").toLowerCase();
+            const propTipo = (tipo || "").toLowerCase();
+
+            // 🔹 Si la fila tiene tipo, filtramos. Si viene null, la aceptamos (datos viejos).
+            if (rowTipo && rowTipo !== propTipo) continue;
 
             const estructuraText: string = row.estructura ?? "";
             const subTipo: string = (row.sub_tipo || "").toLowerCase();
             let keyId: string | null = null;
 
+            // 1) priorizar mapeo por sub_tipo
             if (subTipo && ID_BY_SUBTIPO[subTipo]) {
               keyId = ID_BY_SUBTIPO[subTipo];
             }
 
+            // 2) fallback por texto (como ya tenías)
             if (!keyId) {
               if (estructuras.some((e) => e.id === "13.1") && !estructuraText) {
                 keyId = "13.1";
@@ -96,6 +107,7 @@ export default function CaracteristicasConservacion({
             if (!keyId) continue;
 
             next[keyId] = {
+              idDb: row.id ?? null, // 👈 guardamos el id de DB
               disponibilidad: row.disponibilidad ?? "",
               estado: row.estado ?? "",
               estructura: estructuraText ?? "",
@@ -116,7 +128,7 @@ export default function CaracteristicasConservacion({
     };
 
     fetchData();
-  }, [relevamientoId, construccionId, estructuras]);
+  }, [relevamientoId, construccionId, estructuras, tipo]);
 
   const handleResponseChange = (
     servicioId: string,
@@ -133,13 +145,13 @@ export default function CaracteristicasConservacion({
   const validar = () => {
     for (const e of estructuras) {
       const r = responses[e.id] || {
+        idDb: null,
         disponibilidad: "",
         estado: "",
         estructura: "",
       };
 
       if (e.id === "13.1") {
-        // 13.1 sólo necesita disponibilidad Si/No
         if (r.disponibilidad !== "Si" && r.disponibilidad !== "No") {
           return false;
         }
@@ -147,11 +159,9 @@ export default function CaracteristicasConservacion({
       }
 
       if (e.showCondition) {
-        // Necesita estructura (texto del select) y estado (B/R/M)
         if (!r.estructura?.trim()) return false;
         if (!["Bueno", "Regular", "Malo"].includes(r.estado)) return false;
       }
-      // Si no showCondition (celda “No corresponde”), no exigimos nada extra
     }
     return true;
   };
@@ -175,23 +185,24 @@ export default function CaracteristicasConservacion({
   const enviarDatos = async (esUpdate: boolean) => {
     const payload = estructuras.map((e) => {
       const r = responses[e.id] || {
+        idDb: null,
         disponibilidad: "",
         estado: "",
         estructura: "",
       };
 
       return {
+        id: r.idDb ?? null, // 👈 mandamos el id de DB si existe
         estructura: e.id === "13.1" ? "" : r.estructura || "",
         disponibilidad: r.disponibilidad || "",
         estado: e.id === "13.1" ? "" : r.estado || "",
         relevamiento_id: relevamientoId,
         construccion_id: construccionId,
-        tipo, // viene por prop
-        sub_tipo: e.sub_tipo ?? null, // ⬅️ asegúrate que venga en los items
+        tipo,
+        sub_tipo: e.sub_tipo ?? null,
       };
     });
 
-    // debug rápido: verificá que sub_tipo esté saliendo
     console.log("payload estado_conservacion:", payload);
 
     setIsSubmitting(true);
@@ -221,26 +232,24 @@ export default function CaracteristicasConservacion({
         if (Array.isArray(data) && data.length > 0) {
           const next: Record<string, Resp> = {};
 
-          // build lookup sub_tipo -> id para este bloque
           const ID_BY_SUBTIPO: Record<string, string> = {};
           for (const e of estructuras) {
             if (e.sub_tipo) ID_BY_SUBTIPO[e.sub_tipo.toLowerCase()] = e.id;
           }
 
           for (const row of data) {
-            // solo filas de este bloque (por si GET trae varias categorías)
-            if ((row.tipo || "").toLowerCase() !== tipo.toLowerCase()) continue;
+            const rowTipo = (row.tipo || "").toLowerCase();
+            const propTipo = (tipo || "").toLowerCase();
+            if (rowTipo && rowTipo !== propTipo) continue;
 
             const estructuraText: string = row.estructura ?? "";
             const subTipo: string = (row.sub_tipo || "").toLowerCase();
             let keyId: string | null = null;
 
-            // 1) priorizar mapeo por sub_tipo
             if (subTipo && ID_BY_SUBTIPO[subTipo]) {
               keyId = ID_BY_SUBTIPO[subTipo];
             }
 
-            // 2) fallback por texto (como ya hacías)
             if (!keyId) {
               if (estructuras.some((e) => e.id === "13.1") && !estructuraText) {
                 keyId = "13.1";
@@ -259,6 +268,7 @@ export default function CaracteristicasConservacion({
             if (!keyId) continue;
 
             next[keyId] = {
+              idDb: row.id ?? null, // 👈 volvemos a guardar el id
               disponibilidad: row.disponibilidad ?? "",
               estado: row.estado ?? "",
               estructura: estructuraText ?? "",
@@ -307,26 +317,27 @@ export default function CaracteristicasConservacion({
           </tr>
         </thead>
         <tbody>
-          {estructuras.map(({ id, question, showCondition, opciones }) => {
-            const r = responses[id] || {
+          {estructuras.map(({ id: idStr, question, showCondition, opciones }) => {
+            const r = responses[idStr] || {
+              idDb: null,
               disponibilidad: "",
               estado: "",
               estructura: "",
             };
 
             return (
-              <tr className="border" key={id}>
-                <td className="border p-2 text-center">{id}</td>
+              <tr className="border" key={idStr}>
+                <td className="border p-2 text-center">{idStr}</td>
                 <td className="border p-2">{question}</td>
 
                 {/* Columna 3 */}
                 <td className="border p-2 text-center">
-                  {id !== "13.1" ? (
+                  {idStr !== "13.1" ? (
                     <Select
                       label=""
                       value={r.estructura || ""}
                       onChange={(e) =>
-                        handleResponseChange(id, "estructura", e.target.value)
+                        handleResponseChange(idStr, "estructura", e.target.value)
                       }
                       options={opciones.map((option) => ({
                         value: option.name,
@@ -337,11 +348,11 @@ export default function CaracteristicasConservacion({
                     <label>
                       <input
                         type="radio"
-                        name={`disp-${id}`}
+                        name={`disp-${idStr}`}
                         value="No"
                         checked={r.disponibilidad === "No"}
                         onChange={() =>
-                          handleResponseChange(id, "disponibilidad", "No")
+                          handleResponseChange(idStr, "disponibilidad", "No")
                         }
                       />
                     </label>
@@ -350,16 +361,16 @@ export default function CaracteristicasConservacion({
 
                 {/* Columna 4 */}
                 <td className="border p-2 text-center">
-                  {showCondition && id !== "13.1" ? (
+                  {showCondition && idStr !== "13.1" ? (
                     <div className="flex gap-2 items-center justify-center">
                       <label>
                         <input
                           type="radio"
-                          name={`estado-${id}`}
+                          name={`estado-${idStr}`}
                           value="Bueno"
                           checked={r.estado === "Bueno"}
                           onChange={() =>
-                            handleResponseChange(id, "estado", "Bueno")
+                            handleResponseChange(idStr, "estado", "Bueno")
                           }
                           className="mr-1"
                         />
@@ -368,11 +379,11 @@ export default function CaracteristicasConservacion({
                       <label>
                         <input
                           type="radio"
-                          name={`estado-${id}`}
+                          name={`estado-${idStr}`}
                           value="Regular"
                           checked={r.estado === "Regular"}
                           onChange={() =>
-                            handleResponseChange(id, "estado", "Regular")
+                            handleResponseChange(idStr, "estado", "Regular")
                           }
                           className="mr-1"
                         />
@@ -381,11 +392,11 @@ export default function CaracteristicasConservacion({
                       <label>
                         <input
                           type="radio"
-                          name={`estado-${id}`}
+                          name={`estado-${idStr}`}
                           value="Malo"
                           checked={r.estado === "Malo"}
                           onChange={() =>
-                            handleResponseChange(id, "estado", "Malo")
+                            handleResponseChange(idStr, "estado", "Malo")
                           }
                           className="mr-1"
                         />
@@ -396,11 +407,11 @@ export default function CaracteristicasConservacion({
                     <label>
                       <input
                         type="radio"
-                        name={`disp-${id}`}
+                        name={`disp-${idStr}`}
                         value="Si"
                         checked={r.disponibilidad === "Si"}
                         onChange={() =>
-                          handleResponseChange(id, "disponibilidad", "Si")
+                          handleResponseChange(idStr, "disponibilidad", "Si")
                         }
                       />
                     </label>
@@ -413,8 +424,8 @@ export default function CaracteristicasConservacion({
                     <TextInput
                       label="Indique cuales"
                       sublabel=""
-                      value="" // aún no definido en modelo de DB; placeholder
-                      onChange={() => {}} // pendiente si decides persistir este campo
+                      value="" // placeholder (a futuro si querés persistir este campo)
+                      onChange={() => {}}
                     />
                   </td>
                 )}

@@ -75,11 +75,6 @@ export default function ElectricidadServicio({
 
       const data = await res.json();
 
-      console.log("[ElectricidadServicio] Datos crudos desde API:", data);
-      console.log(
-        "[ElectricidadServicio] Servicios configurados:",
-        servicios
-      );
 
       setEditando(Array.isArray(data) && data.length > 0);
 
@@ -104,10 +99,6 @@ export default function ElectricidadServicio({
         );
 
         if (candidatos.length === 0) {
-          console.warn(
-            "[ElectricidadServicio] No se encontró servicio para la pregunta de BD:",
-            rawQuestion
-          );
           return;
         }
 
@@ -130,14 +121,6 @@ export default function ElectricidadServicio({
           // currentCount es 1 para la primera vez que aparece ese texto, 2 para la segunda, etc.
           servicioMatch = ordenados[currentCount - 1] ?? ordenados[0];
 
-          console.log(
-            "[ElectricidadServicio] Texto duplicado:",
-            rawQuestion,
-            "ocurrencia:",
-            currentCount,
-            "asignado a id:",
-            servicioMatch.id
-          );
         }
 
         const servicioId = servicioMatch.id;
@@ -153,10 +136,6 @@ export default function ElectricidadServicio({
         newPotenciaOptions[servicioId] = Number(item.potencia) || 0;
       });
 
-      console.log(
-        "[ElectricidadServicio] newResponses mapeado:",
-        newResponses
-      );
 
       setResponses(newResponses);
       setCombustibleOptions(newCombustibleOptions);

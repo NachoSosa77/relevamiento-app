@@ -27,6 +27,17 @@ export const ArchivosDetalle = ({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
+  // --- Lógica del Checkbox Maestro ---
+  const allSelected = archivos.length > 0 && archivos.every((a) => a.selected);
+  const someSelected = archivos.some((a) => a.selected);
+  const noneSelected = !someSelected;
+
+  const toggleSelectAll = () => {
+    const shouldSelect = !allSelected; // Si no están todos seleccionados, los seleccionamos todos.
+    setArchivos((prev) => prev.map((a) => ({ ...a, selected: shouldSelect })));
+  };
+  // -----------------------------------
+
   useEffect(() => {
     const fetchArchivos = async () => {
       try {
@@ -35,7 +46,8 @@ export const ArchivosDetalle = ({
         );
         if (!res.ok) throw new Error("Error al obtener archivos");
         const data = await res.json();
-        setArchivos(data.archivos || []);
+        // Inicializar 'selected' a false al cargar los archivos
+        setArchivos(data.archivos.map((a: Archivo) => ({ ...a, selected: false })) || []);
       } catch (err) {
         toast.error("Error al cargar archivos");
       } finally {
@@ -72,6 +84,11 @@ export const ArchivosDetalle = ({
     );
 
     let successCount = 0;
+    let failedCount = 0;
+    const idsToDelete = seleccionados.map(a => a.id);
+
+    // Creamos una copia de los archivos actuales para el estado optimista (mejor UX)
+    setArchivos(prev => prev.filter(a => !idsToDelete.includes(a.id)));
 
     for (const archivo of seleccionados) {
       try {
@@ -79,16 +96,20 @@ export const ArchivosDetalle = ({
           method: "DELETE",
         });
         if (!res.ok) throw new Error("Error al eliminar archivo");
-        setArchivos((prev) => prev.filter((a) => a.id !== archivo.id));
+        // La actualización de archivos por ID ya se hizo con el "setArchivos" de arriba (optimista).
+        // Solo necesitamos contar los éxitos.
         successCount++;
         toast.update(toastId, {
           render: `Eliminando archivos: ${successCount} de ${seleccionados.length}...`,
         });
       } catch (err) {
+        failedCount++;
+        // Si falla, podrías considerar reinsertar el archivo en el estado si es necesario
         console.error(`Error eliminando archivo ${archivo.nombre_archivo}`, err);
       }
     }
 
+    // El manejo del toast finalizado es el mismo
     if (successCount === seleccionados.length) {
       toast.update(toastId, {
         render: "Todos los archivos seleccionados eliminados",
@@ -97,7 +118,7 @@ export const ArchivosDetalle = ({
       });
     } else if (successCount > 0) {
       toast.update(toastId, {
-        render: `Se eliminaron ${successCount} de ${seleccionados.length} archivos`,
+        render: `Se eliminaron ${successCount} de ${seleccionados.length} archivos. Fallaron ${failedCount}.`,
         type: "warning",
         autoClose: 3000,
       });
@@ -141,13 +162,49 @@ export const ArchivosDetalle = ({
 
   return (
     <>
+      {/* Nuevo Control de Selección Múltiple */}
+      <div className="mb-4 flex items-center justify-between border-b pb-2">
+        <label className="flex items-center space-x-2 cursor-pointer">
+          {/* Checkbox con estado intermedio (indeterminate) */}
+          <input
+            type="checkbox"
+            checked={allSelected}
+            // Propiedad 'indeterminate' para el guión cuando algunos están seleccionados
+            ref={(input) => {
+              if (input) {
+                input.indeterminate = someSelected && !allSelected;
+              }
+            }}
+            onChange={toggleSelectAll}
+            className="w-4 h-4 accent-blue-500 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            {allSelected ? "Deseleccionar todos" : "Seleccionar todos"} 
+            {archivos.length > 0 && ` (${archivos.filter(a => a.selected).length}/${archivos.length})`}
+          </span>
+        </label>
+        
+        {/* Botón de Eliminación Rápida */}
+        <button
+            onClick={handleDeleteSelected}
+            className={`px-3 py-1 text-sm rounded transition 
+              ${noneSelected || loadingDelete 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-red-500 text-white hover:bg-red-600'
+              }`}
+            disabled={noneSelected || loadingDelete}
+        >
+            Eliminar ({archivos.filter(a => a.selected).length})
+        </button>
+      </div>
+
       {/* Grid de archivos */}
       <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
         {archivos.map((archivo) => (
           <div
             key={archivo.id}
             className={`relative break-inside-avoid rounded-xl overflow-hidden bg-white shadow hover:shadow-md transition border ${
-              archivo.selected ? "ring-2 ring-blue-500" : ""
+              archivo.selected ? "ring-2 ring-blue-500 border-blue-500" : ""
             }`}
           >
             {/* Imagen o PDF */}
@@ -155,7 +212,7 @@ export const ArchivosDetalle = ({
               <Image
                 src={archivo.archivo_url}
                 alt={archivo.nombre_archivo || "Archivo subido"}
-                className="w-full h-40 object-cover"
+                className="w-full h-40 object-cover cursor-pointer" // Añadido cursor-pointer
                 width={500}
                 height={300}
                 onClick={() => {
@@ -216,7 +273,7 @@ export const ArchivosDetalle = ({
         ))}
       </div>
 
-      {/* Botón eliminar seleccionados */}
+      {/* Botón eliminar seleccionados (manteniendo tu sticky footer) */}
       {archivos.some((a) => a.selected) && (
         <div className="fixed bottom-4 right-4 z-50">
           <button

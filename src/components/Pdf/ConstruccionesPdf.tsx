@@ -150,6 +150,44 @@ const renderCamposConValor = (
   ));
 };
 
+// Normaliza valores JSON (string / array / null) a SIEMPRE un array de strings
+const toArray = (value: any): string[] => {
+  if (!value) return [];
+
+  // Ya es un array
+  if (Array.isArray(value)) return value;
+
+  // Si viene como Buffer u objeto raro, intentamos toString
+  if (value instanceof Buffer) {
+    try {
+      const str = value.toString("utf8");
+      const parsed = JSON.parse(str);
+      return Array.isArray(parsed) ? parsed : [str];
+    } catch {
+      return [value.toString("utf8")];
+    }
+  }
+
+  // Si viene como string con JSON
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+      // Si el JSON no es array (por ejemplo objeto), lo devolvemos como string plano
+      return [trimmed];
+    } catch {
+      // No es JSON válido, lo tratamos como string simple
+      return [trimmed];
+    }
+  }
+
+  // Cualquier otro tipo raro
+  return [String(value)];
+};
+
 export const ConstruccionPdf = ({ data }: { data: any }) => {
   const { relevamiento, construcciones } = data;
 
@@ -233,6 +271,14 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                     {c.superficie_total ? `${c.superficie_total} m²` : "-"}
                   </Text>
                 </View>
+
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeaderCell}>Observaciones</Text>
+                </View>
+
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{c.observaciones}</Text>
+                </View>
               </View>
               {/* Instituciones */}
               {c.instituciones?.length > 0 && (
@@ -292,84 +338,127 @@ export const ConstruccionPdf = ({ data }: { data: any }) => {
                 <Text style={styles.subTitle}>SERVICIOS BÁSICOS</Text>
               </View>
               {/* Servicio Agua */}
-              {/* Servicio Agua */}
-{c.servicioAgua?.length > 0 && (
-  <View
-    style={{
-      marginTop: 8,
-      backgroundColor: "#fff",
-      padding: 6,
-      borderRadius: 4,
-    }}
-  >
-    <Text style={styles.subSectionTitle}>AGUA</Text>
+              {c.servicioAgua?.length > 0 && (
+                <View
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#fff",
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={styles.subSectionTitle}>AGUA</Text>
 
-    {c.servicioAgua.map((cond: any, i: number) => (
-      <View key={i} style={{ marginBottom: 8 }}>
-        {/* Provisión */}
-        {cond.tipo_provision?.map((prov: string, idx: number) => (
-          <View key={idx} style={styles.tableRow}>
-            <Text style={styles.labelCell}>Provisión:</Text>
-            <Text style={styles.valueCell}>{prov ?? "-"}</Text>
-          </View>
-        ))}
+                  {c.servicioAgua.map((cond: any, i: number) => {
+                    const tipoProvision = toArray(cond.tipo_provision);
+                    const tipoProvisionEstado = toArray(
+                      cond.tipo_provision_estado
+                    );
+                    const tipoAlmacenamiento = toArray(
+                      cond.tipo_almacenamiento
+                    );
+                    const tipoAlmacenamientoEstado = toArray(
+                      cond.tipo_almacenamiento_estado
+                    );
+                    const alcance = toArray(cond.alcance);
 
-        {/* Estado de provisión */}
-        {cond.tipo_provision_estado?.map((estado: string, idx: number) => (
-          <View key={idx} style={styles.tableRow}>
-            <Text style={styles.labelCell}>Estado de provisión:</Text>
-            <Text style={styles.valueCell}>{estado || "-"}</Text>
-          </View>
-        ))}
+                    return (
+                      <View key={i} style={{ marginBottom: 8 }}>
+                        {/* Provisión */}
+                        {tipoProvision.map((prov: string, idx: number) => (
+                          <View key={`prov-${idx}`} style={styles.tableRow}>
+                            <Text style={styles.labelCell}>Provisión:</Text>
+                            <Text style={styles.valueCell}>{prov || "-"}</Text>
+                          </View>
+                        ))}
 
-        {/* Tipo de almacenamiento + su estado */}
-        {cond.tipo_almacenamiento?.map((tipo: string, idx: number) => (
-          <View key={idx} style={{ marginBottom: 4 }}>
-            <View style={styles.tableRow}>
-              <Text style={styles.labelCell}>Tipo de almacenamiento:</Text>
-              <Text style={styles.valueCell}>{tipo ?? "-"}</Text>
-            </View>
-            <View style={styles.tableRow}>
-              <Text style={styles.labelCell}>Estado del almacenamiento:</Text>
-              <Text style={styles.valueCell}>
-                {cond.tipo_almacenamiento_estado?.[idx] ?? "-"}
-              </Text>
-            </View>
-          </View>
-        ))}
+                        {/* Estado de provisión */}
+                        {tipoProvisionEstado.map(
+                          (estado: string, idx: number) => (
+                            <View
+                              key={`prov-estado-${idx}`}
+                              style={styles.tableRow}
+                            >
+                              <Text style={styles.labelCell}>
+                                Estado de provisión:
+                              </Text>
+                              <Text style={styles.valueCell}>
+                                {estado || "-"}
+                              </Text>
+                            </View>
+                          )
+                        )}
 
-        {/* Alcance (queda tal como está) */}
-        {cond.alcance?.length > 0 && (
-          <View style={styles.tableRow}>
-            <Text style={styles.labelCell}>Alcance:</Text>
-            <Text style={styles.valueCell}>
-              {cond.alcance.join(", ")}
-            </Text>
-          </View>
-        )}
+                        {/* Tipo de almacenamiento + estado */}
+                        {tipoAlmacenamiento.map((tipo: string, idx: number) => (
+                          <View key={`alm-${idx}`} style={{ marginBottom: 4 }}>
+                            <View style={styles.tableRow}>
+                              <Text style={styles.labelCell}>
+                                Tipo de almacenamiento:
+                              </Text>
+                              <Text style={styles.valueCell}>
+                                {tipo || "-"}
+                              </Text>
+                            </View>
+                            <View style={styles.tableRow}>
+                              <Text style={styles.labelCell}>
+                                Estado del almacenamiento:
+                              </Text>
+                              <Text style={styles.valueCell}>
+                                {tipoAlmacenamientoEstado[idx] || "-"}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
 
-        {/* Otros campos */}
-        <View style={styles.tableRow}>
-          <Text style={styles.labelCell}>Tratamiento potabilizador:</Text>
-          <Text style={styles.valueCell}>{cond.tratamiento ?? "-"}</Text>
-        </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.labelCell}>Tipo de tratamiento:</Text>
-          <Text style={styles.valueCell}>{cond.tipo_tratamiento ?? "-"}</Text>
-        </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.labelCell}>Control sanitario:</Text>
-          <Text style={styles.valueCell}>{cond.control_sanitario ?? "-"}</Text>
-        </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.labelCell}>Cantidad de veces:</Text>
-          <Text style={styles.valueCell}>{cond.cantidad_veces ?? "-"}</Text>
-        </View>
-      </View>
-    ))}
-  </View>
-)}
+                        {/* Alcance */}
+                        {alcance.length > 0 && (
+                          <View style={styles.tableRow}>
+                            <Text style={styles.labelCell}>Alcance:</Text>
+                            <Text style={styles.valueCell}>
+                              {alcance.join(", ")}
+                            </Text>
+                          </View>
+                        )}
 
+                        {/* Otros campos simples */}
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Tratamiento potabilizador:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {cond.tratamiento ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Tipo de tratamiento:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {cond.tipo_tratamiento ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Control sanitario:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {cond.control_sanitario ?? "-"}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.labelCell}>
+                            Cantidad de veces:
+                          </Text>
+                          <Text style={styles.valueCell}>
+                            {cond.cantidad_veces ?? "-"}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
 
               {/* Servicio Desagues Cloacales */}
               {c.servicioDesague?.length > 0 && (

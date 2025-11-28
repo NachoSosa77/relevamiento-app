@@ -43,36 +43,42 @@ export async function GET(
 
     const [localesPorRelevamiento] = await pool.query<LocalPorConstruccion[]>(
       `
-      SELECT 
-        lpc.id,
-        lpc.local_id,
-        lpc.relevamiento_id,
-        lpc.cui_number,
-        lpc.numero_construccion,
-        lpc.numero_planta,
-        loc.tipo,
-        identificacion_plano,
-        estado,
-        superficie,
-        tipo_superficie,
-        lpc.largo_predominante,
-        lpc.ancho_predominante,
-        lpc.diametro,
-        lpc.altura_maxima,
-        lpc.altura_minima,
-        loc.name AS nombre_local
-      FROM locales_por_construccion lpc
-      JOIN opciones_locales loc ON lpc.local_id = loc.id
-      WHERE lpc.relevamiento_id = ?
-      ORDER BY 
-        lpc.numero_construccion ASC,
-        CASE 
-          WHEN lpc.estado = 'completo' THEN 1
-          WHEN lpc.estado = 'incompleto' THEN 2
-          ELSE 3
-        END ASC,
-        lpc.identificacion_plano ASC
-      `,
+  SELECT 
+    lpc.id,
+    lpc.local_id,
+    lpc.relevamiento_id,
+    lpc.cui_number,
+    lpc.numero_construccion,
+    lpc.numero_planta,
+    loc.tipo,
+    identificacion_plano,
+    estado,
+    superficie,
+    tipo_superficie,
+    lpc.largo_predominante,
+    lpc.ancho_predominante,
+    lpc.diametro,
+    lpc.altura_maxima,
+    lpc.altura_minima,
+    loc.name AS nombre_local
+  FROM locales_por_construccion lpc
+  JOIN opciones_locales loc ON lpc.local_id = loc.id
+  WHERE lpc.relevamiento_id = ?
+  ORDER BY 
+    lpc.numero_construccion ASC,
+    lpc.numero_planta ASC,
+    CASE 
+      WHEN lpc.estado = 'completo' THEN 1
+      WHEN lpc.estado = 'incompleto' THEN 2
+      ELSE 3
+    END ASC,
+    CAST(
+      REPLACE(
+        SUBSTRING_INDEX(lpc.identificacion_plano, ' ', -1),
+        ',', '.'
+      ) AS DECIMAL(10,2)
+    ) ASC
+  `,
       [idNumber]
     );
 
