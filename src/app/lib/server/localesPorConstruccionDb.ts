@@ -22,7 +22,10 @@ export const getLocalesByConstruccionAndRelevamiento = async (
   construccionId: number
 ): Promise<LocalPorConstruccion[]> => {
   const [rows] = await pool.execute<LocalPorConstruccion[]>(
-    `SELECT * FROM locales_por_construccion WHERE relevamiento_id = ? AND construccion_id = ?`,
+    `SELECT * FROM locales_por_construccion WHERE relevamiento_id = ? AND construccion_id = ? ORDER BY
+      CAST(identificacion_plano AS UNSIGNED) ASC,  
+      identificacion_plano ASC,
+      id ASC                        `,
     [relevamientoId, construccionId]
   );
 

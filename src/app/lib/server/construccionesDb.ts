@@ -19,7 +19,9 @@ export const getConstruccionesByRelevamientoId = async (
   relevamientoId: number
 ): Promise<Construccion[]> => {
   const [rows] = await pool.execute<Construccion[]>(
-    `SELECT * FROM construcciones WHERE relevamiento_id = ?`,
+    `SELECT * FROM construcciones WHERE relevamiento_id = ? ORDER BY
+      numero_construccion ASC,
+      id ASC`,
     [relevamientoId]
   );
 
