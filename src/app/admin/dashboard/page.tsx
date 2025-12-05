@@ -101,6 +101,24 @@ type ResumenEst = {
   }[];
 };
 
+// Define el tipo esperado para la salida del useMemo
+type NivelConservacionData = {
+  nivel: string;
+  Bueno: number;
+  Regular: number;
+  Malo: number;
+  // Puedes agregar un total aquí si lo necesitas en el Tooltip
+  // totalConstrucciones: number;
+};
+
+// Define el tipo de los datos de entrada (opcional, pero buena práctica)
+// Asumiendo que `edificiosPorNivelYConservacion` contiene objetos con estas claves
+type RawConservacionRow = {
+  nivel: string;
+  conservacion: "Bueno" | "Regular" | "Malo" | string;
+  construcciones: string | number;
+};
+
 const estadoPillClass = (estado: string | null) => {
   if (estado === "Bueno") return "bg-green-100 text-green-700";
   if (estado === "Regular") return "bg-amber-100 text-amber-700";
@@ -227,6 +245,8 @@ export default function AdminDashboardPage() {
   const [conservacionConstrucciones, setConservacionConstrucciones] = useState<
     ConservacionRow[]
   >([]);
+  const [edificiosPorNivelYConservacion, setEdificiosPorNivelYConservacion] =
+    useState<RawConservacionRow[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // búsqueda de establecimientos
@@ -289,8 +309,11 @@ export default function AdminDashboardPage() {
       fetch(`/api/dashboard/escuelas-por-conservacion${qParam}`, {
         credentials: "include",
       }).then((r) => r.json()),
+      fetch(`/api/dashboard/edificios-por-nivel-y-conservacion${qParam}`, {
+        credentials: "include",
+      }).then((r) => r.json()),
     ])
-      .then(([E, A, M, C]) => {
+      .then(([E, A, M, C, D]) => {
         if (cancelled) return;
         setEdificios(E.items || []);
         setAulas(A.items || []);
@@ -303,6 +326,7 @@ export default function AdminDashboardPage() {
             construcciones: Number(x.construcciones || 0),
           }))
         );
+        setEdificiosPorNivelYConservacion(D.items || []); // <--- Guardamos los datos del nuevo endpoint
       })
       .finally(() => {
         if (!cancelled) setLoadingData(false);
@@ -454,6 +478,52 @@ export default function AdminDashboardPage() {
 
     return { porConstruccion };
   }, [resumen]);
+
+  const mergedByNivelAndConservacion = useMemo(() => {
+    // Utilizamos la dependencia del nuevo estado
+    const data: RawConservacionRow[] = edificiosPorNivelYConservacion;
+    if (!data || data.length === 0) return [];
+
+    // Mapa para agrupar las filas por 'nivel'
+    const map = new Map<string, NivelConservacionData>();
+
+    // Función base para una fila
+    const baseRow = (nivel: string): NivelConservacionData => ({
+      nivel,
+      Bueno: 0,
+      Regular: 0,
+      Malo: 0,
+    });
+
+    for (const item of data) {
+      // 1. Normalización de claves
+      const nivelKey = String(item.nivel ?? "SIN NIVEL");
+      const rawConservacion = String(item.conservacion ?? "").trim();
+      const count = Number(item.construcciones || 0);
+
+      // 2. Obtener o inicializar la fila para este nivel
+      const currentRow = map.get(nivelKey) || baseRow(nivelKey);
+
+      // 3. Asignar el conteo
+      // Solo asignamos si la clasificación es uno de los estados esperados
+      if (
+        rawConservacion === "Bueno" ||
+        rawConservacion === "Regular" ||
+        rawConservacion === "Malo"
+      ) {
+        currentRow[rawConservacion] = count;
+      }
+
+      map.set(nivelKey, currentRow);
+    }
+
+    // 4. Convertir el mapa de nuevo a un array y ordenar por el nombre del nivel
+    const result = Array.from(map.values()).sort((a, b) =>
+      a.nivel.localeCompare(b.nivel)
+    );
+
+    return result;
+  }, [edificiosPorNivelYConservacion]);
 
   return (
     <div className="min-h-screen bg-gray-50 mt-8">
@@ -723,6 +793,50 @@ export default function AdminDashboardPage() {
                         dataKey="Malo"
                         name="Malo"
                         radius={[6, 6, 0, 0]}
+                        fill={CHART_CONSERV.Malo}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Edificios por Nivel educativo y estado de conservación 
+                </h2>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {/* Aquí la data debe ser la tabla pivoteada por nivel: mergedByNivelAndConservacion */}
+                    <BarChart data={mergedByNivelAndConservacion}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      {/* El eje X ahora es el nivel educativo */}
+                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                      <Tooltip content={<TooltipContent />} />
+                      <Legend />
+
+                      {/* Usamos el atributo 'stackId' para apilar las barras */}
+                      <Bar
+                        dataKey="Bueno"
+                        name="Bueno"
+                        stackId="a" // Identificador de apilamiento
+                        radius={[6, 6, 0, 0]} // Se aplica solo a la barra superior si es la última en el JSX
+                        fill={CHART_CONSERV.Bueno}
+                      />
+                      <Bar
+                        dataKey="Regular"
+                        name="Regular"
+                        stackId="a" // Mismo identificador
+                        fill={CHART_CONSERV.Regular}
+                      />
+                      <Bar
+                        dataKey="Malo"
+                        name="Malo"
+                        stackId="a" // Mismo identificador
                         fill={CHART_CONSERV.Malo}
                       />
                     </BarChart>
