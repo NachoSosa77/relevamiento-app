@@ -27,6 +27,7 @@
     "date-fns": "^4.1.0",
     "express": "^4.22.1",
     "framer-motion": "^12.23.25",
+    "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.3",
     "jwt-decode": "^4.0.0",

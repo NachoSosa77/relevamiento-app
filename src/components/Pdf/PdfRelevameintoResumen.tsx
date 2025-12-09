@@ -230,7 +230,28 @@ const styles = StyleSheet.create({
   },
 });
 
-export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
+// Agregá arriba del archivo:
+type DashboardResumen = {
+  kpis?: {
+    edificios: number;
+    aulas: number;
+    m2: number;
+  };
+  charts?: {
+    // imágenes en dataURL
+    kpiPorNivel?: string;                 // gráfico combinado edificios/aulas/m2 por nivel
+    construccionesPorConservacion?: string; // semáforo Bueno/Regular/Malo
+    edificiosPorNivelYConservacion?: string; // stacked bar
+  };
+};
+
+export const PdfRelevamientoResumen = ({
+  data,
+  dashboard,
+}: {
+  data: any;
+  dashboard?: DashboardResumen;
+}) => {
   const {
     relevamiento,
     respondientes,
@@ -258,6 +279,97 @@ export const PdfRelevamientoResumen = ({ data }: { data: any }) => {
             <Text style={styles.headerText}>EX-2024-00069131-CFI-GES#DC</Text>
           </View>
         </View>
+
+        {/* 🔵 NUEVO: SECCIÓN DASHBOARD DEL RELEVAMIENTO */}
+        {dashboard && (
+          <View style={styles.section}>
+            <Text style={styles.title}>Resumen gráfico del relevamiento</Text>
+
+            {/* KPIs numéricos */}
+            {dashboard.kpis && (
+              <View style={{ marginBottom: 8 }}>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Edificios</Text>
+                  <Text style={styles.detailValue}>
+                    {dashboard.kpis.edificios.toLocaleString("es-AR")}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Aulas</Text>
+                  <Text style={styles.detailValue}>
+                    {dashboard.kpis.aulas.toLocaleString("es-AR")}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Metros cuadrados</Text>
+                  <Text style={styles.detailValue}>
+                    {dashboard.kpis.m2.toLocaleString("es-AR")} m²
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Grilla de imágenes de gráficos */}
+            {dashboard.charts && (
+              <View style={styles.imageGrid}>
+                {dashboard.charts.kpiPorNivel && (
+                  <View style={styles.imageContainer}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        marginBottom: 2,
+                        textAlign: "center",
+                      }}
+                    >
+                      Edificios, aulas y m² por nivel
+                    </Text>
+                    <Image
+                      src={dashboard.charts.kpiPorNivel}
+                      style={styles.image}
+                    />
+                  </View>
+                )}
+
+                {dashboard.charts.construccionesPorConservacion && (
+                  <View style={styles.imageContainer}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        marginBottom: 2,
+                        textAlign: "center",
+                      }}
+                    >
+                      Construcciones por nivel de conservación
+                    </Text>
+                    <Image
+                      src={dashboard.charts.construccionesPorConservacion}
+                      style={styles.image}
+                    />
+                  </View>
+                )}
+
+                {dashboard.charts.edificiosPorNivelYConservacion && (
+                  <View style={[styles.imageContainer, { width: "100%" }]}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        marginBottom: 2,
+                        textAlign: "center",
+                      }}
+                    >
+                      Edificios por nivel educativo y estado de conservación
+                    </Text>
+                    <Image
+                      src={dashboard.charts.edificiosPorNivelYConservacion}
+                      style={[styles.image, { height: 150 }]}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Relevamiento */}
         <View style={styles.section}>
           <Text style={styles.title}>Resumen del Relevamiento</Text>

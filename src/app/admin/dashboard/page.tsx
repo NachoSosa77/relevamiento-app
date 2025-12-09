@@ -57,7 +57,8 @@ const TooltipContent = ({ active, payload, label }: TooltipContentProps) => {
 };
 
 type Bloque2Row = {
-  construccion_id?: number; // 👈 NUEVO
+  construccion_id?: number;
+  numero_construccion?: number; // 👈 NUEVO
   tipo: string;
   sub_tipo: string;
   categoria: string;
@@ -175,6 +176,10 @@ function TablaServicio({
     return Array.from(map.values());
   })();
 
+  // 👉 NUEVO: si alguno de los rows es electricidad, cambiamos el header
+  const isElectricidad = rows.some((r) => r.tipo === "servicio_electricidad");
+  const categoriaHeader = isElectricidad ? "Disponibilidad" : "Categoría";
+
   return (
     <div className="rounded-lg border bg-white">
       <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
@@ -189,7 +194,7 @@ function TablaServicio({
                 Aspecto
               </th>
               <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
-                Categoría
+                {categoriaHeader}
               </th>
               <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
                 Estado
@@ -232,6 +237,7 @@ function TablaServicio({
     </div>
   );
 }
+
 
 export default function AdminDashboardPage() {
   const { user, loading } = useUser();
@@ -424,60 +430,68 @@ export default function AdminDashboardPage() {
   }, [conservacionConstrucciones]);
 
   const bloque2PorServicio = useMemo(() => {
-    if (!resumen) return null;
-    const rows = resumen.bloque2 || [];
+  if (!resumen) return null;
+  const rows = resumen.bloque2 || [];
 
-    // Agrupamos TODOS los rows por construcción
-    const map = new Map<
-      number,
-      {
-        construccion_id: number;
-        conservacion: Bloque2Row[];
-        agua: Bloque2Row[];
-        desague: Bloque2Row[];
-        gas: Bloque2Row[];
-        electricidad: Bloque2Row[];
-      }
-    >();
+  const map = new Map<
+    number,
+    {
+      construccion_id: number;
+      numero_construccion?: number | null;   // 👈 NUEVO
+      conservacion: Bloque2Row[];
+      agua: Bloque2Row[];
+      desague: Bloque2Row[];
+      gas: Bloque2Row[];
+      electricidad: Bloque2Row[];
+    }
+  >();
 
-    for (const r of rows) {
-      const id = r.construccion_id ?? 0;
-      if (!id) continue; // si viniera algún row sin construccion_id, lo ignoramos
+  for (const r of rows) {
+    const id = r.construccion_id ?? 0;
+    if (!id) continue;
 
-      const current = map.get(id) || {
-        construccion_id: id,
-        conservacion: [],
-        agua: [],
-        desague: [],
-        gas: [],
-        electricidad: [],
-      };
+    const current = map.get(id) || {
+      construccion_id: id,
+      numero_construccion: r.numero_construccion ?? null,   // 👈 guardamos el número
+      conservacion: [],
+      agua: [],
+      desague: [],
+      gas: [],
+      electricidad: [],
+    };
 
-      if (
-        ["estructura_resistente", "techo", "paredes_cerramientos"].includes(
-          r.tipo
-        )
-      ) {
-        current.conservacion.push(r);
-      } else if (r.tipo === "servicio_agua") {
-        current.agua.push(r);
-      } else if (r.tipo === "servicio_desague") {
-        current.desague.push(r);
-      } else if (r.tipo === "servicio_gas") {
-        current.gas.push(r);
-      } else if (r.tipo === "servicio_electricidad") {
-        current.electricidad.push(r);
-      }
-
-      map.set(id, current);
+    // en caso de que venga luego otro row de la misma construcción con el número seteado,
+    // reforzamos:
+    if (r.numero_construccion != null) {
+      current.numero_construccion = r.numero_construccion;
     }
 
-    const porConstruccion = Array.from(map.values()).sort(
-      (a, b) => a.construccion_id - b.construccion_id
-    );
+    if (
+      ["estructura_resistente", "techo", "paredes_cerramientos"].includes(
+        r.tipo
+      )
+    ) {
+      current.conservacion.push(r);
+    } else if (r.tipo === "servicio_agua") {
+      current.agua.push(r);
+    } else if (r.tipo === "servicio_desague") {
+      current.desague.push(r);
+    } else if (r.tipo === "servicio_gas") {
+      current.gas.push(r);
+    } else if (r.tipo === "servicio_electricidad") {
+      current.electricidad.push(r);
+    }
 
-    return { porConstruccion };
-  }, [resumen]);
+    map.set(id, current);
+  }
+
+  const porConstruccion = Array.from(map.values()).sort(
+    (a, b) => a.construccion_id - b.construccion_id
+  );
+
+  return { porConstruccion };
+}, [resumen]);
+
 
   const mergedByNivelAndConservacion = useMemo(() => {
     // Utilizamos la dependencia del nuevo estado
@@ -940,8 +954,9 @@ export default function AdminDashboardPage() {
                                 className="rounded-xl border border-gray-200 bg-gray-50/60 p-3"
                               >
                                 <div className="mb-2 text-xs font-semibold text-gray-700">
-                                  Construcción #{c.construccion_id}
-                                </div>
+  Construcción N°{" "}
+  {c.numero_construccion != null ? c.numero_construccion : c.construccion_id}
+</div>
 
                                 <div className="space-y-3">
                                   {/* Conservación */}

@@ -5,21 +5,25 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/dashboard/aulas-por-nivel?localidad=<opcional>
+ * GET /api/dashboard/relevamiento/[id]/edificios-por-nivel
+ *
+ * - Misma lógica que /api/dashboard/edificios-por-nivel,
+ *   pero para UN solo relevamiento (r.id = :id)
  * - Provincia fija: "La Pampa"
- * - relevamientos 'completo'
- * - Desduplicación de instituciones por CUI
- * - Cuenta aulas con COUNT(DISTINCT lpc.id)
- * - SOLO considera como aula los locales cuyo opciones_locales.name sea:
- *   "Aula común", "Sala de nivel inicial", "Aula especial"
+ * - Solo relevamientos con estado = "completo"
  * - Solo ADMIN
  */
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // Auth
     const token = (await cookies()).get("token")?.value;
-    if (!token)
+    if (!token) {
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+    }
+
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
@@ -34,19 +38,28 @@ export async function GET(req: NextRequest) {
       `,
       [userId]
     );
+
     if (!Array.isArray(adminRows) || adminRows.length === 0) {
       return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
     }
 
-    // Params
-    const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad");
-    const params: any[] = [];
+    const { id } = await params;
+    const relevamientoId = Number(id);
+    if (!relevamientoId || Number.isNaN(relevamientoId)) {
+      return NextResponse.json(
+        { message: "relevamientoId inválido" },
+        { status: 400 }
+      );
+    }
 
+    // Versión por relevamiento:
+    // - misma desduplicación de instituciones por CUI
+    // - misma lógica de niveles
+    // - pero filtrado a r.id = ?
     const sql = `
       SELECT
         COALESCE(inst.modalidad_nivel, 'SIN NIVEL') AS nivel,
-        COUNT(DISTINCT lpc.id) AS aulas
+        COUNT(DISTINCT c.id) AS edificios
       FROM relevamientos r
       JOIN (
         SELECT
@@ -57,27 +70,28 @@ export async function GET(req: NextRequest) {
         FROM instituciones i
         WHERE i.provincia = 'La Pampa'
         GROUP BY i.cui
-      ) inst                           ON inst.cui = r.cui_id
-      JOIN construcciones c            ON c.relevamiento_id = r.id
-      JOIN locales_por_construccion lpc ON lpc.construccion_id = c.id
-      JOIN opciones_locales ol         ON ol.id = lpc.local_id
+      ) inst                         ON inst.cui = r.cui_id
+      JOIN construcciones c          ON c.relevamiento_id = r.id
       WHERE r.estado = 'completo'
-        ${localidad ? "AND inst.localidad = ?" : ""}
-        AND ol.name IN (
-          'Aula común',
-          'Sala de nivel inicial',
-          'Aula especial'
-        )
+        AND r.id = ?
       GROUP BY COALESCE(inst.modalidad_nivel, 'SIN NIVEL')
       ORDER BY nivel
     `;
 
-    if (localidad && localidad.trim() !== "") params.push(localidad.trim());
+    const [rows]: any[] = await pool.query(sql, [relevamientoId]);
 
-    const [rows]: any[] = await pool.query(sql, params);
-    return NextResponse.json({ items: rows }, { status: 200 });
+    return NextResponse.json(
+      {
+        relevamientoId,
+        items: rows,
+      },
+      { status: 200 }
+    );
   } catch (err: any) {
-    console.error("GET /api/dashboard/aulas-por-nivel:", err?.message);
+    console.error(
+      "GET /api/dashboard/relevamiento/[id]/edificios-por-nivel:",
+      err?.message
+    );
     return NextResponse.json(
       { message: "Error interno", error: err?.message },
       { status: 500 }

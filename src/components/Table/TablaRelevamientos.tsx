@@ -46,8 +46,12 @@ export default function TablaRelevamientos() {
     router.push(`/home/relevamiento/detalle/${id}`);
   };
 
-  const handleView = (id: number) => {
+  /* const handleView = (id: number) => {
     router.push(`/home/relevamiento/detalle/${id}`);
+  }; */
+
+  const handleView = (id: number) => {
+    router.push(`/admin/dashboard/relevamiento/${id}`);
   };
 
   const handleViewPdf = (id: number) => {
