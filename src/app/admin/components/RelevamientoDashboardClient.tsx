@@ -332,6 +332,14 @@ export default function RelevamientoDashboardClient({
       }
 
       setCharts(resultados);
+
+      // 🔵 GUARDAR EN localStorage PARA QUE LO LEA EL PDF
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          `dashboardCharts-${relevamientoId}`,
+          JSON.stringify(resultados)
+        );
+      }
     } finally {
       setCapturandoCharts(false);
     }
