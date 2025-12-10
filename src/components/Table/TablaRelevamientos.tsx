@@ -112,9 +112,9 @@ export default function TablaRelevamientos() {
               <td className="px-4 py-2 text-center flex justify-center gap-2">
                 <button
                   onClick={() => handleView(r.id)}
-                  className="bg-yellow-600 text-white font-bold px-4 py-1 rounded hover:bg-yellow-600/50"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded transition-colors"
                 >
-                  Ver detalle
+                  📊 Ver Dashboard
                 </button>
                 <button
                   onClick={() => handleEditar(r.id)}

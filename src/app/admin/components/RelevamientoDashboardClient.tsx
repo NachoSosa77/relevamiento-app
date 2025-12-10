@@ -2,9 +2,8 @@
 "use client";
 
 import { useUser } from "@/hooks/useUser";
-import html2canvas from "html2canvas"; // 👈 IMPORTANTE: nuevo import
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -120,7 +119,7 @@ type DetalleInfo = {
 
 type Bloque2Row = {
   construccion_id: number;
-  numero_construccion?: number | null; // 👈 NUEVO
+  numero_construccion?: number | null;
   tipo: string;
   sub_tipo: string;
   categoria: string;
@@ -140,12 +139,6 @@ type DetalleRelevamientoResponse = {
   info: DetalleInfo;
   bloque2: Bloque2Row[];
   bloque3: Bloque3Row[];
-};
-
-type DashboardCharts = {
-  kpiPorNivel?: string; // edificios/aulas/m2 por nivel
-  construccionesPorConservacion?: string;
-  edificiosPorNivelYConservacion?: string;
 };
 
 // ---------------------------
@@ -206,18 +199,16 @@ function TablaServicio({
     return Array.from(map.values());
   })();
 
-  // 👇 Si alguno de los rows es servicio_electricidad,
-  // cambiamos el título de la columna a "Disponibilidad".
   const isElectricidad = rows.some((r) => r.tipo === "servicio_electricidad");
   const categoriaHeader = isElectricidad ? "Disponibilidad" : "Categoría";
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className="rounded-lg border bg-white print:break-inside-avoid print-avoid">
       <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
         {titulo}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto print:overflow-visible">
         <table className="min-w-full text-xs">
           <thead className="bg-gray-50">
             <tr>
@@ -291,59 +282,6 @@ export default function RelevamientoDashboardClient({
   );
   const [loadingDetalle, setLoadingDetalle] = useState(true);
   const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
-
-  const [charts, setCharts] = useState<DashboardCharts>({});
-  const [capturandoCharts, setCapturandoCharts] = useState(false);
-
-  const refKpiPorNivel = useRef<HTMLDivElement | null>(null);
-  const refConstruccionesPorConservacion = useRef<HTMLDivElement | null>(null);
-  const refEdificiosPorNivelYConservacion = useRef<HTMLDivElement | null>(null);
-
-  const capturarCharts = async () => {
-    try {
-      setCapturandoCharts(true);
-
-      const resultados: DashboardCharts = {};
-
-      if (refKpiPorNivel.current) {
-        const canvas = await html2canvas(refKpiPorNivel.current, {
-          useCORS: true,
-          scale: 2,
-        });
-        resultados.kpiPorNivel = canvas.toDataURL("image/png");
-      }
-
-      if (refConstruccionesPorConservacion.current) {
-        const canvas = await html2canvas(
-          refConstruccionesPorConservacion.current,
-          { useCORS: true, scale: 2 }
-        );
-        resultados.construccionesPorConservacion =
-          canvas.toDataURL("image/png");
-      }
-
-      if (refEdificiosPorNivelYConservacion.current) {
-        const canvas = await html2canvas(
-          refEdificiosPorNivelYConservacion.current,
-          { useCORS: true, scale: 2 }
-        );
-        resultados.edificiosPorNivelYConservacion =
-          canvas.toDataURL("image/png");
-      }
-
-      setCharts(resultados);
-
-      // 🔵 GUARDAR EN localStorage PARA QUE LO LEA EL PDF
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          `dashboardCharts-${relevamientoId}`,
-          JSON.stringify(resultados)
-        );
-      }
-    } finally {
-      setCapturandoCharts(false);
-    }
-  };
 
   // Redirigir si no es admin
   useEffect(() => {
@@ -424,16 +362,6 @@ export default function RelevamientoDashboardClient({
     };
   }, [isAdmin, relevamientoId]);
 
-  // (Opcional) Auto-capturar charts cuando se cargan los datos
-  useEffect(() => {
-    if (!loadingData && resumen) {
-      const t = setTimeout(() => {
-        capturarCharts();
-      }, 500);
-      return () => clearTimeout(t);
-    }
-  }, [loadingData, resumen]);
-
   // Derivados para gráficos
 
   const mergedByNivel = useMemo(() => {
@@ -506,8 +434,6 @@ export default function RelevamientoDashboardClient({
     );
   }, [resumen]);
 
-  // Agrupación de bloque2 por construcción + servicio
-
   const bloque2PorConstruccion = useMemo(() => {
     if (!detalle) return null;
     const rows = detalle.bloque2 || [];
@@ -571,462 +497,495 @@ export default function RelevamientoDashboardClient({
     return null;
   }
 
+  // Aseguramos que el usuario no imprima antes de que carguen todos los datos
+  const handlePrint = () => {
+    if (loadingData || loadingDetalle || !resumen || !detalle) {
+      alert("Esperá a que se carguen todos los datos antes de imprimir.");
+      return;
+    }
+
+    // Un poco más de delay para que todo termine de pintarse
+    setTimeout(() => {
+      window.print();
+    }, 400);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 mt-8">
-      <div className="mx-auto max-w-7xl px-4 pt-24 pb-10">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Relevamiento N° {relevamientoId}
-            </h1>
-            <p className="text-sm text-gray-600">Resumen del relevamiento.</p>
-          </div>
+    <>
+      {/* Reglas globales de impresión */}
+      <style jsx global>{`
+        @media print {
+          .print-avoid {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          .print-page-break {
+            break-before: page;
+            page-break-before: always;
+          }
+        }
+      `}</style>
 
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              ← Volver
-            </button>
-
-            <button
-              onClick={capturarCharts}
-              disabled={capturandoCharts || loadingData}
-              className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-            >
-              {capturandoCharts
-                ? "Capturando gráficos…"
-                : "Actualizar imágenes PDF"}
-            </button>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* KPIs */}
-        {resumen && (
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm">
-              <div className="text-xs uppercase tracking-wide text-indigo-600">
-                Edificios
-              </div>
-              <div className="mt-2 text-3xl font-semibold text-gray-900">
-                {totals.edificios.toLocaleString("es-AR")}
-              </div>
+      <div className="min-h-screen bg-gray-50 mt-8">
+        <div className="mx-auto max-w-5xl px-4 pt-24 pb-10 print:max-w-none print:px-8 print:pt-8 print:pb-8">
+          {/* Header */}
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between print:mb-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 print:text-2xl">
+                Relevamiento N° {relevamientoId}
+              </h1>
+              <p className="text-sm text-gray-600">Resumen del relevamiento.</p>
             </div>
-            <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm">
-              <div className="text-xs uppercase tracking-wide text-emerald-600">
-                Aulas
-              </div>
-              <div className="mt-2 text-3xl font-semibold text-gray-900">
-                {totals.aulas.toLocaleString("es-AR")}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm">
-              <div className="text-xs uppercase tracking-wide text-amber-600">
-                Metros cuadrados
-              </div>
-              <div className="mt-2 text-3xl font-semibold text-gray-900">
-                {totals.m2.toLocaleString("es-AR")}
-              </div>
+
+            {/* Botones (ocultamos en impresión) */}
+            <div className="flex flex-col gap-2 md:flex-row md:items-center print:hidden">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                ← Volver
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Imprimir / Guardar PDF
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Gráficos */}
-        {loadingData ? (
-          <div className="text-gray-500">Cargando datos…</div>
-        ) : !resumen ? (
-          <div className="text-gray-500">Sin datos para este relevamiento.</div>
-        ) : (
-          <div className="space-y-8">
-            {/* Edificios por nivel */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Edificios por nivel
-                </h2>
-              </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip content={<TooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="edificios"
-                        name="Edificios"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_COLORS.edificios}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-
-            {/* Aulas por nivel */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Aulas por nivel
-                </h2>
-              </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip content={<TooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="aulas"
-                        name="Aulas"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_COLORS.aulas}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-
-            {/* m2 por nivel (este usamos para capturar en PDF) */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Metros cuadrados por nivel
-                </h2>
-              </div>
-              <div
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
-                ref={refKpiPorNivel}
-              >
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip content={<TooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="m2"
-                        name="m²"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_COLORS.m2}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-
-            {/* Construcciones por nivel de conservación */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Construcciones por nivel de conservación
-                </h2>
-              </div>
-              <div
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
-                ref={refConstruccionesPorConservacion}
-              >
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={conservacionConstruccionesSeries}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="grupo" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                      <Tooltip content={<TooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="Bueno"
-                        name="Bueno"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_CONSERV.Bueno}
-                      />
-                      <Bar
-                        dataKey="Regular"
-                        name="Regular"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_CONSERV.Regular}
-                      />
-                      <Bar
-                        dataKey="Malo"
-                        name="Malo"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_CONSERV.Malo}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-
-            {/* Edificios por nivel educativo y estado de conservación */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Edificios por nivel educativo y estado de conservación
-                </h2>
-              </div>
-              <div
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
-                ref={refEdificiosPorNivelYConservacion}
-              >
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivelAndConservacion}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                      <Tooltip content={<TooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="Bueno"
-                        name="Bueno"
-                        stackId="a"
-                        radius={[6, 6, 0, 0]}
-                        fill={CHART_CONSERV.Bueno}
-                      />
-                      <Bar
-                        dataKey="Regular"
-                        name="Regular"
-                        stackId="a"
-                        fill={CHART_CONSERV.Regular}
-                      />
-                      <Bar
-                        dataKey="Malo"
-                        name="Malo"
-                        stackId="a"
-                        fill={CHART_CONSERV.Malo}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* Detalle: info + bloque2 + bloque3 */}
-        <div className="mt-10 space-y-8">
-          {errorDetalle && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {errorDetalle}
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
             </div>
           )}
 
-          {loadingDetalle ? (
-            <div className="text-gray-500">Cargando detalle…</div>
-          ) : !detalle ? (
+          {/* KPIs */}
+          {resumen && (
+            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 print:mb-6">
+              <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="text-xs uppercase tracking-wide text-indigo-600">
+                  Edificios
+                </div>
+                <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
+                  {totals.edificios.toLocaleString("es-AR")}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="text-xs uppercase tracking-wide text-emerald-600">
+                  Aulas
+                </div>
+                <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
+                  {totals.aulas.toLocaleString("es-AR")}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="text-xs uppercase tracking-wide text-amber-600">
+                  Metros cuadrados
+                </div>
+                <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
+                  {totals.m2.toLocaleString("es-AR")}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Gráficos */}
+          {loadingData ? (
+            <div className="text-gray-500">Cargando datos…</div>
+          ) : !resumen ? (
             <div className="text-gray-500">
-              Sin detalle para este relevamiento.
+              Sin datos para este relevamiento.
             </div>
           ) : (
-            <>
-              {/* Ficha del establecimiento */}
-              <section>
-                <h2 className="mb-2 text-lg font-semibold text-gray-900">
-                  Ficha del establecimiento
-                </h2>
-                <div className="rounded-lg border bg-white p-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">Relevamiento ID:</span>{" "}
-                      <span className="font-medium">
-                        {detalle.info.relevamiento_id}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">CUI:</span>{" "}
-                      <span className="font-medium">{detalle.info.cui}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Localidad:</span>{" "}
-                      <span className="font-medium">
-                        {detalle.info.localidad || "-"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Nivel:</span>{" "}
-                      <span className="font-medium">
-                        {detalle.info.modalidad_nivel || "SIN NIVEL"}
-                      </span>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <span className="text-gray-500">
-                        Instituciones (dedup por CUI):
-                      </span>
-                      <ul className="mt-1 list-inside list-disc">
-                        {detalle.info.instituciones.map((i) => (
-                          <li key={i.id} className="font-medium">
-                            {i.nombre}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+            <div className="space-y-8 print:space-y-6">
+              {/* Edificios por nivel */}
+              <section className="print-avoid">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                    Edificios por nivel
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
+                  <div className="h-72 print:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={mergedByNivel}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip content={<TooltipContent />} />
+                        <Legend />
+                        <Bar
+                          dataKey="edificios"
+                          name="Edificios"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_COLORS.edificios}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               </section>
 
-              {/* Bloque 2 · Conservación + servicios por construcción */}
-              <section>
-                <h2 className="mb-2 text-lg font-semibold text-gray-900">
-                  Bloque 2 · Conservación y servicios por construcción
-                </h2>
+              {/* Aulas por nivel */}
+              <section className="print-avoid">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                    Aulas por nivel
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
+                  <div className="h-72 print:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={mergedByNivel}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip content={<TooltipContent />} />
+                        <Legend />
+                        <Bar
+                          dataKey="aulas"
+                          name="Aulas"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_COLORS.aulas}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </section>
 
-                {!bloque2PorConstruccion ||
-                bloque2PorConstruccion.length === 0 ? (
-                  <div className="text-xs text-gray-500">Sin datos.</div>
-                ) : (
-                  <div className="space-y-6">
-                    {bloque2PorConstruccion.map((c) => (
-                      <div
-                        key={c.construccion_id}
-                        className="rounded-xl border border-gray-200 bg-gray-50/60 p-3"
-                      >
-                        <div className="mb-2 text-xs font-semibold text-gray-700">
-                          Construcción N°{" "}
-                          {c.numero_construccion != null
-                            ? c.numero_construccion
-                            : c.construccion_id}
-                        </div>
+              {/* m2 por nivel */}
+              <section className="print-avoid">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                    Metros cuadrados por nivel
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
+                  <div className="h-72 print:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={mergedByNivel}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip content={<TooltipContent />} />
+                        <Legend />
+                        <Bar
+                          dataKey="m2"
+                          name="m²"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_COLORS.m2}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </section>
 
-                        <div className="space-y-3">
-                          {c.conservacion.length > 0 && (
-                            <TablaServicio
-                              titulo="Conservación de la construcción"
-                              rows={c.conservacion}
-                              mostrarConteo={false}
-                            />
-                          )}
+              {/* Construcciones por nivel de conservación */}
+              <section className="print-avoid">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                    Construcciones por nivel de conservación
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
+                  <div className="h-72 print:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={conservacionConstruccionesSeries}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="grupo" tick={{ fontSize: 12 }} />
+                        <YAxis
+                          tick={{ fontSize: 12 }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip content={<TooltipContent />} />
+                        <Legend />
+                        <Bar
+                          dataKey="Bueno"
+                          name="Bueno"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_CONSERV.Bueno}
+                        />
+                        <Bar
+                          dataKey="Regular"
+                          name="Regular"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_CONSERV.Regular}
+                        />
+                        <Bar
+                          dataKey="Malo"
+                          name="Malo"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_CONSERV.Malo}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </section>
 
-                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            {c.agua.length > 0 && (
+              {/* Edificios por nivel educativo y estado de conservación */}
+              <section className="print-avoid">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                    Edificios por nivel educativo y estado de conservación
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
+                  <div className="h-72 print:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={mergedByNivelAndConservacion}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
+                        <YAxis
+                          tick={{ fontSize: 12 }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip content={<TooltipContent />} />
+                        <Legend />
+                        <Bar
+                          dataKey="Bueno"
+                          name="Bueno"
+                          stackId="a"
+                          radius={[6, 6, 0, 0]}
+                          fill={CHART_CONSERV.Bueno}
+                        />
+                        <Bar
+                          dataKey="Regular"
+                          name="Regular"
+                          stackId="a"
+                          fill={CHART_CONSERV.Regular}
+                        />
+                        <Bar
+                          dataKey="Malo"
+                          name="Malo"
+                          stackId="a"
+                          fill={CHART_CONSERV.Malo}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Detalle: info + bloque2 + bloque3 */}
+          <div className="mt-10 space-y-8 print:mt-8 print:space-y-6">
+            {errorDetalle && (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {errorDetalle}
+              </div>
+            )}
+
+            {loadingDetalle ? (
+              <div className="text-gray-500">Cargando detalle…</div>
+            ) : !detalle ? (
+              <div className="text-gray-500">
+                Sin detalle para este relevamiento.
+              </div>
+            ) : (
+              <>
+                {/* Ficha del establecimiento */}
+                <section className="print-page-break print-avoid">
+                  <h2 className="mb-2 text-lg font-semibold text-gray-900 print:text-base">
+                    Ficha del establecimiento
+                  </h2>
+                  <div className="rounded-lg border bg-white p-4 print-avoid">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm print:text-xs">
+                      <div>
+                        <span className="text-gray-500">
+                          Relevamiento ID:
+                        </span>{" "}
+                        <span className="font-medium">
+                          {detalle.info.relevamiento_id}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">CUI:</span>{" "}
+                        <span className="font-medium">{detalle.info.cui}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Localidad:</span>{" "}
+                        <span className="font-medium">
+                          {detalle.info.localidad || "-"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Nivel:</span>{" "}
+                        <span className="font-medium">
+                          {detalle.info.modalidad_nivel || "SIN NIVEL"}
+                        </span>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <span className="text-gray-500">
+                          Instituciones (dedup por CUI):
+                        </span>
+                        <ul className="mt-1 list-inside list-disc">
+                          {detalle.info.instituciones.map((i) => (
+                            <li key={i.id} className="font-medium">
+                              {i.nombre}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Bloque 2 · Conservación + servicios por construcción */}
+                <section>
+                  <h2 className="mb-2 text-lg font-semibold text-gray-900 print:text-base">
+                    Bloque 2 · Conservación y servicios por construcción
+                  </h2>
+
+                  {!bloque2PorConstruccion ||
+                  bloque2PorConstruccion.length === 0 ? (
+                    <div className="text-xs text-gray-500">Sin datos.</div>
+                  ) : (
+                    <div className="space-y-6">
+                      {bloque2PorConstruccion.map((c) => (
+                        <div
+                          key={c.construccion_id}
+                          className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 print:bg-white print-avoid"
+                        >
+                          <div className="mb-2 text-xs font-semibold text-gray-700">
+                            Construcción N°{" "}
+                            {c.numero_construccion != null
+                              ? c.numero_construccion
+                              : c.construccion_id}
+                          </div>
+
+                          <div className="space-y-3">
+                            {c.conservacion.length > 0 && (
                               <TablaServicio
-                                titulo="Agua"
-                                rows={c.agua}
+                                titulo="Conservación de la construcción"
+                                rows={c.conservacion}
                                 mostrarConteo={false}
                               />
                             )}
-                            {c.desague.length > 0 && (
-                              <TablaServicio
-                                titulo="Desagües cloacales"
-                                rows={c.desague}
-                                mostrarConteo={false}
-                              />
-                            )}
-                            {c.gas.length > 0 && (
-                              <TablaServicio
-                                titulo="Gas"
-                                rows={c.gas}
-                                mostrarConteo={false}
-                              />
-                            )}
-                            {c.electricidad.length > 0 && (
-                              <TablaServicio
-                                titulo="Electricidad"
-                                rows={c.electricidad}
-                                mostrarConteo={false}
-                              />
-                            )}
+
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                              {c.agua.length > 0 && (
+                                <TablaServicio
+                                  titulo="Agua"
+                                  rows={c.agua}
+                                  mostrarConteo={false}
+                                />
+                              )}
+                              {c.desague.length > 0 && (
+                                <TablaServicio
+                                  titulo="Desagües cloacales"
+                                  rows={c.desague}
+                                  mostrarConteo={false}
+                                />
+                              )}
+                              {c.gas.length > 0 && (
+                                <TablaServicio
+                                  titulo="Gas"
+                                  rows={c.gas}
+                                  mostrarConteo={false}
+                                />
+                              )}
+                              {c.electricidad.length > 0 && (
+                                <TablaServicio
+                                  titulo="Electricidad"
+                                  rows={c.electricidad}
+                                  mostrarConteo={false}
+                                />
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
+                      ))}
+                    </div>
+                  )}
+                </section>
 
-              {/* Bloque 3 · Locales */}
-              <section>
-                <h2 className="mb-2 text-lg font-semibold text-gray-900">
-                  Bloque 3 · Locales con detalle
-                </h2>
-                <div className="overflow-hidden rounded-lg border bg-white">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700">
-                          Tipo de local
-                        </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700">
-                          Identificación
-                        </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700">
-                          Estado
-                        </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700">
-                          Observaciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detalle.bloque3.length === 0 ? (
+                {/* Bloque 3 · Locales */}
+                <section className="print-avoid">
+                  <h2 className="mb-2 text-lg font-semibold text-gray-900 print:text-base">
+                    Bloque 3 · Locales con detalle
+                  </h2>
+                  <div className="overflow-x-auto rounded-lg border bg-white print:overflow-visible print-avoid">
+                    <table className="min-w-full text-sm print:text-xs">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <td className="px-3 py-2 text-gray-500" colSpan={4}>
-                            Sin datos
-                          </td>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Tipo de local
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Identificación
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Estado
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Observaciones
+                          </th>
                         </tr>
-                      ) : (
-                        detalle.bloque3.map((r, idx) => (
-                          <tr
-                            key={`${r.tipo_local}-${idx}`}
-                            className="border-t align-top"
-                          >
-                            <td className="px-3 py-2">{r.tipo_local}</td>
-                            <td className="px-3 py-2">{r.identificacion}</td>
-                            <td className="px-3 py-2">
-                              {r.estado_local === "Bueno" ||
-                              r.estado_local === "Regular" ||
-                              r.estado_local === "Malo" ? (
-                                <span
-                                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                    r.estado_local === "Bueno"
-                                      ? "bg-green-100 text-green-700"
-                                      : r.estado_local === "Regular"
-                                      ? "bg-amber-100 text-amber-700"
-                                      : "bg-red-100 text-red-700"
-                                  }`}
-                                >
-                                  {r.estado_local}
-                                </span>
-                              ) : (
-                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                                  Sin datos
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-3 py-2 whitespace-pre-wrap">
-                              {r.observaciones ?? (
-                                <span className="text-gray-400">—</span>
-                              )}
+                      </thead>
+                      <tbody>
+                        {detalle.bloque3.length === 0 ? (
+                          <tr>
+                            <td
+                              className="px-3 py-2 text-gray-500"
+                              colSpan={4}
+                            >
+                              Sin datos
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            </>
-          )}
+                        ) : (
+                          detalle.bloque3.map((r, idx) => (
+                            <tr
+                              key={`${r.tipo_local}-${idx}`}
+                              className="border-t align-top"
+                            >
+                              <td className="px-3 py-2">{r.tipo_local}</td>
+                              <td className="px-3 py-2">
+                                {r.identificacion}
+                              </td>
+                              <td className="px-3 py-2">
+                                {r.estado_local === "Bueno" ||
+                                r.estado_local === "Regular" ||
+                                r.estado_local === "Malo" ? (
+                                  <span
+                                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                      r.estado_local === "Bueno"
+                                        ? "bg-green-100 text-green-700"
+                                        : r.estado_local === "Regular"
+                                        ? "bg-amber-100 text-amber-700"
+                                        : "bg-red-100 text-red-700"
+                                    }`}
+                                  >
+                                    {r.estado_local}
+                                  </span>
+                                ) : (
+                                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                    Sin datos
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 whitespace-pre-wrap">
+                                {r.observaciones ?? (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
