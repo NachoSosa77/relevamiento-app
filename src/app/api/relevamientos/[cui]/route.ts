@@ -4,18 +4,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ cui: number }> }
+  { params }: { params: Promise<{ cui: string }> }
 ) {
   try {
-    const cui = (await params).cui;
+    const { cui } = await params;
 
-    if (isNaN(cui)) {
+    const cuiNumber = Number(cui);
+
+    if (!cui || Number.isNaN(cuiNumber)) {
       return NextResponse.json({ message: "CUI inválido" }, { status: 400 });
     }
 
     const [rows] = await pool.query(
       "SELECT * FROM relevamientos WHERE cui_id = ?",
-      [cui]
+      [cuiNumber]
     );
 
     return NextResponse.json(rows);

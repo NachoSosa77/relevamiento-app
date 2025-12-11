@@ -14,16 +14,20 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = (await params).id;
+  const { id } = await params;
+  const numericId = Number(id);
+  if (Number.isNaN(numericId)) {
+    return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+  }
 
-  const relevamiento = await getRelevamientoByIdServer(id);
-  const construcciones = await getConstruccionesByRelevamientoId(id);
+  const relevamiento = await getRelevamientoByIdServer(numericId);
+  const construcciones = await getConstruccionesByRelevamientoId(numericId);
   const construccionesConLocales = await Promise.all(
     construcciones.map(async (construccion) => {
       const locales = await getLocalesByConstruccionAndRelevamiento(
-        id,
+        numericId,
         construccion.id
       );
 
@@ -38,13 +42,13 @@ export async function GET(
             instalacionesBasicas,
             materialesPredominantes,
           ] = await Promise.all([
-            getAberturasByRelevamientoIdAndLocalId(id, local.id),
-            getAcondicionamientoTermicoByRelevamientoId(id, local.id),
-            getEquipamientoCocinaOfficesByRelevamientoId(id, local.id),
-            getEquipamientoSanitariosByRelevamientoId(id, local.id),
-            getIluminacionVentilacionByRelevamientoId(id, local.id),
-            getInstalacionesBasicasByRelevamientoId(id, local.id),
-            getMaterialesPredominantesByRelevamientoId(id, local.id),
+            getAberturasByRelevamientoIdAndLocalId(numericId, local.id),
+            getAcondicionamientoTermicoByRelevamientoId(numericId, local.id),
+            getEquipamientoCocinaOfficesByRelevamientoId(numericId, local.id),
+            getEquipamientoSanitariosByRelevamientoId(numericId, local.id),
+            getIluminacionVentilacionByRelevamientoId(numericId, local.id),
+            getInstalacionesBasicasByRelevamientoId(numericId, local.id),
+            getMaterialesPredominantesByRelevamientoId(numericId, local.id),
           ]);
 
           return {

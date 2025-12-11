@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const construccionId = Number(params.id);
+    const construccionId = Number((await params).id);
     const { relevamientoId } = await req.json();
 
     const res = await recomputeEstadoConstruccion(

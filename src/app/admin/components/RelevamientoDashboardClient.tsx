@@ -504,7 +504,6 @@ export default function RelevamientoDashboardClient({
       return;
     }
 
-    // Un poco más de delay para que todo termine de pintarse
     setTimeout(() => {
       window.print();
     }, 400);
@@ -522,6 +521,11 @@ export default function RelevamientoDashboardClient({
           .print-page-break {
             break-before: page;
             page-break-before: always;
+          }
+          /* Centrar y achicar un poco el contenido del gráfico en PDF */
+          .print-chart-inner {
+            width: 90% !important;
+            margin: 0 auto 18px auto;
           }
         }
       `}</style>
@@ -563,7 +567,7 @@ export default function RelevamientoDashboardClient({
 
           {/* KPIs */}
           {resumen && (
-            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 print:mb-6">
+            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 print:gap-6 print:mb-6">
               <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
                 <div className="text-xs uppercase tracking-wide text-indigo-600">
                   Edificios
@@ -607,10 +611,12 @@ export default function RelevamientoDashboardClient({
                     Edificios por nivel
                   </h2>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
-                  <div className="h-72 print:h-56">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none print-avoid">
+                  <div className="h-72 print:h-56 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={mergedByNivel}>
+                      <BarChart
+                        data={mergedByNivel}
+margin={{ top: 10, right: 20, left: 20, bottom: 10 }}                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
@@ -635,10 +641,13 @@ export default function RelevamientoDashboardClient({
                     Aulas por nivel
                   </h2>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
-                  <div className="h-72 print:h-56">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none print-avoid">
+                  <div className="h-72 print:h-56 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={mergedByNivel}>
+                      <BarChart
+                        data={mergedByNivel}
+                        margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
@@ -663,10 +672,13 @@ export default function RelevamientoDashboardClient({
                     Metros cuadrados por nivel
                   </h2>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
-                  <div className="h-72 print:h-56">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none print-avoid">
+                  <div className="h-72 print:h-56 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={mergedByNivel}>
+                      <BarChart
+                        data={mergedByNivel}
+                        margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
@@ -691,10 +703,13 @@ export default function RelevamientoDashboardClient({
                     Construcciones por nivel de conservación
                   </h2>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
-                  <div className="h-72 print:h-56">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none print-avoid">
+                  <div className="h-72 print:h-56 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={conservacionConstruccionesSeries}>
+                      <BarChart
+                        data={conservacionConstruccionesSeries}
+                        margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="grupo" tick={{ fontSize: 12 }} />
                         <YAxis
@@ -734,10 +749,13 @@ export default function RelevamientoDashboardClient({
                     Edificios por nivel educativo y estado de conservación
                   </h2>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none overflow-hidden print-avoid">
-                  <div className="h-72 print:h-56">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm print:rounded-md print:shadow-none print-avoid">
+                  <div className="h-72 print:h-56 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={mergedByNivelAndConservacion}>
+                      <BarChart
+                        data={mergedByNivelAndConservacion}
+                        margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
                         <YAxis

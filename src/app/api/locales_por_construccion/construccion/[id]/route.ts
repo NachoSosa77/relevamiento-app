@@ -3,10 +3,15 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const construccionId = (await params).id;
+    const { id } = await params; // id viene como string
+    const construccionId = Number(id);
+
+    if (Number.isNaN(construccionId)) {
+      return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+    }
 
     const [rows] = await pool.query(
       `SELECT * FROM locales_por_construccion WHERE construccion_id = ?`,

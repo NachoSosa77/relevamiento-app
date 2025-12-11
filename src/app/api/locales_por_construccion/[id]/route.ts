@@ -58,16 +58,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // Aquí desestructuramos el id
-
+    const { id } = await params;
     const idNumber = Number(id); // Convertir el id a número
 
-    if (isNaN(idNumber)) {
+    if (Number.isNaN(idNumber)) {
       return NextResponse.json(
         { message: "El ID no es válido." },
         { status: 400 }
       );
     }
+
     const [rows] = await pool.query<LocalPorConstruccion[]>(
       `
       SELECT 
@@ -80,15 +80,16 @@ export async function GET(
       `,
       [idNumber]
     );
-    const local = rows[0]; // ✅ Obtenemos el primer elemento
 
-    // Verificar si se encontró el local
+    const local = rows[0];
+
     if (!local) {
       return NextResponse.json(
         { message: "Local no encontrado" },
         { status: 404 }
       );
     }
+
     return NextResponse.json({ local });
   } catch (err: any) {
     console.error("Error al obtener el local:", err);
@@ -99,14 +100,15 @@ export async function GET(
   }
 }
 
-// PUT - Actualizar campos por ID escalable
+// PUT - Actualizar campos por ID (solo algunos campos)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const idNumber = Number(id);
 
-  if (!id || isNaN(id)) {
+  if (!id || Number.isNaN(idNumber)) {
     return NextResponse.json({ message: "ID inválido" }, { status: 400 });
   }
 
@@ -130,7 +132,8 @@ export async function PUT(
     );
   }
 
-  values.push(id); // último parámetro es el ID
+  // último parámetro es el ID numérico
+  values.push(idNumber);
 
   try {
     const [result] = await pool.query(
@@ -153,10 +156,12 @@ export async function PUT(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  if (!id || isNaN(id)) {
+  const idNumber = Number(id);
+
+  if (!id || Number.isNaN(idNumber)) {
     return NextResponse.json({ message: "ID inválido" }, { status: 400 });
   }
 
@@ -180,7 +185,8 @@ export async function PATCH(
     );
   }
 
-  values.push(id); // último parámetro es el ID
+  // último parámetro es el ID numérico
+  values.push(idNumber);
 
   try {
     const [result] = await pool.query(
