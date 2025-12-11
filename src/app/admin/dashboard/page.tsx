@@ -266,6 +266,12 @@ export default function AdminDashboardPage() {
   const [loadingResumen, setLoadingResumen] = useState(false);
   const [resumen, setResumen] = useState<ResumenEst | null>(null);
 
+  const handlePrint = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  };
+
   const isAdmin = !!user?.roles?.includes("ADMIN");
 
   useEffect(() => {
@@ -542,11 +548,27 @@ export default function AdminDashboardPage() {
       <div className="mx-auto max-w-7xl px-4 pt-24 pb-10">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Dashboard · La Pampa
-          </h1>
+          {/* Título + resumen solo-impresión */}
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+              Dashboard · La Pampa
+            </h1>
+            {/* Solo se ve al imprimir: Localidad seleccionada o 'Todas' */}
+            <p className="hidden print:block mt-1 text-sm text-gray-700">
+              Localidad: {localidad || "Todas"}
+            </p>
+          </div>
 
-          <div className="flex flex-col gap-2 md:flex-row md:items-end">
+          {/* Filtros y buscador: ocultos en impresión */}
+          <div className="flex flex-col gap-2 md:flex-row md:items-end print:hidden">
+            {/* Botón Imprimir */}
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center justify-center rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 print:hidden"
+            >
+              Imprimir / Guardar PDF
+            </button>
             {/* Filtro Localidad */}
             <div className="flex items-center gap-3">
               <label className="text-sm text-gray-600">Localidad</label>
@@ -694,7 +716,7 @@ export default function AdminDashboardPage() {
         ) : (
           <div className="space-y-8 print:space-y-6">
             {/* Edificios por nivel */}
-            <section className="print-avoid">
+            <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Edificios por nivel
@@ -729,7 +751,7 @@ export default function AdminDashboardPage() {
             </section>
 
             {/* Aulas por nivel */}
-            <section className="print-avoid">
+            <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Aulas por nivel
@@ -764,7 +786,7 @@ export default function AdminDashboardPage() {
             </section>
 
             {/* m2 por nivel */}
-            <section className="print-avoid">
+            <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Metros cuadrados por nivel
@@ -799,7 +821,7 @@ export default function AdminDashboardPage() {
             </section>
 
             {/* Construcciones por nivel de conservación */}
-            <section className="print-avoid">
+            <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Construcciones por nivel de conservación
@@ -846,7 +868,7 @@ export default function AdminDashboardPage() {
             </section>
 
             {/* Edificios por nivel educativo y estado de conservación */}
-            <section className="print-avoid">
+            <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Edificios por nivel educativo y estado de conservación
