@@ -18,11 +18,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT * FROM estado_conservacion WHERE relevamiento_id = ? AND construccion_id = ?`,
+      `SELECT * 
+       FROM estado_conservacion 
+       WHERE relevamiento_id = ? AND construccion_id = ?`,
       [relevamiento_id, construccion_id]
     );
 
-    return NextResponse.json(rows);
+    return NextResponse.json(rows, { status: 200 });
   } catch (error) {
     console.error("Error en GET estado_conservacion:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
@@ -30,16 +32,19 @@ export async function GET(req: NextRequest) {
 }
 
 // POST: Insertar o actualizar (upsert) en base a id
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const conn = await pool.getConnection();
   try {
     const data = await req.json();
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json(
-        { error: "Payload debe ser un array" },
+        { error: "Payload debe ser un array no vacío" },
         { status: 400 }
       );
     }
+
+    await conn.beginTransaction();
 
     for (const item of data) {
       const {
@@ -53,9 +58,15 @@ export async function POST(req: Request) {
         sub_tipo,
       } = item;
 
+      if (!relevamiento_id || !construccion_id) {
+        throw new Error(
+          "Cada item debe incluir relevamiento_id y construccion_id"
+        );
+      }
+
       if (id) {
         // 🔁 UPDATE por id
-        await pool.execute(
+        await conn.execute(
           `UPDATE estado_conservacion 
            SET estructura = ?, disponibilidad = ?, estado = ?, tipo = ?, sub_tipo = ?
            WHERE id = ?`,
@@ -70,7 +81,7 @@ export async function POST(req: Request) {
         );
       } else {
         // ➕ INSERT si no hay id
-        await pool.execute(
+        await conn.execute(
           `INSERT INTO estado_conservacion 
             (estructura, disponibilidad, estado, relevamiento_id, construccion_id, tipo, sub_tipo)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -87,34 +98,48 @@ export async function POST(req: Request) {
       }
     }
 
+    // Tomamos el par (rel, const) del primer elemento (todos deberían compartirlo)
     const relId = Number(data[0].relevamiento_id);
     const constId = Number(data[0].construccion_id);
+
+    await conn.commit();
+
+    // 🔄 Recalcular snapshot una vez por request
     await recomputeEstadoConstruccion(relId, constId);
 
     return NextResponse.json(
       { message: "Datos guardados y snapshot actualizado correctamente" },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    await conn.rollback();
     console.error("Error en POST estado_conservacion:", error);
     return NextResponse.json(
-      { error: "Error al insertar/actualizar los datos" },
+      {
+        error: "Error al insertar/actualizar los datos",
+        detail: error?.message,
+      },
       { status: 500 }
     );
+  } finally {
+    conn.release();
   }
 }
 
 // PATCH: Actualizar registros existentes (misma lógica que POST, semánticamente "update")
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
+  const conn = await pool.getConnection();
   try {
     const data = await req.json();
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json(
-        { error: "Payload debe ser un array" },
+        { error: "Payload debe ser un array no vacío" },
         { status: 400 }
       );
     }
+
+    await conn.beginTransaction();
 
     for (const item of data) {
       const {
@@ -128,8 +153,14 @@ export async function PATCH(req: Request) {
         sub_tipo,
       } = item;
 
+      if (!relevamiento_id || !construccion_id) {
+        throw new Error(
+          "Cada item debe incluir relevamiento_id y construccion_id"
+        );
+      }
+
       if (id) {
-        await pool.execute(
+        await conn.execute(
           `UPDATE estado_conservacion 
            SET estructura = ?, disponibilidad = ?, estado = ?, tipo = ?, sub_tipo = ?
            WHERE id = ?`,
@@ -143,7 +174,7 @@ export async function PATCH(req: Request) {
           ]
         );
       } else {
-        await pool.execute(
+        await conn.execute(
           `INSERT INTO estado_conservacion 
             (estructura, disponibilidad, estado, relevamiento_id, construccion_id, tipo, sub_tipo)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -162,17 +193,24 @@ export async function PATCH(req: Request) {
 
     const relId = Number(data[0].relevamiento_id);
     const constId = Number(data[0].construccion_id);
+
+    await conn.commit();
+
+    // 🔄 Recalcular snapshot una vez por request
     await recomputeEstadoConstruccion(relId, constId);
 
     return NextResponse.json(
       { message: "Datos actualizados y snapshot recalculado correctamente" },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    await conn.rollback();
     console.error("Error en PATCH estado_conservacion:", error);
     return NextResponse.json(
-      { error: "Error al actualizar los datos" },
+      { error: "Error al actualizar los datos", detail: error?.message },
       { status: 500 }
     );
+  } finally {
+    conn.release();
   }
 }

@@ -57,7 +57,8 @@ const TooltipContent = ({ active, payload, label }: TooltipContentProps) => {
 };
 
 type Bloque2Row = {
-  construccion_id?: number; // 👈 NUEVO
+  construccion_id?: number;
+  numero_construccion?: number; // 👈 NUEVO
   tipo: string;
   sub_tipo: string;
   categoria: string;
@@ -99,6 +100,24 @@ type ResumenEst = {
     score_local?: number;
     tieneCriticoMalo?: boolean;
   }[];
+};
+
+// Define el tipo esperado para la salida del useMemo
+type NivelConservacionData = {
+  nivel: string;
+  Bueno: number;
+  Regular: number;
+  Malo: number;
+  // Puedes agregar un total aquí si lo necesitas en el Tooltip
+  // totalConstrucciones: number;
+};
+
+// Define el tipo de los datos de entrada (opcional, pero buena práctica)
+// Asumiendo que `edificiosPorNivelYConservacion` contiene objetos con estas claves
+type RawConservacionRow = {
+  nivel: string;
+  conservacion: "Bueno" | "Regular" | "Malo" | string;
+  construcciones: string | number;
 };
 
 const estadoPillClass = (estado: string | null) => {
@@ -157,6 +176,10 @@ function TablaServicio({
     return Array.from(map.values());
   })();
 
+  // 👉 NUEVO: si alguno de los rows es electricidad, cambiamos el header
+  const isElectricidad = rows.some((r) => r.tipo === "servicio_electricidad");
+  const categoriaHeader = isElectricidad ? "Disponibilidad" : "Categoría";
+
   return (
     <div className="rounded-lg border bg-white">
       <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
@@ -171,7 +194,7 @@ function TablaServicio({
                 Aspecto
               </th>
               <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
-                Categoría
+                {categoriaHeader}
               </th>
               <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
                 Estado
@@ -227,6 +250,8 @@ export default function AdminDashboardPage() {
   const [conservacionConstrucciones, setConservacionConstrucciones] = useState<
     ConservacionRow[]
   >([]);
+  const [edificiosPorNivelYConservacion, setEdificiosPorNivelYConservacion] =
+    useState<RawConservacionRow[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // búsqueda de establecimientos
@@ -289,8 +314,11 @@ export default function AdminDashboardPage() {
       fetch(`/api/dashboard/escuelas-por-conservacion${qParam}`, {
         credentials: "include",
       }).then((r) => r.json()),
+      fetch(`/api/dashboard/edificios-por-nivel-y-conservacion${qParam}`, {
+        credentials: "include",
+      }).then((r) => r.json()),
     ])
-      .then(([E, A, M, C]) => {
+      .then(([E, A, M, C, D]) => {
         if (cancelled) return;
         setEdificios(E.items || []);
         setAulas(A.items || []);
@@ -303,6 +331,7 @@ export default function AdminDashboardPage() {
             construcciones: Number(x.construcciones || 0),
           }))
         );
+        setEdificiosPorNivelYConservacion(D.items || []); // <--- Guardamos los datos del nuevo endpoint
       })
       .finally(() => {
         if (!cancelled) setLoadingData(false);
@@ -403,11 +432,11 @@ export default function AdminDashboardPage() {
     if (!resumen) return null;
     const rows = resumen.bloque2 || [];
 
-    // Agrupamos TODOS los rows por construcción
     const map = new Map<
       number,
       {
         construccion_id: number;
+        numero_construccion?: number | null; // 👈 NUEVO
         conservacion: Bloque2Row[];
         agua: Bloque2Row[];
         desague: Bloque2Row[];
@@ -418,16 +447,23 @@ export default function AdminDashboardPage() {
 
     for (const r of rows) {
       const id = r.construccion_id ?? 0;
-      if (!id) continue; // si viniera algún row sin construccion_id, lo ignoramos
+      if (!id) continue;
 
       const current = map.get(id) || {
         construccion_id: id,
+        numero_construccion: r.numero_construccion ?? null, // 👈 guardamos el número
         conservacion: [],
         agua: [],
         desague: [],
         gas: [],
         electricidad: [],
       };
+
+      // en caso de que venga luego otro row de la misma construcción con el número seteado,
+      // reforzamos:
+      if (r.numero_construccion != null) {
+        current.numero_construccion = r.numero_construccion;
+      }
 
       if (
         ["estructura_resistente", "techo", "paredes_cerramientos"].includes(
@@ -454,6 +490,52 @@ export default function AdminDashboardPage() {
 
     return { porConstruccion };
   }, [resumen]);
+
+  const mergedByNivelAndConservacion = useMemo(() => {
+    // Utilizamos la dependencia del nuevo estado
+    const data: RawConservacionRow[] = edificiosPorNivelYConservacion;
+    if (!data || data.length === 0) return [];
+
+    // Mapa para agrupar las filas por 'nivel'
+    const map = new Map<string, NivelConservacionData>();
+
+    // Función base para una fila
+    const baseRow = (nivel: string): NivelConservacionData => ({
+      nivel,
+      Bueno: 0,
+      Regular: 0,
+      Malo: 0,
+    });
+
+    for (const item of data) {
+      // 1. Normalización de claves
+      const nivelKey = String(item.nivel ?? "SIN NIVEL");
+      const rawConservacion = String(item.conservacion ?? "").trim();
+      const count = Number(item.construcciones || 0);
+
+      // 2. Obtener o inicializar la fila para este nivel
+      const currentRow = map.get(nivelKey) || baseRow(nivelKey);
+
+      // 3. Asignar el conteo
+      // Solo asignamos si la clasificación es uno de los estados esperados
+      if (
+        rawConservacion === "Bueno" ||
+        rawConservacion === "Regular" ||
+        rawConservacion === "Malo"
+      ) {
+        currentRow[rawConservacion] = count;
+      }
+
+      map.set(nivelKey, currentRow);
+    }
+
+    // 4. Convertir el mapa de nuevo a un array y ordenar por el nombre del nivel
+    const result = Array.from(map.values()).sort((a, b) =>
+      a.nivel.localeCompare(b.nivel)
+    );
+
+    return result;
+  }, [edificiosPorNivelYConservacion]);
 
   return (
     <div className="min-h-screen bg-gray-50 mt-8">
@@ -579,28 +661,28 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* KPIs */}
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 print:gap-6 print:mb-6">
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
             <div className="text-xs uppercase tracking-wide text-indigo-600">
               Edificios
             </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900">
+            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
               {totals.edificios.toLocaleString("es-AR")}
             </div>
           </div>
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
             <div className="text-xs uppercase tracking-wide text-emerald-600">
               Aulas
             </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900">
+            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
               {totals.aulas.toLocaleString("es-AR")}
             </div>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
             <div className="text-xs uppercase tracking-wide text-amber-600">
               Metros cuadrados
             </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900">
+            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
               {totals.m2.toLocaleString("es-AR")}
             </div>
           </div>
@@ -610,22 +692,30 @@ export default function AdminDashboardPage() {
         {loadingData ? (
           <div className="text-gray-500">Cargando datos…</div>
         ) : (
-          <div className="space-y-8">
-            <section>
+          <div className="space-y-8 print:space-y-6">
+            {/* Edificios por nivel */}
+            <section className="print-avoid">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Edificios por nivel
                 </h2>
               </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                  <ResponsiveContainer width="99%" height="100%">
+                    <BarChart
+                      data={mergedByNivel}
+                      margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="nivel"
+                        tick={{ fontSize: 11 }}
+                        tickMargin={8}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip content={<TooltipContent />} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                       <Bar
                         dataKey="edificios"
                         name="Edificios"
@@ -638,21 +728,29 @@ export default function AdminDashboardPage() {
               </div>
             </section>
 
-            <section>
+            {/* Aulas por nivel */}
+            <section className="print-avoid">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Aulas por nivel
                 </h2>
               </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                  <ResponsiveContainer width="99%" height="100%">
+                    <BarChart
+                      data={mergedByNivel}
+                      margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="nivel"
+                        tick={{ fontSize: 11 }}
+                        tickMargin={8}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip content={<TooltipContent />} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                       <Bar
                         dataKey="aulas"
                         name="Aulas"
@@ -665,21 +763,29 @@ export default function AdminDashboardPage() {
               </div>
             </section>
 
-            <section>
+            {/* m2 por nivel */}
+            <section className="print-avoid">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Metros cuadrados por nivel
                 </h2>
               </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedByNivel}>
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                  <ResponsiveContainer width="99%" height="100%">
+                    <BarChart
+                      data={mergedByNivel}
+                      margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="nivel" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="nivel"
+                        tick={{ fontSize: 11 }}
+                        tickMargin={8}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip content={<TooltipContent />} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                       <Bar
                         dataKey="m2"
                         name="m²"
@@ -692,21 +798,29 @@ export default function AdminDashboardPage() {
               </div>
             </section>
 
-            <section>
+            {/* Construcciones por nivel de conservación */}
+            <section className="print-avoid">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 print:text-base">
                   Construcciones por nivel de conservación
                 </h2>
               </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={conservacionConstruccionesSeries}>
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                  <ResponsiveContainer width="99%" height="100%">
+                    <BarChart
+                      data={conservacionConstruccionesSeries}
+                      margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="grupo" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                      <XAxis
+                        dataKey="grupo"
+                        tick={{ fontSize: 11 }}
+                        tickMargin={8}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip content={<TooltipContent />} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                       <Bar
                         dataKey="Bueno"
                         name="Bueno"
@@ -731,6 +845,53 @@ export default function AdminDashboardPage() {
               </div>
             </section>
 
+            {/* Edificios por nivel educativo y estado de conservación */}
+            <section className="print-avoid">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900 print:text-base">
+                  Edificios por nivel educativo y estado de conservación
+                </h2>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
+                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                  <ResponsiveContainer width="99%" height="100%">
+                    <BarChart
+                      data={mergedByNivelAndConservacion}
+                      margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        dataKey="nivel"
+                        tick={{ fontSize: 11 }}
+                        tickMargin={8}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip content={<TooltipContent />} />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                      <Bar
+                        dataKey="Bueno"
+                        name="Bueno"
+                        stackId="a"
+                        radius={[6, 6, 0, 0]}
+                        fill={CHART_CONSERV.Bueno}
+                      />
+                      <Bar
+                        dataKey="Regular"
+                        name="Regular"
+                        stackId="a"
+                        fill={CHART_CONSERV.Regular}
+                      />
+                      <Bar
+                        dataKey="Malo"
+                        name="Malo"
+                        stackId="a"
+                        fill={CHART_CONSERV.Malo}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </section>
             {/* Drawer lateral */}
             <div
               className={`fixed inset-y-0 right-0 z-50 w-full max-w-3xl transform bg-white shadow-2xl transition-transform duration-300 ${
@@ -826,7 +987,10 @@ export default function AdminDashboardPage() {
                                 className="rounded-xl border border-gray-200 bg-gray-50/60 p-3"
                               >
                                 <div className="mb-2 text-xs font-semibold text-gray-700">
-                                  Construcción #{c.construccion_id}
+                                  Construcción N°{" "}
+                                  {c.numero_construccion != null
+                                    ? c.numero_construccion
+                                    : c.construccion_id}
                                 </div>
 
                                 <div className="space-y-3">

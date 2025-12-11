@@ -6,24 +6,35 @@ import { getPrediosByRelevamientoId } from "@/app/lib/server/predioDb";
 import { getRelevamientoByIdServer } from "@/app/lib/server/relevamientoDb";
 import { getRespondientesByRelevamientoId } from "@/app/lib/server/respondientesDb";
 import { getVisitasByRelevamientoIdServer } from "@/app/lib/server/visitasDb";
-import { NextResponse } from "next/server";
-// ...otros imports
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: number }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = (await params).id;
+  const { id } = await params;
 
-  const relevamiento = await getRelevamientoByIdServer(id);
-  const visitas = await getVisitasByRelevamientoIdServer(id);
-  const respondientes = await getRespondientesByRelevamientoId(id);
-  const predio = await getPrediosByRelevamientoId(id);
-  const espacioEscolar = await getEspaciosEscolaresByRelevamientonId(id);
-  const instituciones = await getInstitucionesRelacionadasByRelevamientoId(id);
-  const areasExteriores = await getAreasExterioresByRelevamiento(id);
+  const relevamientoId = Number(id);
+  if (Number.isNaN(relevamientoId)) {
+    return NextResponse.json(
+      { message: "ID de relevamiento inválido" },
+      { status: 400 }
+    );
+  }
 
-  // ...otros fetchs
+  const relevamiento = await getRelevamientoByIdServer(relevamientoId);
+  const visitas = await getVisitasByRelevamientoIdServer(relevamientoId);
+  const respondientes = await getRespondientesByRelevamientoId(relevamientoId);
+  const predio = await getPrediosByRelevamientoId(relevamientoId);
+  const espacioEscolar = await getEspaciosEscolaresByRelevamientonId(
+    relevamientoId
+  );
+  const instituciones = await getInstitucionesRelacionadasByRelevamientoId(
+    relevamientoId
+  );
+  const areasExteriores = await getAreasExterioresByRelevamiento(
+    relevamientoId
+  );
 
   return NextResponse.json({
     relevamiento,
@@ -33,6 +44,5 @@ export async function GET(
     espacioEscolar,
     instituciones,
     areasExteriores,
-    // ...
   });
 }

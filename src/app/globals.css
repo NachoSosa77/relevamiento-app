@@ -24,6 +24,10 @@
     padding-top: 0 !important; /* Por si main tenía espacio por el navbar */
     margin-top: 0 !important;
   }
+  .break-inside-avoid-page {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

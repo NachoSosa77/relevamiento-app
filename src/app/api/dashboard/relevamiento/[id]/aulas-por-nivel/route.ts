@@ -1,3 +1,4 @@
+// app/api/dashboard/relevamiento/[id]/aulas-por-nivel/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { pool } from "@/app/lib/db";
 import jwt from "jsonwebtoken";
@@ -5,21 +6,22 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/dashboard/aulas-por-nivel?localidad=<opcional>
- * - Provincia fija: "La Pampa"
- * - relevamientos 'completo'
- * - Desduplicación de instituciones por CUI
- * - Cuenta aulas con COUNT(DISTINCT lpc.id)
- * - SOLO considera como aula los locales cuyo opciones_locales.name sea:
+ * GET /api/dashboard/relevamiento/[id]/aulas-por-nivel
+ * - Solo cuenta:
  *   "Aula común", "Sala de nivel inicial", "Aula especial"
- * - Solo ADMIN
+ *   según opciones_locales.name
+ * - Solo ADMIN.
  */
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Auth
     const token = (await cookies()).get("token")?.value;
-    if (!token)
+    if (!token) {
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+    }
+
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
@@ -34,14 +36,19 @@ export async function GET(req: NextRequest) {
       `,
       [userId]
     );
+
     if (!Array.isArray(adminRows) || adminRows.length === 0) {
       return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
     }
 
-    // Params
-    const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad");
-    const params: any[] = [];
+    const { id } = await params;
+    const relevamientoId = Number(id);
+    if (!relevamientoId || Number.isNaN(relevamientoId)) {
+      return NextResponse.json(
+        { message: "relevamientoId inválido" },
+        { status: 400 }
+      );
+    }
 
     const sql = `
       SELECT
@@ -62,22 +69,30 @@ export async function GET(req: NextRequest) {
       JOIN locales_por_construccion lpc ON lpc.construccion_id = c.id
       JOIN opciones_locales ol         ON ol.id = lpc.local_id
       WHERE r.estado = 'completo'
-        ${localidad ? "AND inst.localidad = ?" : ""}
+        AND r.id = ?
         AND ol.name IN (
           'Aula común',
           'Sala de nivel inicial',
           'Aula especial'
         )
       GROUP BY COALESCE(inst.modalidad_nivel, 'SIN NIVEL')
-      ORDER BY nivel
+      ORDER BY nivel;
     `;
 
-    if (localidad && localidad.trim() !== "") params.push(localidad.trim());
+    const [rows]: any[] = await pool.query(sql, [relevamientoId]);
 
-    const [rows]: any[] = await pool.query(sql, params);
-    return NextResponse.json({ items: rows }, { status: 200 });
+    return NextResponse.json(
+      {
+        relevamientoId,
+        items: rows,
+      },
+      { status: 200 }
+    );
   } catch (err: any) {
-    console.error("GET /api/dashboard/aulas-por-nivel:", err?.message);
+    console.error(
+      "GET /api/dashboard/relevamiento/[id]/aulas-por-nivel:",
+      err?.message
+    );
     return NextResponse.json(
       { message: "Error interno", error: err?.message },
       { status: 500 }

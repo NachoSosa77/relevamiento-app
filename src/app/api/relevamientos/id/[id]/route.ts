@@ -13,14 +13,22 @@ interface Relevamiento {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    const idNumber = Number(id);
+
+    if (Number.isNaN(idNumber)) {
+      return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+    }
+
     const connection = await getConnection();
-    const id = (await params).id;
 
     const [rows, _fields]: [Relevamiento[] & RowDataPacket[], FieldPacket[]] =
-      await connection.query("SELECT * FROM relevamientos WHERE id = ?", [id]);
+      await connection.query("SELECT * FROM relevamientos WHERE id = ?", [
+        idNumber,
+      ]);
 
     connection.release();
 
@@ -46,7 +54,7 @@ export async function PATCH(
     const { id } = await params;
     const idNumber = Number(id);
 
-    if (isNaN(idNumber)) {
+    if (Number.isNaN(idNumber)) {
       return NextResponse.json({ message: "ID inválido" }, { status: 400 });
     }
 

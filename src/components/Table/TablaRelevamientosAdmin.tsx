@@ -85,8 +85,12 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
     router.push(`/home/relevamiento/detalle/${id}`);
   };
 
-  const handleView = (id: number) => {
+  /* const handleView = (id: number) => {
     router.push(`/home/relevamiento/detalle/${id}`);
+  }; */
+
+   const handleView = (id: number) => {
+    router.push(`/admin/dashboard/relevamiento/${id}`);
   };
 
   const handleViewPdf = (id: number) => {
@@ -136,7 +140,7 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
                   onClick={() => handleView(r.id)}
                   className="bg-yellow-600 text-white font-bold px-4 py-1 rounded hover:bg-yellow-600/50"
                 >
-                  Ver detalle
+                  Ver Dashboard
                 </button>
                 {/* <button
                   onClick={() => handleEditar(r.id)}

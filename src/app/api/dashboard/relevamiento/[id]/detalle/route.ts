@@ -1,120 +1,110 @@
+// app/api/dashboard/relevamiento/[id]/detalle/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { pool } from "@/app/lib/db";
 import { computeLocalScore } from "@/app/lib/estado-local";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * GET /api/dashboard/resumen-establecimiento?cui=4200061
- *
- * Devuelve:
- * {
- *   info: {
- *     cui,
- *     localidad,
- *     modalidad_nivel,
- *     relevamiento_id: number | null,
- *     instituciones: [{id, nombre}]
- *   },
- *   bloque2: [
- *     { construccion_id, tipo, sub_tipo, categoria, estado }, ...
- *   ],
- *   bloque3: [
- *     { tipo_local, identificacion, estado_local, observaciones, score_local?, tieneCriticoMalo? }, ...
- *   ]
- * }
- */
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const cuiStr = req.nextUrl.searchParams.get("cui");
-    if (!cuiStr) {
-      return NextResponse.json(
-        { message: "Falta parámetro 'cui'" },
-        { status: 400 }
-      );
-    }
-    const cui = Number(cuiStr);
-    if (Number.isNaN(cui)) {
-      return NextResponse.json(
-        { message: "Parámetro 'cui' inválido" },
-        { status: 400 }
-      );
+    // ✅ Auth + ADMIN, igual que otros endpoints de dashboard
+    const token = (await cookies()).get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 });
     }
 
-    // 1) Info básica del establecimiento (por CUI, provincia LA PAMPA)
-    const [instRows]: any[] = await pool.query(
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const userId = Number(decoded.id);
+
+    const [adminRows]: any[] = await pool.query(
       `
-      SELECT
-        i.cui,
-        SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1) AS localidad,
-        SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel,
-        GROUP_CONCAT(i.id ORDER BY i.id) AS inst_ids,
-        GROUP_CONCAT(COALESCE(i.institucion, CONCAT('Inst ', i.id)) ORDER BY i.id) AS inst_nombres
-      FROM instituciones i
-      WHERE UPPER(i.provincia) = 'LA PAMPA' AND i.cui = ?
-      GROUP BY i.cui
+      SELECT 1
+      FROM user_role ur
+      JOIN role r ON r.id = ur.role_id AND r.is_active = 1
+      WHERE ur.user_id = ? AND r.name = 'ADMIN'
+      LIMIT 1
       `,
-      [cui]
+      [userId]
     );
 
-    if (!Array.isArray(instRows) || instRows.length === 0) {
+    if (!Array.isArray(adminRows) || adminRows.length === 0) {
+      return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
+    }
+
+    // ✅ params como Promise (Sync Dynamic APIs)
+    const { id } = await params;
+    const relevamientoId = Number(id);
+
+    if (!relevamientoId || Number.isNaN(relevamientoId)) {
       return NextResponse.json(
-        { message: "No se encontraron instituciones para ese CUI" },
+        { message: "relevamientoId inválido" },
+        { status: 400 }
+      );
+    }
+
+    // 1) Info básica: a partir del relevamiento (traemos CUI + instituciones)
+    const [infoRows]: any[] = await pool.query(
+      `
+      SELECT
+        r.id AS relevamiento_id,
+        r.cui_id AS cui,
+        inst.localidad,
+        inst.modalidad_nivel,
+        inst.inst_ids,
+        inst.inst_nombres
+      FROM relevamientos r
+      JOIN (
+        SELECT
+          i.cui,
+          SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1) AS localidad,
+          SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel,
+          GROUP_CONCAT(i.id ORDER BY i.id) AS inst_ids,
+          GROUP_CONCAT(COALESCE(i.institucion, CONCAT('Inst ', i.id)) ORDER BY i.id) AS inst_nombres
+        FROM instituciones i
+        WHERE UPPER(i.provincia) = 'LA PAMPA'
+        GROUP BY i.cui
+      ) inst ON inst.cui = r.cui_id
+      WHERE r.id = ?
+  AND r.estado = 'completo'
+LIMIT 1
+      `,
+      [relevamientoId]
+    );
+
+    if (!Array.isArray(infoRows) || infoRows.length === 0) {
+      return NextResponse.json(
+        { message: "No se encontró el relevamiento" },
         { status: 404 }
       );
     }
 
-    // 2) Buscar el ÚLTIMO relevamiento COMPLETO para ese CUI
-    let relevamientoId: number | null = null;
-
-    const [revRows]: any[] = await pool.query(
-      `
-      SELECT r.id
-      FROM relevamientos r
-      WHERE r.cui_id = ?
-        AND r.estado = 'completo'
-      ORDER BY r.id DESC
-      LIMIT 1
-      `,
-      [cui]
-    );
-
-    if (Array.isArray(revRows) && revRows.length > 0) {
-      relevamientoId = Number(revRows[0].id);
-    }
+    const infoRow = infoRows[0];
 
     const info = {
-      cui,
-      localidad: instRows[0].localidad,
-      modalidad_nivel: instRows[0].modalidad_nivel,
-      relevamiento_id: relevamientoId,
-      instituciones: String(instRows[0].inst_ids)
+      cui: Number(infoRow.cui),
+      localidad: infoRow.localidad,
+      modalidad_nivel: infoRow.modalidad_nivel,
+      relevamiento_id: Number(infoRow.relevamiento_id),
+      instituciones: String(infoRow.inst_ids)
         .split(",")
-        .map((id: string, idx: number) => ({
-          id: Number(id),
+        .map((idStr: string, idx: number) => ({
+          id: Number(idStr),
           nombre:
-            String(instRows[0].inst_nombres).split(",")[idx] ?? `Inst ${id}`,
+            String(infoRow.inst_nombres).split(",")[idx] ?? `Inst ${idStr}`,
         })),
     };
 
-    // Si no hay relevamiento completo, devolvemos info + bloques vacíos
-    if (!relevamientoId) {
-      return NextResponse.json(
-        {
-          info,
-          bloque2: [],
-          bloque3: [],
-        },
-        { status: 200 }
-      );
-    }
-
-    // 3) Bloque 2 — Preguntas 3–6: estado de construcción + servicios, SOLO para ese relevamiento
+    // 2) Bloque 2 — Preguntas 3–6 (conservación + servicios) SOLO para ese relevamiento
     const [b2Rows]: any[] = await pool.query(
       `
   SELECT
     t.relevamiento_id,
     t.construccion_id,
-    c.numero_construccion,          -- 👈 NUEVO
+    c.numero_construccion,         -- 👈 NUEVO
     t.tipo,
     t.sub_tipo,
     t.categoria,
@@ -180,7 +170,7 @@ export async function GET(req: NextRequest) {
 
     UNION ALL
 
-    -- e) Servicio de electricidad
+    -- e) Servicio de electricidad (ahora usamos disponibilidad, estado NULL)
     SELECT
       se.relevamiento_id,
       se.construccion_id,
@@ -191,25 +181,25 @@ export async function GET(req: NextRequest) {
     FROM servicio_electricidad se
   ) AS t
   JOIN relevamientos r ON r.id = t.relevamiento_id
-  JOIN construcciones c ON c.id = t.construccion_id   -- 👈 JOIN
+  JOIN construcciones c ON c.id = t.construccion_id   -- 👈 JOIN a construcciones
   WHERE r.estado = 'completo'
-    AND r.cui_id = ?
-    AND r.id = ?   -- solo el último relevamiento completo
+    AND r.id = ?
   ORDER BY t.relevamiento_id, t.construccion_id, t.tipo, t.sub_tipo
   `,
-      [cui, relevamientoId]
+      [relevamientoId]
     );
 
     const bloque2 = (b2Rows || []).map((r: any) => ({
       construccion_id: Number(r.construccion_id),
-      numero_construccion: Number(r.numero_construccion), // 👈 NUEVO
+      numero_construccion:
+        r.numero_construccion != null ? Number(r.numero_construccion) : null, // 👈 mejor así
       tipo: r.tipo,
       sub_tipo: r.sub_tipo,
       categoria: r.categoria,
       estado: (r.estado ?? null) as "Bueno" | "Regular" | "Malo" | null,
     }));
 
-    // 4) Bloque 3 — locales + estado por materiales_predominantes, SOLO ese relevamiento
+    // 3) Bloque 3 — locales + estado por materiales_predominantes (solo ese relevamiento)
     const [b3Rows]: any[] = await pool.query(
       `
       SELECT
@@ -223,11 +213,10 @@ export async function GET(req: NextRequest) {
       JOIN locales_por_construccion lpc  ON lpc.construccion_id = c.id
       LEFT JOIN opciones_locales ol      ON ol.id = lpc.local_id
       WHERE r.estado = 'completo'
-        AND r.cui_id = ?
-        AND r.id = ?   -- 👈 mismo relevamiento
+        AND r.id = ?
       ORDER BY c.id, lpc.id
       `,
-      [cui, relevamientoId]
+      [relevamientoId]
     );
 
     const bloque3 = await Promise.all(
@@ -272,7 +261,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ info, bloque2, bloque3 }, { status: 200 });
   } catch (err: any) {
-    console.error("GET /api/dashboard/resumen-establecimiento:", err?.message);
+    console.error(
+      "GET /api/dashboard/relevamiento/[id]/detalle:",
+      err?.message
+    );
     return NextResponse.json(
       { message: "Error interno", error: err?.message },
       { status: 500 }

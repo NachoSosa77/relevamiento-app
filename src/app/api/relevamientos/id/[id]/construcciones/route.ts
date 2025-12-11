@@ -18,15 +18,19 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: number }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = (await params).id;
+  const { id } = await params;
+  const numericId = Number(id);
+  if (Number.isNaN(numericId)) {
+    return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+  }
   const conn: PoolConnection = await getConnection();
 
   try {
-    const relevamiento = await getRelevamientoByIdServer(id);
+    const relevamiento = await getRelevamientoByIdServer(numericId);
 
-    const construcciones = await getConstruccionesByRelevamientoId(id);
+    const construcciones = await getConstruccionesByRelevamientoId(numericId);
 
     const construccionesConLocales = await Promise.all(
       construcciones.map(async (construccion) => {
@@ -44,24 +48,36 @@ export async function GET(
           estadoConservacion,
         ] = await Promise.all([
           getCondicionesAccesibilidadByConstruccionId(
-            id,
+            numericId,
             construccion.id,
             conn
           ),
-          getEnergiasAlternativasByConstruccionId(id, construccion.id, conn),
+          getEnergiasAlternativasByConstruccionId(
+            numericId,
+            construccion.id,
+            conn
+          ),
           getInstalacionesSeguridadIncendioByConstruccionId(
-            id,
+            numericId,
             construccion.id,
             conn
           ),
-          getInstitucionesPorConstruccion(id, construccion.id),
-          getPlantasPorConstruccion(id, construccion.id, conn),
-          getServicioAguaByRelevamientoId(id, construccion.id, conn),
-          getServicioDesagueByRelevamientoId(id, construccion.id, conn),
-          getServicioElectricidadByRelevamientoId(id, construccion.id, conn),
-          getServicioGasByRelevamientoId(id, construccion.id, conn),
-          getUsoComedorByRelevamientoId(id, construccion.id, conn),
-          getEstadoConservacionByRelevamientoId(id, construccion.id, conn),
+          getInstitucionesPorConstruccion(numericId, construccion.id),
+          getPlantasPorConstruccion(numericId, construccion.id, conn),
+          getServicioAguaByRelevamientoId(numericId, construccion.id, conn),
+          getServicioDesagueByRelevamientoId(numericId, construccion.id, conn),
+          getServicioElectricidadByRelevamientoId(
+            numericId,
+            construccion.id,
+            conn
+          ),
+          getServicioGasByRelevamientoId(numericId, construccion.id, conn),
+          getUsoComedorByRelevamientoId(numericId, construccion.id, conn),
+          getEstadoConservacionByRelevamientoId(
+            numericId,
+            construccion.id,
+            conn
+          ),
         ]);
 
         return {
