@@ -2,7 +2,7 @@
 
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -82,6 +82,13 @@ type Establecimiento = {
   modalidad_nivel: string | null;
 };
 
+type ConstruccionEstadoItem = {
+  construccionId: number;
+  numero_construccion?: number | null;
+  clasificacion: "Bueno" | "Regular" | "Malo";
+  score?: number | null;
+};
+
 type ResumenEstInfo = {
   cui: number;
   localidad: string;
@@ -118,6 +125,15 @@ type RawConservacionRow = {
   nivel: string;
   conservacion: "Bueno" | "Regular" | "Malo" | string;
   construcciones: string | number;
+};
+
+type DrillItem = {
+  relevamiento_id: number;
+  cui: number;
+  cues?: string | null; // si lo devolvés concatenado
+  instituciones?: string | null; // si lo devolvés concatenado
+  construcciones?: number; // MUY recomendado para alinear con el gráfico
+  construccion_id?: number; // para linkear a la construcción
 };
 
 const estadoPillClass = (estado: string | null) => {
@@ -252,19 +268,44 @@ export default function AdminDashboardPage() {
   >([]);
   const [edificiosPorNivelYConservacion, setEdificiosPorNivelYConservacion] =
     useState<RawConservacionRow[]>([]);
+  const [resumenRelevado, setResumenRelevado] = useState<{
+    cuis: number;
+    cues: number;
+  }>({
+    cuis: 0,
+    cues: 0,
+  });
   const [loadingData, setLoadingData] = useState(true);
+  const [estadoConstruccionSel, setEstadoConstruccionSel] = useState<
+    "Bueno" | "Regular" | "Malo"
+  >("Regular");
+
+  const [construccionesPorEstado, setConstruccionesPorEstado] = useState<
+    ConstruccionEstadoItem[]
+  >([]);
+  const [loadingConstruccionesPorEstado, setLoadingConstruccionesPorEstado] =
+    useState(false);
 
   // búsqueda de establecimientos
-  const [q, setQ] = useState<string>("");
-  const [establecimientos, setEstablecimientos] = useState<Establecimiento[]>(
-    []
-  );
-  const [selCui, setSelCui] = useState<number | null>(null);
-  const [loadingEst, setLoadingEst] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openResumen, setOpenResumen] = useState(false);
   const [loadingResumen, setLoadingResumen] = useState(false);
   const [resumen, setResumen] = useState<ResumenEst | null>(null);
+
+  // filtros cascada CUI/CUE
+  const [cuisFiltro, setCuisFiltro] = useState<number[]>([]);
+  const [cuesFiltro, setCuesFiltro] = useState<number[]>([]);
+  const [selCuiFiltro, setSelCuiFiltro] = useState<number | "">("");
+  const [selCueFiltro, setSelCueFiltro] = useState<number | "">("");
+  const [loadingCuis, setLoadingCuis] = useState(false);
+  const [loadingCues, setLoadingCues] = useState(false);
+
+  // filtros establacientos nivel
+  const [drillNivel, setDrillNivel] = useState<string>("");
+  const [drillEstado, setDrillEstado] = useState<
+    "" | "Bueno" | "Regular" | "Malo"
+  >("");
+  const [drillItems, setDrillItems] = useState<DrillItem[]>([]);
+  const [loadingDrill, setLoadingDrill] = useState(false);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -273,6 +314,132 @@ export default function AdminDashboardPage() {
   };
 
   const isAdmin = !!user?.roles?.includes("ADMIN");
+
+  const fetchDrilldown = async (
+    nivel: string,
+    estado: "Bueno" | "Regular" | "Malo"
+  ) => {
+    setLoadingDrill(true);
+    try {
+      const params = new URLSearchParams();
+      if (localidad) params.set("localidad", localidad);
+      params.set("nivel", nivel);
+      params.set("conservacion", estado);
+      params.set("limit", "100");
+
+      const res = await fetch(
+        `/api/dashboard/establecimientos-por-nivel-y-conservacion?${params.toString()}`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+
+      setDrillNivel(nivel);
+      setDrillEstado(estado);
+      setDrillItems(data.items || []);
+    } finally {
+      setLoadingDrill(false);
+    }
+  };
+
+  // 1) Cargar CUIs disponibles (según localidad)
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoadingCuis(true);
+        const params = new URLSearchParams();
+        if (localidad) params.set("localidad", localidad);
+
+        const res = await fetch(
+          `/api/dashboard/filtros/cuis?${params.toString()}`,
+          {
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!cancelled) {
+          const items = (data.items || [])
+            .map((x: any) => Number(x))
+            .filter((n: number) => !Number.isNaN(n));
+
+          setCuisFiltro(items);
+
+          // reset cascada
+          setSelCuiFiltro("");
+          setSelCueFiltro("");
+          setCuesFiltro([]);
+        }
+      } catch {
+        if (!cancelled) {
+          setCuisFiltro([]);
+          setSelCuiFiltro("");
+          setSelCueFiltro("");
+          setCuesFiltro([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingCuis(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, localidad]);
+
+  // 2) Cargar CUEs del CUI seleccionado (según localidad + CUI)
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    if (!selCuiFiltro) {
+      setCuesFiltro([]);
+      setSelCueFiltro("");
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoadingCues(true);
+        const params = new URLSearchParams();
+        if (localidad) params.set("localidad", localidad);
+        params.set("cui", String(selCuiFiltro));
+
+        const res = await fetch(
+          `/api/dashboard/filtros/cues?${params.toString()}`,
+          {
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!cancelled) {
+          const items = (data.items || [])
+            .map((x: any) => Number(x))
+            .filter((n: number) => !Number.isNaN(n));
+
+          setCuesFiltro(items);
+          setSelCueFiltro(""); // reset cue al cambiar cui
+        }
+      } catch {
+        if (!cancelled) {
+          setCuesFiltro([]);
+          setSelCueFiltro("");
+        }
+      } finally {
+        if (!cancelled) setLoadingCues(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, localidad, selCuiFiltro]);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -302,12 +469,17 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!isAdmin) return;
     let cancelled = false;
-    const qParam = localidad
-      ? `?localidad=${encodeURIComponent(localidad)}`
-      : "";
+    const params = new URLSearchParams();
+    if (localidad) params.set("localidad", localidad);
+    if (selCuiFiltro) params.set("cui", String(selCuiFiltro));
+    if (selCueFiltro) params.set("cue", String(selCueFiltro));
+    const qParam = params.toString() ? `?${params.toString()}` : "";
     setLoadingData(true);
 
     Promise.all([
+      fetch(`/api/dashboard/resumen-relevado${qParam}`, {
+        credentials: "include",
+      }).then((r) => r.json()),
       fetch(`/api/dashboard/edificios-por-nivel${qParam}`, {
         credentials: "include",
       }).then((r) => r.json()),
@@ -324,8 +496,14 @@ export default function AdminDashboardPage() {
         credentials: "include",
       }).then((r) => r.json()),
     ])
-      .then(([E, A, M, C, D]) => {
+      .then(([R, E, A, M, C, D]) => {
         if (cancelled) return;
+
+        setResumenRelevado({
+          cuis: Number(R?.cuis || 0),
+          cues: Number(R?.cues || 0),
+        });
+
         setEdificios(E.items || []);
         setAulas(A.items || []);
         setM2(M.items || []);
@@ -337,7 +515,7 @@ export default function AdminDashboardPage() {
             construcciones: Number(x.construcciones || 0),
           }))
         );
-        setEdificiosPorNivelYConservacion(D.items || []); // <--- Guardamos los datos del nuevo endpoint
+        setEdificiosPorNivelYConservacion(D.items || []);
       })
       .finally(() => {
         if (!cancelled) setLoadingData(false);
@@ -346,40 +524,42 @@ export default function AdminDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, localidad]);
+  }, [isAdmin, localidad, selCuiFiltro, selCueFiltro]);
 
-  // Debounced fetch de establecimientos (por nombre, dedup por CUI)
   useEffect(() => {
     if (!isAdmin) return;
+    let cancelled = false;
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
+    (async () => {
       try {
-        setLoadingEst(true);
+        setLoadingConstruccionesPorEstado(true);
+
         const params = new URLSearchParams();
         if (localidad) params.set("localidad", localidad);
-        if (q.trim()) params.set("q", q.trim());
-        params.set("limit", "50");
+        if (selCuiFiltro) params.set("cui", String(selCuiFiltro));
+        if (selCueFiltro) params.set("cue", String(selCueFiltro));
+        params.set("estado", estadoConstruccionSel);
 
         const res = await fetch(
-          `/api/dashboard/establecimientos?${params.toString()}`,
-          {
-            credentials: "include",
-          }
+          `/api/dashboard/escuelas-por-conservacion?${params.toString()}`,
+          { credentials: "include" }
         );
         const data = await res.json();
-        setEstablecimientos(data.items || []);
+
+        if (!cancelled) setConstruccionesPorEstado(data.items || []);
       } catch {
-        setEstablecimientos([]);
+        if (!cancelled) setConstruccionesPorEstado([]);
       } finally {
-        setLoadingEst(false);
+        if (!cancelled) setLoadingConstruccionesPorEstado(false);
       }
-    }, 300);
+    })();
 
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      cancelled = true;
     };
-  }, [isAdmin, localidad, q]);
+  }, [isAdmin, localidad, selCuiFiltro, selCueFiltro, estadoConstruccionSel]);
+
+  // Debounced fetch de establecimientos (por nombre, dedup por CUI)
 
   const mergedByNivel = useMemo(() => {
     const map = new Map<string, ItemKpi>();
@@ -586,112 +766,122 @@ export default function AdminDashboardPage() {
               </select>
             </div>
 
-            {/* Buscador de Establecimientos */}
-            <div className="w-full md:w-96">
-              <label className="text-sm text-gray-600">
-                Buscar establecimiento
-              </label>
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Escribí el nombre de la institución…"
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+            {/* Filtros CUI / CUE */}
+            <div className="flex flex-col gap-2 md:flex-row md:items-end">
+              {/* CUI */}
+              <div className="flex items-center gap-3">
+                <label className="text-sm text-gray-600">CUI</label>
+                <select
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  value={selCuiFiltro}
+                  onChange={(e) =>
+                    setSelCuiFiltro(
+                      e.target.value ? Number(e.target.value) : ""
+                    )
+                  }
+                  disabled={loadingCuis}
+                >
+                  <option value="">
+                    {loadingCuis ? "Cargando..." : "Todos"}
+                  </option>
+                  {cuisFiltro.map((cui) => (
+                    <option key={cui} value={cui}>
+                      {cui}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              {loadingEst ? (
-                <div className="mt-1 text-xs text-gray-500">Buscando…</div>
-              ) : (
-                <>
-                  {q && establecimientos.length === 0 ? (
-                    <div className="mt-1 text-xs text-gray-500">
-                      Sin resultados
-                    </div>
-                  ) : null}
+              {/* CUE */}
+              <div className="flex items-center gap-3">
+                <label className="text-sm text-gray-600">CUE</label>
+                <select
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  value={selCueFiltro}
+                  onChange={(e) =>
+                    setSelCueFiltro(
+                      e.target.value ? Number(e.target.value) : ""
+                    )
+                  }
+                  disabled={!selCuiFiltro || loadingCues}
+                >
+                  <option value="">
+                    {!selCuiFiltro
+                      ? "Seleccioná CUI"
+                      : loadingCues
+                      ? "Cargando..."
+                      : "Todos"}
+                  </option>
+                  {cuesFiltro.map((cue) => (
+                    <option key={cue} value={cue}>
+                      {cue}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  {establecimientos.length > 0 && (
-                    <ul className="mt-1 max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-sm">
-                      {establecimientos.map((e) => (
-                        <li
-                          key={e.cui}
-                          className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-gray-50 ${
-                            selCui === e.cui ? "bg-indigo-50" : ""
-                          }`}
-                          onClick={() => setSelCui(e.cui)}
-                          title={`Seleccionar ${e.etiqueta}`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-800">
-                              {e.etiqueta}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {e.localidad} · {e.modalidad_nivel || "SIN NIVEL"}{" "}
-                              · CUI {e.cui}
-                            </span>
-                          </div>
-                          {selCui === e.cui && (
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
-                              Seleccionado
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+              {/* Acciones */}
+              <div className="flex items-center gap-2">
+                <button
+                  className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-gray-300 disabled:text-gray-600"
+                  disabled={!selCuiFiltro}
+                  onClick={async () => {
+                    if (!selCuiFiltro) return;
+                    try {
+                      setLoadingResumen(true);
+                      setOpenResumen(true);
 
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-gray-300 disabled:text-gray-600"
-                      disabled={!selCui}
-                      onClick={async () => {
-                        if (!selCui) return;
-                        try {
-                          setLoadingResumen(true);
-                          setOpenResumen(true);
-                          const params = new URLSearchParams();
-                          params.set("cui", String(selCui));
-                          const res = await fetch(
-                            `/api/dashboard/resumen-establecimiento?${params.toString()}`,
-                            {
-                              credentials: "include",
-                            }
-                          );
-                          const data = await res.json();
-                          setResumen(data);
-                        } catch (e) {
-                          setResumen(null);
-                        } finally {
-                          setLoadingResumen(false);
+                      const p = new URLSearchParams();
+                      if (localidad) p.set("localidad", localidad);
+                      p.set("cui", String(selCuiFiltro));
+                      if (selCueFiltro) p.set("cue", String(selCueFiltro));
+
+                      const res = await fetch(
+                        `/api/dashboard/resumen-establecimiento?${p.toString()}`,
+                        {
+                          credentials: "include",
                         }
-                      }}
-                    >
-                      Ver resumen del establecimiento
-                    </button>
-                    {selCui && (
-                      <button
-                        className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        onClick={() => setSelCui(null)}
-                      >
-                        Limpiar selección
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
+                      );
+                      const data = await res.json();
+                      setResumen(data);
+                    } catch {
+                      setResumen(null);
+                    } finally {
+                      setLoadingResumen(false);
+                    }
+                  }}
+                >
+                  Ver resumen
+                </button>
+
+                {(selCuiFiltro || selCueFiltro) && (
+                  <button
+                    className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={() => {
+                      setSelCuiFiltro("");
+                      setSelCueFiltro("");
+                      setCuesFiltro([]);
+                    }}
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* KPIs */}
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 print:gap-6 print:mb-6">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4 print:gap-6 print:mb-6">
           <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
             <div className="text-xs uppercase tracking-wide text-indigo-600">
-              Edificios
+              Predios (CUI)
             </div>
             <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
-              {totals.edificios.toLocaleString("es-AR")}
+              {resumenRelevado.cuis.toLocaleString("es-AR")}
             </div>
           </div>
+
           <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
             <div className="text-xs uppercase tracking-wide text-emerald-600">
               Aulas
@@ -875,45 +1065,171 @@ export default function AdminDashboardPage() {
                 </h2>
               </div>
               <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
-                <div className="h-64 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
+                <div className="h-96 print:h-64 w-full max-w-[640px] mx-auto print:max-w-[600px]">
                   <ResponsiveContainer width="99%" height="100%">
                     <BarChart
                       data={mergedByNivelAndConservacion}
                       margin={{ top: 12, right: 18, left: 18, bottom: 20 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
                       <XAxis
                         dataKey="nivel"
                         tick={{ fontSize: 11 }}
-                        tickMargin={8}
+                        tickMargin={10}
+                        interval={0}
                       />
+
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip content={<TooltipContent />} />
+
+                      <Tooltip
+                        content={<TooltipContent />}
+                        cursor={{ fill: "rgba(99,102,241,0.12)" }}
+                      />
+
                       <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+
                       <Bar
                         dataKey="Bueno"
                         name="Bueno"
                         stackId="a"
-                        radius={[6, 6, 0, 0]}
                         fill={CHART_CONSERV.Bueno}
+                        style={{ cursor: "pointer" }}
+                        onClick={(barData: any) => {
+                          const nivel = barData?.payload?.nivel;
+                          if (nivel) fetchDrilldown(String(nivel), "Bueno");
+                        }}
                       />
+
                       <Bar
                         dataKey="Regular"
                         name="Regular"
                         stackId="a"
                         fill={CHART_CONSERV.Regular}
+                        style={{ cursor: "pointer" }}
+                        onClick={(barData: any) => {
+                          const nivel = barData?.payload?.nivel;
+                          if (nivel) fetchDrilldown(String(nivel), "Regular");
+                        }}
                       />
+
                       <Bar
                         dataKey="Malo"
                         name="Malo"
                         stackId="a"
                         fill={CHART_CONSERV.Malo}
+                        style={{ cursor: "pointer" }}
+                        onClick={(barData: any) => {
+                          const nivel = barData?.payload?.nivel;
+                          if (nivel) fetchDrilldown(String(nivel), "Malo");
+                        }}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </section>
+            {drillNivel && drillEstado && (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      Establecimientos · {drillNivel} · {drillEstado}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {localidad
+                        ? `Localidad: ${localidad}`
+                        : "Todas las localidades"}
+                    </div>
+                  </div>
+
+                  <button
+                    className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+                    onClick={() => {
+                      setDrillNivel("");
+                      setDrillEstado("");
+                      setDrillItems([]);
+                    }}
+                  >
+                    Limpiar
+                  </button>
+                </div>
+
+                {loadingDrill ? (
+                  <div className="mt-3 text-sm text-gray-500">Cargando…</div>
+                ) : drillItems.length === 0 ? (
+                  <div className="mt-3 text-sm text-gray-500">
+                    Sin resultados
+                  </div>
+                ) : (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Relev.
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            CUI
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            CUEs
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Instituciones
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Construcciones
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">
+                            Acción
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {drillItems.map((it) => (
+                          <tr
+                            key={it.relevamiento_id}
+                            className="border-t align-top"
+                          >
+                            <td className="px-3 py-2">{it.relevamiento_id}</td>
+                            <td className="px-3 py-2">{it.cui}</td>
+                            <td className="px-3 py-2">{it.cues || "—"}</td>
+                            <td className="px-3 py-2">
+                              {it.instituciones || "—"}
+                            </td>
+                            <td className="px-3 py-2">
+                              {Number(it.construcciones || 0)}
+                            </td>
+                            <td className="px-3 py-2">
+                              <button
+                                className="rounded-md bg-indigo-600 px-3 py-1.5 text-white hover:bg-indigo-500"
+                                onClick={() => {
+                                  const relId = Number(it.relevamiento_id);
+                                  const constId = Number(it.construccion_id);
+
+                                  if (!Number.isFinite(relId) || relId <= 0)
+                                    return;
+                                  if (!Number.isFinite(constId) || constId <= 0)
+                                    return;
+
+                                  router.push(
+                                    `/relevamiento-construcciones/${relId}?construccionId=${constId}`
+                                  );
+                                }}
+                              >
+                                Ver
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Drawer lateral */}
             <div
               className={`fixed inset-y-0 right-0 z-50 w-full max-w-3xl transform bg-white shadow-2xl transition-transform duration-300 ${

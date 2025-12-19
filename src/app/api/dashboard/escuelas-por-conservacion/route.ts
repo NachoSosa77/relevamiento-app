@@ -1,4 +1,4 @@
-// /api/dashboard/construcciones-por-conservacion/route.ts
+// /api/dashboard/escuelas-por-conservacion/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { pool } from "@/app/lib/db";
 import jwt from "jsonwebtoken";
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items: rows, total }, { status: 200 });
   } catch (err: any) {
     console.error(
-      "GET /api/dashboard/construcciones-por-conservacion:",
+      "GET /api/dashboard/escuelas-por-conservacion:",
       err?.message
     );
     return NextResponse.json(
