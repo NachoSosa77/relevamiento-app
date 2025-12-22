@@ -14,7 +14,7 @@ type AdminFilters = {
   fecha_hasta?: string; // "YYYY-MM-DD"
   created_by?: string;
   cui?: string;
-  estado?: string;      // "incompleto" | "completo" | "pendiente" (ajusta a tus valores reales)
+  estado?: string; // "incompleto" | "completo" | "pendiente" (ajusta a tus valores reales)
 };
 
 type Props = {
@@ -22,7 +22,10 @@ type Props = {
   pageSize?: number;
 };
 
-export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }: Props) {
+export default function TablaRelevamientosAdmin({
+  filters = {},
+  pageSize = 25,
+}: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
@@ -45,17 +48,27 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          scope: "all",                  // 👈 ADMIN ve todos
+          scope: "all", // 👈 ADMIN ve todos
           page: String(page),
           pageSize: String(pageSize),
           ...(effectiveFilters.cui ? { cui: effectiveFilters.cui } : {}),
-          ...(effectiveFilters.created_by ? { created_by: effectiveFilters.created_by } : {}),
-          ...(effectiveFilters.estado ? { estado: effectiveFilters.estado } : {}),
-          ...(effectiveFilters.fecha_desde ? { fecha_desde: effectiveFilters.fecha_desde } : {}),
-          ...(effectiveFilters.fecha_hasta ? { fecha_hasta: effectiveFilters.fecha_hasta } : {}),
+          ...(effectiveFilters.created_by
+            ? { created_by: effectiveFilters.created_by }
+            : {}),
+          ...(effectiveFilters.estado
+            ? { estado: effectiveFilters.estado }
+            : {}),
+          ...(effectiveFilters.fecha_desde
+            ? { fecha_desde: effectiveFilters.fecha_desde }
+            : {}),
+          ...(effectiveFilters.fecha_hasta
+            ? { fecha_hasta: effectiveFilters.fecha_hasta }
+            : {}),
         }).toString();
 
-        const res = await fetch(`/api/relevamientos?${params}`, { credentials: "include" });
+        const res = await fetch(`/api/relevamientos?${params}`, {
+          credentials: "include",
+        });
         const data = await res.json();
 
         // Estructura esperada: { items: Relevamiento[], total, page, pageSize }
@@ -85,11 +98,11 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
     router.push(`/home/relevamiento/detalle/${id}`);
   };
 
-  /* const handleView = (id: number) => {
+  const handleViewDetalle = (id: number) => {
     router.push(`/home/relevamiento/detalle/${id}`);
-  }; */
+  };
 
-   const handleView = (id: number) => {
+  const handleView = (id: number) => {
     router.push(`/admin/dashboard/relevamiento/${id}`);
   };
 
@@ -106,11 +119,21 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
       <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">ID</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">CUI</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Usuario</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Fecha</th>
-            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Estado</th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              ID
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              CUI
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Usuario
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Fecha
+            </th>
+            <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              Estado
+            </th>
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
@@ -119,16 +142,22 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
             <tr key={r.id} className="hover:bg-gray-50">
               <td className="px-4 py-2 text-center text-sm">{r.id}</td>
               {/* 👇 usa tu campo actual cui_id (ajusta si tu API devuelve 'cui') */}
-              <td className="px-4 py-2 text-center text-sm">{(r as any).cui_id ?? (r as any).cui}</td>
+              <td className="px-4 py-2 text-center text-sm">
+                {(r as any).cui_id ?? (r as any).cui}
+              </td>
               <td className="px-4 py-2 text-center text-sm">{r.created_by}</td>
               <td className="px-4 py-2 text-center text-sm">
                 {r.created_at
-                  ? format(new Date(r.created_at), "dd/MM/yyyy HH:mm", { locale: es })
+                  ? format(new Date(r.created_at), "dd/MM/yyyy HH:mm", {
+                      locale: es,
+                    })
                   : "-"}
               </td>
               <td className="px-4 py-2 text-center text-sm">
                 {r.estado === "incompleto" ? (
-                  <span className="text-yellow-600 font-semibold">Incompleto</span>
+                  <span className="text-yellow-600 font-semibold">
+                    Incompleto
+                  </span>
                 ) : r.estado === "completo" ? (
                   <span className="text-green-600 font-semibold">Completo</span>
                 ) : (
@@ -137,17 +166,28 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
               </td>
               <td className="px-4 py-2 text-center flex justify-center gap-2">
                 <button
-                  onClick={() => handleView(r.id)}
-                  className="bg-indigo-600 text-white font-bold px-4 py-1 rounded hover:bg-indigo-600/50"
+                  onClick={() => r.estado === "completo" && handleView(r.id)}
+                  disabled={r.estado !== "completo"}
+                  title={
+                    r.estado !== "completo"
+                      ? "Disponible cuando el relevamiento esté completo"
+                      : "Ver dashboard"
+                  }
+                  className={`font-bold px-4 py-1 rounded
+    ${
+      r.estado === "completo"
+        ? "bg-indigo-600 text-white hover:bg-indigo-600/50"
+        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+    }`}
                 >
-                   📊 Ver Dashboard
+                  📊 Ver Dashboard
                 </button>
-                {/* <button
+                <button
                   onClick={() => handleEditar(r.id)}
                   className="bg-custom text-white font-bold px-4 py-1 rounded hover:bg-custom/50"
                 >
                   Editar / Continuar
-                </button> */}
+                </button>
                 <button
                   onClick={() => handleViewPdf(r.id)}
                   className="bg-green-600 text-white font-bold px-4 py-1 rounded hover:bg-green-600/50"
@@ -160,7 +200,10 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
 
           {relevamientos.length === 0 && (
             <tr>
-              <td colSpan={6} className="text-center py-4 text-sm text-gray-500">
+              <td
+                colSpan={6}
+                className="text-center py-4 text-sm text-gray-500"
+              >
                 No hay relevamientos disponibles.
               </td>
             </tr>
@@ -181,7 +224,9 @@ export default function TablaRelevamientosAdmin({ filters = {}, pageSize = 25 }:
           </button>
           <button
             className="px-3 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => (page * pageSize < total ? p + 1 : p))}
+            onClick={() =>
+              setPage((p) => (page * pageSize < total ? p + 1 : p))
+            }
             disabled={page * pageSize >= total}
           >
             Siguiente

@@ -5,7 +5,6 @@
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Select from "@/components/ui/SelectComponent";
 import TextInput from "@/components/ui/TextInput";
-import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -26,6 +25,7 @@ interface Estructura {
 interface EstructuraReuProps {
   id: number;
   label: string;
+  relevamientoId: number;
   estructuras: Estructura[];
   construccionId: number | null;
   tipo: string;
@@ -42,11 +42,11 @@ type Resp = {
 export default function CaracteristicasConservacion({
   id,
   label,
+  relevamientoId,
   estructuras,
   construccionId,
   tipo,
 }: EstructuraReuProps) {
-  const relevamientoId = useRelevamientoId();
   const [responses, setResponses] = useState<Record<string, Resp>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editando, setEditando] = useState(false);
@@ -56,6 +56,9 @@ export default function CaracteristicasConservacion({
   useEffect(() => {
     const fetchData = async () => {
       if (!relevamientoId || !construccionId) return;
+
+      setResponses({});
+      setEditando(false);
       try {
         const res = await fetch(
           `/api/estado_conservacion?relevamiento_id=${relevamientoId}&construccion_id=${construccionId}`
@@ -317,121 +320,127 @@ export default function CaracteristicasConservacion({
           </tr>
         </thead>
         <tbody>
-          {estructuras.map(({ id: idStr, question, showCondition, opciones }) => {
-            const r = responses[idStr] || {
-              idDb: null,
-              disponibilidad: "",
-              estado: "",
-              estructura: "",
-            };
+          {estructuras.map(
+            ({ id: idStr, question, showCondition, opciones }) => {
+              const r = responses[idStr] || {
+                idDb: null,
+                disponibilidad: "",
+                estado: "",
+                estructura: "",
+              };
 
-            return (
-              <tr className="border" key={idStr}>
-                <td className="border p-2 text-center">{idStr}</td>
-                <td className="border p-2">{question}</td>
+              return (
+                <tr className="border" key={idStr}>
+                  <td className="border p-2 text-center">{idStr}</td>
+                  <td className="border p-2">{question}</td>
 
-                {/* Columna 3 */}
-                <td className="border p-2 text-center">
-                  {idStr !== "13.1" ? (
-                    <Select
-                      label=""
-                      value={r.estructura || ""}
-                      onChange={(e) =>
-                        handleResponseChange(idStr, "estructura", e.target.value)
-                      }
-                      options={opciones.map((option) => ({
-                        value: option.name,
-                        label: `${option.prefijo} ${option.name}`,
-                      }))}
-                    />
-                  ) : (
-                    <label>
-                      <input
-                        type="radio"
-                        name={`disp-${idStr}`}
-                        value="No"
-                        checked={r.disponibilidad === "No"}
-                        onChange={() =>
-                          handleResponseChange(idStr, "disponibilidad", "No")
-                        }
-                      />
-                    </label>
-                  )}
-                </td>
-
-                {/* Columna 4 */}
-                <td className="border p-2 text-center">
-                  {showCondition && idStr !== "13.1" ? (
-                    <div className="flex gap-2 items-center justify-center">
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${idStr}`}
-                          value="Bueno"
-                          checked={r.estado === "Bueno"}
-                          onChange={() =>
-                            handleResponseChange(idStr, "estado", "Bueno")
-                          }
-                          className="mr-1"
-                        />
-                        B
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${idStr}`}
-                          value="Regular"
-                          checked={r.estado === "Regular"}
-                          onChange={() =>
-                            handleResponseChange(idStr, "estado", "Regular")
-                          }
-                          className="mr-1"
-                        />
-                        R
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`estado-${idStr}`}
-                          value="Malo"
-                          checked={r.estado === "Malo"}
-                          onChange={() =>
-                            handleResponseChange(idStr, "estado", "Malo")
-                          }
-                          className="mr-1"
-                        />
-                        M
-                      </label>
-                    </div>
-                  ) : (
-                    <label>
-                      <input
-                        type="radio"
-                        name={`disp-${idStr}`}
-                        value="Si"
-                        checked={r.disponibilidad === "Si"}
-                        onChange={() =>
-                          handleResponseChange(idStr, "disponibilidad", "Si")
-                        }
-                      />
-                    </label>
-                  )}
-                </td>
-
-                {/* Columna 5 (solo fila 13.x sin condición) */}
-                {!showCondition && (
+                  {/* Columna 3 */}
                   <td className="border p-2 text-center">
-                    <TextInput
-                      label="Indique cuales"
-                      sublabel=""
-                      value="" // placeholder (a futuro si querés persistir este campo)
-                      onChange={() => {}}
-                    />
+                    {idStr !== "13.1" ? (
+                      <Select
+                        label=""
+                        value={r.estructura || ""}
+                        onChange={(e) =>
+                          handleResponseChange(
+                            idStr,
+                            "estructura",
+                            e.target.value
+                          )
+                        }
+                        options={opciones.map((option) => ({
+                          value: option.name,
+                          label: `${option.prefijo} ${option.name}`,
+                        }))}
+                      />
+                    ) : (
+                      <label>
+                        <input
+                          type="radio"
+                          name={`disp-${idStr}`}
+                          value="No"
+                          checked={r.disponibilidad === "No"}
+                          onChange={() =>
+                            handleResponseChange(idStr, "disponibilidad", "No")
+                          }
+                        />
+                      </label>
+                    )}
                   </td>
-                )}
-              </tr>
-            );
-          })}
+
+                  {/* Columna 4 */}
+                  <td className="border p-2 text-center">
+                    {showCondition && idStr !== "13.1" ? (
+                      <div className="flex gap-2 items-center justify-center">
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${idStr}`}
+                            value="Bueno"
+                            checked={r.estado === "Bueno"}
+                            onChange={() =>
+                              handleResponseChange(idStr, "estado", "Bueno")
+                            }
+                            className="mr-1"
+                          />
+                          B
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${idStr}`}
+                            value="Regular"
+                            checked={r.estado === "Regular"}
+                            onChange={() =>
+                              handleResponseChange(idStr, "estado", "Regular")
+                            }
+                            className="mr-1"
+                          />
+                          R
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`estado-${idStr}`}
+                            value="Malo"
+                            checked={r.estado === "Malo"}
+                            onChange={() =>
+                              handleResponseChange(idStr, "estado", "Malo")
+                            }
+                            className="mr-1"
+                          />
+                          M
+                        </label>
+                      </div>
+                    ) : (
+                      <label>
+                        <input
+                          type="radio"
+                          name={`disp-${idStr}`}
+                          value="Si"
+                          checked={r.disponibilidad === "Si"}
+                          onChange={() =>
+                            handleResponseChange(idStr, "disponibilidad", "Si")
+                          }
+                        />
+                      </label>
+                    )}
+                  </td>
+
+                  {/* Columna 5 (solo fila 13.x sin condición) */}
+                  {!showCondition && (
+                    <td className="border p-2 text-center">
+                      <TextInput
+                        label="Indique cuales"
+                        sublabel=""
+                        value="" // placeholder (a futuro si querés persistir este campo)
+                        onChange={() => {}}
+                      />
+                    </td>
+                  )}
+                </tr>
+              );
+            }
+          )}
         </tbody>
       </table>
 

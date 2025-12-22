@@ -1,7 +1,6 @@
 "use client";
 import NumericInput from "@/components/ui/NumericInput";
 import Spinner from "@/components/ui/Spinner";
-import { useRelevamientoId } from "@/hooks/useRelevamientoId";
 import { InstitucionesData } from "@/interfaces/Instituciones";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -13,6 +12,7 @@ interface Construccion {
 }
 
 interface CuiComponentProps {
+  relevamientoId: number;
   label: string;
   sublabel: string;
   selectedInstitutions: InstitucionesData[] | null;
@@ -23,6 +23,7 @@ interface CuiComponentProps {
 }
 
 const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
+  relevamientoId,
   label,
   sublabel,
   selectedInstitutions,
@@ -30,7 +31,6 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   initialCui,
   setConstruccionId,
 }) => {
-  const relevamientoId = useRelevamientoId();
   const [isLoading, setIsLoading] = useState(true);
   const [construcciones, setConstrucciones] = useState<Construccion[]>([]);
   const [selectedConstruccionId, setSelectedConstruccionId] = useState<
@@ -39,6 +39,9 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
   const [numeroConstruccion, setNumeroConstruccion] = useState<number>(0);
 
   useEffect(() => {
+  let cancelled = false;
+
+  (async () => {
     if (!relevamientoId) {
       setConstrucciones([]);
       setSelectedConstruccionId(null);
@@ -48,26 +51,58 @@ const CuiConstruccionComponent: React.FC<CuiComponentProps> = ({
       return;
     }
 
-    fetch(`/api/construcciones?relevamiento_id=${relevamientoId}`)
-      .then((res) => res.json())
-      .then((data: Construccion[]) => {
-        setConstrucciones(data);
+    try {
+      setIsLoading(true);
 
-        if (data.length > 0 && selectedConstruccionId === null) {
-          setSelectedConstruccionId(data[0].id);
-          setNumeroConstruccion(data[0].numero_construccion);
-          setConstruccionId(data[0].id);
-        } else if (data.length === 0) {
-          setSelectedConstruccionId(null);
-          setNumeroConstruccion(0);
-          setConstruccionId(null);
-        }
-      })
-      .catch(() => {
-        toast.error("Error al cargar construcciones");
-         setIsLoading(false);
-      });
-  }, [relevamientoId, setConstruccionId, selectedConstruccionId]);
+      const res = await fetch(
+        `/api/relevamientos/by-id/${relevamientoId}/construcciones`,
+        { credentials: "include" }
+      );
+      if (!res.ok) throw new Error("Error al cargar construcciones");
+
+      const data = await res.json();
+
+      // Soportar ambos formatos: {items: [...] } o array directo
+      const items: Construccion[] = Array.isArray(data) ? data : (data?.items ?? []);
+
+      if (cancelled) return;
+
+      setConstrucciones(items);
+
+      if (items.length > 0) {
+        // mantener selección si existe; si no, usar primera
+        const keep =
+          selectedConstruccionId != null && items.some(x => x.id === selectedConstruccionId);
+
+        const first = keep ? items.find(x => x.id === selectedConstruccionId)! : items[0];
+
+        setSelectedConstruccionId(first.id);
+        setNumeroConstruccion(first.numero_construccion);
+        setConstruccionId(first.id);
+      } else {
+        setSelectedConstruccionId(null);
+        setNumeroConstruccion(0);
+        setConstruccionId(null);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al cargar construcciones");
+      if (!cancelled) {
+        setConstrucciones([]);
+        setSelectedConstruccionId(null);
+        setNumeroConstruccion(0);
+        setConstruccionId(null);
+      }
+    } finally {
+      if (!cancelled) setIsLoading(false);
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+  // Importante: NO dependas de selectedConstruccionId, o refetch-eás al clickear tabs.
+}, [relevamientoId, setConstruccionId]);
 
 
   // Cuando cambie la construcción seleccionada vía tab

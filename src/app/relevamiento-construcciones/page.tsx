@@ -181,6 +181,7 @@ export default function RelevamientoConstruccionesPage() {
         </div>
       </div>
       <CuiConstruccionComponent
+      relevamientoId={relevamientoId}
         selectedInstitutions={selectedInstitutions}
         initialCui={selectedCui}
         onCuiInputChange={() => {}}
@@ -272,6 +273,7 @@ export default function RelevamientoConstruccionesPage() {
           <SeparadorReutilizable data={caracteristicasConstruccion} />
           <CaracteristicasConservacion
             id={10}
+            relevamientoId={relevamientoId}
             label="ESTRUCTURA RESISTENTE"
             estructuras={estructuraResistente}
             construccionId={construccionId}
@@ -279,6 +281,7 @@ export default function RelevamientoConstruccionesPage() {
           />
           <CaracteristicasConservacion
             id={11}
+            relevamientoId={relevamientoId}
             label="TECHO"
             estructuras={estructuraTecho}
             construccionId={construccionId}
@@ -286,6 +289,7 @@ export default function RelevamientoConstruccionesPage() {
           />
           <CaracteristicasConservacion
             id={12}
+            relevamientoId={relevamientoId}
             label="PAREDES Y CERRAMIENTOS EXTERIORES"
             estructuras={paredesCerramientos}
             construccionId={construccionId}

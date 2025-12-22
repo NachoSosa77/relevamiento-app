@@ -2,7 +2,7 @@
 
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -258,6 +258,9 @@ export default function AdminDashboardPage() {
   const { user, loading } = useUser();
   const router = useRouter();
 
+  const drillRef = useRef<HTMLDivElement | null>(null);
+  const pendingScrollRef = useRef(false);
+
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [localidad, setLocalidad] = useState<string>("");
   const [edificios, setEdificios] = useState<ItemKpi[]>([]);
@@ -320,6 +323,7 @@ export default function AdminDashboardPage() {
     estado: "Bueno" | "Regular" | "Malo"
   ) => {
     setLoadingDrill(true);
+    pendingScrollRef.current = true;
     try {
       const params = new URLSearchParams();
       if (localidad) params.set("localidad", localidad);
@@ -342,6 +346,22 @@ export default function AdminDashboardPage() {
       setLoadingDrill(false);
     }
   };
+
+  useEffect(() => {
+    if (loadingDrill) return;
+    if (!pendingScrollRef.current) return;
+    if (!drillNivel || !drillEstado) return;
+
+    pendingScrollRef.current = false;
+
+    // Espera un frame para asegurar que el DOM renderizó
+    requestAnimationFrame(() => {
+      drillRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [loadingDrill, drillNivel, drillEstado]);
 
   // 1) Cargar CUIs disponibles (según localidad)
   useEffect(() => {
@@ -1130,7 +1150,10 @@ export default function AdminDashboardPage() {
               </div>
             </section>
             {drillNivel && drillEstado && (
-              <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+              <div
+                ref={drillRef}
+                className="mt-4 rounded-xl border border-gray-200 bg-white p-4"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
