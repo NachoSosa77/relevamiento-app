@@ -29,9 +29,28 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+
     const localidad = (url.searchParams.get("localidad") || "").trim();
     const nivel = (url.searchParams.get("nivel") || "").trim();
     const conservacion = (url.searchParams.get("conservacion") || "").trim();
+
+    // NUEVO: filtros cascada
+    const cuiRaw = url.searchParams.get("cui");
+    const cueRaw = url.searchParams.get("cue");
+
+    const cui = cuiRaw != null && cuiRaw !== "" ? Number(cuiRaw) : null;
+    const cue = cueRaw != null && cueRaw !== "" ? Number(cueRaw) : null;
+
+    if (cuiRaw != null && cui === null)
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+    if (cui !== null && (!Number.isFinite(cui) || cui <= 0))
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+
+    if (cueRaw != null && cue === null)
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+    if (cue !== null && (!Number.isFinite(cue) || cue <= 0))
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+
     const limit = Math.min(Number(url.searchParams.get("limit") || 50), 200);
     const offset = Math.max(Number(url.searchParams.get("offset") || 0), 0);
 
@@ -58,7 +77,10 @@ export async function GET(req: NextRequest) {
         SELECT
           i.cui,
           SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1) AS localidad,
-          COALESCE(SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1), 'SIN NIVEL') AS modalidad_nivel,
+          COALESCE(
+            SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1),
+            'SIN NIVEL'
+          ) AS modalidad_nivel,
           GROUP_CONCAT(DISTINCT i.cue ORDER BY i.cue SEPARATOR ',') AS cues,
           GROUP_CONCAT(DISTINCT i.institucion ORDER BY i.institucion SEPARATOR ' | ') AS instituciones,
           COUNT(DISTINCT i.id) AS instituciones_count
@@ -76,7 +98,7 @@ export async function GET(req: NextRequest) {
         inst.instituciones_count,
         s.clasificacion AS conservacion,
 
-        -- NUEVO: una construcción de ese relevamiento en ese estado
+        -- una construcción ejemplo para armar el link
         MIN(s.construccion_id) AS construccion_id,
 
         COUNT(DISTINCT s.construccion_id) AS construcciones
@@ -87,6 +109,20 @@ export async function GET(req: NextRequest) {
         ${localidad ? "AND inst.localidad = ?" : ""}
         AND inst.modalidad_nivel = ?
         AND s.clasificacion = ?
+        ${cui !== null ? "AND r.cui_id = ?" : ""}
+
+        -- NUEVO: filtrar por CUE real asociado al relevamiento completo
+        ${
+          cue !== null
+            ? `AND EXISTS (
+                 SELECT 1
+                 FROM instituciones_por_relevamiento ipr
+                 JOIN instituciones i2 ON i2.id = ipr.institucion_id
+                 WHERE ipr.relevamiento_id = r.id
+                   AND i2.cue = ?
+               )`
+            : ""
+        }
       GROUP BY
         r.id, r.cui_id, inst.localidad, inst.modalidad_nivel,
         inst.cues, inst.instituciones, inst.instituciones_count,
@@ -99,6 +135,10 @@ export async function GET(req: NextRequest) {
     if (localidad) params.push(localidad);
     params.push(nivel);
     params.push(conservacion);
+
+    if (cui !== null) params.push(cui);
+    if (cue !== null) params.push(cue);
+
     params.push(limit, offset);
 
     const [rows]: any[] = await pool.query(sql, params);

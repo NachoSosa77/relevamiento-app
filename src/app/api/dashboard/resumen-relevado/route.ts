@@ -5,23 +5,35 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/dashboard/resumen-relevado?localidad=<opcional>
+ * GET /api/dashboard/resumen-relevado
+ *
+ * Params opcionales:
+ * - localidad
+ * - cui
+ * - cue
+ *
+ * Lógica:
  * - Solo relevamientos con estado = "completo"
- * - CUI/CUE "relevados" via instituciones_por_relevamiento
- * - Filtro opcional por localidad (desde instituciones)
+ * - CUIs / CUEs efectivamente relevados (instituciones_por_relevamiento)
+ * - Filtros consistentes con todo el dashboard
  * - Solo ADMIN
  */
 export async function GET(req: NextRequest) {
   try {
-    // Auth
+    /* =========================
+       Auth
+    ========================= */
     const token = (await cookies()).get("token")?.value;
-    if (!token)
+    if (!token) {
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+    }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
-    // Guard: ADMIN
+    /* =========================
+       Guard: ADMIN
+    ========================= */
     const [adminRows]: any[] = await pool.query(
       `
       SELECT 1
@@ -37,34 +49,78 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
     }
 
-    // Params
+    /* =========================
+       Params
+    ========================= */
     const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad")?.trim();
 
-    const whereLocalidad = localidad ? "AND i.localidad = ?" : "";
+    const localidad = url.searchParams.get("localidad")?.trim() || null;
+
+    const cuiRaw = url.searchParams.get("cui");
+    const cueRaw = url.searchParams.get("cue");
+
+    const cui = cuiRaw && cuiRaw !== "" ? Number(cuiRaw) : null;
+    const cue = cueRaw && cueRaw !== "" ? Number(cueRaw) : null;
+
+    if (cuiRaw && (!Number.isFinite(cui) || (cui as number) <= 0)) {
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+    }
+
+    if (cueRaw && (!Number.isFinite(cue) || (cue as number) <= 0)) {
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+    }
+
+    /* =========================
+       WHERE dinámico (compartido)
+    ========================= */
+    const where: string[] = [];
     const params: any[] = [];
-    if (localidad) params.push(localidad);
 
-    // 1) CUIs
+    if (localidad) {
+      where.push("i.localidad = ?");
+      params.push(localidad);
+    }
+
+    if (cui != null) {
+      where.push("i.cui = ?");
+      params.push(cui);
+    }
+
+    if (cue != null) {
+      where.push("i.cue = ?");
+      params.push(cue);
+    }
+
+    const whereSql = where.length ? "AND " + where.join(" AND ") : "";
+
+    /* =========================
+       1) Predios (CUIs)
+    ========================= */
     const sqlCuis = `
       SELECT COUNT(DISTINCT i.cui) AS cuis
       FROM relevamientos r
-      JOIN instituciones_por_relevamiento ipr ON ipr.relevamiento_id = r.id
-      JOIN instituciones i ON i.id = ipr.institucion_id
+      JOIN instituciones_por_relevamiento ipr
+        ON ipr.relevamiento_id = r.id
+      JOIN instituciones i
+        ON i.id = ipr.institucion_id
       WHERE r.estado = 'completo'
         AND i.cui IS NOT NULL
-        ${whereLocalidad}
+        ${whereSql}
     `;
 
-    // 2) CUEs
+    /* =========================
+       2) Establecimientos (CUEs)
+    ========================= */
     const sqlCues = `
       SELECT COUNT(DISTINCT i.cue) AS cues
       FROM relevamientos r
-      JOIN instituciones_por_relevamiento ipr ON ipr.relevamiento_id = r.id
-      JOIN instituciones i ON i.id = ipr.institucion_id
+      JOIN instituciones_por_relevamiento ipr
+        ON ipr.relevamiento_id = r.id
+      JOIN instituciones i
+        ON i.id = ipr.institucion_id
       WHERE r.estado = 'completo'
         AND i.cue IS NOT NULL
-        ${whereLocalidad}
+        ${whereSql}
     `;
 
     const [cuiRows]: any[] = await pool.query(sqlCuis, params);

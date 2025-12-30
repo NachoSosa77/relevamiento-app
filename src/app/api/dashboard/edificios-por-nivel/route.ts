@@ -4,23 +4,15 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * GET /api/dashboard/edificios-por-nivel?localidad=<opcional>
- * - Provincia fija: "La Pampa"
- * - Solo relevamientos con estado = "completo"
- * - Desduplicación por CUI en instituciones para evitar sobreconteo
- * - Solo ADMIN
- */
 export async function GET(req: NextRequest) {
   try {
-    // Auth
     const token = (await cookies()).get("token")?.value;
     if (!token)
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
-    // Guard: ADMIN
     const [adminRows]: any[] = await pool.query(
       `
       SELECT 1
@@ -35,41 +27,62 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
     }
 
-    // Params
     const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad");
+    const localidad = url.searchParams.get("localidad")?.trim() || "";
+    const cuiRaw = url.searchParams.get("cui");
+    const cueRaw = url.searchParams.get("cue");
 
-    // Query con instituciones desduplicadas por CUI
+    const cui = cuiRaw && cuiRaw !== "" ? Number(cuiRaw) : null;
+    const cue = cueRaw && cueRaw !== "" ? Number(cueRaw) : null;
+
+    if (cuiRaw && (!Number.isFinite(cui) || (cui as number) <= 0))
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+
+    if (cueRaw && (!Number.isFinite(cue) || (cue as number) <= 0))
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+
+    const where: string[] = [];
+    const params: any[] = [];
+
+    // Provincia fija (según tu requerimiento actual)
+    where.push(`i.provincia = 'La Pampa'`);
+
+    // Solo relevamientos completos (para contar establecimientos efectivamente relevados)
+    // Usamos la tabla puente para asegurar que el CUE está asociado a un relevamiento completo.
+    where.push(`r.estado = 'completo'`);
+
+    if (localidad) {
+      where.push(`i.localidad = ?`);
+      params.push(localidad);
+    }
+    if (cui != null) {
+      where.push(`i.cui = ?`);
+      params.push(cui);
+    }
+    if (cue != null) {
+      where.push(`i.cue = ?`);
+      params.push(cue);
+    }
+
     const sql = `
       SELECT
-        COALESCE(inst.modalidad_nivel, 'SIN NIVEL') AS nivel,
-        COUNT(DISTINCT c.id) AS edificios
+        COALESCE(i.modalidad_nivel, 'SIN NIVEL') AS nivel,
+        COUNT(DISTINCT i.cue) AS establecimientos
       FROM relevamientos r
-      JOIN (
-        SELECT
-          i.cui,
-          SUBSTRING_INDEX(GROUP_CONCAT(i.provincia ORDER BY i.id), ',', 1)       AS provincia,
-          SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1)       AS localidad,
-          SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel
-        FROM instituciones i
-        WHERE i.provincia = 'La Pampa'
-        GROUP BY i.cui
-      ) inst                         ON inst.cui = r.cui_id
-      JOIN construcciones c          ON c.relevamiento_id = r.id
-      WHERE r.estado = 'completo'
-        ${localidad ? "AND inst.localidad = ?" : ""}
-      GROUP BY COALESCE(inst.modalidad_nivel, 'SIN NIVEL')
+      JOIN instituciones_por_relevamiento ipr ON ipr.relevamiento_id = r.id
+      JOIN instituciones i ON i.id = ipr.institucion_id
+      WHERE ${where.join(" AND ")}
+      GROUP BY COALESCE(i.modalidad_nivel, 'SIN NIVEL')
       ORDER BY nivel
     `;
 
-    const params: any[] = [];
-    if (localidad && localidad.trim() !== "") params.push(localidad.trim());
-
     const [rows]: any[] = await pool.query(sql, params);
-
     return NextResponse.json({ items: rows }, { status: 200 });
   } catch (err: any) {
-    console.error("GET /api/dashboard/edificios-por-nivel:", err?.message);
+    console.error(
+      "GET /api/dashboard/edificios-por-nivel (CUE):",
+      err?.message
+    );
     return NextResponse.json(
       { message: "Error interno", error: err?.message },
       { status: 500 }

@@ -5,13 +5,12 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/dashboard/aulas-por-nivel?localidad=<opcional>
+ * GET /api/dashboard/aulas-por-nivel?localidad=<opcional>&cui=<opcional>&cue=<opcional>
  * - Provincia fija: "La Pampa"
  * - relevamientos 'completo'
- * - Desduplicación de instituciones por CUI
+ * - Desduplicación de instituciones por CUI (predio)
  * - Cuenta aulas con COUNT(DISTINCT lpc.id)
- * - SOLO considera como aula los locales cuyo opciones_locales.name sea:
- *   "Aula común", "Sala de nivel inicial", "Aula especial"
+ * - Considera aula solo si opciones_locales.name IN (...)
  * - Solo ADMIN
  */
 export async function GET(req: NextRequest) {
@@ -20,6 +19,7 @@ export async function GET(req: NextRequest) {
     const token = (await cookies()).get("token")?.value;
     if (!token)
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
@@ -40,8 +40,29 @@ export async function GET(req: NextRequest) {
 
     // Params
     const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad");
-    const params: any[] = [];
+    const localidad = url.searchParams.get("localidad")?.trim() || "";
+    const cuiRaw = url.searchParams.get("cui");
+    const cueRaw = url.searchParams.get("cue");
+
+    const cui = cuiRaw != null && cuiRaw !== "" ? Number(cuiRaw) : null;
+    const cue = cueRaw != null && cueRaw !== "" ? Number(cueRaw) : null;
+
+    if (cuiRaw != null && cui === null)
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+    if (cui !== null && (!Number.isFinite(cui) || cui <= 0))
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+
+    if (cueRaw != null && cue === null)
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+    if (cue !== null && (!Number.isFinite(cue) || cue <= 0))
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+
+    /**
+     * Nota conceptual:
+     * - Este KPI está modelado a nivel de CUI (predio): se cuelga del relevamiento y construcciones.
+     * - Por eso, filtrar por CUE normalmente NO cambia aulas si ese CUE pertenece al mismo CUI,
+     *   pero lo aplicamos para consistencia del dashboard y para acotar el universo cuando haga falta.
+     */
 
     const sql = `
       SELECT
@@ -56,13 +77,18 @@ export async function GET(req: NextRequest) {
           SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel
         FROM instituciones i
         WHERE i.provincia = 'La Pampa'
+          ${cui !== null ? "AND i.cui = ?" : ""}
+          ${cue !== null ? "AND i.cue = ?" : ""}
         GROUP BY i.cui
       ) inst                           ON inst.cui = r.cui_id
       JOIN construcciones c            ON c.relevamiento_id = r.id
-      JOIN locales_por_construccion lpc ON lpc.construccion_id = c.id
+      JOIN locales_por_construccion lpc
+           ON lpc.construccion_id = c.id
+          AND lpc.relevamiento_id = r.id
       JOIN opciones_locales ol         ON ol.id = lpc.local_id
       WHERE r.estado = 'completo'
         ${localidad ? "AND inst.localidad = ?" : ""}
+        ${cui !== null ? "AND r.cui_id = ?" : ""}
         AND ol.name IN (
           'Aula común',
           'Sala de nivel inicial',
@@ -72,7 +98,11 @@ export async function GET(req: NextRequest) {
       ORDER BY nivel
     `;
 
-    if (localidad && localidad.trim() !== "") params.push(localidad.trim());
+    const params: any[] = [];
+    if (cui !== null) params.push(cui); // i.cui
+    if (cue !== null) params.push(cue); // i.cue
+    if (localidad) params.push(localidad);
+    if (cui !== null) params.push(cui); // r.cui_id
 
     const [rows]: any[] = await pool.query(sql, params);
     return NextResponse.json({ items: rows }, { status: 200 });

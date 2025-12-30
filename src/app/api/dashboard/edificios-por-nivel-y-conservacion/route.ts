@@ -1,4 +1,4 @@
-// Nuevo Endpoint: /api/dashboard/edificios-por-nivel-y-conservacion
+// /api/dashboard/edificios-por-nivel-y-conservacion/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { pool } from "@/app/lib/db";
 import jwt from "jsonwebtoken";
@@ -6,21 +6,24 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/dashboard/edificios-por-nivel-y-conservacion?localidad=<opcional>
+ * GET /api/dashboard/edificios-por-nivel-y-conservacion?localidad=<opcional>&cui=<opcional>&cue=<opcional>
  * - Provincia fija: "La Pampa"
  * - Solo relevamientos con estado = "completo"
- * - Muestra la cantidad de construcciones AGRUPADAS por Nivel Educativo y Estado de Conservación.
+ * - Cantidad de CONSTRUCCIONES agrupadas por Nivel Educativo y Estado de Conservación (snapshot)
+ * - Filtros opcionales: localidad, CUI, CUE
  * - Solo ADMIN
  */
 export async function GET(req: NextRequest) {
   try {
-    // 1. Autenticación y Autorización (Admin)
+    // Auth
     const token = (await cookies()).get("token")?.value;
     if (!token)
       return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = Number(decoded.id);
 
+    // Guard: ADMIN
     const [adminRows]: any[] = await pool.query(
       `
       SELECT 1
@@ -35,52 +38,83 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Sin permiso" }, { status: 403 });
     }
 
-    // 2. Parámetros
+    // Params
     const url = new URL(req.url);
-    const localidad = url.searchParams.get("localidad");
+    const localidad = url.searchParams.get("localidad")?.trim() || "";
+    const cuiRaw = url.searchParams.get("cui");
+    const cueRaw = url.searchParams.get("cue");
+
+    const cui = cuiRaw != null && cuiRaw !== "" ? Number(cuiRaw) : null;
+    const cue = cueRaw != null && cueRaw !== "" ? Number(cueRaw) : null;
+
+    if (cuiRaw != null && cui === null)
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+    if (cui !== null && (!Number.isFinite(cui) || cui <= 0))
+      return NextResponse.json({ message: "cui inválido" }, { status: 400 });
+
+    if (cueRaw != null && cue === null)
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+    if (cue !== null && (!Number.isFinite(cue) || cue <= 0))
+      return NextResponse.json({ message: "cue inválido" }, { status: 400 });
+
     const params: any[] = [];
 
-    // 3. Query
+    /**
+     * Nota de diseño:
+     * - inst desdup por CUI para resolver localidad/nivel consistente con el resto del dashboard.
+     * - filtro por CUE se aplica con EXISTS contra instituciones_por_relevamiento, para no
+     *   “romper” la desduplicación por CUI.
+     * - se filtra r.estado='completo' y además se une a r por seguridad.
+     */
     const sql = `
       SELECT
         COALESCE(inst.modalidad_nivel, 'SIN NIVEL') AS nivel,
         s.clasificacion AS conservacion,
-        COUNT(s.construccion_id) AS construcciones
+        COUNT(DISTINCT s.construccion_id) AS construcciones
       FROM relevamientos r
-      
-      -- Subconsulta de Instituciones (desduplicadas por CUI y obteniendo nivel)
       JOIN (
         SELECT
           i.cui,
-          SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1) AS localidad,
+          SUBSTRING_INDEX(GROUP_CONCAT(i.provincia ORDER BY i.id), ',', 1)       AS provincia,
+          SUBSTRING_INDEX(GROUP_CONCAT(i.localidad ORDER BY i.id), ',', 1)       AS localidad,
           SUBSTRING_INDEX(GROUP_CONCAT(i.modalidad_nivel ORDER BY i.id), ',', 1) AS modalidad_nivel
         FROM instituciones i
         WHERE i.provincia = 'La Pampa'
+          ${cui !== null ? "AND i.cui = ?" : ""}
         GROUP BY i.cui
       ) inst ON inst.cui = r.cui_id
-      
-      -- Unión con el Estado de Conservación (Snapshot)
-      JOIN estado_construccion_snapshot s ON s.relevamiento_id = r.id
-      
+      JOIN estado_construccion_snapshot s
+        ON s.relevamiento_id = r.id
       WHERE r.estado = 'completo'
         ${localidad ? "AND inst.localidad = ?" : ""}
-      
-      -- Agrupación por Nivel Educativo y Clasificación de Conservación
+        ${cui !== null ? "AND r.cui_id = ?" : ""}
+        ${
+          cue !== null
+            ? `AND EXISTS (
+                 SELECT 1
+                 FROM instituciones_por_relevamiento ipr
+                 JOIN instituciones i2 ON i2.id = ipr.institucion_id
+                 WHERE ipr.relevamiento_id = r.id
+                   AND i2.cue = ?
+               )`
+            : ""
+        }
       GROUP BY
-        nivel,
-        conservacion
-      
-      -- Ordenamiento: Primero por Nivel y luego por la clasificación (Bueno, Regular, Malo)
+        COALESCE(inst.modalidad_nivel, 'SIN NIVEL'),
+        s.clasificacion
       ORDER BY
-        nivel,
-        FIELD(conservacion, 'Bueno', 'Regular', 'Malo');
+        COALESCE(inst.modalidad_nivel, 'SIN NIVEL'),
+        FIELD(s.clasificacion, 'Bueno', 'Regular', 'Malo');
     `;
 
-    if (localidad && localidad.trim() !== "") params.push(localidad.trim());
+    // params en el orden exacto de los placeholders
+    if (cui !== null) params.push(cui); // i.cui
+    if (localidad) params.push(localidad);
+    if (cui !== null) params.push(cui); // r.cui_id
+    if (cue !== null) params.push(cue); // EXISTS i2.cue
 
     const [rows]: any[] = await pool.query(sql, params);
 
-    // 4. Calcular Total (opcional, si se requiere el total general de construcciones)
     const total = (rows || []).reduce(
       (acc: number, r: any) => acc + Number(r.construcciones || 0),
       0

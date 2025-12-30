@@ -15,7 +15,7 @@ import {
 } from "recharts";
 
 const CHART_COLORS = {
-  edificios: "#6366F1",
+  establecimientos: "#6366F1",
   aulas: "#10B981",
   m2: "#F59E0B",
 };
@@ -67,7 +67,7 @@ type Bloque2Row = {
 
 type ItemKpi = {
   nivel: string;
-  edificios?: number;
+  establecimientos?: number;
   aulas?: number;
   m2?: number;
 };
@@ -263,7 +263,7 @@ export default function AdminDashboardPage() {
 
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [localidad, setLocalidad] = useState<string>("");
-  const [edificios, setEdificios] = useState<ItemKpi[]>([]);
+  const [establecimientos, setEstablecimientos] = useState<ItemKpi[]>([]);
   const [aulas, setAulas] = useState<ItemKpi[]>([]);
   const [m2, setM2] = useState<ItemKpi[]>([]);
   const [conservacionConstrucciones, setConservacionConstrucciones] = useState<
@@ -327,6 +327,8 @@ export default function AdminDashboardPage() {
     try {
       const params = new URLSearchParams();
       if (localidad) params.set("localidad", localidad);
+      if (selCuiFiltro) params.set("cui", String(selCuiFiltro));
+      if (selCueFiltro) params.set("cue", String(selCueFiltro));
       params.set("nivel", nivel);
       params.set("conservacion", estado);
       params.set("limit", "100");
@@ -346,6 +348,46 @@ export default function AdminDashboardPage() {
       setLoadingDrill(false);
     }
   };
+
+  function KpiCard({
+    title,
+    value,
+    loading,
+    toneClass,
+  }: {
+    title: string;
+    value: string;
+    loading: boolean;
+    toneClass: string; // ej: "border-indigo-100 from-white to-indigo-50 text-indigo-600"
+  }) {
+    const [borderClass, fromClass, toClass, titleColor] =
+      toneClass.split(" | ");
+
+    return (
+      <div
+        className={`rounded-2xl border ${borderClass} bg-gradient-to-br ${fromClass} ${toClass} p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid`}
+      >
+        <div className={`text-xs uppercase tracking-wide ${titleColor}`}>
+          {title}
+        </div>
+
+        <div className="mt-2">
+          {loading ? (
+            <div className="h-9 w-28 animate-pulse rounded-md bg-gray-200 print:hidden" />
+          ) : (
+            <div className="text-3xl font-semibold text-gray-900 print:text-2xl">
+              {value}
+            </div>
+          )}
+
+          {/* Para impresión: nunca mostramos skeleton */}
+          <div className="hidden print:block text-3xl font-semibold text-gray-900 print:text-2xl">
+            {value}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (loadingDrill) return;
@@ -524,7 +566,7 @@ export default function AdminDashboardPage() {
           cues: Number(R?.cues || 0),
         });
 
-        setEdificios(E.items || []);
+        setEstablecimientos(E.items || []);
         setAulas(A.items || []);
         setM2(M.items || []);
         setConservacionConstrucciones(
@@ -586,32 +628,37 @@ export default function AdminDashboardPage() {
     const add = (arr: any[], key: keyof ItemKpi) => {
       (arr || []).forEach((i: any) => {
         const k = i.nivel ?? "SIN NIVEL";
-        const prev = map.get(k) || { nivel: k, edificios: 0, aulas: 0, m2: 0 };
+        const prev = map.get(k) || {
+          nivel: k,
+          establecimientos: 0,
+          aulas: 0,
+          m2: 0,
+        };
         (prev as any)[key] =
           Number(i[key]) ||
-          Number(i.edificios) ||
+          Number(i.establecimientos) ||
           Number(i.aulas) ||
           Number(i.m2) ||
           0;
         map.set(k, prev);
       });
     };
-    add(edificios, "edificios");
+    add(establecimientos, "establecimientos");
     add(aulas, "aulas");
     add(m2, "m2");
     return Array.from(map.values()).sort((a, b) =>
       a.nivel.localeCompare(b.nivel)
     );
-  }, [edificios, aulas, m2]);
+  }, [establecimientos, aulas, m2]);
 
   const totals = useMemo(() => {
     return mergedByNivel.reduce(
-      (acc: { edificios: number; aulas: number; m2: number }, x) => ({
-        edificios: acc.edificios + (x.edificios || 0),
+      (acc: { establecimientos: number; aulas: number; m2: number }, x) => ({
+        establecimientos: acc.establecimientos + (x.establecimientos || 0),
         aulas: acc.aulas + (x.aulas || 0),
         m2: acc.m2 + (x.m2 || 0),
       }),
-      { edificios: 0, aulas: 0, m2: 0 }
+      { establecimientos: 0, aulas: 0, m2: 0 }
     );
   }, [mergedByNivel]);
 
@@ -742,6 +789,15 @@ export default function AdminDashboardPage() {
 
     return result;
   }, [edificiosPorNivelYConservacion]);
+
+  useEffect(() => {
+    const totalGrafico = mergedByNivel.reduce(
+      (acc, x) => acc + (x.establecimientos || 0),
+      0
+    );
+    console.log("TOTAL GRAFICO CUE:", totalGrafico);
+    console.log("KPI CUE:", resumenRelevado.cues);
+  }, [mergedByNivel, resumenRelevado.cues]);
 
   return (
     <div className="min-h-screen bg-gray-50 mt-8">
@@ -893,31 +949,39 @@ export default function AdminDashboardPage() {
 
         {/* KPIs */}
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4 print:gap-6 print:mb-6">
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
-            <div className="text-xs uppercase tracking-wide text-indigo-600">
-              Predios (CUI)
-            </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
-              {resumenRelevado.cuis.toLocaleString("es-AR")}
-            </div>
-          </div>
+          <KpiCard
+            title="Predios (CUI)"
+            loading={loadingData}
+            value={resumenRelevado.cuis.toLocaleString("es-AR")}
+            toneClass={
+              "border-indigo-100 | from-white | to-indigo-50 | text-indigo-600"
+            }
+          />
 
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
-            <div className="text-xs uppercase tracking-wide text-emerald-600">
-              Aulas
-            </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
-              {totals.aulas.toLocaleString("es-AR")}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
-            <div className="text-xs uppercase tracking-wide text-amber-600">
-              Metros cuadrados
-            </div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900 print:text-2xl">
-              {totals.m2.toLocaleString("es-AR")}
-            </div>
-          </div>
+          <KpiCard
+            title="Edificios (CUE)"
+            loading={loadingData}
+            value={resumenRelevado.cues.toLocaleString("es-AR")}
+            toneClass={"border-sky-100 | from-white | to-sky-50 | text-sky-600"}
+          />
+
+          <KpiCard
+            title="Aulas"
+            loading={loadingData}
+            value={totals.aulas.toLocaleString("es-AR")}
+            toneClass={
+              "border-emerald-100 | from-white | to-emerald-50 | text-emerald-600"
+            }
+          />
+
+          <KpiCard
+            title="Metros cuadrados"
+            loading={loadingData}
+            value={totals.m2.toLocaleString("es-AR")}
+            toneClass={
+              "border-amber-100 | from-white | to-amber-50 | text-amber-600"
+            }
+          />
         </div>
 
         {/* Gráficos */}
@@ -929,7 +993,7 @@ export default function AdminDashboardPage() {
             <section className="print:break-inside-avoid-page">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 print:text-base">
-                  Edificios por nivel
+                  Edificios (CUE) por nivel educativo
                 </h2>
               </div>
               <div className="rounded-2xl border border-gray-200 bg-white px-4 pt-2 pb-4 shadow-sm print:rounded-md print:border print:border-gray-300 print:bg-white print:shadow-none overflow-hidden print-avoid">
@@ -949,10 +1013,11 @@ export default function AdminDashboardPage() {
                       <Tooltip content={<TooltipContent />} />
                       <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                       <Bar
-                        dataKey="edificios"
-                        name="Edificios"
+                        dataKey="establecimientos"
+                        name="Establecimientos con oferta por nivel educativo
+(un establecimiento puede aparecer en más de un nivel)"
                         radius={[6, 6, 0, 0]}
-                        fill={CHART_COLORS.edificios}
+                        fill={CHART_COLORS.establecimientos}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1196,7 +1261,7 @@ export default function AdminDashboardPage() {
                             CUI
                           </th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            CUEs
+                            CUES
                           </th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">
                             Instituciones
